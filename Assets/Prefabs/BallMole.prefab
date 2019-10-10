@@ -14,7 +14,6 @@ GameObject:
   - component: {fileID: 3699052319643461334}
   - component: {fileID: 3699052319643461335}
   - component: {fileID: 3699052319643461321}
-  - component: {fileID: 8584727348067042045}
   m_Layer: 0
   m_Name: BallMole
   m_TagString: Untagged
@@ -211,15 +210,3 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &8584727348067042045
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3699052319643461328}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 036de088aa4b1bd41ba66396e9ae2ba4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
