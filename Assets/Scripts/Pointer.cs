@@ -39,16 +39,42 @@ public abstract class Pointer : MonoBehaviour
     protected LineRenderer laser;
     protected Renderer cursorRenderer;
     private States state = States.Idle;
-
     private Mole hoveredMole;
-    
-    void Start()
+    private bool active = false;
+
+    // Enables the pointer
+    public void Enable()
     {
-        InitLaser();
+        if (active) return;
+
+        cursor.GetComponent<MeshRenderer>().enabled = true;
+
+        if (!laser)
+        {
+            InitLaser();
+        }
+        else
+        {
+            laser.enabled = true;
+        }
+        active = true;
+    }
+
+    // Disables the pointer
+    public void Disable()
+    {
+        if (!active) return;
+
+        cursor.GetComponent<MeshRenderer>().enabled = false;
+
+        if (laser) laser.enabled = false;
+        active = false;
     }
 
     void Update()
     {
+        if (!active) return;
+
         RaycastHit hit;
         if (Physics.Raycast(transform.position + laserOrigin, transform.forward, out hit, 100f))
         {
@@ -115,9 +141,12 @@ public abstract class Pointer : MonoBehaviour
     {
         Mole mole;
         state = States.Shooting;
-        if (hit.collider.gameObject.TryGetComponent<Mole>(out mole))
+        if (hit.collider)
         {
-            mole.Pop();
+            if (hit.collider.gameObject.TryGetComponent<Mole>(out mole))
+            {
+                mole.Pop();
+            }
         }
         PlayShoot();
     }
