@@ -96,15 +96,6 @@ public abstract class Pointer : MonoBehaviour
                 }
             }
         }
-        
-        //test input
-        if (Input.GetButtonDown("Jump"))
-        {
-            if (state == States.Idle)
-            {
-                Shoot(hit);
-            }
-        }
     }
 
     protected virtual void PlayShoot() 
