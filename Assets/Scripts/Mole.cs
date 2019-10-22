@@ -19,6 +19,8 @@ public abstract class Mole : MonoBehaviour
     private float lifeTime;
     private bool active = false;
     private int id = -1;
+    private float activatedTimeLeft;
+    private bool isPaused = false;
 
     protected virtual void Start()
     {
@@ -54,6 +56,11 @@ public abstract class Mole : MonoBehaviour
         ChangeState(States.Disabling);
     }
 
+    public void SetPause(bool pause)
+    {
+        isPaused = pause;
+    }
+
     public void Reset()
     {
         active = false;
@@ -64,6 +71,7 @@ public abstract class Mole : MonoBehaviour
 
     public void Pop()
     {
+        if (isPaused) return;
         if (state != States.Enabled && state != States.Enabling)
         {
             return;
@@ -165,7 +173,15 @@ public abstract class Mole : MonoBehaviour
 
     private IEnumerator StartTimer(float duration)
     {
-        yield return new WaitForSeconds(duration);
+        activatedTimeLeft = duration;
+        while (activatedTimeLeft > 0)
+        {
+            if (!isPaused)
+            {
+                activatedTimeLeft -= Time.deltaTime;
+            }
+            yield return null;
+        }
         OnTimeout();
     }
 

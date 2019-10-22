@@ -72,6 +72,15 @@ public class WallManager : MonoBehaviour
         GetRandomMole().Enable(lifeTime, isFake);
     }
 
+    // Pauses/unpauses the moles
+    public void SetPauseMole(bool pause)
+    {
+        foreach(Mole mole in moles)
+        {
+            mole.SetPause(pause);
+        }
+    }
+
     // Returns a random, inactive Mole
     private Mole GetRandomMole()
     {

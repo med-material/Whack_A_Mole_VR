@@ -90,10 +90,12 @@ public class GameDirector : MonoBehaviour
         if(gameState == GameState.Playing)
         {
             UpdateState(GameState.Paused);
+            wallManager.SetPauseMole(true);
         }
         else if(gameState == GameState.Paused)
         {
             UpdateState(GameState.Playing);
+            wallManager.SetPauseMole(false);
         }
     }
 
