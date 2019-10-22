@@ -34,7 +34,7 @@ public class ModifiersManager : MonoBehaviour
     [SerializeField]
     private Transform wallReference;
 
-    private EyePatch eyePatch;
+    private EyePatch eyePatch = EyePatch.None;
     private bool mirrorEffect;
     private bool dualTask;
     private bool rightControllerMain;
