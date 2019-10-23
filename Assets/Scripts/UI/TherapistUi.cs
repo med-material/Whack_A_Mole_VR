@@ -20,6 +20,9 @@ public class TherapistUi : MonoBehaviour
     [SerializeField]
     private MinimizedPanelController minimizedPanelController;
 
+    [SerializeField]
+    private PlayerPanel playerPanel;
+
     private GameDirector.GameState currentGameState = GameDirector.GameState.Stopped;
 
     // When start game event is raised, nofifies the gameDirector.
@@ -51,7 +54,7 @@ public class TherapistUi : MonoBehaviour
             case GameDirector.GameState.Playing:
                 if(currentGameState == GameDirector.GameState.Paused)
                 {
-                    GamePaused(false);
+                    GamePausedUnpaused(false);
                 }
                 else
                 {
@@ -59,7 +62,7 @@ public class TherapistUi : MonoBehaviour
                 }
                 break;
             case GameDirector.GameState.Paused:
-                GamePaused();
+                GamePausedUnpaused();
                 break;
         }
         currentGameState = newState;
@@ -78,6 +81,7 @@ public class TherapistUi : MonoBehaviour
             }
         }
         minimizedPanelController.UpdateDisplayedInfos(data);
+        playerPanel.UpdateDisplayedInfos(data);
     }
 
     // When the game modifier updated event is raised, notifies the modifiersManager.
@@ -133,6 +137,7 @@ public class TherapistUi : MonoBehaviour
     {
         therapistPanelController.GameStart();
         minimizedPanelController.GameStart();
+        playerPanel.SetEnablePanel(false);
     }
 
     // When the game stopped event is raised (by the game director), updates the UI.
@@ -140,12 +145,16 @@ public class TherapistUi : MonoBehaviour
     {
         therapistPanelController.GameStop();
         minimizedPanelController.GameStop();
+        playerPanel.SetPausedContainer(false);
+        playerPanel.SetEnablePanel();
     }
 
     // When the game paused event is raised (by the game director), updates the UI.
-    private void GamePaused(bool pause = true)
+    private void GamePausedUnpaused(bool pause = true)
     {
         therapistPanelController.GamePause(pause);
         minimizedPanelController.GamePause(pause);
+        playerPanel.SetPausedContainer(pause);
+        playerPanel.SetEnablePanel(pause);
     }
 }
