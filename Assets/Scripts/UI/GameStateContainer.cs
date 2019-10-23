@@ -19,7 +19,14 @@ public class GameStateContainer : MonoBehaviour
     [SerializeField]
     private Text gameStateText;
 
-    // When the game starts, updates the text, shows the runningContainer (container containing the chronometer, pause button and stop button) and hides the startContainer.
+    [SerializeField]
+    private Text gameTimeText;
+
+    [SerializeField]
+    private Button pauseGameButton;
+
+
+    // When the game starts, updates the text and shows the runningContainer (containing the chronometer, pause and stop buttons).
     public void OnStartGame()
     {
         gameStateText.text = "Game is running.";
@@ -35,9 +42,33 @@ public class GameStateContainer : MonoBehaviour
         startContainer.SetActive(true);
     }
 
-    // When the game is paused, updates the text.
-    public void OnPauseGame()
+    // When the game pauses, darkens the pause button
+    public void OnPauseGame(bool pause)
     {
-        gameStateText.text = "Game is paused.";
+        if (pause)
+        {
+            gameStateText.text = "Game is paused.";
+            ColorBlock newColor = pauseGameButton.colors;
+            newColor.colorMultiplier = 0.5f;
+            pauseGameButton.colors = newColor;
+        }
+        else
+        {
+            gameStateText.text = "Game is running.";
+            ColorBlock newColor = pauseGameButton.colors;
+            newColor.colorMultiplier = 1f;
+            pauseGameButton.colors = newColor;
+        }
+    }
+
+    // Updates the time displayed by the chronometer. Sets it from seconds to a mm:ss.ddd format
+    public void UpdateTime(float time)
+    {
+        string value = "";
+
+        value += Mathf.FloorToInt(time / 60f);
+        value += ":";
+        value += (time % 60f).ToString("F3");
+        gameTimeText.text = value;
     }
 }

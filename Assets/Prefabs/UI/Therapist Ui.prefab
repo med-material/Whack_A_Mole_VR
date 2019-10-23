@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 3656936269680613501}
   - component: {fileID: 4582546346169783461}
   - component: {fileID: 7504468739406993927}
+  - component: {fileID: 7322853925231374488}
   m_Layer: 5
   m_Name: Off Button
   m_TagString: Untagged
@@ -118,7 +119,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3656936269680613501}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 7322853925231374488}
+        m_MethodName: OnValueChange
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &7504468739406993927
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -139,6 +151,34 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &7322853925231374488
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 16535065816021288}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15716b2357855454288372fc649233d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UiNotifyTarget:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 310600849815655360}
+        m_MethodName: SetGameModifier
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  identifier: hand
+  buttonArg: false
 --- !u!1 &211747984192209360
 GameObject:
   m_ObjectHideFlags: 0
@@ -281,6 +321,7 @@ GameObject:
   - component: {fileID: 1289087907770685172}
   - component: {fileID: 4923572440814484061}
   - component: {fileID: 8637544462847642389}
+  - component: {fileID: 8238203512152790140}
   m_Layer: 5
   m_Name: On Button
   m_TagString: Untagged
@@ -386,7 +427,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1289087907770685172}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 8238203512152790140}
+        m_MethodName: OnValueChange
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &8637544462847642389
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -407,6 +459,34 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &8238203512152790140
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 255129909422687108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15716b2357855454288372fc649233d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UiNotifyTarget:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 310600849815655360}
+        m_MethodName: SetGameModifier
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  identifier: mirror
+  buttonArg: true
 --- !u!1 &384507647204584765
 GameObject:
   m_ObjectHideFlags: 0
@@ -420,6 +500,7 @@ GameObject:
   - component: {fileID: 8985141951973477251}
   - component: {fileID: 4274547061331982543}
   - component: {fileID: 4344948388242006000}
+  - component: {fileID: 6287551361655016123}
   m_Layer: 5
   m_Name: Right Button
   m_TagString: Untagged
@@ -525,7 +606,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8985141951973477251}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 6287551361655016123}
+        m_MethodName: OnValueChange
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &4344948388242006000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -546,6 +638,34 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &6287551361655016123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 384507647204584765}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15716b2357855454288372fc649233d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UiNotifyTarget:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 310600849815655360}
+        m_MethodName: SetGameModifier
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  identifier: eye
+  buttonArg: right
 --- !u!1 &404839011281822954
 GameObject:
   m_ObjectHideFlags: 0
@@ -751,7 +871,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 310600849815655360}
         m_MethodName: StopGame
         m_Mode: 1
         m_Arguments:
@@ -904,6 +1024,7 @@ GameObject:
   - component: {fileID: 3695234704293813703}
   - component: {fileID: 4100302087523992948}
   - component: {fileID: 7437965340168727579}
+  - component: {fileID: 6818559754463680318}
   m_Layer: 5
   m_Name: Slow Button
   m_TagString: Untagged
@@ -1009,7 +1130,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3695234704293813703}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 6818559754463680318}
+        m_MethodName: OnValueChange
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &7437965340168727579
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1030,6 +1162,34 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &6818559754463680318
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 990744056734398928}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15716b2357855454288372fc649233d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UiNotifyTarget:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 310600849815655360}
+        m_MethodName: SetGameModifier
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  identifier: speed
+  buttonArg: easy
 --- !u!1 &1071237763941018507
 GameObject:
   m_ObjectHideFlags: 0
@@ -1328,6 +1488,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2339376424958852397}
+  - component: {fileID: 310600849815655360}
   m_Layer: 0
   m_Name: Therapist Ui
   m_TagString: Untagged
@@ -1351,6 +1512,22 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &310600849815655360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1392605837138651403}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2c43dc8d002db24a8e0106116d867f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  modifiersManager: {fileID: 0}
+  gameDirector: {fileID: 0}
+  therapistPanelController: {fileID: 8213942572069198567}
+  minimizedPanelController: {fileID: 2373028383081114547}
 --- !u!1 &1450220733201500719
 GameObject:
   m_ObjectHideFlags: 0
@@ -1503,7 +1680,7 @@ GameObject:
   - component: {fileID: 2995028664859412372}
   - component: {fileID: 6617945806392086417}
   m_Layer: 5
-  m_Name: Text
+  m_Name: GameTime Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1817,6 +1994,7 @@ GameObject:
   - component: {fileID: 7069996660330191925}
   - component: {fileID: 8406641575391003906}
   - component: {fileID: 7562749838437989785}
+  - component: {fileID: 3168093876554533439}
   m_Layer: 5
   m_Name: Fast Button
   m_TagString: Untagged
@@ -1922,7 +2100,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 7069996660330191925}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 3168093876554533439}
+        m_MethodName: OnValueChange
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &7562749838437989785
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1943,6 +2132,34 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &3168093876554533439
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1907295797464703183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15716b2357855454288372fc649233d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UiNotifyTarget:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 310600849815655360}
+        m_MethodName: SetGameModifier
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  identifier: speed
+  buttonArg: hard
 --- !u!1 &2010535821387596543
 GameObject:
   m_ObjectHideFlags: 0
@@ -2484,6 +2701,7 @@ GameObject:
   - component: {fileID: 5358049266092394874}
   - component: {fileID: 6505188197604773851}
   - component: {fileID: 4873879562817017272}
+  - component: {fileID: 9017148424935454970}
   m_Layer: 5
   m_Name: Off Button
   m_TagString: Untagged
@@ -2589,7 +2807,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 5358049266092394874}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 9017148424935454970}
+        m_MethodName: OnValueChange
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &4873879562817017272
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2610,6 +2839,34 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &9017148424935454970
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2689865234132853368}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15716b2357855454288372fc649233d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UiNotifyTarget:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 310600849815655360}
+        m_MethodName: SetGameModifier
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  identifier: prism
+  buttonArg: 0
 --- !u!1 &2701941754286633952
 GameObject:
   m_ObjectHideFlags: 0
@@ -2623,6 +2880,7 @@ GameObject:
   - component: {fileID: 3927794443784424005}
   - component: {fileID: 2003282519178333876}
   - component: {fileID: 8671772029319424987}
+  - component: {fileID: 3685042265375869318}
   m_Layer: 5
   m_Name: On Button
   m_TagString: Untagged
@@ -2728,7 +2986,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3927794443784424005}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 3685042265375869318}
+        m_MethodName: OnValueChange
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &8671772029319424987
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2749,6 +3018,34 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &3685042265375869318
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2701941754286633952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15716b2357855454288372fc649233d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UiNotifyTarget:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 310600849815655360}
+        m_MethodName: SetGameModifier
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  identifier: hand
+  buttonArg: true
 --- !u!1 &2780251420896435568
 GameObject:
   m_ObjectHideFlags: 0
@@ -3652,7 +3949,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 5754039157580263154}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 310600849815655360}
+        m_MethodName: PauseGame
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &415623826501570322
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3875,7 +4183,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 310600849815655360}
         m_MethodName: StartGame
         m_Mode: 1
         m_Arguments:
@@ -4240,6 +4548,7 @@ GameObject:
   - component: {fileID: 4946907868040300937}
   - component: {fileID: 8711444943788485106}
   - component: {fileID: 5842841128066215828}
+  - component: {fileID: 6048823462582945398}
   m_Layer: 5
   m_Name: MinFifteen Button
   m_TagString: Untagged
@@ -4345,7 +4654,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 4946907868040300937}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 6048823462582945398}
+        m_MethodName: OnValueChange
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &5842841128066215828
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4366,6 +4686,34 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &6048823462582945398
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3872165640463606448}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15716b2357855454288372fc649233d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UiNotifyTarget:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 310600849815655360}
+        m_MethodName: SetGameModifier
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  identifier: prism
+  buttonArg: -15
 --- !u!1 &3885971084068032706
 GameObject:
   m_ObjectHideFlags: 0
@@ -4638,6 +4986,7 @@ GameObject:
   - component: {fileID: 4527452441298514610}
   - component: {fileID: 7591216081196312399}
   - component: {fileID: 6694017317372676529}
+  - component: {fileID: 9076846293215793887}
   m_Layer: 5
   m_Name: Left Button
   m_TagString: Untagged
@@ -4743,7 +5092,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 4527452441298514610}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 9076846293215793887}
+        m_MethodName: OnValueChange
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &6694017317372676529
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4764,6 +5124,34 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &9076846293215793887
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3979897930527021196}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15716b2357855454288372fc649233d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UiNotifyTarget:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 310600849815655360}
+        m_MethodName: SetGameModifier
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  identifier: eye
+  buttonArg: left
 --- !u!1 &4060106825784933558
 GameObject:
   m_ObjectHideFlags: 0
@@ -5260,6 +5648,7 @@ GameObject:
   - component: {fileID: 6311981934980558464}
   - component: {fileID: 3438960294986490510}
   - component: {fileID: 8987009979712763283}
+  - component: {fileID: 7440244738122113532}
   m_Layer: 5
   m_Name: On Button
   m_TagString: Untagged
@@ -5365,7 +5754,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 6311981934980558464}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 7440244738122113532}
+        m_MethodName: OnValueChange
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &8987009979712763283
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5386,6 +5786,34 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &7440244738122113532
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4443746587708566875}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15716b2357855454288372fc649233d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UiNotifyTarget:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 310600849815655360}
+        m_MethodName: SetGameModifier
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  identifier: dual
+  buttonArg: true
 --- !u!1 &4523323195442958070
 GameObject:
   m_ObjectHideFlags: 0
@@ -5985,6 +6413,7 @@ GameObject:
   - component: {fileID: 4533007903441636867}
   - component: {fileID: 5900448260170319250}
   - component: {fileID: 2959732103965597834}
+  - component: {fileID: 228363510198622356}
   m_Layer: 5
   m_Name: Off Button
   m_TagString: Untagged
@@ -6090,7 +6519,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 4533007903441636867}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 228363510198622356}
+        m_MethodName: OnValueChange
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &2959732103965597834
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6111,6 +6551,34 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &228363510198622356
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5176956382840919239}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15716b2357855454288372fc649233d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UiNotifyTarget:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 310600849815655360}
+        m_MethodName: SetGameModifier
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  identifier: eye
+  buttonArg: none
 --- !u!1 &5182486117042489064
 GameObject:
   m_ObjectHideFlags: 0
@@ -6727,6 +7195,7 @@ GameObject:
   - component: {fileID: 9214773752143211926}
   - component: {fileID: 272400673898409900}
   - component: {fileID: 5574769497174100002}
+  - component: {fileID: 7892739672862974619}
   m_Layer: 5
   m_Name: PlusFifteen Button
   m_TagString: Untagged
@@ -6832,7 +7301,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 9214773752143211926}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 7892739672862974619}
+        m_MethodName: OnValueChange
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &5574769497174100002
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6853,6 +7333,34 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &7892739672862974619
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5497214318577176344}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15716b2357855454288372fc649233d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UiNotifyTarget:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 310600849815655360}
+        m_MethodName: SetGameModifier
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  identifier: prism
+  buttonArg: 15
 --- !u!1 &5570460202067566104
 GameObject:
   m_ObjectHideFlags: 0
@@ -7039,6 +7547,7 @@ GameObject:
   - component: {fileID: 6700668080027774938}
   - component: {fileID: 4518818760520381030}
   - component: {fileID: 8632743906402409358}
+  - component: {fileID: 3818926948862661284}
   m_Layer: 5
   m_Name: Off Button
   m_TagString: Untagged
@@ -7144,7 +7653,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 6700668080027774938}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 3818926948862661284}
+        m_MethodName: OnValueChange
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &8632743906402409358
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7165,6 +7685,34 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &3818926948862661284
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5660946502367814546}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15716b2357855454288372fc649233d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UiNotifyTarget:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 310600849815655360}
+        m_MethodName: SetGameModifier
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  identifier: dual
+  buttonArg: false
 --- !u!1 &5671339256858699786
 GameObject:
   m_ObjectHideFlags: 0
@@ -7611,6 +8159,7 @@ GameObject:
   - component: {fileID: 7853072360188382796}
   - component: {fileID: 3554455515471402091}
   - component: {fileID: 3489891669826828372}
+  - component: {fileID: 4524464296617183147}
   m_Layer: 5
   m_Name: Off Button
   m_TagString: Untagged
@@ -7716,7 +8265,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 7853072360188382796}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 4524464296617183147}
+        m_MethodName: OnValueChange
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &3489891669826828372
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7737,6 +8297,34 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &4524464296617183147
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6103363963344163548}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15716b2357855454288372fc649233d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UiNotifyTarget:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 310600849815655360}
+        m_MethodName: SetGameModifier
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  identifier: mirror
+  buttonArg: false
 --- !u!1 &6285949563112090122
 GameObject:
   m_ObjectHideFlags: 0
@@ -8865,6 +9453,7 @@ GameObject:
   - component: {fileID: 7425226054475304161}
   - component: {fileID: 716373800854041076}
   - component: {fileID: 102035071113672588}
+  - component: {fileID: 4905055178909369873}
   m_Layer: 5
   m_Name: Normal Button
   m_TagString: Untagged
@@ -8970,7 +9559,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 7425226054475304161}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 4905055178909369873}
+        m_MethodName: OnValueChange
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &102035071113672588
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8991,6 +9591,34 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &4905055178909369873
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7859909101480615827}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15716b2357855454288372fc649233d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UiNotifyTarget:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 310600849815655360}
+        m_MethodName: SetGameModifier
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  identifier: speed
+  buttonArg: medium
 --- !u!1 &7952294267435824527
 GameObject:
   m_ObjectHideFlags: 0
@@ -10333,7 +10961,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startContainer: {fileID: 4905811495138989174}
   runningContainer: {fileID: 4079704160740169681}
-  gameStateText: {fileID: 0}
+  gameStateText: {fileID: 3381394768466033456}
+  gameTimeText: {fileID: 2995028664859412372}
+  pauseGameButton: {fileID: 2183902697252661023}
 --- !u!1 &8922691250099221188
 GameObject:
   m_ObjectHideFlags: 0
@@ -10764,7 +11394,7 @@ PrefabInstance:
     - target: {fileID: 7901853550441448915, guid: 303a12377f2a3c34f8dbda300fdc75b6,
         type: 3}
       propertyPath: UiNotifyTarget.m_PersistentCalls.m_Calls.Array.size
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7901853550441448915, guid: 303a12377f2a3c34f8dbda300fdc75b6,
         type: 3}
@@ -10790,7 +11420,7 @@ PrefabInstance:
         type: 3}
       propertyPath: UiNotifyTarget.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 310600849815655360}
     - target: {fileID: 7901853550441448915, guid: 303a12377f2a3c34f8dbda300fdc75b6,
         type: 3}
       propertyPath: UiNotifyTarget.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
@@ -11109,7 +11739,7 @@ PrefabInstance:
     - target: {fileID: 7901853550441448915, guid: 303a12377f2a3c34f8dbda300fdc75b6,
         type: 3}
       propertyPath: UiNotifyTarget.m_PersistentCalls.m_Calls.Array.size
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7901853550441448915, guid: 303a12377f2a3c34f8dbda300fdc75b6,
         type: 3}
@@ -11135,7 +11765,7 @@ PrefabInstance:
         type: 3}
       propertyPath: UiNotifyTarget.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 310600849815655360}
     - target: {fileID: 7901853550441448915, guid: 303a12377f2a3c34f8dbda300fdc75b6,
         type: 3}
       propertyPath: UiNotifyTarget.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
@@ -11536,7 +12166,7 @@ PrefabInstance:
         type: 3}
       propertyPath: UiNotifyTarget.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 310600849815655360}
     - target: {fileID: 7901853550441448915, guid: 303a12377f2a3c34f8dbda300fdc75b6,
         type: 3}
       propertyPath: UiNotifyTarget.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
@@ -11546,6 +12176,16 @@ PrefabInstance:
         type: 3}
       propertyPath: UiNotifyTarget.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 7901853550441448915, guid: 303a12377f2a3c34f8dbda300fdc75b6,
+        type: 3}
+      propertyPath: identifier
+      value: runTime
+      objectReference: {fileID: 0}
+    - target: {fileID: 7901853550441448915, guid: 303a12377f2a3c34f8dbda300fdc75b6,
+        type: 3}
+      propertyPath: minValue
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7901853550441448914, guid: 303a12377f2a3c34f8dbda300fdc75b6,
         type: 3}

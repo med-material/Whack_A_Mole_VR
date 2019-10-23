@@ -30,23 +30,39 @@ public class MinimizedPanelController : MonoBehaviour
     [SerializeField]
     private Sprite stopSprite;
 
+    private bool gamePlaying = false;
+
 
     // When the game starts, updates the "state sprite" to the "playing" icon.
     public void GameStart()
     {
         gameStateSprite.sprite = playSprite;
+        gamePlaying = true;
     }
 
     // When the game stops, updates the "state sprite" to the "stopped" icon.
     public void GameStop()
     {
         gameStateSprite.sprite = stopSprite;
+        gameStateText.text = "Ready";
+        gamePlaying = false;
     }
 
-    // When the game is paused, updates the "state sprite" to the "paused" icon.
-    public void GamePause()
+    // When the game pauses, updates the "state sprite" to the "paused" icon.
+    public void GamePause(bool pause)
     {
-        gameStateSprite.sprite = pauseSprite;
+        if(pause)
+        {
+            gameStateSprite.sprite = pauseSprite;
+            gameStateText.text = "Paused";
+            gamePlaying = false;
+        }
+        else
+        {
+            gameStateSprite.sprite = playSprite;
+            gamePlaying = true;
+        }
+        
     }
 
     // Updates displayed information such as the participant Id and the test Id
@@ -65,5 +81,17 @@ public class MinimizedPanelController : MonoBehaviour
                     break;
             }
         }
+    }
+
+    // Updates the displayed time, sets it to a mm:ss format.
+    public void GameTimeUpdate(float time)
+    {
+        if (!gamePlaying) return;
+        string value = "";
+
+        value += Mathf.FloorToInt(time / 60f);
+        value += ":";
+        value += Mathf.Floor(time % 60f);
+        gameStateText.text = value;
     }
 }

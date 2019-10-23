@@ -54,7 +54,20 @@ public class TherapistPanelController : MonoBehaviour
         {
             controller.Enable();
         }
+        gameStateContainer.OnPauseGame(false);
         gameStateContainer.OnStopGame();
+    }
+
+    // When the game pauses, updates the gameState container.
+    public void GamePause(bool pause)
+    {
+        gameStateContainer.OnPauseGame(pause);
+    }
+
+    // When game time updated, updates the gameState container
+    public void GameTimeUpdate(float time)
+    {
+        gameStateContainer.UpdateTime(time);
     }
 
     // Plays the collapsing animation of the maximized therapist Ui.
