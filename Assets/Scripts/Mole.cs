@@ -17,7 +17,6 @@ public abstract class Mole : MonoBehaviour
     protected bool fake = false;
     private Coroutine timer;
     private float lifeTime;
-    private bool active = false;
     private int id = -1;
     private float activatedTimeLeft;
     private bool isPaused = false;
@@ -56,12 +55,11 @@ public abstract class Mole : MonoBehaviour
 
     public bool IsActive()
     {
-        return active;
+        return (state == States.Enabled || state == States.Enabling);
     }
 
     public void Enable(float enabledLifeTime, bool isFake = false)
     {
-        active = true;
         fake = isFake;
         lifeTime = enabledLifeTime;
         ChangeState(States.Enabling);
@@ -69,7 +67,6 @@ public abstract class Mole : MonoBehaviour
 
     public void Disable()
     {
-        active = false;
         ChangeState(States.Disabling);
     }
 
@@ -80,7 +77,6 @@ public abstract class Mole : MonoBehaviour
 
     public void Reset()
     {
-        active = false;
         StopAllCoroutines();
         state = States.Disabled;
         EnterState(States.Disabled);
