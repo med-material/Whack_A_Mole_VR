@@ -24,6 +24,21 @@ public class TherapistUi : MonoBehaviour
     private PlayerPanel playerPanel;
 
     private GameDirector.GameState currentGameState = GameDirector.GameState.Stopped;
+    private LoggerNotifier loggerNotifier;
+
+    void Start()
+    {
+        // Initialization of the LoggerNotifier. Here we will only raise PersistentEvent.
+        loggerNotifier = new LoggerNotifier(persistentEventsHeadersDefaults: new Dictionary<string, string>(){
+            {"ParticipantId", "NULL"},
+            {"TestId", "NULL"}
+        });
+        // Initialization of the starting values of the parameters.
+        loggerNotifier.InitPersistentEventParameters(new Dictionary<string, object>(){
+            {"ParticipantId", 0},
+            {"TestId", 0}
+        });
+    }
 
     // When start game event is raised, nofifies the gameDirector.
     public void StartGame()
@@ -75,8 +90,15 @@ public class TherapistUi : MonoBehaviour
         {
             switch(entry.Key)
             {
-                case "runTime":
+                case "GameDuration":
                     gameDirector.SetGameDuration(float.Parse((string)entry.Value) * 60f);
+                    break;
+                default:
+                    // Raise an event.
+                    loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>()
+                    {
+                        {entry.Key, entry.Value}
+                    });
                     break;
             }
         }

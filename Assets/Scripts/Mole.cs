@@ -21,10 +21,27 @@ public abstract class Mole : MonoBehaviour
     private int id = -1;
     private float activatedTimeLeft;
     private bool isPaused = false;
+    private LoggerNotifier loggerNotifier;
 
     protected virtual void Start()
     {
         EnterState(States.Disabled);
+
+        // Initialization of the LoggerNotifier. Here we will only raise Event, and we will use a function to pass and update 
+        // certain parameters values every time we raise an event (UpdateLogNotifierGeneralValues). We don't set any starting values.
+        loggerNotifier = new LoggerNotifier(UpdateLogNotifierGeneralValues, new Dictionary<string, string>(){
+            {"MolePositionWorldX", "NULL"},
+            {"MolePositionWorldY", "NULL"},
+            {"MolePositionWorldZ", "NULL"},
+            {"MolePositionLocalX", "NULL"},
+            {"MolePositionLocalY", "NULL"},
+            {"MolePositionLocalZ", "NULL"},
+            {"MoleLifeTime", "NULL"},
+            {"MoleActivatedDuration", "NULL"},
+            {"MoleId", "NULL"},
+            {"MoleIndexX", "NULL"},
+            {"MoleIndexY", "NULL"}
+        });
     }
 
     public void SetId(int newId)
@@ -159,13 +176,33 @@ public abstract class Mole : MonoBehaviour
                 PlayEnable();
                 break;
             case States.Popping:
+                if (!fake) 
+                {
+                    loggerNotifier.NotifyLogger("Mole Hit", new Dictionary<string, object>()
+                    {
+                        {"MoleActivatedDuration", lifeTime - activatedTimeLeft},
+                    });
+                }
+                else 
+                {
+                    loggerNotifier.NotifyLogger("Fake Mole Hit", new Dictionary<string, object>()
+                    {
+                        {"MoleActivatedDuration", lifeTime - activatedTimeLeft},
+                    });
+                }
+
                 PlayPop();
                 break;
             case States.Enabling:
+
+                if (!fake) loggerNotifier.NotifyLogger("Mole Spawned");
+                else loggerNotifier.NotifyLogger("Fake Mole Spawned");
+
                 timer = StartCoroutine(StartTimer(lifeTime));
                 PlayEnabling();
                 break;
             case States.Disabling:
+                loggerNotifier.NotifyLogger("Mole Missed");
                 PlayDisabling();
                 break;
         }
@@ -192,5 +229,23 @@ public abstract class Mole : MonoBehaviour
             return;
         }
         Disable();
+    }
+
+    // Function that will be called by the LoggerNotifier every time an event is raised, to automatically update
+    // and pass certain parameters' values.
+    private LogEventContainer UpdateLogNotifierGeneralValues()
+    {
+        return new LogEventContainer(new Dictionary<string, object>(){
+            {"MolePositionWorldX", transform.position.x},
+            {"MolePositionWorldY", transform.position.y},
+            {"MolePositionWorldZ", transform.position.z},
+            {"MolePositionLocalX", transform.localPosition.x},
+            {"MolePositionLocalY", transform.localPosition.y},
+            {"MolePositionLocalZ", transform.localPosition.z},
+            {"MoleLifeTime", lifeTime},
+            {"MoleId", id.ToString("0000")},
+            {"MoleIndexX", (int)Mathf.Floor(id/100)},
+            {"MoleIndexY", (id % 100)}   
+        });
     }
 }

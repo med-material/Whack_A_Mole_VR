@@ -41,6 +41,7 @@ public class GameDirector : MonoBehaviour
     private float currentGameTimeLeft;
     private float currentMoleTimeLeft;
     private GameState gameState = GameState.Stopped;
+    private LoggerNotifier loggerNotifier;
 
     private Dictionary<string, Dictionary<string, float>> difficulties = new Dictionary<string, Dictionary<string, float>>(){
         {"easy", new Dictionary<string, float>(){
@@ -63,6 +64,24 @@ public class GameDirector : MonoBehaviour
         }}
     };
 
+    void Start()
+    {
+        // Initialization of the LoggerNotifier. Here we will only pass parameters to PersistentEvent, even if we will also raise Events.
+        loggerNotifier = new LoggerNotifier(persistentEventsHeadersDefaults: new Dictionary<string, string>(){
+            {"GameState", "NULL"},
+            {"GameDuration", "NULL"},
+            {"GameSpeed", "NULL"},
+            {"GameTimeSpent", "NULL"},
+            {"GameTimeLeft", "NULL"}
+        });
+        // Initialization of the starting values of the parameters.
+        loggerNotifier.InitPersistentEventParameters(new Dictionary<string, object>(){
+            {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)},
+            {"GameDuration", gameDuration.ToString()},
+            {"GameSpeed", gameDifficulty}
+        });
+    }
+
     // Starts the game.
     public void StartGame()
     {
@@ -72,6 +91,10 @@ public class GameDirector : MonoBehaviour
         LoadDifficulty();
         StartMoleTimer(gameWarmUpTime);
         StartCoroutine(WaitEndGame(gameDuration));
+        loggerNotifier.NotifyLogger("Game Started", new Dictionary<string, object>()
+        {
+            {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
+        });
     }
 
     // Stops the game.
@@ -80,6 +103,10 @@ public class GameDirector : MonoBehaviour
         if (gameState == GameState.Stopped) return;
         StopAllCoroutines();
         FinishGame();
+        loggerNotifier.NotifyLogger("Game Stopped", new Dictionary<string, object>()
+        {
+            {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
+        });
     }
 
     // Pauses/unpauses the game.
@@ -91,11 +118,19 @@ public class GameDirector : MonoBehaviour
         {
             UpdateState(GameState.Paused);
             wallManager.SetPauseMole(true);
+            loggerNotifier.NotifyLogger("Game Paused", new Dictionary<string, object>()
+            {
+                {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
+            });
         }
         else if(gameState == GameState.Paused)
         {
             UpdateState(GameState.Playing);
             wallManager.SetPauseMole(false);
+            loggerNotifier.NotifyLogger("Game Unpaused", new Dictionary<string, object>()
+            {
+                {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
+            });
         }
     }
 
@@ -104,13 +139,23 @@ public class GameDirector : MonoBehaviour
     {
         if (gameState == GameState.Playing) return;
         gameDuration = duration;
+        loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>()
+        {
+            {"GameDuration", gameDuration}
+        });
     }
 
     // Sets the game difficulty.
     public void SetDifficulty(string difficulty)
     {
+        if(difficulty == gameDifficulty) return;
         gameDifficulty = difficulty;
         LoadDifficulty();
+
+        loggerNotifier.NotifyLogger("Game Speed Changed To "+gameDifficulty, new Dictionary<string, object>()
+            {
+                {"GameSpeed", gameDifficulty}
+            });
     }
 
     // Loads the difficulty.
@@ -119,7 +164,7 @@ public class GameDirector : MonoBehaviour
         difficulties.TryGetValue(gameDifficulty, out difficultySettings);
     }
 
-    // Updates the state of the game (playing, stopped, paused) and raises an event to notify any listener (UI...).
+    // Updates the state of the game (playing, stopped, paused) and raises an event to notify any listener (UI, logger...).
     private void UpdateState(GameState newState)
     {
         gameState = newState;
@@ -182,15 +227,32 @@ public class GameDirector : MonoBehaviour
             {
                 currentGameTimeLeft -= Time.deltaTime;
                 timeUpdate.Invoke(currentGameTimeLeft);
+                loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>()
+                {
+                    {"GameTimeSpent", gameDuration - currentGameTimeLeft},
+                    {"GameTimeLeft", currentGameTimeLeft}
+                });
             }
             yield return null;
         }
         timeUpdate.Invoke(0f);
+
+        loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>()
+        {
+            {"GameTimeSpent", gameDuration},
+            {"GameTimeLeft", 0f}
+        });
+
         OnGameEndTimeout();
     }
 
     private void OnGameEndTimeout()
     {
         FinishGame();
+
+        loggerNotifier.NotifyLogger("Game Finished", new Dictionary<string, object>()
+        {
+            {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
+        });
     }
 }

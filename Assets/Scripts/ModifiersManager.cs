@@ -40,14 +40,31 @@ public class ModifiersManager : MonoBehaviour
     private bool rightControllerMain;
     private float prismEffect;
     private Dictionary<string, Pointer> controllersList;
+    private LoggerNotifier loggerNotifier;
 
     void Start()
     {
         controllersList = new Dictionary<string, Pointer>(){
-            {"main", null},
-            {"second", null}
+            {"main", rightController},
+            {"second", leftController}
         };
-        SetMainController(true);
+
+        // Initialization of the LoggerNotifier. Here we will only pass parameters to PersistentEvent, even if we will also raise Events.
+        loggerNotifier = new LoggerNotifier(persistentEventsHeadersDefaults: new Dictionary<string, string>(){
+            {"RightControllerMain", "Undefined"},
+            {"MirrorEffect", "No Mirror Effect Defined"},
+            {"EyePatch", "No Eye Patch Defined"},
+            {"PrismEffect", "No Prism Effect Defined"},
+            {"DualTask", "No Dual Task Defined"}
+        });
+        // Initialization of the starting values of the parameters.
+        loggerNotifier.InitPersistentEventParameters(new Dictionary<string, object>(){
+            {"RightControllerMain", rightControllerMain},
+            {"MirrorEffect", mirrorEffect},
+            {"EyePatch", System.Enum.GetName(typeof(ModifiersManager.EyePatch), eyePatch)},
+            {"PrismEffect", prismEffect},
+            {"DualTask", dualTask}
+        });
     }
 
     // Sets an eye patch. Calls WaitForCameraAndUpdate coroutine to set eye patch.
@@ -66,6 +83,12 @@ public class ModifiersManager : MonoBehaviour
 
         mirrorEffect = value;
         UpdateMirrorEffect();
+
+        // Raises an Event and updates a PersistentEvent's parameter (in consequence, a PersistentEvent will also be raised)
+        loggerNotifier.NotifyLogger("Mirror Effect Set "+value, new Dictionary<string, object>()
+        {
+            {"MirrorEffect", value}
+        });
     }
 
     // Sets the dual task mode (if dualtask is enabled, both controllers can be used to pop moles)
@@ -79,6 +102,11 @@ public class ModifiersManager : MonoBehaviour
         {
             UpdateMirrorEffect();
         }
+
+        loggerNotifier.NotifyLogger("Dual Task Set "+value, new Dictionary<string, object>()
+        {
+            {"DualTask", value}
+        });
     }
 
     // Sets the prism effect. Shifts the view (around y axis) by a given angle to create a shifting between seen view and real positions.
@@ -87,6 +115,12 @@ public class ModifiersManager : MonoBehaviour
         prismEffect = value;
         rightControllerContainer.localEulerAngles = new Vector3(0, prismEffect, 0);
         leftControllerContainer.localEulerAngles = new Vector3(0, prismEffect, 0);
+
+        loggerNotifier.NotifyLogger("Prism Effect Set "+value, new Dictionary<string, object>()
+        {
+            {"PrismEffect", value}
+        });
+        
     }
 
     // Sets the main controller. By default it is the right handed one.
@@ -113,6 +147,11 @@ public class ModifiersManager : MonoBehaviour
         }
 
         if (!dualTask) SetControllerEnabled("second", false);
+
+        loggerNotifier.NotifyLogger("Right Controller Set Main "+rightIsMain, new Dictionary<string, object>()
+        {
+            {"RightControllerMain", rightIsMain}
+        });
     }
 
     // Updates the mirroring effect. Is called when enabling/disabling the mirror effect or when controllers are activated/deactivated (dual task, main controller change).
@@ -186,5 +225,10 @@ public class ModifiersManager : MonoBehaviour
         {
             viveCamera.stereoTargetEye = StereoTargetEyeMask.Right;
         }
+
+        loggerNotifier.NotifyLogger("Eye Patch Set "+System.Enum.GetName(typeof(ModifiersManager.EyePatch), value), new Dictionary<string, object>()
+        {
+            {"EyePatch", System.Enum.GetName(typeof(ModifiersManager.EyePatch), value)}
+        });
     }
 }
