@@ -144,7 +144,7 @@ public class WallManager : MonoBehaviour
 
     private int GetMoleId(int xIndex, int yIndex)
     {
-        return (xIndex * 100) + yIndex;
+        return ((xIndex + 1) * 100) + (yIndex + 1);
     }
 
     // Gets the Mole rotation so it is always looking away from the wall, depending on its X local position and the wall's curvature (curveCoeff)
