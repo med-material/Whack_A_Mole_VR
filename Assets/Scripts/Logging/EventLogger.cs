@@ -15,7 +15,8 @@ The EventLogger collects logs through events (raised by LoggerNotifier). There a
         want to log a row every time that they are updated due to their update frequency and that their update isn't worth logging (we don't 
         want to generate a new row every frame for the Game Time Left for example).
     
-The logs are currently saved in a CSV format when the game is stopped. Each column represents a parameter, each row represents an event.
+The logs are currently saved in a CSV format when the game is stopped, as well as sent to the CREATE SQL database.
+Each column represents a parameter, each row represents an event.
 
 Before saving, the Event are stored in the logs Dictionary as following: Dictionary(key: string, value: Dictionary(key: int, value: string))
                                                                                             ^                            ^             ^
@@ -31,6 +32,10 @@ public class EventLogger : MonoBehaviour
     [SerializeField]
     private string fileName = "log";
 
+    // Temporarily serialized. Will be managed through interface in the future
+    [SerializeField]
+    private bool saveLocally = true;
+
 
     private string completeFileName = "";
     private string filePath;
@@ -43,11 +48,13 @@ public class EventLogger : MonoBehaviour
     private Dictionary<string, string> defaultValues = new Dictionary<string, string>();
     private int logCount = 0;
     private string uid = "";
+    private ConnectToMySQL connectToMySQL;
 
 
     // On start, init the logs with the mandatory columns.
     void Start()
     {
+        connectToMySQL = gameObject.GetComponent<ConnectToMySQL>();
         logs.Add("TimeStamp", new Dictionary<int, string>());
         logs.Add("TimeSinceLastEvent", new Dictionary<int, string>());
         logs.Add("GameId", new Dictionary<int, string>());
@@ -106,7 +113,8 @@ public class EventLogger : MonoBehaviour
             case "Game Finished":
                 trackerHub.StopTrackers();
                 SaveEventDatas(datas);
-                SaveLogs();
+                SaveCsvLogs();
+                SaveSqlLogs();
                 ResetLogs();
                 break;
             case "Mole Spawned":
@@ -240,11 +248,58 @@ public class EventLogger : MonoBehaviour
         logCount++;
     }
 
+
+    private void SaveSqlLogs()
+    {
+        Dictionary<string, List<string>> logCollection = new Dictionary<string, List<string>>();
+        logCollection.Add("Email", new List<string>());
+        for(int i = 0; i < logCount; i++)
+        {
+            logCollection["Email"].Add("dull.mail@create.aau.dk");
+        }
+        string temp;
+
+        foreach(KeyValuePair<string, Dictionary<int, string>> pair in logs)
+        {
+            logCollection.Add(pair.Key, new List<string>());
+            
+            for(int i = 0; i < logCount; i++)
+            {
+                if (pair.Value.TryGetValue(i, out temp))
+                {
+                    logCollection[pair.Key].Add(temp);
+                }
+                else
+                {
+                    if(defaultValues.TryGetValue(pair.Key, out temp))
+                    {
+                        logCollection[pair.Key].Add(temp);
+                    }
+                    else
+                    {
+                        logCollection[pair.Key].Add("NULL");
+                    }
+                }
+            }
+        }
+        SendSqlLogs(logCollection);
+    }
+
+
+    private void SendSqlLogs(Dictionary<string, List<string>> logCollection)
+    {
+        connectToMySQL.AddToUploadQueue(logCollection);
+        connectToMySQL.UploadNow();
+    }
+
+
     // Formats the logs to a CSV row format and saves them. Calls the CSV headers generation beforehand.
     // If a parameter doesn't have a value for a given row, uses the given value given previously (see 
     // UpdateHeadersAndDefaults).
-    private void SaveLogs()
+    private void SaveCsvLogs()
     {
+        if(!saveLocally) return;
+
         GenerateHeaders();
         string temp;
         for (int i = 0; i < logCount; i++)
@@ -331,7 +386,7 @@ public class EventLogger : MonoBehaviour
     // Returns a time stamp including the milliseconds.
     private string GetTimeStamp()
     {
-        return System.DateTime.Now.ToString() + "." + System.DateTime.Now.Millisecond.ToString();
+        return System.DateTime.Now.ToString().Replace('/', '-') + "." + System.DateTime.Now.Millisecond.ToString();
     }
 
     // Initialises the CSV file parameters (name and file path).
