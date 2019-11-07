@@ -136,7 +136,7 @@ public abstract class Pointer : MonoBehaviour
         {
             if (hit.collider.gameObject.TryGetComponent<Mole>(out mole))
             {
-                mole.Pop();
+                mole.Pop(hit.point);
             }
         }
         PlayShoot();

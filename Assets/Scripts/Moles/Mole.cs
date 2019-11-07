@@ -21,6 +21,7 @@ public abstract class Mole : MonoBehaviour
     private float activatedTimeLeft;
     private bool isPaused = false;
     private LoggerNotifier loggerNotifier;
+    private Vector3 lastHitPoint = new Vector3();
 
     protected virtual void Start()
     {
@@ -39,8 +40,11 @@ public abstract class Mole : MonoBehaviour
             {"MoleActivatedDuration", "NULL"},
             {"MoleId", "NULL"},
             {"MoleIndexX", "NULL"},
-            {"MoleIndexY", "NULL"}
+            {"MoleIndexY", "NULL"},
+            {"MoleSurfaceHitLocationX", "NULL"},
+            {"MoleSurfaceHitLocationY", "NULL"}
         });
+
     }
 
     public void SetId(int newId)
@@ -82,13 +86,14 @@ public abstract class Mole : MonoBehaviour
         EnterState(States.Disabled);
     }
 
-    public void Pop()
+    public void Pop(Vector3 hitPoint)
     {
         if (isPaused) return;
         if (state != States.Enabled && state != States.Enabling)
         {
             return;
         }
+        lastHitPoint = Quaternion.AngleAxis(-transform.rotation.y,Vector3.up) * (hitPoint - transform.position);
         ChangeState(States.Popping);
     }
 
@@ -177,6 +182,8 @@ public abstract class Mole : MonoBehaviour
                     loggerNotifier.NotifyLogger("Mole Hit", new Dictionary<string, object>()
                     {
                         {"MoleActivatedDuration", lifeTime - activatedTimeLeft},
+                        {"MoleSurfaceHitLocationX", lastHitPoint.x},
+                        {"MoleSurfaceHitLocationY", lastHitPoint.y}
                     });
                 }
                 else 
@@ -184,6 +191,8 @@ public abstract class Mole : MonoBehaviour
                     loggerNotifier.NotifyLogger("Fake Mole Hit", new Dictionary<string, object>()
                     {
                         {"MoleActivatedDuration", lifeTime - activatedTimeLeft},
+                        {"MoleSurfaceHitLocationX", lastHitPoint.x},
+                        {"MoleSurfaceHitLocationY", lastHitPoint.y}
                     });
                 }
 

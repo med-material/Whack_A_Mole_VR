@@ -32,7 +32,7 @@ public class TestMole : MonoBehaviour
         if (Input.GetButtonDown("Submit"))
         {
             Debug.Log("Pop");
-            mole.Pop();
+            mole.Pop(new Vector3(0f, 0f, 0f));
         }
     }
 }
