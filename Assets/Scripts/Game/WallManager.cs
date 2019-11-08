@@ -151,11 +151,7 @@ public class WallManager : MonoBehaviour
     private Quaternion DefineMoleRotation(Vector2 molePosXZ)
     {
         Quaternion lookAngle = new Quaternion();
-        lookAngle.eulerAngles = new Vector3(0f, -Vector2.SignedAngle(Vector2.right, new Vector2(molePosXZ.x - wallCenter.x, molePosXZ.y - wallCenter.z)), 0f);
-        if (molePosXZ.x - wallCenter.x < 0)
-        {
-            lookAngle.eulerAngles += new Vector3(0f, 180, 0f);
-        }
+        lookAngle.eulerAngles = new Vector3(0f, 50f * (molePosXZ.x / (wallSize.x / 2)), 0f);
         return lookAngle;
     }
 }
