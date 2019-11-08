@@ -48,6 +48,7 @@ public class ModifiersManager : MonoBehaviour
             {"main", rightController},
             {"second", leftController}
         };
+        SetControllerEnabled("main");
 
         // Initialization of the LoggerNotifier. Here we will only pass parameters to PersistentEvent, even if we will also raise Events.
         loggerNotifier = new LoggerNotifier(persistentEventsHeadersDefaults: new Dictionary<string, string>(){
