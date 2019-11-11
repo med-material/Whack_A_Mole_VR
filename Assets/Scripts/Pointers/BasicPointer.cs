@@ -17,16 +17,15 @@ public class BasicPointer : Pointer
     {
         laser.startColor = shootColor;
         laser.endColor = shootColor;
-        cursorRenderer.material.color = shootColor;
-        StartCoroutine(Wait(.2f, new Del(ResetLaser)));
+        cursor.SetColor(shootColor);
+        StartCoroutine(Wait(.1f, new Del(ResetLaser)));
     }
 
     private void ResetLaser()
     {
         laser.startColor = startLaserColor;
         laser.endColor = EndLaserColor;
-        cursorRenderer.material.color = EndLaserColor;
-        base.PlayShoot();
+        cursor.SetColor(EndLaserColor);
     }
 
     private IEnumerator Wait(float duration, Del method)

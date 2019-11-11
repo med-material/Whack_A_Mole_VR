@@ -33,21 +33,25 @@ public abstract class Pointer : MonoBehaviour
     [SerializeField]
     protected float maxLaserLength;
 
-    [SerializeField]
-    protected GameObject cursor;
-
     protected LineRenderer laser;
-    protected Renderer cursorRenderer;
+    protected LaserCursor cursor;
     private States state = States.Idle;
     private Mole hoveredMole;
     private bool active = false;
+
+
+    // On Awake, gets the cursor object if there is one.
+    void Awake()
+    {
+        cursor = gameObject.GetComponentInChildren<LaserCursor>();
+    }
 
     // Enables the pointer
     public void Enable()
     {
         if (active) return;
 
-        cursor.GetComponent<MeshRenderer>().enabled = true;
+        if (cursor) cursor.Enable();
 
         if (!laser)
         {
@@ -65,7 +69,7 @@ public abstract class Pointer : MonoBehaviour
     {
         if (!active) return;
 
-        cursor.GetComponent<MeshRenderer>().enabled = false;
+        if (cursor) cursor.Disable();
 
         if (laser) laser.enabled = false;
         active = false;
@@ -145,14 +149,15 @@ public abstract class Pointer : MonoBehaviour
     private void UpdateLaser(bool hit, float distance)
     {
         laser.SetPosition(1, laserOrigin + Vector3.forward * distance);
-        if (cursorRenderer.enabled != hit)
+
+        if (!cursor) return;
+
+        if (cursor.IsEnabled() != hit)
         {
-            cursorRenderer.enabled = hit;
+            if (hit) cursor.Enable();
+            else cursor.Disable();
         }
-        if (hit)
-        {
-            cursor.transform.localPosition = laserOrigin + Vector3.forward * distance;
-        }
+        if (hit) cursor.SetPosition(laserOrigin + Vector3.forward * distance);
     }
 
     private void InitLaser()
@@ -166,12 +171,10 @@ public abstract class Pointer : MonoBehaviour
         laser.startWidth = laserWidth;
         laser.endWidth = laserWidth;
 
-        if (cursor)
-        {
-            cursorRenderer = cursor.GetComponent<Renderer>();
-            cursorRenderer.material.color = EndLaserColor;
-            cursorRenderer.enabled = false;
-        }
+        if (!cursor) return;
+
+        cursor.SetColor(EndLaserColor);
+        cursor.Disable();
     }
 
 }
