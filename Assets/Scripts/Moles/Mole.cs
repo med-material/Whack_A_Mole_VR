@@ -86,15 +86,16 @@ public abstract class Mole : MonoBehaviour
         EnterState(States.Disabled);
     }
 
-    public void Pop(Vector3 hitPoint)
+    public bool Pop(Vector3 hitPoint)
     {
-        if (isPaused) return;
+        if (isPaused) return false;
         if (state != States.Enabled && state != States.Enabling)
         {
-            return;
+            return false;
         }
         lastHitPoint = Quaternion.AngleAxis(-transform.rotation.y,Vector3.up) * (hitPoint - transform.position);
         ChangeState(States.Popping);
+        return !fake;
     }
 
     public void OnHoverEnter()

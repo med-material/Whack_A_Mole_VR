@@ -10,7 +10,7 @@ functions on events to be overriden in its derived classes.
 
 public abstract class Pointer : MonoBehaviour
 {
-    private enum States {Idle, Shooting}
+    private enum States {Idle, CoolingDown}
 
     [SerializeField]
     private SteamVR_Input_Sources controller;
@@ -33,6 +33,9 @@ public abstract class Pointer : MonoBehaviour
     [SerializeField]
     protected float maxLaserLength;
 
+    [SerializeField]
+    protected float shotCooldown;
+
     protected LineRenderer laser;
     protected LaserCursor cursor;
     private States state = States.Idle;
@@ -40,10 +43,11 @@ public abstract class Pointer : MonoBehaviour
     private bool active = false;
 
 
-    // On Awake, gets the cursor object if there is one.
+    // On Awake, gets the cursor object if there is one. Also connects the PositionUpdated function to the VR update event.
     void Awake()
     {
         cursor = gameObject.GetComponentInChildren<LaserCursor>();
+        gameObject.GetComponent<SteamVR_Behaviour_Pose>().onTransformUpdated.AddListener(delegate{PositionUpdated();});
     }
 
     // Enables the pointer
@@ -61,6 +65,7 @@ public abstract class Pointer : MonoBehaviour
         {
             laser.enabled = true;
         }
+        state = States.Idle;
         active = true;
     }
 
@@ -75,7 +80,8 @@ public abstract class Pointer : MonoBehaviour
         active = false;
     }
 
-    void Update()
+    // Function called on VR update, since it can be faster/not synchronous to Update() function. Makes the Pointer slightly more reactive.
+    public void PositionUpdated()
     {
         if (!active) return;
 
@@ -102,11 +108,11 @@ public abstract class Pointer : MonoBehaviour
         }
     }
 
-    protected virtual void PlayShoot() 
-    {
-        state = States.Idle;
-    }
+    // Functions to call in the class implementation to add extra animation/effect behavior on shoot/cooldown.
+    protected virtual void PlayShoot(bool correctHit) {}
+    protected virtual void PlayCooldownEnd() {}
 
+    // Checks if a Mole is hovered and tells it to play the hovered efect.
     private void hoverMole(RaycastHit hit)
     {
         Mole mole;
@@ -132,20 +138,26 @@ public abstract class Pointer : MonoBehaviour
         }
     }
 
+    // Shoots a raycast. If Mole is hit, calls its Pop() function. Depending on the hit result, plays the hit/missed shooting animation.
     private void Shoot(RaycastHit hit)
     {
         Mole mole;
-        state = States.Shooting;
+
+        state = States.CoolingDown;
+        StartCoroutine(WaitForCooldown());
+
         if (hit.collider)
         {
             if (hit.collider.gameObject.TryGetComponent<Mole>(out mole))
             {
-                mole.Pop(hit.point);
+                PlayShoot(mole.Pop(hit.point));
+                return;
             }
         }
-        PlayShoot();
+        PlayShoot(false);
     }
 
+    // Updates the laser position. If the raycast hits something, places the cursor in consequence.
     private void UpdateLaser(bool hit, float distance)
     {
         laser.SetPosition(1, laserOrigin + Vector3.forward * distance);
@@ -160,6 +172,7 @@ public abstract class Pointer : MonoBehaviour
         if (hit) cursor.SetPosition(laserOrigin + Vector3.forward * distance);
     }
 
+    // Inits the laser.
     private void InitLaser()
     {
         laser = gameObject.AddComponent<LineRenderer>();
@@ -170,6 +183,7 @@ public abstract class Pointer : MonoBehaviour
         laser.endColor = EndLaserColor;
         laser.startWidth = laserWidth;
         laser.endWidth = laserWidth;
+        laser.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
         if (!cursor) return;
 
@@ -177,4 +191,11 @@ public abstract class Pointer : MonoBehaviour
         cursor.Disable();
     }
 
+    // Waits the CoolDown duration.
+    private IEnumerator WaitForCooldown()
+    {
+        yield return new WaitForSeconds(shotCooldown);
+        state = States.Idle;
+        PlayCooldownEnd();
+    }
 }
