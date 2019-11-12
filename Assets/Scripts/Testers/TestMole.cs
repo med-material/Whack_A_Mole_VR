@@ -17,7 +17,7 @@ public class TestMole : MonoBehaviour
         if (Input.GetButtonDown("Jump"))
         {
             Debug.Log("Enable");
-            mole.Enable(2);
+            mole.Enable(2f, .2f);
         }
         if (Input.GetButtonDown("Fire1"))
         {

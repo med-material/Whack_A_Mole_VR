@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 /*
 Mole abstract class. Contains the main behaviour of the mole and calls actions to be played on
@@ -12,16 +13,21 @@ Facilitates the creation of moles with different behaviours on specific events
 
 public abstract class Mole : MonoBehaviour
 {
-    protected enum States {Disabled, Enabled, Popping, Enabling, Disabling}
+    public enum MolePopAnswer {Ok, Fake, Expired, Disabled, Paused}
+    protected enum States {Disabled, Enabled, Expired, Popping, Enabling, Disabling}
     protected States state = States.Disabled;
     protected bool fake = false;
+
+    private class StateUpdateEvent: UnityEvent<bool, Mole>{};
+    private StateUpdateEvent stateUpdateEvent = new StateUpdateEvent();
     private Coroutine timer;
     private float lifeTime;
+    private float expiringTime;
     private int id = -1;
     private float activatedTimeLeft;
+    private float expiringTimeLeft;
     private bool isPaused = false;
     private LoggerNotifier loggerNotifier;
-    private Vector3 lastHitPoint = new Vector3();
 
     protected virtual void Start()
     {
@@ -44,7 +50,6 @@ public abstract class Mole : MonoBehaviour
             {"MoleSurfaceHitLocationX", "NULL"},
             {"MoleSurfaceHitLocationY", "NULL"}
         });
-
     }
 
     public void SetId(int newId)
@@ -59,13 +64,14 @@ public abstract class Mole : MonoBehaviour
 
     public bool IsActive()
     {
-        return (state == States.Enabled || state == States.Enabling);
+        return (state == States.Enabled || state == States.Enabling || state == States.Disabling);
     }
 
-    public void Enable(float enabledLifeTime, bool isFake = false)
+    public void Enable(float enabledLifeTime, float expiringDuration, bool isFake = false)
     {
         fake = isFake;
         lifeTime = enabledLifeTime;
+        expiringTime = expiringDuration;
         ChangeState(States.Enabling);
     }
 
@@ -86,16 +92,49 @@ public abstract class Mole : MonoBehaviour
         EnterState(States.Disabled);
     }
 
-    public bool Pop(Vector3 hitPoint)
+    // Pops the Mole. Returns an answer correspondind to its poping state.
+    public MolePopAnswer Pop(Vector3 hitPoint)
     {
-        if (isPaused) return false;
-        if (state != States.Enabled && state != States.Enabling)
+        if (isPaused) return MolePopAnswer.Paused;
+        if (state != States.Enabled && state != States.Enabling && state != States.Expired) return MolePopAnswer.Disabled;
+
+        Vector3 localHitPoint = Quaternion.AngleAxis(-transform.rotation.y,Vector3.up) * (hitPoint - transform.position);
+
+        if (state == States.Expired)
         {
-            return false;
+            loggerNotifier.NotifyLogger("Expired Mole Hit", new Dictionary<string, object>()
+            {
+                {"MoleExpiredDuration", expiringTime - expiringTimeLeft},
+                {"MoleSurfaceHitLocationX", localHitPoint.x},
+                {"MoleSurfaceHitLocationY", localHitPoint.y}
+            });
+            return MolePopAnswer.Expired;
         }
-        lastHitPoint = Quaternion.AngleAxis(-transform.rotation.y,Vector3.up) * (hitPoint - transform.position);
-        ChangeState(States.Popping);
-        return !fake;
+
+        if (!fake) 
+        {
+            loggerNotifier.NotifyLogger("Mole Hit", new Dictionary<string, object>()
+            {
+                {"MoleActivatedDuration", lifeTime - activatedTimeLeft},
+                {"MoleSurfaceHitLocationX", localHitPoint.x},
+                {"MoleSurfaceHitLocationY", localHitPoint.y}
+            });
+
+            ChangeState(States.Popping);
+            return MolePopAnswer.Ok;
+        }
+        else 
+        {
+            loggerNotifier.NotifyLogger("Fake Mole Hit", new Dictionary<string, object>()
+            {
+                {"MoleActivatedDuration", lifeTime - activatedTimeLeft},
+                {"MoleSurfaceHitLocationX", localHitPoint.x},
+                {"MoleSurfaceHitLocationY", localHitPoint.y}
+            });
+
+            ChangeState(States.Popping);
+            return MolePopAnswer.Fake;
+        }
     }
 
     public void OnHoverEnter()
@@ -116,6 +155,11 @@ public abstract class Mole : MonoBehaviour
         PlayHoverLeave();
     }
 
+    public UnityEvent<bool, Mole> GetUpdateEvent()
+    {
+        return stateUpdateEvent;
+    }
+
     protected virtual void PlayEnable() {}
     protected virtual void PlayDisable() {}
     protected virtual void PlayHoverEnter() {}
@@ -131,7 +175,7 @@ public abstract class Mole : MonoBehaviour
     }
     protected virtual void PlayDisabling() 
     {
-        ChangeState(States.Disabled);
+        ChangeState(States.Expired);
     }
     protected virtual void PlayPop() 
     {
@@ -149,6 +193,7 @@ public abstract class Mole : MonoBehaviour
         EnterState(state);
     }
 
+    // Does certain actions when leaving a state.
     private void LeaveState(States state)
     {
         switch(state)
@@ -167,6 +212,7 @@ public abstract class Mole : MonoBehaviour
         }
     }
 
+    // Does certain actions when entering a state.
     private void EnterState(States state)
     {
         switch(state)
@@ -178,25 +224,6 @@ public abstract class Mole : MonoBehaviour
                 PlayEnable();
                 break;
             case States.Popping:
-                if (!fake) 
-                {
-                    loggerNotifier.NotifyLogger("Mole Hit", new Dictionary<string, object>()
-                    {
-                        {"MoleActivatedDuration", lifeTime - activatedTimeLeft},
-                        {"MoleSurfaceHitLocationX", lastHitPoint.x},
-                        {"MoleSurfaceHitLocationY", lastHitPoint.y}
-                    });
-                }
-                else 
-                {
-                    loggerNotifier.NotifyLogger("Fake Mole Hit", new Dictionary<string, object>()
-                    {
-                        {"MoleActivatedDuration", lifeTime - activatedTimeLeft},
-                        {"MoleSurfaceHitLocationX", lastHitPoint.x},
-                        {"MoleSurfaceHitLocationY", lastHitPoint.y}
-                    });
-                }
-
                 PlayPop();
                 break;
             case States.Enabling:
@@ -204,17 +231,27 @@ public abstract class Mole : MonoBehaviour
                 if (!fake) loggerNotifier.NotifyLogger("Mole Spawned");
                 else loggerNotifier.NotifyLogger("Fake Mole Spawned");
 
-                timer = StartCoroutine(StartTimer(lifeTime));
+                if (!fake) stateUpdateEvent.Invoke(true, this);
+
+                timer = StartCoroutine(StartActivatedTimer(lifeTime));
                 PlayEnabling();
                 break;
             case States.Disabling:
-                loggerNotifier.NotifyLogger("Mole Missed");
+                if (!fake) loggerNotifier.NotifyLogger("Mole Expired");
+                else loggerNotifier.NotifyLogger("Fake Mole Expired");
+
+                if (!fake) stateUpdateEvent.Invoke(false, this);
+
                 PlayDisabling();
+                break;
+            case States.Expired:
+                StartCoroutine(StartExpiringTimer(expiringTime));
                 break;
         }
     }
 
-    private IEnumerator StartTimer(float duration)
+    // IEnumerator starting the enabled timer.
+    private IEnumerator StartActivatedTimer(float duration)
     {
         activatedTimeLeft = duration;
         while (activatedTimeLeft > 0)
@@ -225,16 +262,27 @@ public abstract class Mole : MonoBehaviour
             }
             yield return null;
         }
-        OnTimeout();
+
+        if (state == States.Enabled)
+        {
+            Disable();
+        }
     }
 
-    private void OnTimeout()
+    // IEnumerator starting the expiring timer.
+    private IEnumerator StartExpiringTimer(float duration)
     {
-        if (state != States.Enabled)
+        expiringTimeLeft = duration;
+        while (activatedTimeLeft > 0)
         {
-            return;
+            if (!isPaused)
+            {
+                expiringTimeLeft -= Time.deltaTime;
+            }
+            yield return null;
         }
-        Disable();
+
+        EnterState(States.Disabled);
     }
 
     // Function that will be called by the LoggerNotifier every time an event is raised, to automatically update

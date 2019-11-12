@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 /*
 Spawns, references and activates the moles. Is the only component to directly interact with the moles.
@@ -32,8 +33,9 @@ public class WallManager : MonoBehaviour
     [SerializeField]
     private float heightOffset;
 
+    private class StateUpdateEvent: UnityEvent<bool, List<Mole>> {};
+    private StateUpdateEvent stateUpdateEvent = new StateUpdateEvent();
     private Vector3 wallCenter;
-
     private List<Mole> moles = new List<Mole>();
     private bool active = false;
 
@@ -62,14 +64,15 @@ public class WallManager : MonoBehaviour
     {
         active = false;
         DestroyWall();
+        stateUpdateEvent.Invoke(false, moles);
     }
 
     // Activates a random Mole for a given lifeTime and s fake or not
-    public void ActivateMole(float lifeTime, bool isFake)
+    public void ActivateMole(float lifeTime, float moleExpiringDuration, bool isFake)
     {
         if (!active) return;
 
-        GetRandomMole().Enable(lifeTime, isFake);
+        GetRandomMole().Enable(lifeTime, moleExpiringDuration, isFake);
     }
 
     // Pauses/unpauses the moles
@@ -79,6 +82,11 @@ public class WallManager : MonoBehaviour
         {
             mole.SetPause(pause);
         }
+    }
+
+    public UnityEvent<bool, List<Mole>> GetUpdateEvent()
+    {
+        return stateUpdateEvent;
     }
 
     // Returns a random, inactive Mole
@@ -134,6 +142,7 @@ public class WallManager : MonoBehaviour
                 moles.Add(mole);
             }
         }
+        stateUpdateEvent.Invoke(true, moles);
     }
 
     // Gets the Mole position depending on its index, the wall size (x and y axes of the vector3), and also on the curve coefficient (for the z axis).

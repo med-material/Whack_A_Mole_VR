@@ -31,6 +31,9 @@ public class GameDirector : MonoBehaviour
     private float gameWarmUpTime = 3f;
 
     [SerializeField]
+    private float moleExpiringDuration = .2f;
+
+    [SerializeField]
     public TimeUpdateEvent timeUpdate;
 
     [SerializeField]
@@ -180,7 +183,7 @@ public class GameDirector : MonoBehaviour
 
     private void SpawnMole(float lifeTime, bool fakeCoeff)
     {
-        wallManager.ActivateMole(lifeTime, fakeCoeff);
+        wallManager.ActivateMole(lifeTime, moleExpiringDuration, fakeCoeff);
     }
 
     private void StartMoleTimer(float setTime = -1)

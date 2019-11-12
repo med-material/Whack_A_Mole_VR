@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR;
+using UnityEngine.Events;
 
 /*
 Abstract class of the VR pointer used to pop moles. Like the Mole class, calls specific empty
@@ -38,9 +39,11 @@ public abstract class Pointer : MonoBehaviour
 
     protected LineRenderer laser;
     protected LaserCursor cursor;
+
     private States state = States.Idle;
     private Mole hoveredMole;
     private bool active = false;
+    private LoggerNotifier loggerNotifier;
 
 
     // On Awake, gets the cursor object if there is one. Also connects the PositionUpdated function to the VR update event.
@@ -49,6 +52,17 @@ public abstract class Pointer : MonoBehaviour
         cursor = gameObject.GetComponentInChildren<LaserCursor>();
         gameObject.GetComponent<SteamVR_Behaviour_Pose>().onTransformUpdated.AddListener(delegate{PositionUpdated();});
     }
+
+    // On start, inits the logger notifier.
+    void Start()
+    {
+        loggerNotifier = new LoggerNotifier(eventsHeadersDefaults: new Dictionary<string, string>(){
+            {"HitPositionWorldX", "NULL"},
+            {"HitPositionWorldY", "NULL"},
+            {"HitPositionWorldZ", "NULL"}
+        });
+    }
+
 
     // Enables the pointer
     public void Enable()
@@ -138,7 +152,8 @@ public abstract class Pointer : MonoBehaviour
         }
     }
 
-    // Shoots a raycast. If Mole is hit, calls its Pop() function. Depending on the hit result, plays the hit/missed shooting animation.
+    // Shoots a raycast. If Mole is hit, calls its Pop() function. Depending on the hit result, plays the hit/missed shooting animation
+    // and raises a "Mole Missed" event.
     private void Shoot(RaycastHit hit)
     {
         Mole mole;
@@ -150,11 +165,25 @@ public abstract class Pointer : MonoBehaviour
         {
             if (hit.collider.gameObject.TryGetComponent<Mole>(out mole))
             {
-                PlayShoot(mole.Pop(hit.point));
+                Mole.MolePopAnswer moleAnswer = mole.Pop(hit.point);
+
+                if (moleAnswer == Mole.MolePopAnswer.Disabled) RaiseMoleMissedEvent(hit.point);
+                PlayShoot(moleAnswer == Mole.MolePopAnswer.Ok);
                 return;
             }
+            RaiseMoleMissedEvent(hit.point);
         }
         PlayShoot(false);
+    }
+
+    // Function raising a "Mole Missed" event.
+    private void RaiseMoleMissedEvent(Vector3 hitPosition)
+    {
+        loggerNotifier.NotifyLogger("Mole Missed", new Dictionary<string, object>(){
+            {"HitPositionWorldX", hitPosition.x},
+            {"HitPositionWorldY", hitPosition.y},
+            {"HitPositionWorldZ", hitPosition.z}
+        });
     }
 
     // Updates the laser position. If the raycast hits something, places the cursor in consequence.

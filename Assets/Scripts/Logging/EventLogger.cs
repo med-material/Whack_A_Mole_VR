@@ -49,12 +49,15 @@ public class EventLogger : MonoBehaviour
     private int logCount = 0;
     private string uid = "";
     private ConnectToMySQL connectToMySQL;
+    private WallStateTracker wallStateTracker;
 
 
     // On start, init the logs with the mandatory columns.
     void Start()
     {
         connectToMySQL = gameObject.GetComponent<ConnectToMySQL>();
+        wallStateTracker = gameObject.GetComponent<WallStateTracker>();
+
         logs.Add("TimeStamp", new Dictionary<int, string>());
         logs.Add("TimeSinceLastEvent", new Dictionary<int, string>());
         logs.Add("GameId", new Dictionary<int, string>());
@@ -124,8 +127,13 @@ public class EventLogger : MonoBehaviour
             case "Fake Mole Spawned":
                 SaveEventDatas(datas, true, true);
                 break;
-            case "Mole Hit":
             case "Mole Missed":
+                datas = AddClosestActiveMole(datas);
+                SaveEventDatas(datas, true, true);
+                break;
+            case "Mole Hit":
+            case "Mole Expired":
+            case "Fake Mole Expired":
             case "Wrong Mole Hit":
                 if (currentMoleLog.ContainsKey("CurrentMoleId"))
                 {
@@ -191,6 +199,18 @@ public class EventLogger : MonoBehaviour
         currentMoleLog["CurrentMoleToHitPositionLocalX"] = datas["MolePositionLocalX"];
         currentMoleLog["CurrentMoleToHitPositionLocalY"] = datas["MolePositionLocalY"];
         currentMoleLog["CurrentMoleToHitPositionLocalZ"] = datas["MolePositionLocalZ"];
+    }
+
+    // Adds to the datas the closest active Mole entries.
+    private Dictionary<string, object> AddClosestActiveMole(Dictionary<string, object> datas)
+    {
+        if (!datas.ContainsKey("HitPositionWorldX") || !datas.ContainsKey("HitPositionWorldY") || !datas.ContainsKey("HitPositionWorldZ")) return datas;
+
+        Vector2 closestActiveMoleDist = wallStateTracker.GetClosestDistPointToMole(new Vector3((float)datas["HitPositionWorldX"], (float)datas["HitPositionWorldY"], (float)datas["HitPositionWorldZ"]));
+        datas.Add("ClosestActiveMoleDistanceX", closestActiveMoleDist.x);
+        datas.Add("ClosestActiveMoleDistanceY", closestActiveMoleDist.y);
+
+        return datas;
     }
 
     // Save the datas of an Event. Amends to the datas extra parameters if asked to.
