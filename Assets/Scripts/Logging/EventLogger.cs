@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 using System;
+using System.Globalization;
 
 /*
 Class dedicated to gather logs, organize, format and save them.
@@ -374,7 +375,7 @@ public class EventLogger : MonoBehaviour
         object testId;
         persistentLog.TryGetValue("ParticipantId", out participantId);
         persistentLog.TryGetValue("TestId", out testId);
-        uid = participantId.ToString() + testId.ToString() + System.DateTime.Now.ToString().Replace(" ", "").Replace("/", "").Replace(":", "");
+        uid = participantId.ToString() + testId.ToString() + System.DateTime.Now.ToString(new CultureInfo("en-GB")).Replace(" ", "").Replace("/", "").Replace(":", "");
     }
 
     // Converts the values of the parameters (in a "object format") to a string, formatting them to the
@@ -406,7 +407,7 @@ public class EventLogger : MonoBehaviour
     // Returns a time stamp including the milliseconds.
     private string GetTimeStamp()
     {
-        return System.DateTime.Now.ToString().Replace('/', '-') + "." + System.DateTime.Now.Millisecond.ToString();
+        return System.DateTime.Now.ToString(new CultureInfo("en-GB")).Replace('/', '-') + "." + System.DateTime.Now.Millisecond.ToString();
     }
 
     // Initialises the CSV file parameters (name and file path).
