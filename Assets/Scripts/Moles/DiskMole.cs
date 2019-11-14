@@ -25,6 +25,9 @@ public class DiskMole : Mole
     private Color fakeHoverColor;
 
     [SerializeField]
+    private Color popColor;
+
+    [SerializeField]
     private AudioClip enableSound;
 
     [SerializeField]
@@ -33,19 +36,27 @@ public class DiskMole : Mole
     [SerializeField]
     private AudioClip popSound;
 
-    private delegate void Del();
     private Shader opaqueShader;
     private Shader glowShader;
-    private Material ballMaterial;
+    private Material meshMaterial;
     private AudioSource audioSource;
+    private Animation animationPlayer;
+    private Coroutine colorAnimation;
+    private string playingClip = "";
 
     protected override void Start()
     {
-        ballMaterial = gameObject.GetComponent<Renderer>().material;
+        animationPlayer = gameObject.GetComponent<Animation>();
+        meshMaterial = gameObject.GetComponentInChildren<Renderer>().material;
         opaqueShader = Shader.Find("Standard");
         glowShader = Shader.Find("Particles/Standard Unlit");
         audioSource = gameObject.GetComponent<AudioSource>();
         base.Start();
+    }
+
+    public void EndPlayPop()
+    {
+        base.PlayPop();
     }
 
     /*
@@ -54,77 +65,75 @@ public class DiskMole : Mole
 
     protected override void PlayEnabling()
     {
-        PlaySound(enableSound);
         base.PlayEnabling();
     }
 
     protected override void PlayEnable() 
     {
+        PlaySound(enableSound);
         SwitchShader(false);
+        PlayAnimation("EnableDisable");
 
         if (!fake)
         {
-            ChangeColor(enabledColor);
+            PlayTransitionColor(getAnimationDuration(), meshMaterial.color, enabledColor);
         }
         else
         {
-            ChangeColor(fakeEnabledColor);
+            PlayTransitionColor(getAnimationDuration(), meshMaterial.color, fakeEnabledColor);
         }
     }
 
     protected override void PlayDisabling()
     {
-        PlaySound(enableSound);
         base.PlayDisabling();
     }
 
     protected override void PlayDisable()
     {
+        PlaySound(enableSound);
         SwitchShader(false);
-        ChangeColor(disabledColor);
+        PlayAnimation("EnableDisable");
+        PlayTransitionColor(getAnimationDuration(), meshMaterial.color, disabledColor);
     }
 
     protected override void PlayHoverEnter() 
     {
         SwitchShader(true);
+        PlayAnimation("HoverEnter");
         if (!fake)
         {
-            ChangeColor(hoverColor);
+            PlayTransitionColor(getAnimationDuration(), meshMaterial.color, hoverColor);
         }
         else
         {
-            ChangeColor(fakeHoverColor);
+            PlayTransitionColor(getAnimationDuration(), meshMaterial.color, fakeHoverColor);
         }
     }
 
     protected override void PlayHoverLeave() 
     {
         SwitchShader(false);
+        PlayAnimation("HoverExit");
         if (!fake)
         {
-            ChangeColor(enabledColor);
+            PlayTransitionColor(getAnimationDuration(), meshMaterial.color, enabledColor);
         }
         else
         {
-            ChangeColor(fakeEnabledColor);
+            PlayTransitionColor(getAnimationDuration(), meshMaterial.color, fakeEnabledColor);
         }
     }
 
     protected override void PlayPop() 
     {
         SwitchShader(true);
-        if (!fake)
-        {
-            ChangeColor(enabledColor);
-        }
-        else
-        {
-            ChangeColor(fakeEnabledColor);
-        }
+        PlayAnimation("PopOscill");
+        PlayTransitionColor(getAnimationDuration(), popColor, disabledColor);
         PlaySound(popSound);
-        StartCoroutine(Wait(.2f, new Del(base.PlayPop)));
     }
 
+    // Plays a sound.
     private void PlaySound(AudioClip audioClip)
     {
         if (!audioSource)
@@ -135,28 +144,76 @@ public class DiskMole : Mole
         audioSource.Play();
     }
 
-    private void ChangeColor(Color color)
+    // Plays an animation clip.
+    private void PlayAnimation(string animationName)
     {
-        ballMaterial.color = color;
+        playingClip = animationName;
+        animationPlayer.Play(animationName);
     }
 
+    // Returns the duration of the currently playing animation clip.
+    private float getAnimationDuration()
+    {
+        return animationPlayer.GetClip(playingClip).length;
+    }
+
+    // Sets up the TransitionColor coroutine to smoothly transition between two colors.
+    private void PlayTransitionColor(float duration, Color startColor, Color endColor)
+    {
+        if (colorAnimation != null) StopCoroutine(colorAnimation);
+        colorAnimation = StartCoroutine(TransitionColor(duration, startColor, endColor));
+    }
+
+    // Changes the color of the mesh.
+    private void ChangeColor(Color color)
+    {
+        meshMaterial.color = color;
+    }
+
+    // Switches between the glowing and standard shader.
     private void SwitchShader(bool glow = false)
     {
         if (glow)
         {
-            if (ballMaterial.shader.name == glowShader.name) return;
-            ballMaterial.shader = glowShader;
+            if (meshMaterial.shader.name == glowShader.name) return;
+            meshMaterial.shader = glowShader;
         }
         else
         {
-            if (ballMaterial.shader.name == opaqueShader.name) return;
-            ballMaterial.shader = opaqueShader;
+            if (meshMaterial.shader.name == opaqueShader.name) return;
+            meshMaterial.shader = opaqueShader;
         }
     }
 
-    private IEnumerator Wait(float duration, Del method)
+    // Ease function, Quart ratio.
+    private float EaseQuartOut (float k) 
     {
-        yield return new WaitForSeconds(duration);
-        method();
+        return 1f - ((k -= 1f)*k*k*k);
+    }
+
+    private IEnumerator TransitionColor(float duration, Color startColor, Color endColor)
+    {
+        float durationLeft = duration;
+        float totalDuration = duration;
+
+        // Generation of a color gradient from the start color to the end color.
+        Gradient colorGradient = new Gradient();
+        GradientColorKey[] colorKey = new GradientColorKey[2]{new GradientColorKey(startColor, 0f), new GradientColorKey(endColor, 1f)};
+        GradientAlphaKey[] alphaKey = new GradientAlphaKey[2]{new GradientAlphaKey(startColor.a, 0f), new GradientAlphaKey(endColor.a, 1f)};
+        colorGradient.SetKeys(colorKey, alphaKey);
+
+        // Playing of the animation. The DiskMole color is interpolated following the easing curve
+        while (durationLeft > 0f)
+        {
+            float timeRatio = (totalDuration - durationLeft) / totalDuration;
+
+            ChangeColor(colorGradient.Evaluate(EaseQuartOut(timeRatio)));
+            durationLeft -= Time.deltaTime;
+
+            yield return null;
+        }
+
+        // When the animation is finished, resets the color to its end value.
+        ChangeColor(endColor);
     }
 }
