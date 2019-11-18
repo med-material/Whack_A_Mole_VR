@@ -23,11 +23,22 @@ public class WallManager : MonoBehaviour
 
     // The size of the wall
     [SerializeField]
-    private Vector2 wallSize;
+    private Vector3 wallSize;
 
-    // Coefficient of the curvature of the wall. The higher the coefficient, the less curved is the wall
+    // Coefficient of the X curvature of the wall. 1 = PI/2, 0 = straight line
     [SerializeField]
-    private float curveCoeff = 20f;
+    [Range(0.1f, 1f)]
+    private float xCurveRatio = 1f;
+
+    // Coefficient of the Y curvature of the wall. 1 = PI/2, 0 = straight line
+    [SerializeField]
+    [Range(0.1f, 1f)]
+    private float yCurveRatio = 1f;
+
+    // The angle of the edge moles if a curve ratio of 1 is given
+    [SerializeField]
+    [Range(0f, 90f)]
+    private float maxAngle = 90f;
 
     // Offest of the height of the wall
     [SerializeField]
@@ -129,6 +140,8 @@ public class WallManager : MonoBehaviour
         {
             for (int y = 0; y < rowCount; y++)
             {
+                if((x == 0 || x == columnCount - 1) && (y == rowCount - 1 || y == 0)) continue;
+
                 // Instanciates a Mole object
                 Mole mole = Instantiate(moleObject, transform);
                 // Get the Mole object's local position depending on the current row, column and the curve coefficient
@@ -136,7 +149,7 @@ public class WallManager : MonoBehaviour
 
                 // Sets the Mole local position, rotates it so it looks away from the wall (affected by the curve)
                 mole.transform.localPosition = molePos;
-                mole.transform.localRotation = DefineMoleRotation(new Vector2(molePos.x, molePos.z));
+                mole.transform.localRotation = DefineMoleRotation(x, y);
                 // Sets the Mole ID and references it
                 mole.SetId(GetMoleId(x, y));
                 moles.Add(mole);
@@ -148,7 +161,10 @@ public class WallManager : MonoBehaviour
     // Gets the Mole position depending on its index, the wall size (x and y axes of the vector3), and also on the curve coefficient (for the z axis).
     private Vector3 DefineMolePos(int xIndex, int yIndex)
     {
-        return new Vector3((((float)xIndex/(columnCount - 1)) * wallSize.x) - wallCenter.x, (((float)yIndex/(rowCount - 1)) * wallSize.y) + heightOffset - wallCenter.y, -Mathf.Pow(xIndex - (columnCount/2), 2) * wallSize.x / curveCoeff);
+        float angleX = ((((float)xIndex/(columnCount - 1)) * 2) - 1) * ((Mathf.PI * xCurveRatio) / 2);
+        float angleY = ((((float)yIndex/(rowCount - 1)) * 2) - 1) * ((Mathf.PI * yCurveRatio) / 2);
+
+        return new Vector3(Mathf.Sin(angleX) * (wallSize.x / (2 * xCurveRatio)), Mathf.Sin(angleY) * (wallSize.y / (2 * yCurveRatio)), ((Mathf.Cos(angleY) * (wallSize.z)) + (Mathf.Cos(angleX) * (wallSize.z))));
     }
 
     private int GetMoleId(int xIndex, int yIndex)
@@ -157,10 +173,10 @@ public class WallManager : MonoBehaviour
     }
 
     // Gets the Mole rotation so it is always looking away from the wall, depending on its X local position and the wall's curvature (curveCoeff)
-    private Quaternion DefineMoleRotation(Vector2 molePosXZ)
+    private Quaternion DefineMoleRotation(int xIndex, int yIndex)
     {
         Quaternion lookAngle = new Quaternion();
-        lookAngle.eulerAngles = new Vector3(0f, 50f * (molePosXZ.x / (wallSize.x / 2)), 0f);
+        lookAngle.eulerAngles = new Vector3(-((((float)yIndex/(rowCount - 1)) * 2) - 1) * (maxAngle * yCurveRatio), ((((float)xIndex/(columnCount - 1)) * 2) - 1) * (maxAngle * xCurveRatio), 0f);
         return lookAngle;
     }
 }
