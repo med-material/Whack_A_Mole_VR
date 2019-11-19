@@ -51,6 +51,11 @@ public class DiskMole : Mole
         opaqueShader = Shader.Find("Standard");
         glowShader = Shader.Find("Particles/Standard Unlit");
         audioSource = gameObject.GetComponent<AudioSource>();
+
+        SwitchShader(false);
+        PlayAnimation("EnableDisable");
+        PlayTransitionColor(getAnimationDuration(), meshMaterial.color, disabledColor);
+
         base.Start();
     }
 
@@ -65,11 +70,6 @@ public class DiskMole : Mole
 
     protected override void PlayEnabling()
     {
-        base.PlayEnabling();
-    }
-
-    protected override void PlayEnable() 
-    {
         PlaySound(enableSound);
         SwitchShader(false);
         PlayAnimation("EnableDisable");
@@ -82,19 +82,16 @@ public class DiskMole : Mole
         {
             PlayTransitionColor(getAnimationDuration(), meshMaterial.color, fakeEnabledColor);
         }
+        base.PlayEnabling();
     }
 
     protected override void PlayDisabling()
-    {
-        base.PlayDisabling();
-    }
-
-    protected override void PlayDisable()
     {
         PlaySound(enableSound);
         SwitchShader(false);
         PlayAnimation("EnableDisable");
         PlayTransitionColor(getAnimationDuration(), meshMaterial.color, disabledColor);
+        base.PlayDisabling();
     }
 
     protected override void PlayHoverEnter() 
@@ -127,7 +124,7 @@ public class DiskMole : Mole
 
     protected override void PlayPop() 
     {
-        SwitchShader(true);
+        SwitchShader(false);
         PlayAnimation("PopOscill");
         PlayTransitionColor(getAnimationDuration(), popColor, disabledColor);
         PlaySound(popSound);
