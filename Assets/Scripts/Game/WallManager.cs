@@ -46,12 +46,14 @@ public class WallManager : MonoBehaviour
 
     private class StateUpdateEvent: UnityEvent<bool, List<Mole>> {};
     private StateUpdateEvent stateUpdateEvent = new StateUpdateEvent();
+    private WallGenerator wallGenerator;
     private Vector3 wallCenter;
     private List<Mole> moles = new List<Mole>();
     private bool active = false;
 
     void Start()
     {
+        wallGenerator = gameObject.GetComponent<WallGenerator>();
         wallCenter = new Vector3(wallSize.x/2f, wallSize.y/2f, 0);
     }
 
@@ -132,6 +134,7 @@ public class WallManager : MonoBehaviour
     // Generates the wall of Moles
     private void GenerateWall()
     {
+        wallGenerator.InitPointsLists(columnCount, rowCount);
         // Updates the wallCenter value
         wallCenter = new Vector3(wallSize.x/2f, wallSize.y/2f, 0);
 
@@ -140,7 +143,11 @@ public class WallManager : MonoBehaviour
         {
             for (int y = 0; y < rowCount; y++)
             {
-                if((x == 0 || x == columnCount - 1) && (y == rowCount - 1 || y == 0)) continue;
+                if((x == 0 || x == columnCount - 1) && (y == rowCount - 1 || y == 0))
+                {
+                    wallGenerator.AddPoint(x, y, DefineMolePos(x, y), DefineMoleRotation(x, y));
+                    continue;
+                }
 
                 // Instanciates a Mole object
                 Mole mole = Instantiate(moleObject, transform);
@@ -153,9 +160,12 @@ public class WallManager : MonoBehaviour
                 // Sets the Mole ID and references it
                 mole.SetId(GetMoleId(x, y));
                 moles.Add(mole);
+
+                wallGenerator.AddPoint(x, y, molePos, mole.transform.localRotation);
             }
         }
         stateUpdateEvent.Invoke(true, moles);
+        wallGenerator.GenerateWall();
     }
 
     // Gets the Mole position depending on its index, the wall size (x and y axes of the vector3), and also on the curve coefficient (for the z axis).
