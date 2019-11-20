@@ -218,11 +218,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a74adce6cde1fa046b4af92d75364313, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  disabledColor: {r: 0.4339623, g: 0.4339623, b: 0.4339623, a: 1}
-  enabledColor: {r: 0, g: 1, b: 0.23935056, a: 1}
-  fakeEnabledColor: {r: 1, g: 0, b: 0, a: 1}
-  hoverColor: {r: 0.7688679, g: 1, b: 0.8241583, a: 1}
-  fakeHoverColor: {r: 1, g: 0.759434, b: 0.759434, a: 1}
+  disabledColor: {r: 0.8235294, g: 0.8235294, b: 0.8235294, a: 1}
+  enabledColor: {r: 0.43137255, g: 0.7490196, b: 0.23921569, a: 1}
+  fakeEnabledColor: {r: 0.85490197, g: 0.36078432, b: 0.2627451, a: 1}
+  hoverColor: {r: 0.67058825, g: 0.8784314, b: 0.5882353, a: 1}
+  fakeHoverColor: {r: 0.9098039, g: 0.7529412, b: 0.7254902, a: 1}
   popColor: {r: 1, g: 1, b: 1, a: 1}
   enableSound: {fileID: 8300000, guid: 093810481fbea044a888edafeb74156b, type: 3}
   disableSound: {fileID: 8300000, guid: 093810481fbea044a888edafeb74156b, type: 3}
