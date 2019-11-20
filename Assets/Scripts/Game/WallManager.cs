@@ -21,6 +21,10 @@ public class WallManager : MonoBehaviour
     [SerializeField]
     private int columnCount;
 
+    // Offest of the height of the wall
+    [SerializeField]
+    private float heightOffset;
+
     // The size of the wall
     [SerializeField]
     private Vector3 wallSize;
@@ -40,9 +44,9 @@ public class WallManager : MonoBehaviour
     [Range(0f, 90f)]
     private float maxAngle = 90f;
 
-    // Offest of the height of the wall
+    // The scale of the Mole. Idealy shouldn't be scaled on the Z axis (to preserve the animations)
     [SerializeField]
-    private float heightOffset;
+    private Vector3 moleScale = Vector3.one;
 
     private class StateUpdateEvent: UnityEvent<bool, List<Mole>> {};
     private StateUpdateEvent stateUpdateEvent = new StateUpdateEvent();
@@ -50,11 +54,19 @@ public class WallManager : MonoBehaviour
     private Vector3 wallCenter;
     private List<Mole> moles = new List<Mole>();
     private bool active = false;
+    private bool isInit = false;
+    private float updateCooldownDuration = .1f;
 
     void Start()
     {
         wallGenerator = gameObject.GetComponent<WallGenerator>();
         wallCenter = new Vector3(wallSize.x/2f, wallSize.y/2f, 0);
+        isInit = true;
+    }
+
+    void OnValidate()
+    {
+        UpdateWall();
     }
 
     public void Enable()
@@ -157,8 +169,9 @@ public class WallManager : MonoBehaviour
                 // Sets the Mole local position, rotates it so it looks away from the wall (affected by the curve)
                 mole.transform.localPosition = molePos;
                 mole.transform.localRotation = DefineMoleRotation(x, y);
-                // Sets the Mole ID and references it
+                // Sets the Mole ID, scale and references it
                 mole.SetId(GetMoleId(x, y));
+                mole.transform.localScale = moleScale;
                 moles.Add(mole);
 
                 wallGenerator.AddPoint(x, y, molePos, mole.transform.localRotation);
@@ -166,6 +179,14 @@ public class WallManager : MonoBehaviour
         }
         stateUpdateEvent.Invoke(true, moles);
         wallGenerator.GenerateWall();
+    }
+
+    // Updates the wall
+    private void UpdateWall()
+    {
+        if (!(active && isInit)) return;
+        StopAllCoroutines();
+        StartCoroutine(WallUpdateCooldown());
     }
 
     // Gets the Mole position depending on its index, the wall size (x and y axes of the vector3), and also on the curve coefficient (for the z axis).
@@ -188,5 +209,16 @@ public class WallManager : MonoBehaviour
         Quaternion lookAngle = new Quaternion();
         lookAngle.eulerAngles = new Vector3(-((((float)yIndex/(rowCount - 1)) * 2) - 1) * (maxAngle * yCurveRatio), ((((float)xIndex/(columnCount - 1)) * 2) - 1) * (maxAngle * xCurveRatio), 0f);
         return lookAngle;
+    }
+
+    private IEnumerator WallUpdateCooldown()
+    {
+        yield return new WaitForSeconds(updateCooldownDuration);
+
+        if(active)
+        {
+            Clear();
+            Enable();
+        }
     }
 }
