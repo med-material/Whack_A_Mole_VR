@@ -43,9 +43,9 @@ public class LoggerNotifier: UnityEngine.Object
 
     // Function called by the class instantiating this LoggerNotifier to notify the EventLogger of a new event.
     // If an eventName is given, an Event will be raised. Otherwise only a PersistentEvent will be raised (if it has parameters).
-    public void NotifyLogger(string eventName = "", Dictionary<string, object> overrideEventParameters = null)
+    public void NotifyLogger(string eventName = "", EventLogger.EventType eventType = EventLogger.EventType.DefaultEvent, Dictionary<string, object> overrideEventParameters = null)
     {
-        updateEvent.Invoke(GenerateLogEvent(eventName, overrideEventParameters));
+        updateEvent.Invoke(GenerateLogEvent(eventName, eventType, overrideEventParameters));
     }
 
     // Function called by the class instantiating this LoggerNotifier to initialize certain parameters with a desired value.
@@ -59,7 +59,7 @@ public class LoggerNotifier: UnityEngine.Object
     // If no value is given for a certain parameter, uses the parameter's value given by the updateGeneralValue function
     // passed by the parent class on initialization. If no function has been passed or the function doesn't return a value for
     // the given parameter, the value will be set to its default by the EventLogger.
-    private LogEventContainer GenerateLogEvent(string eventName, Dictionary<string, object> overrideEventParameters)
+    private LogEventContainer GenerateLogEvent(string eventName, EventLogger.EventType eventType, Dictionary<string, object> overrideEventParameters)
     {
         Dictionary<string, object> resultEventParameters = new Dictionary<string, object>();
         Dictionary<string, object> resultPersistentEventParameters = new Dictionary<string, object>();
@@ -74,6 +74,7 @@ public class LoggerNotifier: UnityEngine.Object
         if(eventName != "")
         {
             resultEventParameters.Add("Event", eventName);
+            resultEventParameters.Add("EventType", eventType);
             foreach(KeyValuePair<string, string> headerDefault in eventsHeadersDefaults)
             {
                 if(!(overrideEventParameters is null))

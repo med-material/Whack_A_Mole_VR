@@ -56,9 +56,31 @@ public class WallManager : MonoBehaviour
     private bool active = false;
     private bool isInit = false;
     private float updateCooldownDuration = .1f;
+    private LoggerNotifier loggerNotifier;
 
     void Start()
     {
+        // Initialization of the LoggerNotifier.
+        loggerNotifier = new LoggerNotifier(persistentEventsHeadersDefaults: new Dictionary<string, string>(){
+            {"WallRowCount", "NULL"},
+            {"WallColumnCount", "NULL"},
+            {"WallSizeX", "NULL"},
+            {"WallSizeY", "NULL"},
+            {"WallSizeZ", "NULL"},
+            {"WallCurveRatioX", "NULL"},
+            {"WallCurveRatioY", "NULL"}
+        });
+
+        loggerNotifier.InitPersistentEventParameters(new Dictionary<string, object>(){
+            {"WallRowCount", rowCount},
+            {"WallColumnCount", columnCount},
+            {"WallSizeX", wallSize.x},
+            {"WallSizeY", wallSize.y},
+            {"WallSizeZ", wallSize.z},
+            {"WallCurveRatioX", xCurveRatio},
+            {"WallCurveRatioY", yCurveRatio}
+        });
+
         wallGenerator = gameObject.GetComponent<WallGenerator>();
         wallCenter = new Vector3(wallSize.x/2f, wallSize.y/2f, 0);
         isInit = true;
@@ -171,6 +193,7 @@ public class WallManager : MonoBehaviour
                 mole.transform.localRotation = DefineMoleRotation(x, y);
                 // Sets the Mole ID, scale and references it
                 mole.SetId(GetMoleId(x, y));
+                mole.SetNormalizedIndex(GetnormalizedIndex(x, y));
                 mole.transform.localScale = moleScale;
                 moles.Add(mole);
 
@@ -201,6 +224,11 @@ public class WallManager : MonoBehaviour
     private int GetMoleId(int xIndex, int yIndex)
     {
         return ((xIndex + 1) * 100) + (yIndex + 1);
+    }
+
+    private Vector2 GetnormalizedIndex(int xIndex, int yIndex)
+    {
+        return (new Vector2((float)xIndex / (columnCount - 1), (float)yIndex / (rowCount - 1)));
     }
 
     // Gets the Mole rotation so it is always looking away from the wall, depending on its X local position and the wall's curvature (curveCoeff)

@@ -27,6 +27,8 @@ Before saving, the Event are stored in the logs Dictionary as following: Diction
 
 public class EventLogger : MonoBehaviour
 {
+    public enum EventType{MoleEvent, WallEvent, GameEvent, ModifierEvent, DefaultEvent}
+
     [SerializeField]
     private string savePath = "";
 
@@ -60,6 +62,8 @@ public class EventLogger : MonoBehaviour
         wallStateTracker = gameObject.GetComponent<WallStateTracker>();
 
         logs.Add("TimeStamp", new Dictionary<int, string>());
+        logs.Add("Time", new Dictionary<int, string>());
+        logs.Add("Date", new Dictionary<int, string>());
         logs.Add("TimeSinceLastEvent", new Dictionary<int, string>());
         logs.Add("GameId", new Dictionary<int, string>());
         trackerHub.Init();
@@ -217,6 +221,8 @@ public class EventLogger : MonoBehaviour
     // Save the datas of an Event. Amends to the datas extra parameters if asked to.
     private void SaveEventDatas(Dictionary<string, object> datas, bool includeMoleToHit = false, bool logTrack = false)
     {
+        datas["EventType"] = System.Enum.GetName(typeof(EventLogger.EventType), datas["EventType"]);
+
         if (includeMoleToHit)
         {
             foreach(KeyValuePair<string, object> pair in currentMoleLog)
@@ -240,6 +246,8 @@ public class EventLogger : MonoBehaviour
     private void GenerateLine(Dictionary<string, object> log)
     {
         logs["TimeStamp"].Add(logCount, GetTimeStamp());
+        logs["Date"].Add(logCount, System.DateTime.Now.ToString("yyyy-MM-dd"));
+        logs["Time"].Add(logCount, System.DateTime.Now.ToString("HH:mm:ss.ffff"));
         logs["TimeSinceLastEvent"].Add(logCount, GetPreviousEventTimeDiff().ToString("0.0000").Replace(",", "."));
         logs["GameId"].Add(logCount, uid);
 
@@ -407,7 +415,7 @@ public class EventLogger : MonoBehaviour
     // Returns a time stamp including the milliseconds.
     private string GetTimeStamp()
     {
-        return System.DateTime.Now.ToString(new CultureInfo("en-GB")).Replace('/', '-') + "." + System.DateTime.Now.Millisecond.ToString();
+        return System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.ffff");
     }
 
     // Initialises the CSV file parameters (name and file path).

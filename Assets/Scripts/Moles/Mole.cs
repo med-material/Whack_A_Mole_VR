@@ -27,6 +27,7 @@ public abstract class Mole : MonoBehaviour
     private float activatedTimeLeft;
     private float expiringTimeLeft;
     private bool isPaused = false;
+    private Vector2 normalizedIndex;
     private LoggerNotifier loggerNotifier;
 
     protected virtual void Start()
@@ -47,6 +48,8 @@ public abstract class Mole : MonoBehaviour
             {"MoleId", "NULL"},
             {"MoleIndexX", "NULL"},
             {"MoleIndexY", "NULL"},
+            {"MoleNormalizedIndexX", "NULL"},
+            {"MoleNormalizedIndexY", "NULL"},
             {"MoleSurfaceHitLocationX", "NULL"},
             {"MoleSurfaceHitLocationY", "NULL"}
         });
@@ -55,6 +58,11 @@ public abstract class Mole : MonoBehaviour
     public void SetId(int newId)
     {
         id = newId;
+    }
+
+    public void SetNormalizedIndex(Vector2 newNormalizedIndex)
+    {
+        normalizedIndex = newNormalizedIndex;
     }
 
     public int GetId()
@@ -102,7 +110,7 @@ public abstract class Mole : MonoBehaviour
 
         if (state == States.Expired)
         {
-            loggerNotifier.NotifyLogger("Expired Mole Hit", new Dictionary<string, object>()
+            loggerNotifier.NotifyLogger("Expired Mole Hit", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
             {
                 {"MoleExpiredDuration", expiringTime - expiringTimeLeft},
                 {"MoleSurfaceHitLocationX", localHitPoint.x},
@@ -113,7 +121,7 @@ public abstract class Mole : MonoBehaviour
 
         if (!fake) 
         {
-            loggerNotifier.NotifyLogger("Mole Hit", new Dictionary<string, object>()
+            loggerNotifier.NotifyLogger("Mole Hit", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
             {
                 {"MoleActivatedDuration", lifeTime - activatedTimeLeft},
                 {"MoleSurfaceHitLocationX", localHitPoint.x},
@@ -125,7 +133,7 @@ public abstract class Mole : MonoBehaviour
         }
         else 
         {
-            loggerNotifier.NotifyLogger("Fake Mole Hit", new Dictionary<string, object>()
+            loggerNotifier.NotifyLogger("Fake Mole Hit", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
             {
                 {"MoleActivatedDuration", lifeTime - activatedTimeLeft},
                 {"MoleSurfaceHitLocationX", localHitPoint.x},
@@ -228,8 +236,8 @@ public abstract class Mole : MonoBehaviour
                 break;
             case States.Enabling:
 
-                if (!fake) loggerNotifier.NotifyLogger("Mole Spawned");
-                else loggerNotifier.NotifyLogger("Fake Mole Spawned");
+                if (!fake) loggerNotifier.NotifyLogger("Mole Spawned", EventLogger.EventType.MoleEvent);
+                else loggerNotifier.NotifyLogger("Fake Mole Spawned", EventLogger.EventType.MoleEvent);
 
                 if (!fake) stateUpdateEvent.Invoke(true, this);
 
@@ -237,8 +245,8 @@ public abstract class Mole : MonoBehaviour
                 PlayEnabling();
                 break;
             case States.Disabling:
-                if (!fake) loggerNotifier.NotifyLogger("Mole Expired");
-                else loggerNotifier.NotifyLogger("Fake Mole Expired");
+                if (!fake) loggerNotifier.NotifyLogger("Mole Expired", EventLogger.EventType.MoleEvent);
+                else loggerNotifier.NotifyLogger("Fake Mole Expired", EventLogger.EventType.MoleEvent);
 
                 if (!fake) stateUpdateEvent.Invoke(false, this);
 
@@ -299,7 +307,9 @@ public abstract class Mole : MonoBehaviour
             {"MoleLifeTime", lifeTime},
             {"MoleId", id.ToString("0000")},
             {"MoleIndexX", (int)Mathf.Floor(id/100)},
-            {"MoleIndexY", (id % 100)}   
+            {"MoleIndexY", (id % 100)},
+            {"MoleNormalizedIndexX", normalizedIndex.x},
+            {"MoleNormalizedIndexY", normalizedIndex.y},
         });
     }
 }

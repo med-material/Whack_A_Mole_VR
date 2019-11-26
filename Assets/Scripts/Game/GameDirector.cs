@@ -47,19 +47,19 @@ public class GameDirector : MonoBehaviour
     private LoggerNotifier loggerNotifier;
 
     private Dictionary<string, Dictionary<string, float>> difficulties = new Dictionary<string, Dictionary<string, float>>(){
-        {"easy", new Dictionary<string, float>(){
+        {"slow", new Dictionary<string, float>(){
             {"spawnRate", 3.5f},
             {"spawnVariance", .1f},
             {"lifeTime", 5f},
             {"fakeCoeff", .1f},
         }},
-        {"medium", new Dictionary<string, float>(){
+        {"normal", new Dictionary<string, float>(){
             {"spawnRate", 2.25f},
             {"spawnVariance", .3f},
             {"lifeTime", 4f},
             {"fakeCoeff", .2f},
         }},
-        {"hard", new Dictionary<string, float>(){
+        {"fast", new Dictionary<string, float>(){
             {"spawnRate", 1f},
             {"spawnVariance", .5f},
             {"lifeTime", 3f},
@@ -94,7 +94,7 @@ public class GameDirector : MonoBehaviour
         LoadDifficulty();
         StartMoleTimer(gameWarmUpTime);
         StartCoroutine(WaitEndGame(gameDuration));
-        loggerNotifier.NotifyLogger("Game Started", new Dictionary<string, object>()
+        loggerNotifier.NotifyLogger("Game Started", EventLogger.EventType.GameEvent, new Dictionary<string, object>()
         {
             {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
         });
@@ -106,7 +106,7 @@ public class GameDirector : MonoBehaviour
         if (gameState == GameState.Stopped) return;
         StopAllCoroutines();
         FinishGame();
-        loggerNotifier.NotifyLogger("Game Stopped", new Dictionary<string, object>()
+        loggerNotifier.NotifyLogger("Game Stopped", EventLogger.EventType.GameEvent, new Dictionary<string, object>()
         {
             {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
         });
@@ -121,7 +121,7 @@ public class GameDirector : MonoBehaviour
         {
             UpdateState(GameState.Paused);
             wallManager.SetPauseMole(true);
-            loggerNotifier.NotifyLogger("Game Paused", new Dictionary<string, object>()
+            loggerNotifier.NotifyLogger("Game Paused", EventLogger.EventType.GameEvent, new Dictionary<string, object>()
             {
                 {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
             });
@@ -130,7 +130,7 @@ public class GameDirector : MonoBehaviour
         {
             UpdateState(GameState.Playing);
             wallManager.SetPauseMole(false);
-            loggerNotifier.NotifyLogger("Game Unpaused", new Dictionary<string, object>()
+            loggerNotifier.NotifyLogger("Game Unpaused", EventLogger.EventType.GameEvent, new Dictionary<string, object>()
             {
                 {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
             });
@@ -155,7 +155,7 @@ public class GameDirector : MonoBehaviour
         gameDifficulty = difficulty;
         LoadDifficulty();
 
-        loggerNotifier.NotifyLogger("Game Speed Changed To "+gameDifficulty, new Dictionary<string, object>()
+        loggerNotifier.NotifyLogger("Game Speed Changed To "+gameDifficulty, EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
             {
                 {"GameSpeed", gameDifficulty}
             });
@@ -253,7 +253,7 @@ public class GameDirector : MonoBehaviour
     {
         FinishGame();
 
-        loggerNotifier.NotifyLogger("Game Finished", new Dictionary<string, object>()
+        loggerNotifier.NotifyLogger("Game Finished", EventLogger.EventType.GameEvent, new Dictionary<string, object>()
         {
             {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
         });

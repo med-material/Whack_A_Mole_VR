@@ -86,7 +86,7 @@ public class ModifiersManager : MonoBehaviour
         UpdateMirrorEffect();
 
         // Raises an Event and updates a PersistentEvent's parameter (in consequence, a PersistentEvent will also be raised)
-        loggerNotifier.NotifyLogger("Mirror Effect Set "+value, new Dictionary<string, object>()
+        loggerNotifier.NotifyLogger("Mirror Effect Set "+value, EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
         {
             {"MirrorEffect", value}
         });
@@ -104,7 +104,7 @@ public class ModifiersManager : MonoBehaviour
             UpdateMirrorEffect();
         }
 
-        loggerNotifier.NotifyLogger("Dual Task Set "+value, new Dictionary<string, object>()
+        loggerNotifier.NotifyLogger("Dual Task Set "+value, EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
         {
             {"DualTask", value}
         });
@@ -117,7 +117,7 @@ public class ModifiersManager : MonoBehaviour
         rightControllerContainer.localEulerAngles = new Vector3(0, prismEffect, 0);
         leftControllerContainer.localEulerAngles = new Vector3(0, prismEffect, 0);
 
-        loggerNotifier.NotifyLogger("Prism Effect Set "+value, new Dictionary<string, object>()
+        loggerNotifier.NotifyLogger("Prism Effect Set "+value, EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
         {
             {"PrismEffect", value}
         });
@@ -149,7 +149,7 @@ public class ModifiersManager : MonoBehaviour
 
         if (!dualTask) SetControllerEnabled("second", false);
 
-        loggerNotifier.NotifyLogger("Right Controller Set Main "+rightIsMain, new Dictionary<string, object>()
+        loggerNotifier.NotifyLogger("Right Controller Set Main "+rightIsMain, EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
         {
             {"RightControllerMain", rightIsMain}
         });
@@ -227,7 +227,7 @@ public class ModifiersManager : MonoBehaviour
             viveCamera.stereoTargetEye = StereoTargetEyeMask.Right;
         }
 
-        loggerNotifier.NotifyLogger("Eye Patch Set "+System.Enum.GetName(typeof(ModifiersManager.EyePatch), value), new Dictionary<string, object>()
+        loggerNotifier.NotifyLogger("Eye Patch Set "+System.Enum.GetName(typeof(ModifiersManager.EyePatch), value), EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
         {
             {"EyePatch", System.Enum.GetName(typeof(ModifiersManager.EyePatch), value)}
         });

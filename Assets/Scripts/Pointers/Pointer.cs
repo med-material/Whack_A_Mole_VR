@@ -179,7 +179,7 @@ public abstract class Pointer : MonoBehaviour
     // Function raising a "Mole Missed" event.
     private void RaiseMoleMissedEvent(Vector3 hitPosition)
     {
-        loggerNotifier.NotifyLogger("Mole Missed", new Dictionary<string, object>(){
+        loggerNotifier.NotifyLogger("Mole Missed", EventLogger.EventType.MoleEvent, new Dictionary<string, object>(){
             {"HitPositionWorldX", hitPosition.x},
             {"HitPositionWorldY", hitPosition.y},
             {"HitPositionWorldZ", hitPosition.z}
