@@ -61,15 +61,15 @@ public class PlayerPanel : MonoBehaviour
         {
             switch(entry.Key)
             {
-                case "participant":
+                case "ParticipantId":
                     participantText.text = "Participant " + entry.Value.ToString();
                     break;
 
-                case "test":
+                case "TestId":
                     testText.text = "Test " + entry.Value.ToString();
                     break;
                 
-                case "runTime":
+                case "GameDuration":
                     timeText.text = entry.Value.ToString() + " minutes";
                     break;
             }

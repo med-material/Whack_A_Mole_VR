@@ -10,12 +10,14 @@ public class ControllerModifierManager : MonoBehaviour
     private SteamVR_Action_Pose controllerPose;
     private SteamVR_Input_Sources inputSource;
     private bool isMirroring = false;
+    private Pointer controllerPointer;
 
 
     void Start()
     {
         inputSource = gameObject.GetComponent<SteamVR_Behaviour_Pose>().inputSource;
         controllerPose = gameObject.GetComponent<SteamVR_Behaviour_Pose>().poseAction;
+        controllerPointer = gameObject.GetComponent<Pointer>();
     }
 
     // Enables mirroring. Disables the controller position update and uses OnPoseUpdate to set a custom mirrored position on  tracked controller position update
@@ -43,6 +45,10 @@ public class ControllerModifierManager : MonoBehaviour
     // On VR update, update the position and rotation so they are mirrored. The "mirroring plane" has the angle of the wall and the position of the head.
     private void OnPoseUpdated(bool obj)
     {
+        if(controllerPointer)
+        {
+            controllerPointer.PositionUpdated();
+        }
         // Defines the local position of the controller, its position relative to the head and its rotation
         Vector3 controllerLocalPosition = controllerPose.GetLocalPosition(inputSource);
         Vector3 controllerToHead = controllerLocalPosition - cameraTransform.localPosition;
