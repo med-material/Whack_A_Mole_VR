@@ -14,7 +14,13 @@ Facilitates the creation of moles with different behaviours on specific events
 public abstract class Mole : MonoBehaviour
 {
     public enum MolePopAnswer {Ok, Fake, Expired, Disabled, Paused}
+
+    // The states may be reduced to 3 - 4 (by removing Popping, enabling...), however this could reduce the control over the Mole
     protected enum States {Disabled, Enabled, Expired, Popping, Enabling, Disabling}
+
+    [SerializeField]
+    private float disableCooldown = 3f;
+
     protected States state = States.Disabled;
     protected bool fake = false;
 
@@ -29,10 +35,12 @@ public abstract class Mole : MonoBehaviour
     private bool isPaused = false;
     private Vector2 normalizedIndex;
     private LoggerNotifier loggerNotifier;
+    private float disabledTimeLeft = 0f;
+    private bool isOnDisabledCoolDown = false;
 
     protected virtual void Start()
     {
-        EnterState(States.Disabled);
+        Reset();
 
         // Initialization of the LoggerNotifier. Here we will only raise Event, and we will use a function to pass and update 
         // certain parameters values every time we raise an event (UpdateLogNotifierGeneralValues). We don't set any starting values.
@@ -70,9 +78,10 @@ public abstract class Mole : MonoBehaviour
         return id;
     }
 
-    public bool IsActive()
+    public bool CanBeActivated()
     {
-        return (state == States.Enabled || state == States.Enabling || state == States.Disabling);
+        if (isOnDisabledCoolDown) return false;
+        return (!(state == States.Enabled || state == States.Enabling || state == States.Disabling));
     }
 
     public void Enable(float enabledLifeTime, float expiringDuration, bool isFake = false)
@@ -96,8 +105,10 @@ public abstract class Mole : MonoBehaviour
     public void Reset()
     {
         StopAllCoroutines();
+        isOnDisabledCoolDown = false;
+        isPaused = false;
         state = States.Disabled;
-        EnterState(States.Disabled);
+        PlayReset();
     }
 
     // Pops the Mole. Returns an answer correspondind to its poping state.
@@ -170,6 +181,7 @@ public abstract class Mole : MonoBehaviour
 
     protected virtual void PlayEnable() {}
     protected virtual void PlayDisable() {}
+    protected virtual void PlayReset() {}
     protected virtual void PlayHoverEnter() {}
     protected virtual void PlayHoverLeave() {}
 
@@ -227,6 +239,8 @@ public abstract class Mole : MonoBehaviour
         {
             case States.Disabled:
                 PlayDisable();
+                isOnDisabledCoolDown = true;
+                StartCoroutine(StartDisabledCooldownTimer(disableCooldown));
                 break;
             case States.Enabled:
                 PlayEnable();
@@ -291,6 +305,21 @@ public abstract class Mole : MonoBehaviour
         }
 
         EnterState(States.Disabled);
+    }
+
+    private IEnumerator StartDisabledCooldownTimer(float duration)
+    {
+        disabledTimeLeft = duration;
+        while (disabledTimeLeft > 0)
+        {
+            if (!isPaused)
+            {
+                disabledTimeLeft -= Time.deltaTime;
+            }
+            yield return null;
+        }
+
+        isOnDisabledCoolDown = false;
     }
 
     // Function that will be called by the LoggerNotifier every time an event is raised, to automatically update

@@ -104,7 +104,6 @@ public class GameDirector : MonoBehaviour
     public void StopGame()
     {
         if (gameState == GameState.Stopped) return;
-        StopAllCoroutines();
         FinishGame();
         loggerNotifier.NotifyLogger("Game Stopped", EventLogger.EventType.GameEvent, new Dictionary<string, object>()
         {
@@ -177,6 +176,7 @@ public class GameDirector : MonoBehaviour
     private void FinishGame()
     {
         if (gameState == GameState.Stopped) return;
+        StopAllCoroutines();
         UpdateState(GameState.Stopped);
         wallManager.Disable();
     }

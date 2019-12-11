@@ -136,7 +136,7 @@ public class WallManager : MonoBehaviour
         return stateUpdateEvent;
     }
 
-    // Returns a random, inactive Mole
+    // Returns a random, inactive Mole. Can block the game if no Mole can be found. May need to be put in a coroutine.
     private Mole GetRandomMole()
     {
         Mole mole;
@@ -144,7 +144,7 @@ public class WallManager : MonoBehaviour
         {
             mole = moles[Random.Range(0, moles.Count)];
         }
-        while (mole.IsActive());
+        while (!mole.CanBeActivated());
         return mole;
     }
 

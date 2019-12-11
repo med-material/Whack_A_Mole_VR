@@ -130,6 +130,13 @@ public class DiskMole : Mole
         PlaySound(popSound);
     }
 
+    protected override void PlayReset()
+    {
+        SwitchShader(false);
+        PlayAnimation("EnableDisable");
+        PlayTransitionColor(getAnimationDuration(), meshMaterial.color, disabledColor);
+    }
+
     // Plays a sound.
     private void PlaySound(AudioClip audioClip)
     {
