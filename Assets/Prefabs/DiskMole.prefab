@@ -217,7 +217,8 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a74adce6cde1fa046b4af92d75364313, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
+  disableCooldown: 3 
   disabledColor: {r: 0.8235294, g: 0.8235294, b: 0.8235294, a: 1}
   enabledColor: {r: 0.43137255, g: 0.7490196, b: 0.23921569, a: 1}
   fakeEnabledColor: {r: 0.85490197, g: 0.36078432, b: 0.2627451, a: 1}

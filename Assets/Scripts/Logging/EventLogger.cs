@@ -27,7 +27,7 @@ Before saving, the Event are stored in the logs Dictionary as following: Diction
 
 public class EventLogger : MonoBehaviour
 {
-    public enum EventType{MoleEvent, WallEvent, GameEvent, ModifierEvent, DefaultEvent}
+    public enum EventType{MoleEvent, WallEvent, GameEvent, ModifierEvent, PointerEvent, DefaultEvent}
 
     [SerializeField]
     private string savePath = "";
