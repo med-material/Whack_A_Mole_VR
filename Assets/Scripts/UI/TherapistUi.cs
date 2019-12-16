@@ -25,9 +25,14 @@ public class TherapistUi : MonoBehaviour
 
     private GameDirector.GameState currentGameState = GameDirector.GameState.Stopped;
     private LoggerNotifier loggerNotifier;
+    private Animation animationPlayer;
+
+    // Temporary implementation
+    private string profileName;
 
     void Start()
     {
+        animationPlayer = gameObject.GetComponent<Animation>();
         // Initialization of the LoggerNotifier. Here we will only raise PersistentEvent.
         loggerNotifier = new LoggerNotifier(persistentEventsHeadersDefaults: new Dictionary<string, string>(){
             {"ParticipantId", "NULL"},
@@ -152,6 +157,20 @@ public class TherapistUi : MonoBehaviour
     {
         therapistPanelController.GameTimeUpdate(time);
         minimizedPanelController.GameTimeUpdate(time);
+    }
+
+    // Switches between the therapist panel and the profile panel.
+    public void SwitchPanel(bool toTherapistPanel, string name = null)
+    {
+        if (name != null) profileName = name;
+        if (toTherapistPanel) animationPlayer.Play("ProfileToTherapist");
+        else animationPlayer.Play("TherapistToProfile");
+    }
+
+    // Updates the TherapistPanel profile name. Called by the transition animation.
+    public void UpdateTherapistProfileName()
+    {
+        therapistPanelController.UpdateProfileName(profileName);
     }
 
     // When the game started event is raised (by the game director), updates the UI.

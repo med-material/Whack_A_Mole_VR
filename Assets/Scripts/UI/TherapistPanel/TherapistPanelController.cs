@@ -21,8 +21,12 @@ public class TherapistPanelController : MonoBehaviour
     [SerializeField]
     private GameStateContainer gameStateContainer;
 
+    [SerializeField]
+    private Text profileNameText;
+
     private Animation animationPlayer;
     private LayoutElement layoutElement;
+    private TherapistUi therapistUi;
     private List<ButtonTextController> buttonTextControllers = new List<ButtonTextController>();
 
     // On start, references the game data ButtonTextController (participant Id...)
@@ -30,6 +34,7 @@ public class TherapistPanelController : MonoBehaviour
     {
         animationPlayer = gameObject.GetComponent<Animation>();
         layoutElement = gameObject.GetComponent<LayoutElement>();
+        therapistUi = FindObjectOfType<TherapistUi>();
 
         foreach(ButtonTextController controller in buttonTextContainer.GetComponentsInChildren<ButtonTextController>())
         {
@@ -96,5 +101,18 @@ public class TherapistPanelController : MonoBehaviour
         minimizedContainer.SetActive(false);
         maximizedContainer.SetActive(true);
         animationPlayer.Play("PanelSlideUp");
+    }
+
+    // Tells the TherapistUi to stop the game and switch to the ProfilePanel.
+    public void SwitchToProfilePanel()
+    {
+        therapistUi.StopGame();
+        therapistUi.SwitchPanel(false);
+    }
+
+    // Updates the displayed profile name. Calles by the TherapistUi.
+    public void UpdateProfileName(string name)
+    {
+        profileNameText.text = name;
     }
 }
