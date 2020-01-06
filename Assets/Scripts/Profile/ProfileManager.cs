@@ -13,9 +13,11 @@ public class ProfileManager : MonoBehaviour
     private Dictionary<string, string> selectedProfileProperties;
     private ProfilesReadWriter readWriter;
     private List<string> deletionBuffer = new List<string>();
+    private EventLogger eventLogger;
 
     void Awake()
     {
+        eventLogger = FindObjectOfType<EventLogger>();
         readWriter = new ProfilesReadWriter();
         selectedProfileProperties = new Dictionary<string, string>();
     }
@@ -40,6 +42,7 @@ public class ProfileManager : MonoBehaviour
         if (profileId == selectedProfileId) return;
         selectedProfileId = profileId;
         selectedProfileProperties = readWriter.GetProfile(profileId);
+        eventLogger.UpdateEmail(selectedProfileProperties["Mail"]);
     }
 
     // Creates a new profile from its name, mail and properties.

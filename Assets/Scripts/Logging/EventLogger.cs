@@ -51,6 +51,7 @@ public class EventLogger : MonoBehaviour
     private Dictionary<string, string> defaultValues = new Dictionary<string, string>();
     private int logCount = 0;
     private string uid = "";
+    private string email = "";
     private ConnectToMySQL connectToMySQL;
     private WallStateTracker wallStateTracker;
 
@@ -68,6 +69,13 @@ public class EventLogger : MonoBehaviour
         logs.Add("GameId", new Dictionary<int, string>());
         trackerHub.Init();
         GenerateUid();
+    }
+
+    // Updates the logged mail.
+    public void UpdateEmail(string newEmail)
+    {
+        if (email == newEmail) return;
+        email = newEmail;
     }
 
     // Function mostly called from the LoggerNotifier. Adds to the logs the columns (parameters) that will be used.
@@ -284,7 +292,7 @@ public class EventLogger : MonoBehaviour
         logCollection.Add("Email", new List<string>());
         for(int i = 0; i < logCount; i++)
         {
-            logCollection["Email"].Add("dull.mail@create.aau.dk");
+            logCollection["Email"].Add(email);
         }
         string temp;
 
