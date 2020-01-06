@@ -48,11 +48,11 @@ public class WallManager : MonoBehaviour
     [SerializeField]
     private Vector3 moleScale = Vector3.one;
 
-    private class StateUpdateEvent: UnityEvent<bool, List<Mole>> {};
+    private class StateUpdateEvent: UnityEvent<bool, Dictionary<int, Mole>> {};
     private StateUpdateEvent stateUpdateEvent = new StateUpdateEvent();
     private WallGenerator wallGenerator;
     private Vector3 wallCenter;
-    private List<Mole> moles = new List<Mole>();
+    private Dictionary<int, Mole> moles;
     private bool active = false;
     private bool isInit = false;
     private float updateCooldownDuration = .1f;
@@ -81,6 +81,7 @@ public class WallManager : MonoBehaviour
             {"WallCurveRatioY", yCurveRatio}
         });
 
+        moles = new Dictionary<int, Mole>();
         wallGenerator = gameObject.GetComponent<WallGenerator>();
         wallCenter = new Vector3(wallSize.x/2f, wallSize.y/2f, 0);
         isInit = true;
@@ -114,24 +115,68 @@ public class WallManager : MonoBehaviour
         stateUpdateEvent.Invoke(false, moles);
     }
 
-    // Activates a random Mole for a given lifeTime and s fake or not
-    public void ActivateMole(float lifeTime, float moleExpiringDuration, bool isFake)
+    // Activates a random Mole for a given lifeTime and set if is fake or not
+    public void ActivateRandomMole(float lifeTime, float moleExpiringDuration, bool isFake)
     {
         if (!active) return;
 
         GetRandomMole().Enable(lifeTime, moleExpiringDuration, isFake);
     }
 
+    // Activates a specific Mole for a given lifeTime and set if is fake or not
+    public void ActivateMole(int moleId, float lifeTime, float moleExpiringDuration, bool isFake)
+    {
+        if (!active) return;
+        if (!moles.ContainsKey(moleId)) return;
+        moles[moleId].Enable(lifeTime, moleExpiringDuration, isFake);
+    }
+
     // Pauses/unpauses the moles
     public void SetPauseMole(bool pause)
     {
-        foreach(Mole mole in moles)
+        foreach(Mole mole in moles.Values)
         {
             mole.SetPause(pause);
         }
     }
 
-    public UnityEvent<bool, List<Mole>> GetUpdateEvent()
+    public void UpdateMoleCount(int newRowCount = -1, int newColumnCount = -1)
+    {
+        if (newRowCount >= 2) rowCount = newRowCount;
+        if (newColumnCount >= 2) columnCount = newColumnCount;
+        // UpdateWall();
+    }
+
+    public void UpdateWallSize(float newWallSizeX = -1, float newWallSizeY = -1, float newWallSizeZ = -1)
+    {
+        if (newWallSizeX >= 0) wallSize.x = newWallSizeX;
+        if (newWallSizeY >= 0) wallSize.y = newWallSizeY;
+        if (newWallSizeZ >= 0) wallSize.z = newWallSizeZ;
+        // UpdateWall();
+    }
+
+    public void UpdateWallCurveRatio(float newCurveRatioX = -1, float newCurveRatioY = -1)
+    {
+        if (newCurveRatioX >= 0 && newCurveRatioX <= 1 ) xCurveRatio = newCurveRatioX;
+        if (newCurveRatioY >= 0 && newCurveRatioY <= 1 ) yCurveRatio = newCurveRatioY;
+        // UpdateWall();
+    }
+
+    public void UpdateWallMaxAngle(float newMaxAngle)
+    {
+        if (newMaxAngle >= 0 && newMaxAngle <= 90 ) maxAngle = newMaxAngle;
+        // UpdateWall();
+    }
+
+    public void UpdateMoleScale(float newMoleScaleX = -1, float newMoleScaleY = -1, float newMoleScaleZ = -1)
+    {
+        if (newMoleScaleX >= 0) moleScale.x = newMoleScaleX;
+        if (newMoleScaleY >= 0) moleScale.y = newMoleScaleY;
+        if (newMoleScaleZ >= 0) moleScale.z = newMoleScaleZ;
+        // UpdateWall();
+    }
+
+    public UnityEvent<bool, Dictionary<int, Mole>> GetUpdateEvent()
     {
         return stateUpdateEvent;
     }
@@ -140,9 +185,11 @@ public class WallManager : MonoBehaviour
     private Mole GetRandomMole()
     {
         Mole mole;
+        Mole[] tempMolesList = new Mole[moles.Count];
+        moles.Values.CopyTo(tempMolesList, 0);
         do
         {
-            mole = moles[Random.Range(0, moles.Count)];
+            mole = tempMolesList[Random.Range(0, moles.Count)];
         }
         while (!mole.CanBeActivated());
         return mole;
@@ -150,7 +197,7 @@ public class WallManager : MonoBehaviour
 
     private void disableMoles()
     {
-        foreach(Mole mole in moles)
+        foreach(Mole mole in moles.Values)
         {
             mole.Reset();
         }
@@ -158,7 +205,7 @@ public class WallManager : MonoBehaviour
 
     private void DestroyWall()
     {
-        foreach(Mole mole in moles)
+        foreach(Mole mole in moles.Values)
         {
             Destroy(mole.gameObject);
         }
@@ -192,10 +239,11 @@ public class WallManager : MonoBehaviour
                 mole.transform.localPosition = molePos;
                 mole.transform.localRotation = DefineMoleRotation(x, y);
                 // Sets the Mole ID, scale and references it
-                mole.SetId(GetMoleId(x, y));
+                int moleId = GetMoleId(x, y);
+                mole.SetId(moleId);
                 mole.SetNormalizedIndex(GetnormalizedIndex(x, y));
                 mole.transform.localScale = moleScale;
-                moles.Add(mole);
+                moles.Add(moleId, mole);
 
                 wallGenerator.AddPoint(x, y, molePos, mole.transform.localRotation);
             }

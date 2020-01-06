@@ -45,6 +45,7 @@ public class GameDirector : MonoBehaviour
     private float currentMoleTimeLeft;
     private GameState gameState = GameState.Stopped;
     private LoggerNotifier loggerNotifier;
+    private PatternManager patternManager;
 
     private Dictionary<string, Dictionary<string, float>> difficulties = new Dictionary<string, Dictionary<string, float>>(){
         {"slow", new Dictionary<string, float>(){
@@ -66,6 +67,11 @@ public class GameDirector : MonoBehaviour
             {"fakeCoeff", .3f},
         }}
     };
+
+    void Awake()
+    {
+        patternManager = FindObjectOfType<PatternManager>();
+    }
 
     void Start()
     {
@@ -89,11 +95,21 @@ public class GameDirector : MonoBehaviour
     public void StartGame()
     {
         if (gameState == GameState.Playing) return;
-        UpdateState(GameState.Playing);
-        wallManager.Enable();
         LoadDifficulty();
-        StartMoleTimer(gameWarmUpTime);
-        StartCoroutine(WaitEndGame(gameDuration));
+
+        if(patternManager.PlayPattern())
+        {
+            StartCoroutine(WaitEndGame(patternManager.GetPatternDuration()));
+        }
+        else
+        {
+            wallManager.Enable();
+            StartMoleTimer(gameWarmUpTime);
+            StartCoroutine(WaitEndGame(gameDuration));
+        }
+        
+        UpdateState(GameState.Playing);
+        
         loggerNotifier.NotifyLogger("Game Started", EventLogger.EventType.GameEvent, new Dictionary<string, object>()
         {
             {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
@@ -118,6 +134,7 @@ public class GameDirector : MonoBehaviour
 
         if(gameState == GameState.Playing)
         {
+            patternManager.PauseUnpausePattern(true);
             UpdateState(GameState.Paused);
             wallManager.SetPauseMole(true);
             loggerNotifier.NotifyLogger("Game Paused", EventLogger.EventType.GameEvent, new Dictionary<string, object>()
@@ -127,6 +144,7 @@ public class GameDirector : MonoBehaviour
         }
         else if(gameState == GameState.Paused)
         {
+            patternManager.PauseUnpausePattern(false);
             UpdateState(GameState.Playing);
             wallManager.SetPauseMole(false);
             loggerNotifier.NotifyLogger("Game Unpaused", EventLogger.EventType.GameEvent, new Dictionary<string, object>()
@@ -150,7 +168,8 @@ public class GameDirector : MonoBehaviour
     // Sets the game difficulty.
     public void SetDifficulty(string difficulty)
     {
-        if(difficulty == gameDifficulty) return;
+        if (difficulty == gameDifficulty) return;
+        if (!difficulties.ContainsKey(difficulty)) return;
         gameDifficulty = difficulty;
         LoadDifficulty();
 
@@ -158,6 +177,12 @@ public class GameDirector : MonoBehaviour
             {
                 {"GameSpeed", gameDifficulty}
             });
+    }
+
+    // Returns the Mole expiring duration
+    public float GetMoleExpiringDuration()
+    {
+        return moleExpiringDuration;
     }
 
     // Loads the difficulty.
@@ -176,6 +201,7 @@ public class GameDirector : MonoBehaviour
     private void FinishGame()
     {
         if (gameState == GameState.Stopped) return;
+        patternManager.StopPattern();
         StopAllCoroutines();
         UpdateState(GameState.Stopped);
         wallManager.Disable();
@@ -183,7 +209,7 @@ public class GameDirector : MonoBehaviour
 
     private void SpawnMole(float lifeTime, bool fakeCoeff)
     {
-        wallManager.ActivateMole(lifeTime, moleExpiringDuration, fakeCoeff);
+        wallManager.ActivateRandomMole(lifeTime, moleExpiringDuration, fakeCoeff);
     }
 
     private void StartMoleTimer(float setTime = -1)
@@ -224,6 +250,8 @@ public class GameDirector : MonoBehaviour
     private IEnumerator WaitEndGame(float duration)
     {
         currentGameTimeLeft = duration;
+        float currentGameDuration = duration;
+
         while (currentGameTimeLeft > 0)
         {
             if (gameState == GameState.Playing)
@@ -232,7 +260,7 @@ public class GameDirector : MonoBehaviour
                 timeUpdate.Invoke(currentGameTimeLeft);
                 loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>()
                 {
-                    {"GameTimeSpent", gameDuration - currentGameTimeLeft},
+                    {"GameTimeSpent", currentGameDuration - currentGameTimeLeft},
                     {"GameTimeLeft", currentGameTimeLeft}
                 });
             }

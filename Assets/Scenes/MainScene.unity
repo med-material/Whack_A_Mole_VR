@@ -6141,12 +6141,12 @@ PrefabInstance:
     - target: {fileID: 1741703791931102569, guid: a72dfebca5501ab46b09e9cb91b26d32,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.00004196167
+      value: -0.000030517578
       objectReference: {fileID: 0}
     - target: {fileID: 1741703791931102569, guid: a72dfebca5501ab46b09e9cb91b26d32,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -0.000045776367
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1741703791931102569, guid: a72dfebca5501ab46b09e9cb91b26d32,
         type: 3}
@@ -7891,6 +7891,40 @@ MonoBehaviour:
   identifier: RightController
   trackRot: 1
   trackPos: 1
+--- !u!21 &721257572
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Sprites/Default
+  m_Shader: {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
+  m_ShaderKeywords: 
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _AlphaTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - PixelSnap: 0
+    - _EnableExternalAlpha: 0
+    m_Colors:
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Flip: {r: 1, g: 1, b: 1, a: 1}
+    - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &840057735 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 310600849815655360, guid: a72dfebca5501ab46b09e9cb91b26d32,
@@ -8047,7 +8081,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   meshMaterial: {fileID: 2100000, guid: 23fa484d087546640b460fcdabd928e5, type: 2}
   wallRecoil: 0.16
---- !u!43 &1291651156
+--- !u!43 &1309226314
 Mesh:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8330,40 +8364,6 @@ MonoBehaviour:
   identifier: HeadCamera
   trackRot: 1
   trackPos: 0
---- !u!21 &1538862090
-Material:
-  serializedVersion: 6
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Sprites/Default
-  m_Shader: {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
-  m_ShaderKeywords: 
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _AlphaTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Floats:
-    - PixelSnap: 0
-    - _EnableExternalAlpha: 0
-    m_Colors:
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _Flip: {r: 1, g: 1, b: 1, a: 1}
-    - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1001 &1561696153
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8422,11 +8422,11 @@ PrefabInstance:
     - target: {fileID: 2348914, guid: 4d293c8e162f3874b982baadd71153d2, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 1538862090}
+      objectReference: {fileID: 721257572}
     - target: {fileID: 3380982, guid: 4d293c8e162f3874b982baadd71153d2, type: 3}
       propertyPath: m_Mesh
       value: 
-      objectReference: {fileID: 1291651156}
+      objectReference: {fileID: 1309226314}
     - target: {fileID: 20000014031267948, guid: 4d293c8e162f3874b982baadd71153d2,
         type: 3}
       propertyPath: m_BackGroundColor.r
@@ -8853,6 +8853,76 @@ MonoBehaviour:
   positionOffset: {x: 0, y: 0, z: -0.01}
   lightRadius: 0.6
   lightIntensity: 0.75
+--- !u!1 &1824309279
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1824309281}
+  - component: {fileID: 1824309280}
+  - component: {fileID: 1824309283}
+  - component: {fileID: 1824309282}
+  m_Layer: 0
+  m_Name: PatternManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1824309280
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1824309279}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c4d70250c93429499a76898a3abf0d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  desiredPatternName: tempPattern
+--- !u!4 &1824309281
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1824309279}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 532.51764, y: 123.47681, z: -5.470047}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 8
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1824309282
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1824309279}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8cf4d7d2f5583db46b67d942cdf339df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1824309283
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1824309279}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2099784a8aa81774d8a4fbc27094642f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1940206513
 GameObject:
   m_ObjectHideFlags: 0
