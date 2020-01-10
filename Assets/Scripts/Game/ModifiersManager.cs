@@ -2,6 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR;
+using UnityEngine.Events;
+
+[System.Serializable]
+public class ModifierUpdateEvent : UnityEvent<string, string> {}
+
 
 /*
 Manages different VR modifiers, which are setting the main hand, dual-task mode, eye-patch, mirror mode and prism offset.
@@ -41,6 +46,7 @@ public class ModifiersManager : MonoBehaviour
     private float prismEffect;
     private Dictionary<string, Pointer> controllersList;
     private LoggerNotifier loggerNotifier;
+    private ModifierUpdateEvent modifierUpdateEvent = new ModifierUpdateEvent();
 
     void Start()
     {
@@ -90,6 +96,8 @@ public class ModifiersManager : MonoBehaviour
         {
             {"MirrorEffect", value}
         });
+
+        modifierUpdateEvent.Invoke("MirrorEffect", value.ToString());
     }
 
     // Sets the dual task mode (if dualtask is enabled, both controllers can be used to pop moles)
@@ -108,6 +116,8 @@ public class ModifiersManager : MonoBehaviour
         {
             {"DualTask", value}
         });
+
+        modifierUpdateEvent.Invoke("DualTask", value.ToString());
     }
 
     // Sets the prism effect. Shifts the view (around y axis) by a given angle to create a shifting between seen view and real positions.
@@ -121,7 +131,8 @@ public class ModifiersManager : MonoBehaviour
         {
             {"PrismEffect", value}
         });
-        
+
+        modifierUpdateEvent.Invoke("PrismEffect", value.ToString());
     }
 
     // Sets the main controller. By default it is the right handed one.
@@ -153,6 +164,11 @@ public class ModifiersManager : MonoBehaviour
         {
             {"RightControllerMain", rightIsMain}
         });
+    }
+
+    public UnityEvent<string, string> GetModifierUpdateEvent()
+    {
+        return modifierUpdateEvent;
     }
 
     // Updates the mirroring effect. Is called when enabling/disabling the mirror effect or when controllers are activated/deactivated (dual task, main controller change).
@@ -231,5 +247,7 @@ public class ModifiersManager : MonoBehaviour
         {
             {"EyePatch", System.Enum.GetName(typeof(ModifiersManager.EyePatch), value)}
         });
+
+        modifierUpdateEvent.Invoke("EyePatch", System.Enum.GetName(typeof(ModifiersManager.EyePatch), value));
     }
 }

@@ -33,6 +33,12 @@ public class TherapistUi : MonoBehaviour
     void Start()
     {
         animationPlayer = gameObject.GetComponent<Animation>();
+
+        // Connect to the modifier updated event from the ModifiersManager
+        modifiersManager.GetModifierUpdateEvent().AddListener(ModifierUpdated);
+        // Connect to the speed updated event from the GameDirector
+        gameDirector.GetDifficultyUpdateEvent().AddListener(ModifierUpdated);
+
         // Initialization of the LoggerNotifier. Here we will only raise PersistentEvent.
         loggerNotifier = new LoggerNotifier(persistentEventsHeadersDefaults: new Dictionary<string, string>(){
             {"ParticipantId", "NULL"},
@@ -118,34 +124,34 @@ public class TherapistUi : MonoBehaviour
         {
             switch(entry.Key)
             {
-                case "mirror":
+                case "MirrorEffect":
                     modifiersManager.SetMirrorEffect(bool.Parse((string)entry.Value));
                     break;
-                case "hand":
+                case "ShowHand":
                     break;
-                case "dual":
+                case "DualTask":
                     modifiersManager.SetDualTask(bool.Parse((string)entry.Value));
                     break;
-                case "eye":
+                case "EyePatch":
                     ModifiersManager.EyePatch value = ModifiersManager.EyePatch.None;
                     switch(entry.Value)
                     {
-                        case "left":
+                        case "Left":
                             value = ModifiersManager.EyePatch.Left;
                             break;
-                        case "none":
+                        case "None":
                             value = ModifiersManager.EyePatch.None;
                             break;
-                        case "right":
+                        case "Right":
                             value = ModifiersManager.EyePatch.Right;
                             break;
                     }
                     modifiersManager.SetEyePatch(value);
                     break;
-                case "prism":
+                case "PrismEffect":
                     modifiersManager.SetPrismEffect(float.Parse((string)entry.Value));
                     break;
-                case "speed":
+                case "GameSpeed":
                     gameDirector.SetDifficulty((string)entry.Value);
                     break;
             }
@@ -197,5 +203,10 @@ public class TherapistUi : MonoBehaviour
         minimizedPanelController.GamePause(pause);
         playerPanel.SetPausedContainer(pause);
         playerPanel.SetEnablePanel(pause);
+    }
+
+    private void ModifierUpdated(string identifier, string value)
+    {
+        therapistPanelController.UpdateSelectedModifier(identifier, value);
     }
 }

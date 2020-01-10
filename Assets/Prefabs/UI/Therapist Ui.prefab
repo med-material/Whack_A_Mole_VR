@@ -177,8 +177,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  identifier: hand
-  buttonArg: false
+  identifier: ShowHand
+  buttonArg: False
 --- !u!1 &149837634767787129
 GameObject:
   m_ObjectHideFlags: 0
@@ -807,8 +807,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  identifier: mirror
-  buttonArg: true
+  identifier: MirrorEffect
+  buttonArg: True
 --- !u!1 &285327105550432740
 GameObject:
   m_ObjectHideFlags: 0
@@ -898,7 +898,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.000061035156, y: 15.655281}
+  m_AnchoredPosition: {x: 0.000061035156, y: 15.656814}
   m_SizeDelta: {x: 0, y: 140}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &3211576957919340677
@@ -1103,8 +1103,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  identifier: eye
-  buttonArg: right
+  identifier: EyePatch
+  buttonArg: Right
 --- !u!1 &404839011281822954
 GameObject:
   m_ObjectHideFlags: 0
@@ -1926,8 +1926,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  identifier: speed
-  buttonArg: slow
+  identifier: GameSpeed
+  buttonArg: Slow
 --- !u!1 &1069479618443925997
 GameObject:
   m_ObjectHideFlags: 0
@@ -3436,8 +3436,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  identifier: speed
-  buttonArg: fast
+  identifier: GameSpeed
+  buttonArg: Fast
 --- !u!1 &1999853377148588421
 GameObject:
   m_ObjectHideFlags: 0
@@ -4692,7 +4692,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  identifier: prism
+  identifier: PrismEffect
   buttonArg: 0
 --- !u!1 &2701941754286633952
 GameObject:
@@ -4871,8 +4871,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  identifier: hand
-  buttonArg: true
+  identifier: ShowHand
+  buttonArg: True
 --- !u!1 &2780251420896435568
 GameObject:
   m_ObjectHideFlags: 0
@@ -7666,7 +7666,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  identifier: prism
+  identifier: PrismEffect
   buttonArg: -15
 --- !u!1 &3885971084068032706
 GameObject:
@@ -8177,8 +8177,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  identifier: eye
-  buttonArg: left
+  identifier: EyePatch
+  buttonArg: Left
 --- !u!1 &3982966419482207310
 GameObject:
   m_ObjectHideFlags: 0
@@ -8968,8 +8968,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  identifier: dual
-  buttonArg: true
+  identifier: DualTask
+  buttonArg: True
 --- !u!1 &4473036631908158591
 GameObject:
   m_ObjectHideFlags: 0
@@ -9466,8 +9466,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8050715646044479662}
   m_HandleRect: {fileID: 5607672798831900655}
   m_Direction: 2
-  m_Value: 0.5211272
-  m_Size: 0.76648647
+  m_Value: -0.000012669658
+  m_Size: 0.88816684
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -10315,8 +10315,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  identifier: eye
-  buttonArg: none
+  identifier: EyePatch
+  buttonArg: None
 --- !u!1 &5182486117042489064
 GameObject:
   m_ObjectHideFlags: 0
@@ -10984,6 +10984,7 @@ MonoBehaviour:
   buttonTextContainer: {fileID: 3399127508577287008}
   gameStateContainer: {fileID: 5942509030983891207}
   profileNameText: {fileID: 6229919350924772940}
+  gameModifiersContainer: {fileID: 3308580869233638383}
 --- !u!114 &2373028383081114547
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11264,7 +11265,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  identifier: prism
+  identifier: PrismEffect
   buttonArg: 15
 --- !u!1 &5570460202067566104
 GameObject:
@@ -11361,6 +11362,7 @@ GameObject:
   - component: {fileID: 2154549205973625976}
   - component: {fileID: 4197377592519779311}
   - component: {fileID: 5718795247570298644}
+  - component: {fileID: 3308580869233638383}
   m_Layer: 5
   m_Name: GameModifiers Container
   m_TagString: Untagged
@@ -11439,6 +11441,18 @@ MonoBehaviour:
   m_ChildControlHeight: 1
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
+--- !u!114 &3308580869233638383
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5581418877971589301}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7a757e227c5c854696e910d3cfb835b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &5643976538321512915
 GameObject:
   m_ObjectHideFlags: 0
@@ -11706,8 +11720,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  identifier: dual
-  buttonArg: false
+  identifier: DualTask
+  buttonArg: False
 --- !u!1 &5671339256858699786
 GameObject:
   m_ObjectHideFlags: 0
@@ -12555,8 +12569,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  identifier: mirror
-  buttonArg: false
+  identifier: MirrorEffect
+  buttonArg: False
 --- !u!1 &6226403973879583237
 GameObject:
   m_ObjectHideFlags: 0
@@ -13141,7 +13155,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 5213886792307606992}
   m_Direction: 0
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.99999994
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -14228,7 +14242,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 131.89832, y: -11.7646675}
+  m_AnchoredPosition: {x: 131.89832, y: -11.764679}
   m_SizeDelta: {x: 263.79663, y: 23.529335}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &7627343309604355896
@@ -14536,8 +14550,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  identifier: speed
-  buttonArg: normal
+  identifier: GameSpeed
+  buttonArg: Normal
 --- !u!1 &7875135690426771042
 GameObject:
   m_ObjectHideFlags: 0

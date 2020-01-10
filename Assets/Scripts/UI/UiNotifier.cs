@@ -22,8 +22,13 @@ public abstract class UiNotifier : MonoBehaviour
     [SerializeField]
     private string identifier;
 
+    // Returns the identifier
+    public string GetIdentifier()
+    {
+        return identifier;
+    }
 
-    //Raises an Event to notify any listener
+    // Raises an Event to notify any listener
     protected void NotifyTarget(object arg)
     {
         UiNotifyTarget.Invoke(new Dictionary<string, object>{{identifier, arg}});

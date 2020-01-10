@@ -12,6 +12,12 @@ public class ButtonNotifier : UiNotifier
     [SerializeField]
     private string buttonArg;
 
+    // Returns the button argument
+    public string GetArg()
+    {
+        return buttonArg;
+    }
+
     public void OnValueChange()
     {
         NotifyTarget(buttonArg);

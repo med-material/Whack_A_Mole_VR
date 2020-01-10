@@ -9,6 +9,9 @@ public class TimeUpdateEvent : UnityEvent<float> {}
 [System.Serializable]
 public class StateUpdateEvent : UnityEvent<GameDirector.GameState> {}
 
+[System.Serializable]
+public class SpeedUpdateEvent : UnityEvent<string, string> {}
+
 /*
 Base class of the game. Launches and stops the game. Contains the different game's parameters.
 */
@@ -46,21 +49,22 @@ public class GameDirector : MonoBehaviour
     private GameState gameState = GameState.Stopped;
     private LoggerNotifier loggerNotifier;
     private PatternManager patternManager;
+    private SpeedUpdateEvent speedUpdateEvent = new SpeedUpdateEvent();
 
     private Dictionary<string, Dictionary<string, float>> difficulties = new Dictionary<string, Dictionary<string, float>>(){
-        {"slow", new Dictionary<string, float>(){
+        {"Slow", new Dictionary<string, float>(){
             {"spawnRate", 3.5f},
             {"spawnVariance", .1f},
             {"lifeTime", 5f},
             {"fakeCoeff", .1f},
         }},
-        {"normal", new Dictionary<string, float>(){
+        {"Normal", new Dictionary<string, float>(){
             {"spawnRate", 2.25f},
             {"spawnVariance", .3f},
             {"lifeTime", 4f},
             {"fakeCoeff", .2f},
         }},
-        {"fast", new Dictionary<string, float>(){
+        {"Fast", new Dictionary<string, float>(){
             {"spawnRate", 1f},
             {"spawnVariance", .5f},
             {"lifeTime", 3f},
@@ -177,12 +181,20 @@ public class GameDirector : MonoBehaviour
             {
                 {"GameSpeed", gameDifficulty}
             });
+        
+        speedUpdateEvent.Invoke("GameSpeed", gameDifficulty);
     }
 
     // Returns the Mole expiring duration
     public float GetMoleExpiringDuration()
     {
         return moleExpiringDuration;
+    }
+
+    // Returns the difficulty update event
+    public UnityEvent<string, string> GetDifficultyUpdateEvent()
+    {
+        return speedUpdateEvent;
     }
 
     // Loads the difficulty.

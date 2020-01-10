@@ -24,6 +24,9 @@ public class TherapistPanelController : MonoBehaviour
     [SerializeField]
     private Text profileNameText;
 
+    [SerializeField]
+    private GameModifiersContainer gameModifiersContainer;
+
     private Animation animationPlayer;
     private LayoutElement layoutElement;
     private TherapistUi therapistUi;
@@ -73,6 +76,12 @@ public class TherapistPanelController : MonoBehaviour
     public void GameTimeUpdate(float time)
     {
         gameStateContainer.UpdateTime(time);
+    }
+
+    // When a modifier is changed, update the selected button
+    public void UpdateSelectedModifier(string identifier, string argument)
+    {
+        gameModifiersContainer.UpdateSelectedButton(identifier, argument);
     }
 
     // Plays the collapsing animation of the maximized therapist Ui.

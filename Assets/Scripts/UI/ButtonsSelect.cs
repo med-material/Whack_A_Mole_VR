@@ -17,8 +17,14 @@ public class ButtonsSelect : MonoBehaviour
         foreach(Button button in gameObject.GetComponentsInChildren<Button>())
         {
             buttons.Add(button);
-            button.onClick.AddListener(delegate{ButtonClicked(button);});
+            // button.onClick.AddListener(delegate{ButtonClicked(button);});
         }
+    }
+
+    public bool ContainsButton(Button button)
+    {
+        if (buttons.Contains(button)) return true;
+        return false;
     }
 
     public void ButtonClicked(Button clickedButton)
