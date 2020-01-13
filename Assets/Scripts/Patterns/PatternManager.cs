@@ -14,6 +14,7 @@ public class PatternManager : MonoBehaviour
     private PatternReadWriter patternReadWriter;
     private PatternParser patternParser;
     private PatternPlayer patternPlayer;
+    private LoggerNotifier loggerNotifier;
 
     // TO-DO: ADD PATTERN DISPLAY AND SELECTION IN EDITOR
     // TEMPORARY: the pattern can be selected by entering its name in the editor
@@ -28,6 +29,11 @@ public class PatternManager : MonoBehaviour
         patternReadWriter = new PatternReadWriter();
         patternParser = new PatternParser();
         patternPlayer = FindObjectOfType<PatternPlayer>();
+
+        loggerNotifier = new LoggerNotifier(persistentEventsHeadersDefaults: new Dictionary<string, string>(){
+            {"PlayedPattern", "None"}
+        });
+
 
         // TEMPORARY
         if (desiredPatternName != "")
@@ -57,9 +63,15 @@ public class PatternManager : MonoBehaviour
         if (!PatternLoaded())
         {
             Debug.LogError("No pattern loaded!");
+            loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>(){
+                {"PlayedPattern", "None"}
+            });
             return false;
         }
         patternPlayer.PlayPattern();
+        loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>(){
+                {"PlayedPattern", loadedPatternName}
+            });
         return true;
     }
 
