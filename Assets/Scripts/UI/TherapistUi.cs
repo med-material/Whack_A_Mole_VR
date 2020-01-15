@@ -23,9 +23,13 @@ public class TherapistUi : MonoBehaviour
     [SerializeField]
     private PlayerPanel playerPanel;
 
+    [SerializeField]
+    private PatternManager patternManager;
+
     private GameDirector.GameState currentGameState = GameDirector.GameState.Stopped;
     private LoggerNotifier loggerNotifier;
     private Animation animationPlayer;
+    
 
     // Temporary implementation
     private string profileName;
@@ -33,6 +37,8 @@ public class TherapistUi : MonoBehaviour
     void Start()
     {
         animationPlayer = gameObject.GetComponent<Animation>();
+        patternManager.GetPatternUpdateEvent().AddListener(PatternLoaded);
+        UpdatePatternDropDown();
 
         // Connect to the modifier updated event from the ModifiersManager
         modifiersManager.GetModifierUpdateEvent().AddListener(ModifierUpdated);
@@ -156,6 +162,33 @@ public class TherapistUi : MonoBehaviour
                     break;
             }
         }
+    }
+
+    // Updates the values of the pattern dropdown
+    public void UpdatePatternDropDown()
+    {
+        therapistPanelController.UpdatePatternDropDown(patternManager.GetPatternsName());
+    }
+
+    // When a pattern is selected on the dropdown
+    public void DropDownPatternSelected(string patternName)
+    {
+        if (patternName == "No pattern")
+        {
+            patternManager.ClearPattern();
+            return;
+        }
+        if(!patternManager.LoadPattern(patternName))
+        {
+            therapistPanelController.UpdatePatternDropDown(patternManager.GetPatternsName());
+            therapistPanelController.SetSelectedPattern(patternManager.GetLoadedPatternName());
+        }
+    }
+
+    // When a pattern has been correctly loaded (function called when the pattern loaded event is raised)
+    public void PatternLoaded(string patternName)
+    {
+        therapistPanelController.SetSelectedPattern(patternName);
     }
 
     // When the game time updated event is raised (by the game director), updates the UI.

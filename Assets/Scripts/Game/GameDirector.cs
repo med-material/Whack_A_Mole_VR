@@ -103,10 +103,18 @@ public class GameDirector : MonoBehaviour
 
         if(patternManager.PlayPattern())
         {
+            loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>()
+            {
+                {"GameDuration", patternManager.GetPatternDuration()}
+            });
             StartCoroutine(WaitEndGame(patternManager.GetPatternDuration()));
         }
         else
         {
+            loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>()
+            {
+                {"GameDuration", gameDuration}
+            });
             wallManager.Enable();
             StartMoleTimer(gameWarmUpTime);
             StartCoroutine(WaitEndGame(gameDuration));
@@ -163,10 +171,6 @@ public class GameDirector : MonoBehaviour
     {
         if (gameState == GameState.Playing) return;
         gameDuration = duration;
-        loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>()
-        {
-            {"GameDuration", gameDuration}
-        });
     }
 
     // Sets the game difficulty.

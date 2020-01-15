@@ -27,6 +27,9 @@ public class TherapistPanelController : MonoBehaviour
     [SerializeField]
     private GameModifiersContainer gameModifiersContainer;
 
+    [SerializeField]
+    private Dropdown patternsDropdown;
+
     private Animation animationPlayer;
     private LayoutElement layoutElement;
     private TherapistUi therapistUi;
@@ -53,6 +56,8 @@ public class TherapistPanelController : MonoBehaviour
             controller.Disable();
         }
         gameStateContainer.OnStartGame();
+        patternsDropdown.Hide();
+        patternsDropdown.interactable = false;
     }
 
     // On game stop, enables the ButtonTextController and updates the GameStateContainer
@@ -64,6 +69,43 @@ public class TherapistPanelController : MonoBehaviour
         }
         gameStateContainer.OnPauseGame(false);
         gameStateContainer.OnStopGame();
+        patternsDropdown.interactable = true;
+    }
+
+    // Updates the displayed values in the patterns dropdown
+    public void UpdatePatternDropDown(List<string> newValues)
+    {
+        patternsDropdown.ClearOptions();
+        List<Dropdown.OptionData> patternOptions = new List<Dropdown.OptionData>();
+        patternOptions.Add(new Dropdown.OptionData("No pattern"));
+
+        foreach (string value in newValues)
+        {
+            patternOptions.Add(new Dropdown.OptionData(value));
+        }
+        patternsDropdown.AddOptions(patternOptions);
+
+        patternsDropdown.RefreshShownValue();
+    }
+
+    // When a pattern is selected on the dropdown (called by the dropdown)
+    public void OnPatternSelected()
+    {
+        therapistUi.DropDownPatternSelected(patternsDropdown.options[patternsDropdown.value].text);
+    }
+
+    // Sets the selected pattern
+    public void SetSelectedPattern(string patternName)
+    {
+        for (int i = 0; i < patternsDropdown.options.Count; i++)
+        {
+            if (patternsDropdown.options[i].text == patternName)
+            {
+                patternsDropdown.value = i;
+                return;
+            }
+        }
+        patternsDropdown.value = 0;
     }
 
     // When the game pauses, updates the gameState container.

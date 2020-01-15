@@ -36,7 +36,7 @@ public class PatternReadWriter
     }
 
     // Returns the name of all pattern files found
-    public List<string> LoadPatternsName()
+    public List<string> GetPatternsName()
     {
         List<string> foundPatternsName = new List<string>();
         DirectoryInfo info = new DirectoryInfo(saveDirectory);

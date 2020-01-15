@@ -2,6 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using UnityEngine.Events;
+
+
+[System.Serializable]
+public class PatternUpdateEvent : UnityEvent<string> {}
 
 /*
 Class managing the selected pattern. Stores it, and does the interface between the rest of the game and the
@@ -15,14 +20,7 @@ public class PatternManager : MonoBehaviour
     private PatternParser patternParser;
     private PatternPlayer patternPlayer;
     private LoggerNotifier loggerNotifier;
-
-    // TO-DO: ADD PATTERN DISPLAY AND SELECTION IN EDITOR
-    // TEMPORARY: the pattern can be selected by entering its name in the editor
-
-    [SerializeField]
-    private string desiredPatternName = "";
-
-    private bool initDone = false;
+    private PatternUpdateEvent patternUpdateEvent = new PatternUpdateEvent();
     
     void Awake()
     {
@@ -33,28 +31,6 @@ public class PatternManager : MonoBehaviour
         loggerNotifier = new LoggerNotifier(persistentEventsHeadersDefaults: new Dictionary<string, string>(){
             {"PlayedPattern", "None"}
         });
-
-
-        // TEMPORARY
-        if (desiredPatternName != "")
-        {
-            LoadPattern(desiredPatternName);
-        }
-
-        initDone = true;
-    }
-
-    // TEMPORARY
-    void OnValidate()
-    {
-        if (!EditorApplication.isPlaying) return;
-        if (!initDone) return;
-        if (desiredPatternName == "")
-        {
-            ClearPattern();
-            return;
-        }
-        if (!LoadPattern(desiredPatternName)) loadedPatternName = "";
     }
 
     // Plays the pattern if one is loaded.
@@ -92,6 +68,11 @@ public class PatternManager : MonoBehaviour
     {
         return patternPlayer.IsPlaying();
     }
+
+    public UnityEvent<string> GetPatternUpdateEvent()
+    {
+        return patternUpdateEvent;
+    }
     
     // Returns if a pattern is loaded or not.
     public bool PatternLoaded()
@@ -122,14 +103,27 @@ public class PatternManager : MonoBehaviour
         loadedPatternName = patternName;
 
         patternPlayer.SetPattern(patternParser.ParsePattern(patternProperties));
+        patternUpdateEvent.Invoke(patternName);
         return true;
     }
 
     // Unload the loaded pattern to get back to a state where no pattern is loaded.
     public void ClearPattern()
     {
-        if (loadedPatternName == "") return;
+        if (!PatternLoaded()) return;
         loadedPatternName = "";
         patternPlayer.ClearPattern();
+    }
+
+    // Returns the name of the available patterns
+    public List<string> GetPatternsName()
+    {
+        return patternReadWriter.GetPatternsName();
+    }
+
+    // Returns the name of the currently loaded pattern
+    public string GetLoadedPatternName()
+    {
+        return loadedPatternName;
     }
 }
