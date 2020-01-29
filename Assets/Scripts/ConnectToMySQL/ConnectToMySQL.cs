@@ -208,10 +208,18 @@ public class ConnectToMySQL : MonoBehaviour {
 		// Create a string with the data
 		string dataString = "";
 		for(int i = 0; i < logCollection["Email"].Count; i++) {
-			int a = 0;
 			List<string> row = new List<string>();
 			foreach(string key in logCollection.Keys) {
-				a++;
+				if (logCollection[key][i].Contains(",")) {
+					Debug.LogWarning("Value " + logCollection[key] + "from column " + key + "contains comma (,). It has been replaced with a dot.");
+					logCollection[key][i].Replace(',', '.');
+				} else if (logCollection[key][i].Contains(";")) {
+					Debug.LogWarning("Value " + logCollection[key] + "from column " + key + "contains semi-colon (;). It has been replaced with a dash.");
+					logCollection[key][i].Replace(';', '-');
+				} else if (logCollection[key][i].Contains("\"")) {
+					Debug.LogWarning("Value " + logCollection[key] + "from column " + key + "contains quotation mark (\"). It has been replaced with a dash.");
+					logCollection[key][i].Replace('\"', '-');
+				}
 				row.Add(logCollection[key][i]);
 			}
 			if(i != 0) {
@@ -231,10 +239,6 @@ public class ConnectToMySQL : MonoBehaviour {
 		form.AddField ("usernamePost", credentials["username"]);
 		form.AddField ("passwordPost", credentials["password"]);
 		form.AddField ("secHashPost",Md5Sum (credentials["dbSecKey"]));
-
-		foreach(KeyValuePair<string,string> cred in credentials) {
-		Debug.Log(cred.Key + " = " + cred.Value);
-		}
 
         colsHash = Md5Sum(dbCols);
 		form.AddField("db_hash", colsHash);
@@ -310,6 +314,11 @@ public class ConnectToMySQL : MonoBehaviour {
 	}
 
 	private void DetectDumpedLogs() {
+		// If no credentials are available, we skip dumplog detection.
+		if (credentials == null) {
+			Debug.LogWarning("No credentials loaded, aborting logdump detection..");
+			return;
+		}
 
 		var fileDumps = Directory.GetFiles(directory, "logdump*");
 
@@ -436,7 +445,7 @@ public class ConnectToMySQL : MonoBehaviour {
 		string[] lines = builtInCredentials.text.Split('\n');
 		foreach (var line in lines) {
 			if (!string.IsNullOrEmpty(line)) {
-				cred = line.Split('=');
+				cred = line.Trim().Split('=');
 				credentials[cred[0]] = cred[1];
 			}
 		}
