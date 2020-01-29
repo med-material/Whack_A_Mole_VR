@@ -6,6 +6,16 @@ public class ApplicationManager : MonoBehaviour
 {
     void Update()
     {
-        if (Input.GetKey("escape")) Application.Quit();
+        if (Input.GetKey("escape")) QuitApplication();
+    }
+
+    public void CloseGame()
+    {
+        QuitApplication();
+    }
+
+    private void QuitApplication()
+    {
+        Application.Quit();
     }
 }

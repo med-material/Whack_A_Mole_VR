@@ -27,7 +27,10 @@ public class PatternManager : MonoBehaviour
         patternReadWriter = new PatternReadWriter();
         patternParser = new PatternParser();
         patternPlayer = FindObjectOfType<PatternPlayer>();
+    }
 
+    void Start()
+    {
         loggerNotifier = new LoggerNotifier(persistentEventsHeadersDefaults: new Dictionary<string, string>(){
             {"PlayedPattern", "None"}
         });

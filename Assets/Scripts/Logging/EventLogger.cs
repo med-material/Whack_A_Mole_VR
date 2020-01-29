@@ -57,7 +57,7 @@ public class EventLogger : MonoBehaviour
 
 
     // On start, init the logs with the mandatory columns.
-    void Start()
+    void Awake()
     {
         connectToMySQL = gameObject.GetComponent<ConnectToMySQL>();
         wallStateTracker = gameObject.GetComponent<WallStateTracker>();
@@ -67,8 +67,10 @@ public class EventLogger : MonoBehaviour
         logs.Add("Date", new Dictionary<int, string>());
         logs.Add("TimeSinceLastEvent", new Dictionary<int, string>());
         logs.Add("GameId", new Dictionary<int, string>());
-        trackerHub.Init();
+        persistentLog.Add("ParticipantId", 0);
+        persistentLog.Add("TestId", 0);
         GenerateUid();
+        trackerHub.Init();
     }
 
     // Updates the logged mail.
@@ -391,7 +393,7 @@ public class EventLogger : MonoBehaviour
         object testId;
         persistentLog.TryGetValue("ParticipantId", out participantId);
         persistentLog.TryGetValue("TestId", out testId);
-        uid = participantId.ToString() + testId.ToString() + System.DateTime.Now.ToString(new CultureInfo("en-GB")).Replace(" ", "").Replace("/", "").Replace(":", "");
+        uid = participantId.ToString() + testId.ToString() + System.DateTime.Now.ToString("yyyy:MM:dd:HH:mm:ss").Replace(" ", "").Replace("/", "").Replace(":", "");
     }
 
     // Converts the values of the parameters (in a "object format") to a string, formatting them to the

@@ -21,10 +21,16 @@ public class TherapistUi : MonoBehaviour
     private MinimizedPanelController minimizedPanelController;
 
     [SerializeField]
+    private WarningPanel warningPanel;
+
+    [SerializeField]
     private PlayerPanel playerPanel;
 
     [SerializeField]
     private PatternManager patternManager;
+
+    [SerializeField]
+    private ApplicationManager applicationManager;
 
     private GameDirector.GameState currentGameState = GameDirector.GameState.Stopped;
     private LoggerNotifier loggerNotifier;
@@ -55,6 +61,17 @@ public class TherapistUi : MonoBehaviour
             {"ParticipantId", 0},
             {"TestId", 0}
         });
+    }
+
+    public void UpdateDeviceWarningDisplay(bool display)
+    {
+        warningPanel.UpdateWarningDisplay(display);
+    }
+
+    // When the exit button is pressed, close the application
+    public void ExitApplication()
+    {
+        applicationManager.CloseGame();
     }
 
     // When start game event is raised, nofifies the gameDirector.

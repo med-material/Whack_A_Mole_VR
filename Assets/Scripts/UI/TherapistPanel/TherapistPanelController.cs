@@ -48,6 +48,12 @@ public class TherapistPanelController : MonoBehaviour
         }
     }
 
+    // Called when the "exit" button is pressed
+    public void OnExitPress()
+    {
+        therapistUi.ExitApplication();
+    }
+
     // On start, disables the ButtonTextController and updates the GameStateContainer
     public void GameStart()
     {
