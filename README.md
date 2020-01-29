@@ -2,6 +2,8 @@
 
 ![Whack A Mole Game Setup](Images/game_setup.png)
 
+**Last release version: v2020.01.29**
+
 The Whack_A_Mole VR environment provides a test for the Pupil Labs Calibration environment, used with the Pupil Labs plugin for eye-tracking in VR. 
 
 The main goal of this project is to be used in clinics for rehabilitation of visualy neglected people. By providing a playful environment, the game stimulates the patient and helps his rehabilitation, while data are collected in the background to allow for a deep analysis of the patient behavior and reactions.
