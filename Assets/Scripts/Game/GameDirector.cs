@@ -23,6 +23,9 @@ public class GameDirector : MonoBehaviour
     [SerializeField]
     private WallManager wallManager;
     
+    [SerializeField]
+    private PupilLabs.RecordingController gazeRecorder;
+
     //temporarily serialized field for game test
     [SerializeField]
     private float gameDuration;
@@ -121,7 +124,7 @@ public class GameDirector : MonoBehaviour
         }
         
         UpdateState(GameState.Playing);
-        
+        gazeRecorder.StartRecording();
         loggerNotifier.NotifyLogger("Game Started", EventLogger.EventType.GameEvent, new Dictionary<string, object>()
         {
             {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
@@ -217,6 +220,7 @@ public class GameDirector : MonoBehaviour
     private void FinishGame()
     {
         if (gameState == GameState.Stopped) return;
+        gazeRecorder.StopRecording();
         patternManager.StopPattern();
         StopAllCoroutines();
         UpdateState(GameState.Stopped);
@@ -302,4 +306,9 @@ public class GameDirector : MonoBehaviour
             {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
         });
     }
+
+    void OnApplicationQuit() {
+        gazeRecorder.StopRecording();
+    }
+
 }
