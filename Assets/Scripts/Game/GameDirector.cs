@@ -124,7 +124,7 @@ public class GameDirector : MonoBehaviour
         }
         
         UpdateState(GameState.Playing);
-        gazeRecorder.StartRecording();
+        if (gazeRecorder != null) gazeRecorder.StartRecording();
         loggerNotifier.NotifyLogger("Game Started", EventLogger.EventType.GameEvent, new Dictionary<string, object>()
         {
             {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
@@ -220,7 +220,7 @@ public class GameDirector : MonoBehaviour
     private void FinishGame()
     {
         if (gameState == GameState.Stopped) return;
-        gazeRecorder.StopRecording();
+        if (gazeRecorder != null) gazeRecorder.StopRecording();
         patternManager.StopPattern();
         StopAllCoroutines();
         UpdateState(GameState.Stopped);

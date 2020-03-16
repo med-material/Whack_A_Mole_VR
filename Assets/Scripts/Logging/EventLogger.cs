@@ -263,8 +263,8 @@ public class EventLogger : MonoBehaviour
         logs["Date"].Add(logCount, System.DateTime.Now.ToString("yyyy-MM-dd"));
         logs["Time"].Add(logCount, System.DateTime.Now.ToString("HH:mm:ss.ffff"));
         logs["TimeSinceLastEvent"].Add(logCount, GetPreviousEventTimeDiff().ToString("0.0000").Replace(",", "."));
-        logs["PupilTime"].Add(logCount, timeSync.GetPupilTimestamp().ToString());
-        logs["UnityToPupilTimeOffset"].Add(logCount, timeSync.UnityToPupilTimeOffset.ToString());
+        logs["PupilTime"].Add(logCount, timeSync != null ? timeSync.GetPupilTimestamp().ToString() : "NULL");
+        logs["UnityToPupilTimeOffset"].Add(logCount, timeSync != null ? timeSync.UnityToPupilTimeOffset.ToString() : "NULL");
         logs["GameId"].Add(logCount, uid);
 
         foreach (KeyValuePair<string, object> pair in log)
