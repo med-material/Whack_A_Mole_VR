@@ -39,6 +39,8 @@ public class EventLogger : MonoBehaviour
     [SerializeField]
     private bool saveLocally = true;
 
+    [SerializeField]
+    private PupilLabs.TimeSync timeSync;
 
     private string completeFileName = "";
     private string filePath;
@@ -66,6 +68,8 @@ public class EventLogger : MonoBehaviour
         logs.Add("Time", new Dictionary<int, string>());
         logs.Add("Date", new Dictionary<int, string>());
         logs.Add("TimeSinceLastEvent", new Dictionary<int, string>());
+        logs.Add("PupilTime", new Dictionary<int, string>());
+        logs.Add("UnityToPupilTimeOffset", new Dictionary<int, string>());
         logs.Add("GameId", new Dictionary<int, string>());
         persistentLog.Add("ParticipantId", 0);
         persistentLog.Add("TestId", 0);
@@ -259,6 +263,8 @@ public class EventLogger : MonoBehaviour
         logs["Date"].Add(logCount, System.DateTime.Now.ToString("yyyy-MM-dd"));
         logs["Time"].Add(logCount, System.DateTime.Now.ToString("HH:mm:ss.ffff"));
         logs["TimeSinceLastEvent"].Add(logCount, GetPreviousEventTimeDiff().ToString("0.0000").Replace(",", "."));
+        logs["PupilTime"].Add(logCount, timeSync.GetPupilTimestamp().ToString());
+        logs["UnityToPupilTimeOffset"].Add(logCount, timeSync.UnityToPupilTimeOffset.ToString());
         logs["GameId"].Add(logCount, uid);
 
         foreach (KeyValuePair<string, object> pair in log)
