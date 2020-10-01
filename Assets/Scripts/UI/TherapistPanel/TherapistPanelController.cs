@@ -54,6 +54,17 @@ public class TherapistPanelController : MonoBehaviour
         therapistUi.ExitApplication();
     }
 
+    // On countdown, updates the gamestate container.
+    public void GameCountDown() {
+        foreach(ButtonTextController controller in buttonTextControllers)
+        {
+            controller.Disable();
+        }
+        gameStateContainer.OnCountDownGame();
+        patternsDropdown.Hide();
+        patternsDropdown.interactable = false;
+    }
+
     // On start, disables the ButtonTextController and updates the GameStateContainer
     public void GameStart()
     {

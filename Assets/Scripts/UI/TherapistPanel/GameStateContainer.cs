@@ -10,6 +10,10 @@ and shows the corresponding buttons.
 
 public class GameStateContainer : MonoBehaviour
 {
+
+    [SerializeField]
+    private GameObject countdownContainer;
+
     [SerializeField]
     private GameObject startContainer;
 
@@ -23,14 +27,30 @@ public class GameStateContainer : MonoBehaviour
     private Text gameTimeText;
 
     [SerializeField]
+    private Text countDownText;
+    private string countDownTextTemplate;
+
+    [SerializeField]
     private Button pauseGameButton;
 
+    void Awake() {
+        countDownTextTemplate = countDownText.text;
+    }
+
+    public void OnCountDownGame()
+    {
+        gameStateText.text = "Preparing the game..";
+        startContainer.SetActive(false);
+        runningContainer.SetActive(false);
+        countdownContainer.SetActive(true);
+    }
 
     // When the game starts, updates the text and shows the runningContainer (containing the chronometer, pause and stop buttons).
     public void OnStartGame()
     {
         gameStateText.text = "Game is running.";
         startContainer.SetActive(false);
+        countdownContainer.SetActive(false);
         runningContainer.SetActive(true);
     }
 
@@ -39,6 +59,7 @@ public class GameStateContainer : MonoBehaviour
     {
         gameStateText.text = "Game is ready.";
         runningContainer.SetActive(false);
+        countdownContainer.SetActive(false);
         startContainer.SetActive(true);
     }
 
@@ -70,5 +91,9 @@ public class GameStateContainer : MonoBehaviour
         value += ":";
         value += (time % 60f).ToString("F3");
         gameTimeText.text = value;
+    }
+
+    public void UpdateCountDown(int count) {
+        countDownText.text = string.Format(countDownTextTemplate, count.ToString());
     }
 }
