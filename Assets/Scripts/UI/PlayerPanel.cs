@@ -17,6 +17,9 @@ public class PlayerPanel : MonoBehaviour
     private GameObject gamePausedContainer;
 
     [SerializeField]
+    private GameObject gameCountDownContainer;
+
+    [SerializeField]
     private Text timeText;
 
     [SerializeField]
@@ -25,12 +28,17 @@ public class PlayerPanel : MonoBehaviour
     [SerializeField]
     private Text testText;
 
+    [SerializeField]
+    private Text countDownText;
+    private string countDownTextTemplate;
+
     private Canvas panelCanvas;
 
 
-    void Start()
+    void Awake()
     {
         panelCanvas = gameObject.GetComponentInChildren<Canvas>();
+        countDownTextTemplate = countDownText.text;
     }
 
     // Hides/shows the panel
@@ -54,6 +62,20 @@ public class PlayerPanel : MonoBehaviour
         }
     }
 
+    // Switches between the "countdown" panel and the information panel.
+    public void SetCountDownContainer(bool countDownContainer = true) {
+        if (countDownContainer)
+        {
+            infoContainer.SetActive(false);
+            gameCountDownContainer.SetActive(true);
+        }
+        else
+        {
+            infoContainer.SetActive(true);
+            gameCountDownContainer.SetActive(false);
+        }
+    }
+
     // Updates the participant Id, game duration and test Id displayed on the information panel.
     public void UpdateDisplayedInfos(Dictionary<string, object> data)
     {
@@ -74,5 +96,10 @@ public class PlayerPanel : MonoBehaviour
                     break;
             }
         }
+    }
+
+    // Updates the countdown in the countdown panel.
+    public void UpdateCountDownInfo(int count) {
+        countDownText.text = string.Format(countDownTextTemplate, count.ToString());
     }
 }
