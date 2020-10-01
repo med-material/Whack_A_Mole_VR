@@ -17,6 +17,9 @@ public abstract class Pointer : MonoBehaviour
     [SerializeField]
     private SteamVR_Input_Sources controller;
 
+    [SerializeField]
+    private GameObject laserOrigin;
+
     // Currently serialized. May be controlled by the UI in the future.
 
     [SerializeField]
@@ -26,7 +29,7 @@ public abstract class Pointer : MonoBehaviour
     private bool directionSmoothed = false;
 
     [SerializeField]
-    protected Vector3 laserOrigin;
+    protected Vector3 laserOffset;
 
     [SerializeField]
     protected Color startLaserColor;
@@ -144,14 +147,14 @@ public abstract class Pointer : MonoBehaviour
         Vector3 rayDirection = GetRayDirection();
 
         RaycastHit hit;
-        if (Physics.Raycast(transform.position + laserOrigin, rayDirection, out hit, 100f, Physics.DefaultRaycastLayers))
+        if (Physics.Raycast(laserOrigin.transform.position + laserOffset, rayDirection, out hit, 100f, Physics.DefaultRaycastLayers))
         {
-            UpdateLaser(true, hitPosition: transform.InverseTransformPoint(hit.point));
+            UpdateLaser(true, hitPosition: laserOrigin.transform.InverseTransformPoint(hit.point));
             hoverMole(hit);
         }
         else
         {
-            UpdateLaser(false, rayDirection: transform.InverseTransformDirection(rayDirection));
+            UpdateLaser(false, rayDirection: laserOrigin.transform.InverseTransformDirection(rayDirection));
         }
 
         if(SteamVR.active)
@@ -167,9 +170,12 @@ public abstract class Pointer : MonoBehaviour
                         {"LastShotControllerRawPointingDirectionX", transform.forward.x},
                         {"LastShotControllerRawPointingDirectionY", transform.forward.y},
                         {"LastShotControllerRawPointingDirectionZ", transform.forward.z},
-                        {"LastShotControllerFilteredPointingDirectionX", rayDirection.x},
-                        {"LastShotControllerFilteredPointingDirectionY", rayDirection.y},
-                        {"LastShotControllerFilteredPointingDirectionZ", rayDirection.z},
+                        {"LastShotBubbleRawPointingDirectionX", laserOrigin.transform.forward.x},
+                        {"LastShotBubbleRawPointingDirectionY", laserOrigin.transform.forward.y},
+                        {"LastShotBubbleRawPointingDirectionZ", laserOrigin.transform.forward.z},
+                        {"LastShotBubbleFilteredPointingDirectionX", rayDirection.x},
+                        {"LastShotBubbleFilteredPointingDirectionY", rayDirection.y},
+                        {"LastShotBubbleFilteredPointingDirectionZ", rayDirection.z},
                     });
 
                     loggerNotifier.NotifyLogger("Pointer Shoot", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
@@ -260,7 +266,7 @@ public abstract class Pointer : MonoBehaviour
             if (hit) cursor.Enable();
             else cursor.Disable();
         }
-        if (hit) cursor.SetPosition(laserOrigin + hitPosition);
+        if (hit) cursor.SetPosition(laserOffset + hitPosition);
     }
 
     private Vector3 GetRayDirection()
@@ -276,7 +282,7 @@ public abstract class Pointer : MonoBehaviour
                 break;
             case AimAssistStates.None:
             default:
-                direction = transform.forward;
+                direction = laserOrigin.transform.forward;
                 break;
         }
 
@@ -305,7 +311,7 @@ public abstract class Pointer : MonoBehaviour
     private Vector3 GetSnappedDirection()
     {
         RaycastHit hit;
-        if (Physics.Raycast(transform.position + laserOrigin, transform.forward, out hit, 100f, Physics.DefaultRaycastLayers))
+        if (Physics.Raycast(laserOrigin.transform.position + laserOffset, laserOrigin.transform.forward, out hit, 100f, Physics.DefaultRaycastLayers))
         {
             Collider[] collidersHit = Physics.OverlapSphere(hit.point, SnapMagnetizeRadius);
 
@@ -318,7 +324,7 @@ public abstract class Pointer : MonoBehaviour
                 }
             }
 
-            if (molesHit.Count == 0) return transform.forward;
+            if (molesHit.Count == 0) return laserOrigin.transform.forward;
 
             float closestDistance = 1000f;
             Vector3 closestMolePosition = Vector3.zero;
@@ -332,15 +338,15 @@ public abstract class Pointer : MonoBehaviour
                     closestMolePosition = moleTransform.position;
                 }
             }
-            return (closestMolePosition + new Vector3(0f, 0.005f, 0f) - transform.position).normalized;
+            return (closestMolePosition + new Vector3(0f, 0.005f, 0f) - laserOrigin.transform.position).normalized;
         }
-        return transform.forward;
+        return laserOrigin.transform.forward;
     }
 
     private Vector3 GetMagnetizedDirection()
     {
         RaycastHit hit;
-        if (Physics.Raycast(transform.position + laserOrigin, transform.forward, out hit, 100f, Physics.DefaultRaycastLayers))
+        if (Physics.Raycast(laserOrigin.transform.position + laserOffset, laserOrigin.transform.forward, out hit, 100f, Physics.DefaultRaycastLayers))
         {
             Collider[] collidersHit = Physics.OverlapSphere(hit.point, SnapMagnetizeRadius);
 
@@ -353,7 +359,7 @@ public abstract class Pointer : MonoBehaviour
                 }
             }
 
-            if (molesHit.Count == 0) return transform.forward;
+            if (molesHit.Count == 0) return laserOrigin.transform.forward;
 
             float closestDistance = 1000f;
             Vector3 closestMolePosition = Vector3.zero;
@@ -367,18 +373,18 @@ public abstract class Pointer : MonoBehaviour
                     closestMolePosition = moleTransform.position;
                 }
             }
-            return (((closestMolePosition + hit.point) / 2f) + new Vector3(0f, 0.005f, 0f) - transform.position).normalized;
+            return (((closestMolePosition + hit.point) / 2f) + new Vector3(0f, 0.005f, 0f) - laserOrigin.transform.position).normalized;
         }
-        return transform.forward;
+        return laserOrigin.transform.forward;
     }
 
     // Inits the laser.
     private void InitLaser()
     {
-        laser = gameObject.AddComponent<LineRenderer>();
+        laser = laserOrigin.AddComponent<LineRenderer>();
         laser.useWorldSpace = false;
         laser.material = laserMaterial;
-        laser.SetPositions(new Vector3[2]{laserOrigin, laserOrigin + Vector3.forward * maxLaserLength});
+        laser.SetPositions(new Vector3[2]{laserOffset, laserOffset + Vector3.forward * maxLaserLength});
         laser.startColor = startLaserColor;
         laser.endColor = EndLaserColor;
         laser.startWidth = laserWidth;
@@ -392,7 +398,7 @@ public abstract class Pointer : MonoBehaviour
 
         // Smoothing init
 
-        previousDirection = transform.forward;
+        previousDirection = laserOrigin.transform.forward;
     }
 
     // Waits the CoolDown duration.
