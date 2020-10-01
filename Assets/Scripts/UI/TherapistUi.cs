@@ -77,7 +77,7 @@ public class TherapistUi : MonoBehaviour
     // When start game event is raised, nofifies the gameDirector.
     public void StartGame()
     {
-        gameDirector.StartGame();
+        gameDirector.CountDownGame();
     }
 
     // When stop game event is raised, nofifies the gameDirector.
@@ -97,6 +97,9 @@ public class TherapistUi : MonoBehaviour
     {
         switch(newState)
         {
+            case GameDirector.GameState.CountDown:
+                GameCountDown();
+                break;
             case GameDirector.GameState.Stopped:
                 GameStopped();
                 break;
@@ -229,6 +232,16 @@ public class TherapistUi : MonoBehaviour
         therapistPanelController.UpdateProfileName(profileName);
     }
 
+    // When the game CountDown event is raised (by the game director), updates the UI.
+    private void GameCountDown()
+    {
+        therapistPanelController.GameCountDown();
+        minimizedPanelController.GameStart();
+        playerPanel.SetPausedContainer(false);
+        playerPanel.SetCountDownContainer(true);
+        playerPanel.SetEnablePanel(true);
+    }
+
     // When the game started event is raised (by the game director), updates the UI.
     private void GameStarted()
     {
@@ -243,6 +256,7 @@ public class TherapistUi : MonoBehaviour
         therapistPanelController.GameStop();
         minimizedPanelController.GameStop();
         playerPanel.SetPausedContainer(false);
+        playerPanel.SetCountDownContainer(false);
         playerPanel.SetEnablePanel();
     }
 
@@ -251,6 +265,7 @@ public class TherapistUi : MonoBehaviour
     {
         therapistPanelController.GamePause(pause);
         minimizedPanelController.GamePause(pause);
+        playerPanel.SetCountDownContainer(false);
         playerPanel.SetPausedContainer(pause);
         playerPanel.SetEnablePanel(pause);
     }
