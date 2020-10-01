@@ -4,6 +4,9 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [System.Serializable]
+public class CountDownEvent : UnityEvent<int> {}
+
+[System.Serializable]
 public class TimeUpdateEvent : UnityEvent<float> {}
 
 [System.Serializable]
@@ -18,11 +21,11 @@ Base class of the game. Launches and stops the game. Contains the different game
 
 public class GameDirector : MonoBehaviour
 {
-    public enum GameState {Paused, Playing, Stopped}
+    public enum GameState {CountDown, Paused, Playing, Stopped}
 
     [SerializeField]
     private WallManager wallManager;
-    
+
     [SerializeField]
     private PupilLabs.RecordingController gazeRecorder;
 
@@ -44,6 +47,9 @@ public class GameDirector : MonoBehaviour
 
     [SerializeField]
     public StateUpdateEvent stateUpdate;
+
+    [SerializeField]
+    public CountDownEvent countUpdate;
 
     private Dictionary<string, float> difficultySettings;
     private Coroutine spawnTimer;
@@ -98,6 +104,12 @@ public class GameDirector : MonoBehaviour
             {"GameTimeSpent", 0},
             {"GameTimeLeft",gameDuration}
         });
+    }
+
+    public void CountDownGame() {
+        if (gameState == GameState.Playing) return;
+        UpdateState(GameState.CountDown);
+        StartCoroutine(WaitStartGame(gameWarmUpTime));
     }
 
     // Starts the game.
@@ -245,6 +257,34 @@ public class GameDirector : MonoBehaviour
         {
             spawnTimer = StartCoroutine(WaitSpawnMole(setTime));
         }
+    }
+
+    // Waits a given time before starting the game
+    private IEnumerator WaitStartGame(float duration) {
+        float currentCountDownLeft = duration;
+        int currentCountDownLeftRounded = -1;
+        int prevCount = -1;
+
+        while (currentCountDownLeft > -0.9) {
+            prevCount = currentCountDownLeftRounded;
+
+            if (gameState == GameState.CountDown) {
+                currentCountDownLeft -= Time.deltaTime;
+            }
+            currentCountDownLeftRounded = (int) Mathf.Ceil(currentCountDownLeft);
+            
+            if (currentCountDownLeftRounded != prevCount) {
+                var data = new Dictionary<string, object>()
+                {
+                    {"CountDown", currentCountDownLeftRounded}
+                };
+                countUpdate.Invoke(currentCountDownLeftRounded);
+                loggerNotifier.NotifyLogger("CountDown " + currentCountDownLeftRounded.ToString(), EventLogger.EventType.GameEvent);
+            }
+            yield return null;
+        }
+
+        StartGame();
     }
 
     // Waits a given time before activating a new Mole
