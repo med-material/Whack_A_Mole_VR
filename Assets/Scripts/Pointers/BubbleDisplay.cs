@@ -26,6 +26,9 @@ public class BubbleDisplay : MonoBehaviour
     [SerializeField]
     private float offsetZ = 0f;
 
+    [SerializeField]
+    private LaserMapper laserMapper;
+
     private float newPosX;
     private float newPosY;
     private float newPosZ;
@@ -46,6 +49,9 @@ public class BubbleDisplay : MonoBehaviour
         newPosY = parentY ? parent.transform.position.y : ownPosition.y;
         newPosZ = parentZ ? parent.transform.position.z : ownPosition.z;
 
-        this.transform.position = new Vector3(newPosX + offsetX, newPosY + offsetY, newPosZ + offsetZ);
+        Vector3 newPos = new Vector3(newPosX, newPosY, newPosZ);
+        if (laserMapper.CoordinateWithinMotorSpace(newPos)) {
+            this.transform.position = new Vector3(newPosX + offsetX, newPosY + offsetY, newPosZ + offsetZ);
+        }
     }
 }
