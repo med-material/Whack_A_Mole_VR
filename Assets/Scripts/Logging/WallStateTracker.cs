@@ -34,8 +34,10 @@ public class WallStateTracker : MonoBehaviour
     }
 
     // Function called through an event when the WallManager initialises the wall (spawns the moles).
-    public void WallStateUpdate(bool isActivating, Dictionary<int, Mole> moleList)
+    public void WallStateUpdate(WallInfo wallInfo)
     {
+        bool isActivating =  wallInfo.active;
+        Dictionary<int, Mole> moleList = wallInfo.moles;
         if (isActivating)
         {
             foreach (Mole mole in moleList.Values)

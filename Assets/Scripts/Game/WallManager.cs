@@ -7,6 +7,20 @@ using UnityEngine.Events;
 Spawns, references and activates the moles. Is the only component to directly interact with the moles.
 */
 
+public class WallInfo {
+    public bool active = false;
+    public Dictionary<int, Mole> moles;
+    public Vector3 wallSize;
+    public Vector3 wallCenter;
+    public float highestX = -1f;
+    public float highestY = -1f;
+    public float lowestX = -1f;
+    public float lowestY = -1f;
+    public float lowestZ = -1f;
+    public float highestZ = -1f;
+    public float heightOffset;
+}
+
 public class WallManager : MonoBehaviour
 {
     // The Mole object to be loaded
@@ -48,8 +62,10 @@ public class WallManager : MonoBehaviour
     [SerializeField]
     private Vector3 moleScale = Vector3.one;
 
-    private class StateUpdateEvent: UnityEvent<bool, Dictionary<int, Mole>> {};
-    private StateUpdateEvent stateUpdateEvent = new StateUpdateEvent();
+    [System.Serializable]
+    public class StateUpdateEvent : UnityEvent<WallInfo> { }
+    public StateUpdateEvent stateUpdateEvent;
+
     private WallGenerator wallGenerator;
     private Vector3 wallCenter;
     private Dictionary<int, Mole> moles;
@@ -58,6 +74,14 @@ public class WallManager : MonoBehaviour
     private float updateCooldownDuration = .1f;
     private LoggerNotifier loggerNotifier;
     private int moleCount = 0;
+
+    // Wall boundaries
+    private float highestX = -1f;
+    private float highestY = -1f;
+    private float lowestX = -1f;
+    private float lowestY = -1f;
+    private float lowestZ = -1f;
+    private float highestZ = -1f;
 
     void Start()
     {
@@ -113,7 +137,24 @@ public class WallManager : MonoBehaviour
     {
         active = false;
         DestroyWall();
-        stateUpdateEvent.Invoke(false, moles);
+        var wallInfo = CreateWallInfo();
+        stateUpdateEvent.Invoke(wallInfo);
+    }
+
+    private WallInfo CreateWallInfo() {
+        var wallInfo = new WallInfo();
+        wallInfo.active = active;
+        wallInfo.moles = moles;
+        wallInfo.wallSize = wallSize;
+        wallInfo.wallCenter = wallCenter;
+        wallInfo.heightOffset = heightOffset;
+        wallInfo.highestX = highestX;
+        wallInfo.highestY = highestY;
+        wallInfo.lowestX = lowestX;
+        wallInfo.lowestY = lowestY;
+        wallInfo.lowestZ = lowestZ;
+        wallInfo.highestZ = highestZ;
+        return wallInfo;
     }
 
     // Activates a random Mole for a given lifeTime and set if is fake or not
@@ -179,7 +220,7 @@ public class WallManager : MonoBehaviour
         // UpdateWall();
     }
 
-    public UnityEvent<bool, Dictionary<int, Mole>> GetUpdateEvent()
+    public UnityEvent<WallInfo> GetUpdateEvent()
     {
         return stateUpdateEvent;
     }
@@ -223,6 +264,13 @@ public class WallManager : MonoBehaviour
         // Updates the wallCenter value
         wallCenter = new Vector3(wallSize.x/2f, wallSize.y/2f, 0);
 
+        highestX = -1f;
+        highestY = -1f;
+        lowestX = -1f;
+        lowestY = -1f;
+        lowestZ = -1f;
+        highestZ = -1f;
+
         // For each row and column:
         for (int x = 0; x < columnCount; x++)
         {
@@ -250,9 +298,26 @@ public class WallManager : MonoBehaviour
                 moles.Add(moleId, mole);
 
                 wallGenerator.AddPoint(x, y, molePos, mole.transform.localRotation);
+
+                // Check's the mole's position to find the outer boundaries of the all moles.
+                if (highestX == -1f) highestX = mole.transform.position.x;
+                if (lowestX == -1f) lowestX = mole.transform.position.x;
+                if (highestY == -1f) highestY = mole.transform.position.y;
+                if(lowestY == -1f) lowestY = mole.transform.position.y;
+                if(lowestZ == -1f) lowestZ = mole.transform.position.z;
+                if(highestZ == -1f) highestZ = mole.transform.position.z;
+
+                highestX = mole.transform.position.x > highestX ? mole.transform.position.x : highestX;
+                lowestX = mole.transform.position.x < lowestX ? mole.transform.position.x : lowestX;
+                highestY = mole.transform.position.y > highestY ? mole.transform.position.y : highestY;
+                lowestY = mole.transform.position.y < lowestY ? mole.transform.position.y : lowestY;
+                lowestZ = mole.transform.position.z < lowestZ ? mole.transform.position.z : lowestZ;
+                highestZ = mole.transform.position.z < highestZ ? mole.transform.position.z : highestZ;
             }
         }
-        stateUpdateEvent.Invoke(true, moles);
+        //stateUpdateEvent.Invoke(true, moles);
+        var wallInfo = CreateWallInfo();
+        stateUpdateEvent.Invoke(wallInfo);
         wallGenerator.GenerateWall();
     }
 
