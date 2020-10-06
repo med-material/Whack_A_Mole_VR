@@ -20,6 +20,9 @@ public abstract class Pointer : MonoBehaviour
     [SerializeField]
     private GameObject laserOrigin;
 
+    [SerializeField]
+    private LaserMapper laserMapper;
+
     // Currently serialized. May be controlled by the UI in the future.
 
     [SerializeField]
@@ -50,6 +53,8 @@ public abstract class Pointer : MonoBehaviour
     protected float shotCooldown;
 
     protected LineRenderer laser;
+    
+    [SerializeField]
     protected LaserCursor cursor;
 
     private States state = States.Idle;
@@ -76,7 +81,6 @@ public abstract class Pointer : MonoBehaviour
     // On Awake, gets the cursor object if there is one. Also connects the PositionUpdated function to the VR update event.
     void Awake()
     {
-        cursor = gameObject.GetComponentInChildren<LaserCursor>();
         gameObject.GetComponent<SteamVR_Behaviour_Pose>().onTransformUpdated.AddListener(delegate{PositionUpdated();});
     }
 
@@ -144,7 +148,10 @@ public abstract class Pointer : MonoBehaviour
     {
         if (!active) return;
 
-        Vector3 rayDirection = GetRayDirection();
+        Vector2 pos = new Vector2(laserOrigin.transform.position.x, laserOrigin.transform.position.y);
+        Vector3 mappedPosition = laserMapper.ConvertMotorSpaceToWallSpace(pos);
+        Vector3 origin = laserOrigin.transform.position;
+        Vector3 rayDirection = (mappedPosition - origin).normalized;
 
         RaycastHit hit;
         if (Physics.Raycast(laserOrigin.transform.position + laserOffset, rayDirection, out hit, 100f, Physics.DefaultRaycastLayers))
