@@ -50,6 +50,9 @@ public abstract class Pointer : MonoBehaviour
     protected float maxLaserLength;
 
     [SerializeField]
+    protected float cursorLength;
+
+    [SerializeField]
     protected float shotCooldown;
 
     protected LineRenderer laser;
@@ -163,7 +166,7 @@ public abstract class Pointer : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(laserOrigin.transform.position + laserOffset, rayDirection, out hit, 100f, Physics.DefaultRaycastLayers))
         {
-            UpdateLaser(true, hitPosition: laserOrigin.transform.InverseTransformPoint(hit.point));
+            UpdateLaser(true, hitPosition: laserOrigin.transform.InverseTransformPoint(hit.point), rayDirection: laserOrigin.transform.InverseTransformDirection(rayDirection));
             hoverMole(hit);
         }
         else
@@ -280,7 +283,7 @@ public abstract class Pointer : MonoBehaviour
             if (hit) cursor.Enable();
             else cursor.Disable();
         }
-        if (hit) cursor.SetPosition(laserOffset + hitPosition);
+        if (hit) cursor.SetPosition(rayDirection * cursorLength);
     }
 
     private Vector3 GetRayDirection()
