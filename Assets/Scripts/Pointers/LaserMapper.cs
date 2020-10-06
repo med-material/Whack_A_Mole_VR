@@ -28,12 +28,12 @@ public class LaserMapper : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        UpdateMotorSpaceCoords();
+        CalculateMotorSpace();
         UpdateMotorSpaceVisualizer();
     }
 
     // Update is called once per frame
-    void UpdateMotorSpaceCoords()
+    void CalculateMotorSpace()
     {
         var motorSpaceOrigin = transform.position + motorSpaceOffset;
         motorSpaceTopLeft = new Vector3(motorSpaceOrigin.x - motorSpaceWidth, motorSpaceOrigin.y + motorSpaceHeight, motorSpaceOrigin.z);
