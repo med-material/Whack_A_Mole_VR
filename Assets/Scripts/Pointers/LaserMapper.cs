@@ -6,17 +6,10 @@ public class LaserMapper : MonoBehaviour
 {
 
     [SerializeField]
-    private WallManager wallManager;
-
-    [SerializeField]
     private GameObject controller;
 
     [SerializeField]
     private GameObject motorSpaceVisualizer;
-
-    private Vector3 wallSpaceOrigin = new Vector3(0f,0f,0f);
-    private Vector3 wallSpaceWidth = new Vector3(0f,0f,0f);
-    private Vector3 wallSpaceHeight = new Vector3(0f,0f,0f);
 
     [SerializeField]
     private Vector3 motorSpaceOffset = new Vector3(0f,0f,0f);
