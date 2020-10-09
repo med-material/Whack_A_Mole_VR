@@ -6,6 +6,11 @@ using UnityEngine;
 Main class of the therapist Ui. Controls the overall behavior of the UI and is used as an interface betweel the UI and the rest of the game.
 */
 
+public enum PanelChoice {
+    TherapistPanel,
+    ProfilePanel
+}
+
 public class TherapistUi : MonoBehaviour
 {
     [SerializeField]
@@ -219,11 +224,14 @@ public class TherapistUi : MonoBehaviour
     }
 
     // Switches between the therapist panel and the profile panel.
-    public void SwitchPanel(bool toTherapistPanel, string name = null)
+    public void SwitchPanel(PanelChoice choice, string name = null)
     {
         if (name != null) profileName = name;
-        if (toTherapistPanel) animationPlayer.Play("ProfileToTherapist");
-        else animationPlayer.Play("TherapistToProfile");
+        if (choice == PanelChoice.TherapistPanel) {
+         animationPlayer.Play("ProfileToTherapist");
+        } else if (choice == PanelChoice.ProfilePanel) {
+         animationPlayer.Play("TherapistToProfile");
+        }
     }
 
     // Updates the TherapistPanel profile name. Called by the transition animation.

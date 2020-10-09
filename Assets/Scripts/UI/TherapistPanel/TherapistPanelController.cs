@@ -175,7 +175,7 @@ public class TherapistPanelController : MonoBehaviour
     public void SwitchToProfilePanel()
     {
         therapistUi.StopGame();
-        therapistUi.SwitchPanel(false);
+        therapistUi.SwitchPanel(PanelChoice.ProfilePanel);
     }
 
     // Updates the displayed profile name. Calles by the TherapistUi.

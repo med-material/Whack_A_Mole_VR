@@ -70,7 +70,7 @@ public class ProfilePanelManager : MonoBehaviour
     // Calls the TherapistUi to switch to the TherapistPanel.
     public void SwitchToTherapistPanel(string name)
     {
-        therapistUi.SwitchPanel(true, name);
+        therapistUi.SwitchPanel(PanelChoice.TherapistPanel, name);
         profileCreationManager.ClearFeedbackText();
     }
 
