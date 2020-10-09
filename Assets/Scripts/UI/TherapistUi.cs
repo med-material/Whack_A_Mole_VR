@@ -8,6 +8,7 @@ Main class of the therapist Ui. Controls the overall behavior of the UI and is u
 
 public enum PanelChoice {
     TherapistPanel,
+    ModifiersPanel,
     ProfilePanel
 }
 
@@ -228,9 +229,11 @@ public class TherapistUi : MonoBehaviour
     {
         if (name != null) profileName = name;
         if (choice == PanelChoice.TherapistPanel) {
-         animationPlayer.Play("ProfileToTherapist");
+         animationPlayer.Play("ToTherapist");
         } else if (choice == PanelChoice.ProfilePanel) {
-         animationPlayer.Play("TherapistToProfile");
+         animationPlayer.Play("ToProfile");
+        } else if (choice == PanelChoice.ModifiersPanel) {
+            animationPlayer.Play("ToModifier");
         }
     }
 

@@ -178,6 +178,12 @@ public class TherapistPanelController : MonoBehaviour
         therapistUi.SwitchPanel(PanelChoice.ProfilePanel);
     }
 
+    // Tells the TherapistUi to switch to ModifersPanel.
+    public void SwitchToModifersPanel()
+    {
+        therapistUi.SwitchPanel(PanelChoice.ModifiersPanel);
+    }
+
     // Updates the displayed profile name. Calles by the TherapistUi.
     public void UpdateProfileName(string name)
     {
