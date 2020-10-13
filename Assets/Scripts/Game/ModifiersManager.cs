@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR;
@@ -39,8 +39,12 @@ public class ModifiersManager : MonoBehaviour
     [SerializeField]
     private Transform wallReference;
 
+    [SerializeField]
+    private GameObject physicalMirror;
+
     private EyePatch eyePatch = EyePatch.None;
     private bool mirrorEffect;
+    private bool physicalMirrorEffect;
     private bool dualTask;
     private bool rightControllerMain;
     private float prismEffect;
@@ -98,6 +102,13 @@ public class ModifiersManager : MonoBehaviour
         });
 
         modifierUpdateEvent.Invoke("MirrorEffect", value.ToString());
+    }
+
+    public void SetPhysicalMirror(bool value)
+    {
+        if (physicalMirrorEffect == value) return;
+        physicalMirrorEffect = value;
+        physicalMirror.SetActive(value);
     }
 
     // Sets the dual task mode (if dualtask is enabled, both controllers can be used to pop moles)

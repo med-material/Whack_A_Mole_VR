@@ -159,6 +159,9 @@ public class TherapistUi : MonoBehaviour
                 case "MirrorEffect":
                     modifiersManager.SetMirrorEffect(bool.Parse((string)entry.Value));
                     break;
+                case "PhysicalMirror":
+                    modifiersManager.SetPhysicalMirror(bool.Parse((string)entry.Value));
+                    break;
                 case "ShowHand":
                     break;
                 case "DualTask":
