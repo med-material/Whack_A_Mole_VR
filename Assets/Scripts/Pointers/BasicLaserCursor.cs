@@ -18,7 +18,7 @@ public class BasicLaserCursor : LaserCursor
     private Light pointLight;
 
     // On enable (right at the beginning, before Start()), creates a Light object.
-    void OnEnable()
+    void Start()
     {
         lightObject = new GameObject("Light");
         lightObject.transform.parent = this.transform;
