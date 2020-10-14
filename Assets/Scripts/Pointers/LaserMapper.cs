@@ -6,7 +6,16 @@ public class LaserMapper : MonoBehaviour
 {
 
     [SerializeField]
-    private GameObject controller;
+    private GameObject controllerLeft;
+
+    [SerializeField]
+    private GameObject controllerRight;
+
+    [SerializeField]
+    private GameObject motorSpaceCalib;
+
+    [SerializeField]
+    private BubbleDisplay bubbleDisplay;
 
     [SerializeField]
     private GameObject motorSpaceVisualizer;
@@ -35,11 +44,95 @@ public class LaserMapper : MonoBehaviour
 
     private Vector3 wallSpaceCoord;
 
+    private bool motorCalibration = false;
+    private float distanceFromLastPoint = -1f;
+    private float minDistancePoint = 0.050f;
+    private Vector3 lastPos = Vector3.zero;
+    private Vector3 newPos = Vector3.zero;
+    private float minX = -1f;
+    private float maxX = -1f;
+    private float minY = -1f;
+    private float maxY = -1f;
+    private float minZ = -1f;
+    private float maxZ = -1f;
+    private Vector3 newCenter;
+    private List<GameObject> calibPointList = new List<GameObject>();
+
     // Start is called before the first frame update
     void Start()
     {
         CalculateMotorSpace();
         UpdateMotorSpaceVisualizer();
+    }
+
+    void Update()
+    {
+        if (motorCalibration) {
+            Vector3 newPos = controllerRight.transform.position;
+            if (lastPos != Vector3.zero) distanceFromLastPoint = Vector3.Distance(lastPos, newPos);
+            if  (distanceFromLastPoint > minDistancePoint) {
+                CreateCalibSphere(lastPos);
+                lastPos = newPos;
+            }
+            if (lastPos == Vector3.zero) {
+                lastPos = newPos;
+                CreateCalibSphere(lastPos);
+            }
+
+            if (minX == -1) minX = controllerRight.transform.position.x;
+            if (maxX == -1) maxX = controllerRight.transform.position.x;
+            if (minY == -1) minY = controllerRight.transform.position.y;
+            if (maxY == -1) maxY = controllerRight.transform.position.y;
+            if (minZ == -1) minZ = controllerRight.transform.position.z;
+            if (maxZ == -1) maxZ = controllerRight.transform.position.z;
+
+            if (minX > controllerRight.transform.position.x) minX = controllerRight.transform.position.x;
+            if (maxX < controllerRight.transform.position.x) maxX = controllerRight.transform.position.x;
+            if (minY > controllerRight.transform.position.y) minY = controllerRight.transform.position.y;
+            if (maxY < controllerRight.transform.position.y) maxY = controllerRight.transform.position.y;
+            if (minZ > controllerRight.transform.position.z) minZ = controllerRight.transform.position.z;
+            if (maxZ < controllerRight.transform.position.z) maxZ = controllerRight.transform.position.z;
+            newCenter = new Vector3( minX + ((maxX - minX) * 0.5f) , minY + ((maxY - minY) * 0.5f), minZ + ((maxZ - minZ) * 0.5f));
+            motorSpaceWidth = (maxX - minX) / 2;
+            motorSpaceHeight = (maxY - minY) / 2;
+        }
+    }
+
+    private void CreateCalibSphere(Vector3 pos) {
+        var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        sphere.transform.SetParent(motorSpaceCalib.transform);
+        sphere.transform.position = pos;
+        sphere.transform.localScale = new Vector3(0.025f, 0.025f, 0.025f);
+        calibPointList.Add(sphere);
+    }
+
+    public void ToggleMotorCalibration(bool value) {
+        if (value == motorCalibration) return;
+        motorCalibration = value;
+        motorSpaceCalib.SetActive(value);
+
+        if (!motorCalibration) {
+            transform.position = newCenter;
+            bubbleDisplay.UpdateOwnPosition(newCenter);
+            CalculateMotorSpace();
+            UpdateMotorSpaceVisualizer();
+            ResetCalibrationValues();
+        }
+    }
+
+    private void ResetCalibrationValues() {
+        minX = -1f;
+        maxX = -1f;
+        minY = -1f;
+        maxY = -1f;
+        minZ = -1f;
+        maxZ = -1f;
+        distanceFromLastPoint = -1f;
+        newCenter = Vector3.zero; 
+        foreach(var obj in calibPointList) {
+            GameObject.Destroy(obj);
+        }
+
     }
 
     // Update is called once per frame
