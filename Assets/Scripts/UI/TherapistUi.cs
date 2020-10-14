@@ -183,6 +183,22 @@ public class TherapistUi : MonoBehaviour
                     }
                     modifiersManager.SetEyePatch(value);
                     break;
+                case "HideWall":
+                    ModifiersManager.HideWall wallValue = ModifiersManager.HideWall.None;
+                    switch(entry.Value)
+                    {
+                        case "Left":
+                            wallValue = ModifiersManager.HideWall.Left;
+                            break;
+                        case "None":
+                            wallValue = ModifiersManager.HideWall.None;
+                            break;
+                        case "Right":
+                            wallValue = ModifiersManager.HideWall.Right;
+                            break;
+                    }
+                    modifiersManager.SetHideWall(wallValue);
+                    break;
                 case "PrismEffect":
                     modifiersManager.SetPrismEffect(float.Parse((string)entry.Value));
                     break;

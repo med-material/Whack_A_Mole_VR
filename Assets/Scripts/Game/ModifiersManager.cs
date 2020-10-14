@@ -20,6 +20,13 @@ It is also possible to fully hide the chaperone by editing the steamvr.vrsetting
 public class ModifiersManager : MonoBehaviour
 {
     public enum EyePatch {Left, None, Right};
+    public enum HideWall {Left, None, Right};
+
+    [SerializeField]
+    private GameObject hideWallLeft;
+
+    [SerializeField]
+    private GameObject hideWallRight;
 
     [SerializeField]
     private Pointer rightController;
@@ -43,6 +50,7 @@ public class ModifiersManager : MonoBehaviour
     private GameObject physicalMirror;
 
     private EyePatch eyePatch = EyePatch.None;
+    private HideWall hideWall = HideWall.None;
     private bool mirrorEffect;
     private bool physicalMirrorEffect;
     private bool dualTask;
@@ -84,6 +92,22 @@ public class ModifiersManager : MonoBehaviour
         if (eyePatch == value) return;
         eyePatch = value;
         StartCoroutine(WaitForCameraAndUpdate(eyePatch));
+    }
+
+    public void SetHideWall(HideWall value) {
+        if (hideWall == value) return;
+        hideWall = value;
+
+        if (hideWall == HideWall.Left) {
+            hideWallLeft.SetActive(true);
+            hideWallRight.SetActive(false);
+        } else if (hideWall == HideWall.Right) {
+            hideWallLeft.SetActive(false);
+            hideWallRight.SetActive(true);
+        } else if (hideWall == HideWall.None) {
+            hideWallLeft.SetActive(false);
+            hideWallRight.SetActive(false);
+        }
     }
 
     // Sets a controller position and rotation's mirroring effect. Calls UpdateMirrorEffect to set the mirror.
