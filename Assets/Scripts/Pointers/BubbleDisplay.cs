@@ -91,4 +91,8 @@ public class BubbleDisplay : MonoBehaviour
             }
         }
     }
+
+    public void UpdateOwnPosition(Vector3 newPosition) {
+        ownPosition = newPosition;
+    }
 }
