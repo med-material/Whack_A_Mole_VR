@@ -15,7 +15,7 @@ public class LaserMapper : MonoBehaviour
     private GameObject motorSpaceCalib;
 
     [SerializeField]
-    private BubbleDisplay bubbleDisplay;
+    private BubbleDisplay[] bubbleDisplay;
 
     [SerializeField]
     private GameObject motorSpaceVisualizer;
@@ -113,7 +113,9 @@ public class LaserMapper : MonoBehaviour
 
         if (!motorCalibration) {
             transform.position = newCenter;
-            bubbleDisplay.UpdateOwnPosition(newCenter);
+            foreach (var bub in bubbleDisplay) {
+                bub.UpdateOwnPosition(newCenter);
+            }
             CalculateMotorSpace();
             UpdateMotorSpaceVisualizer();
             ResetCalibrationValues();
