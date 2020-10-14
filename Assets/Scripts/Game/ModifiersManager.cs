@@ -55,7 +55,7 @@ public class ModifiersManager : MonoBehaviour
     private bool physicalMirrorEffect;
     private bool dualTask;
     private bool rightControllerMain;
-    private float prismEffect;
+    private float controllerOffset;
     private Dictionary<string, Pointer> controllersList;
     private LoggerNotifier loggerNotifier;
     private ModifierUpdateEvent modifierUpdateEvent = new ModifierUpdateEvent();
@@ -73,7 +73,7 @@ public class ModifiersManager : MonoBehaviour
             {"RightControllerMain", "Undefined"},
             {"MirrorEffect", "No Mirror Effect Defined"},
             {"EyePatch", "No Eye Patch Defined"},
-            {"PrismEffect", "No Prism Effect Defined"},
+            {"ControllerOffset", "No Controller Offset Defined"},
             {"DualTask", "No Dual Task Defined"}
         });
         // Initialization of the starting values of the parameters.
@@ -81,7 +81,7 @@ public class ModifiersManager : MonoBehaviour
             {"RightControllerMain", rightControllerMain},
             {"MirrorEffect", mirrorEffect},
             {"EyePatch", System.Enum.GetName(typeof(ModifiersManager.EyePatch), eyePatch)},
-            {"PrismEffect", prismEffect},
+            {"ControllerOffset", controllerOffset},
             {"DualTask", dualTask}
         });
     }
@@ -156,18 +156,18 @@ public class ModifiersManager : MonoBehaviour
     }
 
     // Sets the prism effect. Shifts the view (around y axis) by a given angle to create a shifting between seen view and real positions.
-    public void SetPrismEffect(float value)
+    public void SetControllerOffset(float value)
     {
-        prismEffect = value;
-        rightControllerContainer.localEulerAngles = new Vector3(0, prismEffect, 0);
-        leftControllerContainer.localEulerAngles = new Vector3(0, prismEffect, 0);
+        controllerOffset = value;
+        rightControllerContainer.localEulerAngles = new Vector3(0, controllerOffset, 0);
+        leftControllerContainer.localEulerAngles = new Vector3(0, controllerOffset, 0);
 
-        loggerNotifier.NotifyLogger("Prism Effect Set "+value, EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
+        loggerNotifier.NotifyLogger("Controller Offset Set "+value, EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
         {
-            {"PrismEffect", value}
+            {"ControllerOffset", value}
         });
 
-        modifierUpdateEvent.Invoke("PrismEffect", value.ToString());
+        modifierUpdateEvent.Invoke("ControllerOffset", value.ToString());
     }
 
     // Sets the main controller. By default it is the right handed one.

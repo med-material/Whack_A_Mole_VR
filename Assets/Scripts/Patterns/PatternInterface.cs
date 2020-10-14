@@ -219,9 +219,9 @@ public class PatternInterface : MonoBehaviour
         {
             modifiersManager.SetDualTask(bool.Parse(tempValue));
         }
-        if (action.TryGetValue("PRISMEFFECT", out tempValue))
+        if (action.TryGetValue("CONTROLLEROFFSET", out tempValue))
         {
-            modifiersManager.SetPrismEffect(ParseFloat(tempValue));
+            modifiersManager.SetControllerOffset(ParseFloat(tempValue));
         }
         if (action.TryGetValue("MAINCONTROLLER", out tempValue))
         {

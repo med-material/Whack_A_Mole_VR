@@ -9,7 +9,7 @@ public class TestModifiers : MonoBehaviour
     private ModifiersManager.EyePatch eyePatch = ModifiersManager.EyePatch.Left;
     private bool rightMain = true;
     private bool dualTask = false;
-    private float prismOffset = -15f;
+    private float controllerOffset = -15f;
     private bool mirrorEffect = false;
 
     void Start()
@@ -44,9 +44,9 @@ public class TestModifiers : MonoBehaviour
         }
         if (Input.GetButtonDown("Submit"))
         {
-            prismOffset += 15f;
-            Debug.Log("Prism : " + prismOffset);
-            modifier.SetPrismEffect(prismOffset);
+            controllerOffset += 15f;
+            Debug.Log("Offset : " + controllerOffset);
+            modifier.SetControllerOffset(controllerOffset);
         }
         if (Input.GetButtonDown("Cancel"))
         {

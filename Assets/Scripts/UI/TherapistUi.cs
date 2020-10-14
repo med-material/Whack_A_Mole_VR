@@ -199,8 +199,8 @@ public class TherapistUi : MonoBehaviour
                     }
                     modifiersManager.SetHideWall(wallValue);
                     break;
-                case "PrismEffect":
-                    modifiersManager.SetPrismEffect(float.Parse((string)entry.Value));
+                case "ControllerOffset":
+                    modifiersManager.SetControllerOffset(float.Parse((string)entry.Value));
                     break;
                 case "GameSpeed":
                     gameDirector.SetDifficulty((string)entry.Value);
