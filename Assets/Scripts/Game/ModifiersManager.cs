@@ -41,6 +41,9 @@ public class ModifiersManager : MonoBehaviour
     private Transform leftControllerContainer;
 
     [SerializeField]
+    private GameObject prismOffsetObject;
+
+    [SerializeField]
     private Camera viveCamera;
 
     [SerializeField]
@@ -56,6 +59,7 @@ public class ModifiersManager : MonoBehaviour
     private bool dualTask;
     private bool rightControllerMain;
     private float controllerOffset;
+    private float prismOffset;
     private Dictionary<string, Pointer> controllersList;
     private LoggerNotifier loggerNotifier;
     private ModifierUpdateEvent modifierUpdateEvent = new ModifierUpdateEvent();
@@ -74,6 +78,7 @@ public class ModifiersManager : MonoBehaviour
             {"MirrorEffect", "No Mirror Effect Defined"},
             {"EyePatch", "No Eye Patch Defined"},
             {"ControllerOffset", "No Controller Offset Defined"},
+            {"PrismOffset", "No Controller Offset Defined"},
             {"DualTask", "No Dual Task Defined"}
         });
         // Initialization of the starting values of the parameters.
@@ -82,6 +87,7 @@ public class ModifiersManager : MonoBehaviour
             {"MirrorEffect", mirrorEffect},
             {"EyePatch", System.Enum.GetName(typeof(ModifiersManager.EyePatch), eyePatch)},
             {"ControllerOffset", controllerOffset},
+            {"PrismOffset", controllerOffset},
             {"DualTask", dualTask}
         });
     }
@@ -168,6 +174,20 @@ public class ModifiersManager : MonoBehaviour
         });
 
         modifierUpdateEvent.Invoke("ControllerOffset", value.ToString());
+    }
+
+    // Sets the prism effect. Shifts the view (around y axis) by a given angle to create a shifting between seen view and real positions.
+    public void SetPrismOffset(float value)
+    {
+        prismOffset = value;
+        prismOffsetObject.transform.localEulerAngles = new Vector3(0, prismOffset, 0);
+
+        loggerNotifier.NotifyLogger("Prism Offset Set "+value, EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
+        {
+            {"PrismOffset", value}
+        });
+
+        modifierUpdateEvent.Invoke("PrismOffset", value.ToString());
     }
 
     // Sets the main controller. By default it is the right handed one.
