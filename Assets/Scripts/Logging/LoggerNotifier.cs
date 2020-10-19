@@ -38,7 +38,6 @@ public class LoggerNotifier: UnityEngine.Object
 
         EventLogger eventLogger = FindObjectOfType<EventLogger>();
         updateEvent.AddListener(eventLogger.EventNotification);
-        eventLogger.UpdateHeadersAndDefaults(GetHeadersAndDefaults());
     }
 
     // Function called by the class instantiating this LoggerNotifier to notify the EventLogger of a new event.
