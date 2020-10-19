@@ -1,0 +1,9 @@
+{
+"label": "MyLabel",
+"dbName": "databasename",
+"table": "tableindatabase",
+"username": "myuser",
+"password": "mypassword",
+"dbURL": "urltodatabase",
+"dbSecKey": "securitykey"
+}
