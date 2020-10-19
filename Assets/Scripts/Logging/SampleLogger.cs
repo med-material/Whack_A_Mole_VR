@@ -8,13 +8,13 @@ using System.Globalization;
 public class SampleLogger : MonoBehaviour
 {
 
-    [SerializeField]
-    private string fileName = "log";
-    [SerializeField]
-    private string savePath = "";
-    private string completeFileName = "";
-    private string filePath;
-    private char fieldSeperator = ',';
+    // [SerializeField]
+    // private string fileName = "log";
+    // [SerializeField]
+    // private string savePath = "";
+    // private string completeFileName = "";
+    // private string filePath;
+    // private char fieldSeperator = ',';
 
     [SerializeField]
     float samplingFrequency = 0.02f;
@@ -26,45 +26,46 @@ public class SampleLogger : MonoBehaviour
     private GazeLogger gazeLogger;
 
     private TrackerHub trackerHub = new TrackerHub();
+    private LoggingManager loggingManager;
 
-    private Dictionary<string, Dictionary<int, string>> logs = new Dictionary<string, Dictionary<int, string>>();
+    // private Dictionary<string, Dictionary<int, string>> logs = new Dictionary<string, Dictionary<int, string>>();
 
-    private int logCount = 0;
+    // private int logCount = 0;
 
     // Start is called before the first frame update
     void Awake()
     {
-        if (savePath == "") {
-            savePath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments) + "//" + "whack_a_mole_logs";
-            if(!Directory.Exists(savePath)) {    
-                Directory.CreateDirectory(savePath);
-            }
-        }
-        logs.Add("Framecount", new Dictionary<int, string>());
-        logs.Add("TimeStamp", new Dictionary<int, string>());
-        logs.Add("Time", new Dictionary<int, string>());
-        logs.Add("Date", new Dictionary<int, string>());
-        logs.Add("Event", new Dictionary<int, string>());
-        logs.Add("PupilTime", new Dictionary<int, string>());
-        logs.Add("UnityToPupilTimeOffset", new Dictionary<int, string>());
+        loggingManager = GetComponent<LoggingManager>();
+        // if (savePath == "") {
+        //     savePath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments) + "//" + "whack_a_mole_logs";
+        //     if(!Directory.Exists(savePath)) {    
+        //         Directory.CreateDirectory(savePath);
+        //     }
+        // }
+        // logs.Add("Framecount", new Dictionary<int, string>());
+        // logs.Add("TimeStamp", new Dictionary<int, string>());
+        // logs.Add("Time", new Dictionary<int, string>());
+        // logs.Add("Date", new Dictionary<int, string>());
+        // logs.Add("Event", new Dictionary<int, string>());
+        // logs.Add("PupilTime", new Dictionary<int, string>());
+        // logs.Add("UnityToPupilTimeOffset", new Dictionary<int, string>());
 
         trackerHub.Init();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
+    // // Update is called once per frame
+    // void Update()
+    // {
         
-    }
+    // }
 
-    // Initialises the CSV file parameters (name and file path).
-    private void InitFile()
-    {
-        completeFileName = fileName + "_" + GetTimeStamp().Replace('/', '-').Replace(":", "-");
-        filePath = savePath + "/" + completeFileName + ".csv";
-    }
+    // // Initialises the CSV file parameters (name and file path).
+    // private void InitFile()
+    // {
+    //     completeFileName = fileName + "_" + GetTimeStamp().Replace('/', '-').Replace(":", "-");
+    //     filePath = savePath + "/" + completeFileName + ".csv";
+    // }
 
-    // If game state updated event is raised (by the gameDirector), updates the UI accordingly.
     public void OnGameDirectorStateUpdate(GameDirector.GameState newState)
     {
         switch(newState)
@@ -83,15 +84,15 @@ public class SampleLogger : MonoBehaviour
 
     public void StartLogging() {
         trackerHub.StartTrackers();
-        InitFile();
+        //InitFile();
         StartCoroutine("SampleLog", samplingFrequency);
     }
 
     public void FinishLogging() {
         trackerHub.StopTrackers();
         StopCoroutine("SampleLog");
-        SaveCsvLogs();
-        ResetLogs();
+        //SaveCsvLogs();
+        //ResetLogs();
     }
 
     // Generates a "logs" row (see class description) from the given datas. Adds mandatory parameters and 
@@ -99,27 +100,16 @@ public class SampleLogger : MonoBehaviour
     private IEnumerator SampleLog(float sampleFreq)
     {
         while (true) {
-            logs["Framecount"].Add(logCount, Time.frameCount.ToString());
-            logs["TimeStamp"].Add(logCount, GetTimeStamp());
-            logs["Date"].Add(logCount, System.DateTime.Now.ToString("yyyy-MM-dd"));
-            logs["Event"].Add(logCount, "Sample");
-            logs["Time"].Add(logCount, System.DateTime.Now.ToString("HH:mm:ss.ffff"));
-            //logs["PupilTime"].Add(logCount, timeSync != null ? timeSync.GetPupilTimestamp().ToString() : "NULL");
-            //logs["UnityToPupilTimeOffset"].Add(logCount, timeSync != null ? timeSync.UnityToPupilTimeOffset.ToString() : "NULL");
+            Dictionary<string, object> sampleLog = new Dictionary<string, object>() {
+                {"Event", "Sample"},
+            };
 
             // Adds the parameters of the objects tracked by the TrackerHub's trackers
             Dictionary<string, object> trackedLogs = trackerHub.GetTracks();
 
             foreach (KeyValuePair<string, object> pair in trackedLogs)
             {
-                if (logs.ContainsKey(pair.Key))
-                {
-                    logs[pair.Key].Add(logCount, ConvertToString(pair.Value));
-                }
-                else
-                {
-                    logs.Add(pair.Key, new Dictionary<int, string>{{logCount, ConvertToString(pair.Value)}});
-                }
+                    sampleLog[pair.Key] = pair.Value;
             }
 
             // Adds the parameters from GazeLogger
@@ -127,122 +117,115 @@ public class SampleLogger : MonoBehaviour
                 Dictionary<string, object> gazeLogs = gazeLogger.GetGazeData();
                 foreach (KeyValuePair<string, object> pair in gazeLogs)
                 {
-                    if (logs.ContainsKey(pair.Key))
-                    {
-                        logs[pair.Key].Add(logCount, ConvertToString(pair.Value));
-                    }
-                    else
-                    {
-                        logs.Add(pair.Key, new Dictionary<int, string>{{logCount, ConvertToString(pair.Value)}});
-                    }
+                    sampleLog[pair.Key] = pair.Value;
                 }
             }
 
-            logCount++;
+            loggingManager.Log("Sample", sampleLog);
             yield return new WaitForSeconds(sampleFreq);
         }
     }
 
-    // Converts the values of the parameters (in a "object format") to a string, formatting them to the
-    // correct format in the process.
-    private string ConvertToString(object arg)
-    {
-        if (arg is float)
-        {
-            return ((float)arg).ToString("0.0000").Replace(",", ".");
-        }
-        else if (arg is double)
-        {
-            return ((double)arg).ToString("0.0000").Replace(",", ".");
-        }
-        else if (arg is Vector3)
-        {
-            return ((Vector3)arg).ToString("0.0000").Replace(",", ".");
-        } 
-        else if (arg is string) 
-        {
-            return (string)arg;
-        }
-        else
-        {
-            return arg.ToString();
-        }
-    }
+    // // Converts the values of the parameters (in a "object format") to a string, formatting them to the
+    // // correct format in the process.
+    // private string ConvertToString(object arg)
+    // {
+    //     if (arg is float)
+    //     {
+    //         return ((float)arg).ToString("0.0000").Replace(",", ".");
+    //     }
+    //     else if (arg is double)
+    //     {
+    //         return ((double)arg).ToString("0.0000").Replace(",", ".");
+    //     }
+    //     else if (arg is Vector3)
+    //     {
+    //         return ((Vector3)arg).ToString("0.0000").Replace(",", ".");
+    //     } 
+    //     else if (arg is string) 
+    //     {
+    //         return (string)arg;
+    //     }
+    //     else
+    //     {
+    //         return arg.ToString();
+    //     }
+    // }
 
-    // Returns a time stamp including the milliseconds.
-    private string GetTimeStamp()
-    {
-        return System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.ffff");
-    }
+    // // Returns a time stamp including the milliseconds.
+    // private string GetTimeStamp()
+    // {
+    //     return System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.ffff");
+    // }
 
-    // Formats the logs to a CSV row format and saves them. Calls the CSV headers generation beforehand.
-    // If a parameter doesn't have a value for a given row, uses the given value given previously (see 
-    // UpdateHeadersAndDefaults).
-    private void SaveCsvLogs()
-    {
+    // // Formats the logs to a CSV row format and saves them. Calls the CSV headers generation beforehand.
+    // // If a parameter doesn't have a value for a given row, uses the given value given previously (see 
+    // // UpdateHeadersAndDefaults).
+    // private void SaveCsvLogs()
+    // {
 
-        GenerateHeaders();
-        string temp;
-        for (int i = 0; i < logCount; i++)
-        {
-            string line = "";
-            foreach (KeyValuePair<string, Dictionary<int, string>> log in logs)
-            {
-                if (line != "")
-                {
-                    line += fieldSeperator;
-                }
+    //     GenerateHeaders();
+    //     string temp;
+    //     for (int i = 0; i < logCount; i++)
+    //     {
+    //         string line = "";
+    //         foreach (KeyValuePair<string, Dictionary<int, string>> log in logs)
+    //         {
+    //             if (line != "")
+    //             {
+    //                 line += fieldSeperator;
+    //             }
 
-                if (log.Value.TryGetValue(i, out temp))
-                {
-                    line += temp;
-                }
-                else
-                {
-                    line += "NULL";
-                }
-            }
-            SaveToFile(line);
-        }
-    }
+    //             if (log.Value.TryGetValue(i, out temp))
+    //             {
+    //                 line += temp;
+    //             }
+    //             else
+    //             {
+    //                 line += "NULL";
+    //             }
+    //         }
+    //         SaveToFile(line);
+    //     }
+    // }
 
 
-    // Generates the headers in a CSV format and saves them to the CSV file
-    private void GenerateHeaders()
-    {
-        string headers = "";
-        foreach (string key in logs.Keys)
-        {
-            if (headers != "")
-            {
-                headers += fieldSeperator;
-            }
-            headers += key;
-        }
-        SaveToFile(headers);
-    }
+    // // Generates the headers in a CSV format and saves them to the CSV file
+    // private void GenerateHeaders()
+    // {
+    //     string headers = "";
+    //     foreach (string key in logs.Keys)
+    //     {
+    //         if (headers != "")
+    //         {
+    //             headers += fieldSeperator;
+    //         }
+    //         headers += key;
+    //     }
+    //     SaveToFile(headers);
+    // }
 
-    // Saves the given CSV line to the CSV file.
-    private void SaveToFile(string line, bool end = true)
-    {
-        string tempLine = line;
+    // // Saves the given CSV line to the CSV file.
+    // private void SaveToFile(string line, bool end = true)
+    // {
+    //     string tempLine = line;
 
-        if (end)
-        {
-            tempLine += Environment.NewLine;
-        }
-        File.AppendAllText(filePath, tempLine);
-    }
+    //     if (end)
+    //     {
+    //         tempLine += Environment.NewLine;
+    //     }
+    //     File.AppendAllText(filePath, tempLine);
+    // }
 
-    // Clears the logs, "Current Mole" log, log count and unique test ID. Used to clear the logs when a new game is started.
-    private void ResetLogs()
-    {
+    // // Clears the logs, "Current Mole" log, log count and unique test ID. Used to clear the logs when a new game is started.
+    // private void ResetLogs()
+    // {
         
-        foreach(Dictionary<int, string> dict in logs.Values)
-        {
-            dict.Clear();
-        }
-        logCount = 0;
-    }
+    //     foreach(Dictionary<int, string> dict in logs.Values)
+    //     {
+    //         dict.Clear();
+    //     }
+    //     logCount = 0;
+    // }
 
 }

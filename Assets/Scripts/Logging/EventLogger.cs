@@ -30,21 +30,8 @@ public class EventLogger : MonoBehaviour
     public enum EventType{MoleEvent, WallEvent, GameEvent, ModifierEvent, PointerEvent, DefaultEvent}
 
     [SerializeField]
-    private string savePath = "";
-
-    [SerializeField]
-    private string fileName = "log";
-
-    // Temporarily serialized. Will be managed through interface in the future
-    [SerializeField]
-    private bool saveLocally = true;
-
-    [SerializeField]
     private PupilLabs.TimeSync timeSync;
 
-    private string completeFileName = "";
-    private string filePath;
-    private char fieldSeperator = ',';
     private float previousEventTime = -1;
     private TrackerHub trackerHub = new TrackerHub();
     private Dictionary<string, object> persistentLog = new Dictionary<string, object>();
@@ -52,35 +39,29 @@ public class EventLogger : MonoBehaviour
     private Dictionary<string, Dictionary<int, string>> logs = new Dictionary<string, Dictionary<int, string>>();
     private Dictionary<string, string> defaultValues = new Dictionary<string, string>();
     private int logCount = 0;
-    private string uid = "";
     private string email = "";
-    private ConnectToMySQL connectToMySQL;
+    private LoggingManager loggingManager;
     private WallStateTracker wallStateTracker;
 
 
     // On start, init the logs with the mandatory columns.
     void Awake()
     {
-        if (savePath == "") {
-            savePath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments) + "//" + "whack_a_mole_logs";
-            if(!Directory.Exists(savePath)) {    
-                Directory.CreateDirectory(savePath);
-            }
-        }
-        connectToMySQL = gameObject.GetComponent<ConnectToMySQL>();
+        // connectToMySQL = gameObject.GetComponent<ConnectToMySQL>();
+        loggingManager = gameObject.GetComponent<LoggingManager>();
         wallStateTracker = gameObject.GetComponent<WallStateTracker>();
 
-        logs.Add("TimeStamp", new Dictionary<int, string>());
-        logs.Add("Time", new Dictionary<int, string>());
-        logs.Add("Framecount", new Dictionary<int, string>());
-        logs.Add("Date", new Dictionary<int, string>());
-        logs.Add("TimeSinceLastEvent", new Dictionary<int, string>());
-        logs.Add("PupilTime", new Dictionary<int, string>());
-        logs.Add("UnityToPupilTimeOffset", new Dictionary<int, string>());
-        logs.Add("GameId", new Dictionary<int, string>());
-        persistentLog.Add("ParticipantId", 0);
-        persistentLog.Add("TestId", 0);
-        GenerateUid();
+        // logs.Add("TimeStamp", new Dictionary<int, string>());
+        // logs.Add("Time", new Dictionary<int, string>());
+        // logs.Add("Framecount", new Dictionary<int, string>());
+        // logs.Add("Date", new Dictionary<int, string>());
+        // logs.Add("TimeSinceLastEvent", new Dictionary<int, string>());
+        // logs.Add("PupilTime", new Dictionary<int, string>());
+        // logs.Add("UnityToPupilTimeOffset", new Dictionary<int, string>());
+        // logs.Add("GameId", new Dictionary<int, string>());
+        // persistentLog.Add("ParticipantId", 0);
+        // persistentLog.Add("TestId", 0);
+        loggingManager.Log("Meta", "DeviceID", SystemInfo.deviceUniqueIdentifier, LogMode.Overwrite);
         trackerHub.Init();
     }
 
@@ -89,24 +70,26 @@ public class EventLogger : MonoBehaviour
     {
         if (email == newEmail) return;
         email = newEmail.Replace("\n","").Replace("\r",""); // sanitize e-mail, to not contain newline characters.
+        loggingManager.SetEmail(email);
+        loggingManager.Log("Meta", "Email", email, LogMode.Overwrite);
     }
 
-    // Function mostly called from the LoggerNotifier. Adds to the logs the columns (parameters) that will be used.
-    // Also stores for each column the default value to use when it is not indicated in the event parameters
-    public void UpdateHeadersAndDefaults(Dictionary<string, string> headersToAdd)
-    {
-        foreach(KeyValuePair<string, string> entry in headersToAdd)
-        {
-            if(!logs.ContainsKey(entry.Key))
-            {
-                logs.Add(entry.Key, new Dictionary<int, string>());
-            }
-            if(!defaultValues.ContainsKey(entry.Key))
-            {
-                defaultValues.Add(entry.Key, entry.Value);
-            }
-        }
-    }
+    // // Function mostly called from the LoggerNotifier. Adds to the logs the columns (parameters) that will be used.
+    // // Also stores for each column the default value to use when it is not indicated in the event parameters
+    // public void UpdateHeadersAndDefaults(Dictionary<string, string> headersToAdd)
+    // {
+    //     foreach(KeyValuePair<string, string> entry in headersToAdd)
+    //     {
+    //         if(!logs.ContainsKey(entry.Key))
+    //         {
+    //             logs.Add(entry.Key, new Dictionary<int, string>());
+    //         }
+    //         if(!defaultValues.ContainsKey(entry.Key))
+    //         {
+    //             defaultValues.Add(entry.Key, entry.Value);
+    //         }
+    //     }
+    // }
 
     // Function called by the LoggerNotifier to log an event. Needs a LogEventContainer as argument, which contains
     // an Event and/or a PersistentEvent (see LogEventContainer for more details).
@@ -135,16 +118,15 @@ public class EventLogger : MonoBehaviour
         {
             case "Game Started":
                 trackerHub.StartTrackers();
-                InitFile();
+                //InitFile();
                 SaveEventDatas(datas);
                 break;
             case "Game Stopped":
             case "Game Finished":
                 trackerHub.StopTrackers();
                 SaveEventDatas(datas);
-                SaveCsvLogs();
-                SaveSqlLogs();
-                ResetLogs();
+                loggingManager.SaveAllLogs();
+                loggingManager.ClearAllLogs();
                 break;
             case "Mole Spawned":
                 SaveEventDatas(datas, true, true);
@@ -181,14 +163,7 @@ public class EventLogger : MonoBehaviour
     {
         foreach (KeyValuePair<string, object> pair in datas)
         {
-            if(persistentLog.ContainsKey(pair.Key))
-            {
-                persistentLog[pair.Key] = pair.Value;
-            }
-            else
-            {
-                persistentLog.Add(pair.Key, pair.Value);
-            }
+            persistentLog[pair.Key] = pair.Value;
         }
     }
 
@@ -210,7 +185,7 @@ public class EventLogger : MonoBehaviour
         {
             tempDict.Add(pair.Key, pair.Value.ToString());
         }
-        UpdateHeadersAndDefaults(tempDict);
+        //UpdateHeadersAndDefaults(tempDict);
     }
 
     // Update of the "Current Mole" log, called when a new Mole is activated (see LogEvent function)
@@ -259,174 +234,185 @@ public class EventLogger : MonoBehaviour
                 datas.Add(log.Key, log.Value);
             }
         }
-        GenerateLine(datas);
+
+        datas["TimeSinceLastEvent"] = GetPreviousEventTimeDiff().ToString("0.0000").Replace(",", ".");
+        datas["PupilTime"] = timeSync != null ? timeSync.GetPupilTimestamp().ToString() : "NULL";
+        datas["UnityToPupilTimeOffset"] = timeSync != null ? timeSync.UnityToPupilTimeOffset.ToString() : "NULL";
+        datas["GameId"] = GenerateUid();
+
+        foreach(KeyValuePair<string, object> pair in persistentLog)
+        {
+            datas.Add(pair.Key, pair.Value.ToString());
+        }
+
+        loggingManager.Log("Event", datas);
     }
 
-    // Generates a "logs" row (see class description) from the given datas. Adds mandatory parameters and 
-    // the PersistentEvents parameters to the row when generating it.
-    private void GenerateLine(Dictionary<string, object> log)
-    {
-        logs["Framecount"].Add(logCount, Time.frameCount.ToString());
-        logs["TimeStamp"].Add(logCount, GetTimeStamp());
-        logs["Date"].Add(logCount, System.DateTime.Now.ToString("yyyy-MM-dd"));
-        logs["Time"].Add(logCount, System.DateTime.Now.ToString("HH:mm:ss.ffff"));
-        logs["TimeSinceLastEvent"].Add(logCount, GetPreviousEventTimeDiff().ToString("0.0000").Replace(",", "."));
-        logs["PupilTime"].Add(logCount, timeSync != null ? timeSync.GetPupilTimestamp().ToString() : "NULL");
-        logs["UnityToPupilTimeOffset"].Add(logCount, timeSync != null ? timeSync.UnityToPupilTimeOffset.ToString() : "NULL");
-        logs["GameId"].Add(logCount, uid);
+    // // Generates a "logs" row (see class description) from the given datas. Adds mandatory parameters and 
+    // // the PersistentEvents parameters to the row when generating it.
+    // private void GenerateLine(Dictionary<string, object> log)
+    // {
+    //     logs["Framecount"].Add(logCount, Time.frameCount.ToString());
+    //     logs["TimeStamp"].Add(logCount, GetTimeStamp());
+    //     logs["Date"].Add(logCount, System.DateTime.Now.ToString("yyyy-MM-dd"));
+    //     logs["Time"].Add(logCount, System.DateTime.Now.ToString("HH:mm:ss.ffff"));
+    //     logs["TimeSinceLastEvent"].Add(logCount, GetPreviousEventTimeDiff().ToString("0.0000").Replace(",", "."));
+    //     logs["PupilTime"].Add(logCount, timeSync != null ? timeSync.GetPupilTimestamp().ToString() : "NULL");
+    //     logs["UnityToPupilTimeOffset"].Add(logCount, timeSync != null ? timeSync.UnityToPupilTimeOffset.ToString() : "NULL");
+    //     logs["GameId"].Add(logCount, uid);
 
-        foreach (KeyValuePair<string, object> pair in log)
-        {
-            if (logs.ContainsKey(pair.Key))
-            {
-                logs[pair.Key].Add(logCount, ConvertToString(pair.Value));
-            }
-            else
-            {
-                logs.Add(pair.Key, new Dictionary<int, string>{{logCount, ConvertToString(pair.Value)}});
-            }
-        }
+    //     foreach (KeyValuePair<string, object> pair in log)
+    //     {
+    //         if (logs.ContainsKey(pair.Key))
+    //         {
+    //             logs[pair.Key].Add(logCount, ConvertToString(pair.Value));
+    //         }
+    //         else
+    //         {
+    //             logs.Add(pair.Key, new Dictionary<int, string>{{logCount, ConvertToString(pair.Value)}});
+    //         }
+    //     }
 
-        foreach (KeyValuePair<string, object> pair in persistentLog)
-        {
-            if (logs.ContainsKey(pair.Key))
-            {
-                logs[pair.Key].Add(logCount, ConvertToString(pair.Value));
-            }
-            else
-            {
-                logs.Add(pair.Key, new Dictionary<int, string>{{logCount, ConvertToString(pair.Value)}});
-            }
-        }
-        logCount++;
-    }
+    //     foreach (KeyValuePair<string, object> pair in persistentLog)
+    //     {
+    //         if (logs.ContainsKey(pair.Key))
+    //         {
+    //             logs[pair.Key].Add(logCount, ConvertToString(pair.Value));
+    //         }
+    //         else
+    //         {
+    //             logs.Add(pair.Key, new Dictionary<int, string>{{logCount, ConvertToString(pair.Value)}});
+    //         }
+    //     }
+    //     logCount++;
+    // }
 
 
-    private void SaveSqlLogs()
-    {
-        Dictionary<string, List<string>> logCollection = new Dictionary<string, List<string>>();
-        logCollection.Add("Email", new List<string>());
-        for(int i = 0; i < logCount; i++)
-        {
-            logCollection["Email"].Add(email);
-        }
-        string temp;
+    // private void SaveSqlLogs()
+    // {
+    //     Dictionary<string, List<string>> logCollection = new Dictionary<string, List<string>>();
+    //     logCollection.Add("Email", new List<string>());
+    //     for(int i = 0; i < logCount; i++)
+    //     {
+    //         logCollection["Email"].Add(email);
+    //     }
+    //     string temp;
 
-        foreach(KeyValuePair<string, Dictionary<int, string>> pair in logs)
-        {
-            logCollection.Add(pair.Key, new List<string>());
+    //     foreach(KeyValuePair<string, Dictionary<int, string>> pair in logs)
+    //     {
+    //         logCollection.Add(pair.Key, new List<string>());
             
-            for(int i = 0; i < logCount; i++)
-            {
-                if (pair.Value.TryGetValue(i, out temp))
-                {
-                    logCollection[pair.Key].Add(temp);
-                }
-                else
-                {
-                    if(defaultValues.TryGetValue(pair.Key, out temp))
-                    {
-                        logCollection[pair.Key].Add(temp);
-                    }
-                    else
-                    {
-                        logCollection[pair.Key].Add("NULL");
-                    }
-                }
-            }
-        }
-        SendSqlLogs(logCollection);
-    }
+    //         for(int i = 0; i < logCount; i++)
+    //         {
+    //             if (pair.Value.TryGetValue(i, out temp))
+    //             {
+    //                 logCollection[pair.Key].Add(temp);
+    //             }
+    //             else
+    //             {
+    //                 if(defaultValues.TryGetValue(pair.Key, out temp))
+    //                 {
+    //                     logCollection[pair.Key].Add(temp);
+    //                 }
+    //                 else
+    //                 {
+    //                     logCollection[pair.Key].Add("NULL");
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     SendSqlLogs(logCollection);
+    // }
 
 
-    private void SendSqlLogs(Dictionary<string, List<string>> logCollection)
-    {
-        connectToMySQL.AddToUploadQueue(logCollection);
-        connectToMySQL.UploadNow();
-    }
+    // private void SendSqlLogs(Dictionary<string, List<string>> logCollection)
+    // {
+    //     // connectToMySQL.AddToUploadQueue(logCollection);
+    //     // connectToMySQL.UploadNow();
+    // }
 
 
-    // Formats the logs to a CSV row format and saves them. Calls the CSV headers generation beforehand.
-    // If a parameter doesn't have a value for a given row, uses the given value given previously (see 
-    // UpdateHeadersAndDefaults).
-    private void SaveCsvLogs()
-    {
-        if(!saveLocally) return;
+    // // Formats the logs to a CSV row format and saves them. Calls the CSV headers generation beforehand.
+    // // If a parameter doesn't have a value for a given row, uses the given value given previously (see 
+    // // UpdateHeadersAndDefaults).
+    // private void SaveCsvLogs()
+    // {
+    //     if(!saveLocally) return;
 
-        GenerateHeaders();
-        string temp;
-        for (int i = 0; i < logCount; i++)
-        {
-            string line = "";
-            foreach (KeyValuePair<string, Dictionary<int, string>> log in logs)
-            {
-                if (line != "")
-                {
-                    line += fieldSeperator;
-                }
+    //     GenerateHeaders();
+    //     string temp;
+    //     for (int i = 0; i < logCount; i++)
+    //     {
+    //         string line = "";
+    //         foreach (KeyValuePair<string, Dictionary<int, string>> log in logs)
+    //         {
+    //             if (line != "")
+    //             {
+    //                 line += fieldSeperator;
+    //             }
 
-                if (log.Value.TryGetValue(i, out temp))
-                {
-                    line += temp;
-                }
-                else
-                {
-                    if(defaultValues.TryGetValue(log.Key, out temp))
-                    {
-                        line += temp;
-                    }
-                    else
-                    {
-                        line += "NULL";
-                    }
-                }
-            }
-            SaveToFile(line);
-        }
-    }
+    //             if (log.Value.TryGetValue(i, out temp))
+    //             {
+    //                 line += temp;
+    //             }
+    //             else
+    //             {
+    //                 if(defaultValues.TryGetValue(log.Key, out temp))
+    //                 {
+    //                     line += temp;
+    //                 }
+    //                 else
+    //                 {
+    //                     line += "NULL";
+    //                 }
+    //             }
+    //         }
+    //         SaveToFile(line);
+    //     }
+    // }
 
-    // Generates the headers in a CSV format and saves them to the CSV file
-    private void GenerateHeaders()
-    {
-        string headers = "";
-        foreach (string key in logs.Keys)
-        {
-            if (headers != "")
-            {
-                headers += fieldSeperator;
-            }
-            headers += key;
-        }
-        SaveToFile(headers);
-    }
+    // // Generates the headers in a CSV format and saves them to the CSV file
+    // private void GenerateHeaders()
+    // {
+    //     string headers = "";
+    //     foreach (string key in logs.Keys)
+    //     {
+    //         if (headers != "")
+    //         {
+    //             headers += fieldSeperator;
+    //         }
+    //         headers += key;
+    //     }
+    //     SaveToFile(headers);
+    // }
 
     // Generates a unique ID for the test
-    private void GenerateUid()
+    private string GenerateUid()
     {
         object participantId;
         object testId;
         persistentLog.TryGetValue("ParticipantId", out participantId);
         persistentLog.TryGetValue("TestId", out testId);
-        uid = participantId.ToString() + testId.ToString() + System.DateTime.Now.ToString("yyyy:MM:dd:HH:mm:ss").Replace(" ", "").Replace("/", "").Replace(":", "");
+        return participantId.ToString() + testId.ToString() + System.DateTime.Now.ToString("yyyy:MM:dd:HH:mm:ss").Replace(" ", "").Replace("/", "").Replace(":", "");
     }
 
-    // Converts the values of the parameters (in a "object format") to a string, formatting them to the
-    // correct format in the process.
-    private string ConvertToString(object arg)
-    {
-        if (arg is float)
-        {
-            return ((float)arg).ToString("0.0000").Replace(",", ".");
-        }
-        else if (arg is Vector3)
-        {
-            return ((Vector3)arg).ToString("0.0000").Replace(",", ".");
-        }
-        else
-        {
-            return arg.ToString();
-        }
-    }
+    // // Converts the values of the parameters (in a "object format") to a string, formatting them to the
+    // // correct format in the process.
+    // private string ConvertToString(object arg)
+    // {
+    //     if (arg is float)
+    //     {
+    //         return ((float)arg).ToString("0.0000").Replace(",", ".");
+    //     }
+    //     else if (arg is Vector3)
+    //     {
+    //         return ((Vector3)arg).ToString("0.0000").Replace(",", ".");
+    //     }
+    //     else
+    //     {
+    //         return arg.ToString();
+    //     }
+    // }
 
     // Updates and returns the "TimeSinceLastEvent" value.
     private float GetPreviousEventTimeDiff()
@@ -442,35 +428,35 @@ public class EventLogger : MonoBehaviour
         return System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.ffff");
     }
 
-    // Initialises the CSV file parameters (name and file path).
-    private void InitFile()
-    {
-        completeFileName = fileName + "_" + GetTimeStamp().Replace('/', '-').Replace(":", "-");
-        filePath = savePath + "/" + completeFileName + ".csv";
-    }
+    // // Initialises the CSV file parameters (name and file path).
+    // private void InitFile()
+    // {
+    //     completeFileName = fileName + "_" + GetTimeStamp().Replace('/', '-').Replace(":", "-");
+    //     filePath = savePath + "/" + completeFileName + ".csv";
+    // }
 
-    // Saves the given CSV line to the CSV file.
-    private void SaveToFile(string line, bool end = true)
-    {
-        string tempLine = line;
+    // // Saves the given CSV line to the CSV file.
+    // private void SaveToFile(string line, bool end = true)
+    // {
+    //     string tempLine = line;
 
-        if (end)
-        {
-            tempLine += Environment.NewLine;
-        }
-        File.AppendAllText(filePath, tempLine);
-    }
+    //     if (end)
+    //     {
+    //         tempLine += Environment.NewLine;
+    //     }
+    //     File.AppendAllText(filePath, tempLine    );
+    // }
 
-    // Clears the logs, "Current Mole" log, log count and unique test ID. Used to clear the logs when a new game is started.
-    private void ResetLogs()
-    {
-        currentMoleLog.Clear();
+    // // Clears the logs, "Current Mole" log, log count and unique test ID. Used to clear the logs when a new game is started.
+    // private void ResetLogs()
+    // {
+    //     currentMoleLog.Clear();
         
-        foreach(Dictionary<int, string> dict in logs.Values)
-        {
-            dict.Clear();
-        }
-        logCount = 0;
-        GenerateUid();
-    }
+    //     foreach(Dictionary<int, string> dict in logs.Values)
+    //     {
+    //         dict.Clear();
+    //     }
+    //     logCount = 0;
+    //     GenerateUid();
+    // }
 }
