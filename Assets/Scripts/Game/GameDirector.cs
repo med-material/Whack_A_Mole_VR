@@ -234,10 +234,10 @@ public class GameDirector : MonoBehaviour
     private void FinishGame()
     {
         if (gameState == GameState.Stopped) return;
+        UpdateState(GameState.Stopped);
         if (gazeRecorder != null) gazeRecorder.StopRecording();
         patternManager.StopPattern();
         StopAllCoroutines();
-        UpdateState(GameState.Stopped);
         wallManager.Disable();
     }
 
