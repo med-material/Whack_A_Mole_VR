@@ -35,16 +35,4 @@ public class BasicLaserCursor : LaserCursor
         if (!pointLight) return;
         pointLight.enabled = true;
     }
-
-    // Extra behavior to do when the Cursor is disabled.
-    protected override void ExtraDisable()
-    {
-        pointLight.enabled = false;
-    }
-
-    // Extra behavior to do when the the color of the Cursor is set.
-    protected override void ExtraSetColor(Color newColor)
-    {
-        pointLight.color = newColor;
-    }
 }
