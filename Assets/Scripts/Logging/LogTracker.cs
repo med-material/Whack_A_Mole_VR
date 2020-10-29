@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Valve.VR;
 using UnityEngine;
 
 /*
@@ -17,12 +18,19 @@ public class LogTracker : MonoBehaviour
 
     [SerializeField]
     private bool trackPos = false;
-    
+
+    [SerializeField]
+    private bool trackTrigger = false;
+
+    [SerializeField]
+    private SteamVR_Input_Sources controller;
+
     private bool isTracking = false;
     private Vector3 rotTravel = Vector3.zero;
     private Vector3 previousRot;
     private Vector3 posTravel = Vector3.zero;
     private Vector3 previousPos;
+    private bool trigger = false;
 
     // On update, if is enabled, tracks.
     void Update()
@@ -59,6 +67,17 @@ public class LogTracker : MonoBehaviour
             datas.Add("RotTravelX", rotTravel.x);
             datas.Add("RotTravelY", rotTravel.y);
             datas.Add("RotTravelZ", rotTravel.z);
+        }
+        if (trackTrigger) {
+            trigger = false;
+            if(SteamVR.active)
+            {
+                if (SteamVR_Input._default.inActions.GrabPinch.GetStateDown(controller))
+                {
+                    trigger = true;
+                }
+            }
+            datas.Add("Trigger", trigger);
         }
         ResetTravel();
         return datas;
