@@ -21,6 +21,17 @@ public class PatternManager : MonoBehaviour
     private PatternPlayer patternPlayer;
     private LoggerNotifier loggerNotifier;
     private PatternUpdateEvent patternUpdateEvent = new PatternUpdateEvent();
+
+    [System.Serializable]
+    public struct InternalPattern {
+        public string name;
+        public TextAsset asset;
+    }
+
+    [SerializeField]
+    private InternalPattern[] internalPatterns;
+
+    private Dictionary<string, string[]> internalPatternsDict = new Dictionary<string, string[]>();
     
     void Awake()
     {
@@ -34,6 +45,11 @@ public class PatternManager : MonoBehaviour
         loggerNotifier = new LoggerNotifier(persistentEventsHeadersDefaults: new Dictionary<string, string>(){
             {"PlayedPattern", "None"}
         });
+
+        foreach(InternalPattern pattern in internalPatterns) {
+            internalPatternsDict.Add(pattern.name, pattern.asset.text.Split('\n'));
+        }
+
     }
 
     // Plays the pattern if one is loaded.
@@ -93,7 +109,13 @@ public class PatternManager : MonoBehaviour
     // Loads a pattern from a given name.
     public bool LoadPattern(string patternName)
     {
-        string[] patternProperties = patternReadWriter.LoadPattern(patternName);
+        string[] patternProperties = null;
+
+        if (internalPatternsDict.ContainsKey(patternName)) {
+            patternProperties = internalPatternsDict[patternName];
+        } else {
+            patternProperties = patternReadWriter.LoadPattern(patternName);
+        }
 
         if (patternProperties == null) return false;
 
@@ -121,7 +143,15 @@ public class PatternManager : MonoBehaviour
     // Returns the name of the available patterns
     public List<string> GetPatternsName()
     {
-        return patternReadWriter.GetPatternsName();
+        List<string> patternList = new List<string>();
+
+        foreach(KeyValuePair<string, string[]> pair in internalPatternsDict) {
+            patternList.Add(pair.Key);
+        }
+
+        patternList.AddRange(patternReadWriter.GetPatternsName());
+
+        return patternList;
     }
 
     // Returns the name of the currently loaded pattern
