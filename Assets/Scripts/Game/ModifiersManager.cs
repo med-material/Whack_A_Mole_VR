@@ -32,7 +32,19 @@ public class ModifiersManager : MonoBehaviour
     private Pointer rightController;
 
     [SerializeField]
+    private GameObject rightControllerVisual;
+
+    [SerializeField]
+    private GameObject rightControllerBubbleDisplay;
+
+    [SerializeField]
     private Pointer leftController;
+
+    [SerializeField]
+    private GameObject leftControllerVisual;
+
+    [SerializeField]
+    private GameObject leftControllerBubbleDisplay;
 
     [SerializeField]
     private Transform rightControllerContainer;
@@ -64,13 +76,14 @@ public class ModifiersManager : MonoBehaviour
     private LoggerNotifier loggerNotifier;
     private ModifierUpdateEvent modifierUpdateEvent = new ModifierUpdateEvent();
 
-    void Start()
+    void Awake()
     {
         controllersList = new Dictionary<string, Pointer>(){
             {"main", rightController},
             {"second", leftController}
         };
         SetControllerEnabled("main");
+        SetControllerEnabled("second", false);
 
         // Initialization of the LoggerNotifier. Here we will only pass parameters to PersistentEvent, even if we will also raise Events.
         loggerNotifier = new LoggerNotifier(persistentEventsHeadersDefaults: new Dictionary<string, string>(){
@@ -263,6 +276,13 @@ public class ModifiersManager : MonoBehaviour
         else
         {
             controllersList[controllerType].Disable();
+        }
+        if (controllerType == "main") {
+            rightControllerVisual.SetActive(enable);
+            rightControllerBubbleDisplay.SetActive(enable);
+        } else {
+            leftControllerVisual.SetActive(enable);
+            leftControllerBubbleDisplay.SetActive(enable);
         }
     }
 
