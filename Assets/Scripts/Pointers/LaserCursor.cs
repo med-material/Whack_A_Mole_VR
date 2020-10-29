@@ -25,6 +25,7 @@ public abstract class LaserCursor : MonoBehaviour
     {
         if (isEnabled) return;
         isEnabled = true;
+        if (cursorRenderer == null) cursorRenderer = gameObject.GetComponent<Renderer>();
         cursorRenderer.enabled = true;
         ExtraEnable();
     }
