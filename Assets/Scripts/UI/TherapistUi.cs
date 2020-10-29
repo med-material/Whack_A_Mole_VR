@@ -49,7 +49,6 @@ public class TherapistUi : MonoBehaviour
     void Start()
     {
         animationPlayer = gameObject.GetComponent<Animation>();
-        patternManager.GetPatternUpdateEvent().AddListener(PatternLoaded);
         UpdatePatternDropDown();
 
         // Connect to the modifier updated event from the ModifiersManager
@@ -221,22 +220,12 @@ public class TherapistUi : MonoBehaviour
     // When a pattern is selected on the dropdown
     public void DropDownPatternSelected(string patternName)
     {
-        if (patternName == "No pattern")
+        if (patternName == "Random Moles")
         {
             patternManager.ClearPattern();
             return;
         }
-        if(!patternManager.LoadPattern(patternName))
-        {
-            therapistPanelController.UpdatePatternDropDown(patternManager.GetPatternsName());
-            therapistPanelController.SetSelectedPattern(patternManager.GetLoadedPatternName());
-        }
-    }
-
-    // When a pattern has been correctly loaded (function called when the pattern loaded event is raised)
-    public void PatternLoaded(string patternName)
-    {
-        therapistPanelController.SetSelectedPattern(patternName);
+        patternManager.LoadPattern(patternName);
     }
 
     // When the game time updated event is raised (by the game director), updates the UI.

@@ -28,7 +28,7 @@ public class TherapistPanelController : MonoBehaviour
     private GameModifiersContainer gameModifiersContainer;
 
     [SerializeField]
-    private Dropdown patternsDropdown;
+    private SelectionList patternsList;
 
     private Animation animationPlayer;
     private LayoutElement layoutElement;
@@ -61,8 +61,7 @@ public class TherapistPanelController : MonoBehaviour
             controller.Disable();
         }
         gameStateContainer.OnCountDownGame();
-        patternsDropdown.Hide();
-        patternsDropdown.interactable = false;
+        patternsList.SetInteractable(false);
     }
 
     // On start, disables the ButtonTextController and updates the GameStateContainer
@@ -73,8 +72,7 @@ public class TherapistPanelController : MonoBehaviour
             controller.Disable();
         }
         gameStateContainer.OnStartGame();
-        patternsDropdown.Hide();
-        patternsDropdown.interactable = false;
+        patternsList.SetInteractable(false);
     }
 
     // On game stop, enables the ButtonTextController and updates the GameStateContainer
@@ -86,43 +84,46 @@ public class TherapistPanelController : MonoBehaviour
         }
         gameStateContainer.OnPauseGame(false);
         gameStateContainer.OnStopGame();
-        patternsDropdown.interactable = true;
+        patternsList.SetInteractable(true);
     }
 
     // Updates the displayed values in the patterns dropdown
     public void UpdatePatternDropDown(List<string> newValues)
     {
-        patternsDropdown.ClearOptions();
-        List<Dropdown.OptionData> patternOptions = new List<Dropdown.OptionData>();
-        patternOptions.Add(new Dropdown.OptionData("No pattern"));
+        patternsList.ClearItems();
+        List<string> patternOptions = new List<string>();
+        patternOptions.Add("Random Moles");
 
         foreach (string value in newValues)
         {
-            patternOptions.Add(new Dropdown.OptionData(value));
+            patternOptions.Add(value);
         }
-        patternsDropdown.AddOptions(patternOptions);
-
-        patternsDropdown.RefreshShownValue();
+        patternsList.AddItems(patternOptions);
+        //patternsList.RefreshShownValue();
     }
 
     // When a pattern is selected on the dropdown (called by the dropdown)
-    public void OnPatternSelected()
+    public void OnPatternSelected(int value)
     {
-        therapistUi.DropDownPatternSelected(patternsDropdown.options[patternsDropdown.value].text);
+        if (patternsList.Get() == 0) {
+            return;
+        }
+        string label = patternsList.GetLabel(value);
+        therapistUi.DropDownPatternSelected(label);
     }
 
     // Sets the selected pattern
     public void SetSelectedPattern(string patternName)
     {
-        for (int i = 0; i < patternsDropdown.options.Count; i++)
+        for (int i = 0; i < patternsList.selectionItems.Count; i++)
         {
-            if (patternsDropdown.options[i].text == patternName)
+            if (patternsList.selectionItems[i].label == patternName)
             {
-                patternsDropdown.value = i;
+                patternsList.Set(i);
                 return;
             }
+            patternsList.Set(0);
         }
-        patternsDropdown.value = 0;
     }
 
     // When the game pauses, updates the gameState container.
