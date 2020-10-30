@@ -57,6 +57,7 @@ public class SelectionList : MonoBehaviour
             text.text = newItems[i];
             Transform tr = obj.GetComponent<Transform>();
             tr.SetParent(templateTransform.parent);
+            tr.localScale = new Vector3(1f, 1f, 1f);
             obj.SetActive(true);
             item.label = newItems[i];
             item.toggle = toggle;
