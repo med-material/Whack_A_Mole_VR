@@ -112,6 +112,9 @@ public abstract class Pointer : MonoBehaviour
             {"ControllerSmoothed", directionSmoothed},
             {"ControllerAimAssistState", System.Enum.GetName(typeof(Pointer.AimAssistStates), aimAssistState)}
         });
+
+        previousDirection = laserOrigin.transform.forward;
+        laser = laserOrigin.GetComponent<LineRenderer>();
     }
 
     public void SetPointerEnable(bool active) {
@@ -129,14 +132,7 @@ public abstract class Pointer : MonoBehaviour
 
         if (cursor) cursor.Enable();
 
-        if (!laser)
-        {
-            InitLaser();
-        }
-        else
-        {
-            laser.enabled = true;
-        }
+        if (laser) laser.enabled = true;
         state = States.Idle;
         active = true;
         pointerShootOrder = -1;
@@ -166,12 +162,18 @@ public abstract class Pointer : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(laserOrigin.transform.position + laserOffset, rayDirection, out hit, 100f, Physics.DefaultRaycastLayers))
         {
-            UpdateLaser(true, hitPosition: laserOrigin.transform.InverseTransformPoint(hit.point), rayDirection: laserOrigin.transform.InverseTransformDirection(rayDirection));
+            //UpdateLaser(true, hitPosition: laserOrigin.transform.InverseTransformPoint(hit.point), rayDirection: laserOrigin.transform.InverseTransformDirection(rayDirection));
+            Vector3 hitPosition = laserOrigin.transform.InverseTransformPoint(hit.point);
+            laser.SetPosition(1, hitPosition);
+            cursor.SetPosition(hitPosition);
             hoverMole(hit);
         }
         else
         {
-            UpdateLaser(false, rayDirection: laserOrigin.transform.InverseTransformDirection(rayDirection));
+            Vector3 rayPosition = laserOrigin.transform.InverseTransformDirection(rayDirection) * maxLaserLength; 
+            laser.SetPosition(1, rayPosition);
+            cursor.SetPosition(rayPosition);
+            //UpdateLaser(false, rayDirection: laserOrigin.transform.InverseTransformDirection(rayDirection) * maxLaserLength);
         }
 
         if(SteamVR.active)
@@ -267,23 +269,6 @@ public abstract class Pointer : MonoBehaviour
             {"HitPositionWorldY", hitPosition.y},
             {"HitPositionWorldZ", hitPosition.z}
         });
-    }
-
-    // Updates the laser position. If the raycast hits something, places the cursor in consequence.
-    private void UpdateLaser(bool hit, Vector3 hitPosition = default(Vector3), Vector3 rayDirection = default(Vector3))
-    {
-
-        if (hit) laser.SetPosition(1, hitPosition);
-        else laser.SetPosition(1, rayDirection * maxLaserLength);
-
-        if (!cursor) return;
-
-        if (cursor.IsEnabled() != hit)
-        {
-            if (hit) cursor.Enable();
-            else cursor.Disable();
-        }
-        if (hit) cursor.SetPosition(rayDirection * cursorLength);
     }
 
     private Vector3 GetRayDirection()
@@ -395,28 +380,28 @@ public abstract class Pointer : MonoBehaviour
         return laserOrigin.transform.forward;
     }
 
-    // Inits the laser.
-    private void InitLaser()
-    {
-        laser = laserOrigin.AddComponent<LineRenderer>();
-        laser.useWorldSpace = false;
-        laser.material = laserMaterial;
-        laser.SetPositions(new Vector3[2]{laserOffset, laserOffset + Vector3.forward * maxLaserLength});
-        laser.startColor = startLaserColor;
-        laser.endColor = EndLaserColor;
-        laser.startWidth = laserWidth;
-        laser.endWidth = laserWidth;
-        laser.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+    // // Inits the laser.
+    // private void InitLaser()
+    // {
+    //     laser = laserOrigin.AddComponent<LineRenderer>();
+    //     laser.useWorldSpace = false;
+    //     laser.material = laserMaterial;
+    //     laser.SetPositions(new Vector3[2]{laserOffset, laserOffset + Vector3.forward * maxLaserLength});
+    //     laser.startColor = startLaserColor;
+    //     laser.endColor = EndLaserColor;
+    //     laser.startWidth = laserWidth;
+    //     laser.endWidth = laserWidth;
+    //     laser.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
-        if (!cursor) return;
+    //     if (!cursor) return;
 
-        cursor.SetColor(EndLaserColor);
-        cursor.Disable();
+    //     cursor.SetColor(EndLaserColor);
+    //     cursor.Disable();
 
-        // Smoothing init
+    //     // Smoothing init
 
-        previousDirection = laserOrigin.transform.forward;
-    }
+    //     
+    // }
 
     // Waits the CoolDown duration.
     private IEnumerator WaitForCooldown()

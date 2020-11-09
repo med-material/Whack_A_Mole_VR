@@ -165,8 +165,8 @@ public class ModifiersManager : MonoBehaviour
     {
         if (geometricMirrorEffect == value) return;
         geometricMirrorEffect = value;
+        mirrorMotorSpace.SetActive(value);
         mirrorController.SetActive(value);
-        //mirrorMotorSpace.SetActive(value);
     }
 
     // Sets the dual task mode (if dualtask is enabled, both controllers can be used to pop moles)

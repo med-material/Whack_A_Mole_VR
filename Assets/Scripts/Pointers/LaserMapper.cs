@@ -2,6 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
+
+public class MotorSpaceInfo {
+    public float width;
+    public float height;
+    public Vector3 pos;
+    public float multiplier = 1f;
+}
 
 public class LaserMapper : MonoBehaviour
 {
@@ -63,6 +71,10 @@ public class LaserMapper : MonoBehaviour
 
     [SerializeField]
     private LoggingManager loggingManager;
+
+    [System.Serializable]
+    public class OnMotorSpaceChanged : UnityEvent<MotorSpaceInfo> { }
+    public OnMotorSpaceChanged onMotorSpaceChanged;
 
     // Start is called before the first frame update
     void Start()
@@ -168,6 +180,7 @@ public class LaserMapper : MonoBehaviour
         motorSpaceTopRight = new Vector3(motorSpaceOrigin.x + (motorSpaceWidth * multiplier), motorSpaceOrigin.y + (motorSpaceHeight * multiplier), motorSpaceOrigin.z);
         motorSpaceBottomRight = new Vector3(motorSpaceOrigin.x + (motorSpaceWidth * multiplier), motorSpaceOrigin.y - (motorSpaceHeight * multiplier), motorSpaceOrigin.z);
         motorSpaceBottomLeft = new Vector3(motorSpaceOrigin.x - (motorSpaceWidth * multiplier), motorSpaceOrigin.y - (motorSpaceHeight * multiplier), motorSpaceOrigin.z);
+        onMotorSpaceChanged.Invoke(new MotorSpaceInfo { width = motorSpaceWidth, height = motorSpaceHeight, pos = transform.position} );
         LogMotorSpaceChange("MotorSpace Size Change");
     }
 
@@ -203,6 +216,18 @@ public class LaserMapper : MonoBehaviour
         var highVal = (float) motorSpaceSlider.maxValue;
         var lowVal = (float) motorSpaceSlider.minValue;
         multiplier = (sliderValue - lowVal) / highVal;
+        CalculateMotorSpace();
+        UpdateMotorSpaceVisualizer();
+    }
+
+    public void SetMotorSpaceWidth(float newWidth) {
+        motorSpaceWidth = newWidth;
+        CalculateMotorSpace();
+        UpdateMotorSpaceVisualizer();
+    }
+
+    public void SetMotorSpaceHeight(float newHeight) {
+        motorSpaceHeight = newHeight;
         CalculateMotorSpace();
         UpdateMotorSpaceVisualizer();
     }
