@@ -38,6 +38,12 @@ public class ModifiersManager : MonoBehaviour
     private GameObject rightControllerBubbleDisplay;
 
     [SerializeField]
+    private GameObject mirrorController;
+
+    [SerializeField]
+    private GameObject mirrorMotorSpace;
+
+    [SerializeField]
     private Pointer leftController;
 
     [SerializeField]
@@ -68,6 +74,7 @@ public class ModifiersManager : MonoBehaviour
     private HideWall hideWall = HideWall.None;
     private bool mirrorEffect;
     private bool physicalMirrorEffect;
+    private bool geometricMirrorEffect;
     private bool dualTask;
     private bool rightControllerMain;
     private float controllerOffset;
@@ -152,6 +159,14 @@ public class ModifiersManager : MonoBehaviour
         if (physicalMirrorEffect == value) return;
         physicalMirrorEffect = value;
         physicalMirror.SetActive(value);
+    }
+
+    public void SetGeometricMirror(bool value)
+    {
+        if (geometricMirrorEffect == value) return;
+        geometricMirrorEffect = value;
+        mirrorController.SetActive(value);
+        //mirrorMotorSpace.SetActive(value);
     }
 
     // Sets the dual task mode (if dualtask is enabled, both controllers can be used to pop moles)
