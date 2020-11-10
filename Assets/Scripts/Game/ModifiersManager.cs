@@ -80,13 +80,14 @@ public class ModifiersManager : MonoBehaviour
     private GameObject physicalMirror;
 
     [SerializeField]
-    private float hideWallhighestStart = 1.3f;
+    private float hideWallHighestStart = 1.3f;
     [SerializeField]
-    private float hideWallhighestEnd = 0.6f;
+    private float hideWallHighestEnd = 0.6f;
     [SerializeField]
-    private float hideWalllowestStart = -0.2f;
+    private float hideWallLowestStart = -0.2f;
     [SerializeField]
-    private float hideWalllowestEnd = -1.05f;
+    private float hideWallLowestEnd = -1.05f;
+    private float hideWallAmount = -1f;
 
     private EyePatch eyePatch = EyePatch.None;
     private HideWall hideWall = HideWall.None;
@@ -117,7 +118,9 @@ public class ModifiersManager : MonoBehaviour
             {"EyePatch", "No Eye Patch Defined"},
             {"ControllerOffset", "No Controller Offset Defined"},
             {"PrismOffset", "No Controller Offset Defined"},
-            {"DualTask", "No Dual Task Defined"}
+            {"DualTask", "No Dual Task Defined"},
+            {"HideWall", "No Hide Wall Defined"},
+            {"HideWallAmount", "No Hide Wall Amount Defined"}
         });
         // Initialization of the starting values of the parameters.
         loggerNotifier.InitPersistentEventParameters(new Dictionary<string, object>(){
@@ -126,7 +129,9 @@ public class ModifiersManager : MonoBehaviour
             {"EyePatch", System.Enum.GetName(typeof(ModifiersManager.EyePatch), eyePatch)},
             {"ControllerOffset", controllerOffset},
             {"PrismOffset", controllerOffset},
-            {"DualTask", dualTask}
+            {"DualTask", dualTask},
+            {"HideWall", System.Enum.GetName(typeof(ModifiersManager.HideWall), hideWall)},
+            {"HideWallAmount", hideWallAmount},
         });
     }
 
@@ -141,6 +146,11 @@ public class ModifiersManager : MonoBehaviour
     public void SetHideWall(HideWall value) {
         if (hideWall == value) return;
         hideWall = value;
+
+        loggerNotifier.NotifyLogger("Hide Wall Effect Set "+ value, EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
+        {
+            {"HideWall", value}
+        });
 
         if (hideWall == HideWall.Left) {
             hideWallLeft.SetActive(true);
@@ -160,26 +170,23 @@ public class ModifiersManager : MonoBehaviour
         var sliderValue = (float) hideWallSlider.value;
         var highVal = (float) hideWallSlider.maxValue;
         var lowVal = (float) hideWallSlider.minValue;
-        var multiplier = 1 - ((sliderValue - lowVal) / highVal);
-        var startRange = hideWallhighestStart - hideWalllowestStart;
-        var endRange = hideWallhighestEnd - hideWalllowestEnd;
+        hideWallAmount = ((sliderValue - lowVal) / highVal);
+        var multiplier = 1 - hideWallAmount;
+        var startRange = hideWallHighestStart - hideWallLowestStart;
+        var endRange = hideWallHighestEnd - hideWallLowestEnd;
 
-        var newStart = (startRange * multiplier) + hideWalllowestStart;
-        var newEnd = (endRange * multiplier) + hideWalllowestEnd;
+        var newStart = (startRange * multiplier) + hideWallLowestStart;
+        var newEnd = (endRange * multiplier) + hideWallLowestEnd;
 
         hideWallLeftMat.SetFloat("_FogMaxHeight", -newStart);
         hideWallLeftMat.SetFloat("_FogMinHeight", -newEnd);
         hideWallRightMat.SetFloat("_FogMaxHeight", newStart);
         hideWallRightMat.SetFloat("_FogMinHeight", newEnd);
 
-        // 1.3:-0.2
-        // 0.6:-1.05
-
-        // 1 = 1.3, 0.6
-        // 2 = 1, 0.0
-        // 3 = 0.6, -0.3
-        // 4 = 0.35, -0.55
-        // 5 = -0.2, -1.05
+        loggerNotifier.NotifyLogger("Hide Wall Amount: "+ hideWallAmount, EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
+        {
+            {"HideWallAmount", hideWallAmount}
+        });
     }
 
     // Sets a controller position and rotation's mirroring effect. Calls UpdateMirrorEffect to set the mirror.
