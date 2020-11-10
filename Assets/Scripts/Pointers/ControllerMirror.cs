@@ -23,6 +23,20 @@ public class ControllerMirror : MonoBehaviour
     [SerializeField]
     protected float maxLaserLength;
 
+    [SerializeField]
+    private Color shootColor;
+
+    [SerializeField]
+    private Color badShootColor;
+
+    [SerializeField]
+    private float laserExtraWidthShootAnimation = .05f;
+
+    private float shootTimeLeft;
+    private float totalShootTime;
+
+    private Pointer pointerToMirror;
+
     Vector3 newPos;
     Quaternion newRot;
     Vector3 pos;
@@ -30,8 +44,20 @@ public class ControllerMirror : MonoBehaviour
     Vector3 rayPosition;
     Vector3 origin;
     Vector3 rayDirection;
-    RaycastHit hit;
     Mole hoveredMole;
+    bool didHit = false;
+    RaycastHit hit;
+
+    private float laserWidth;
+    private Color laserColor;
+
+    void Awake()
+    {
+        pointerToMirror = controllerToMirror.GetComponent<Pointer>();
+        pointerToMirror.onPointerShoot.AddListener(onPointerShoot);
+        laserWidth = laser.startWidth;
+        laserColor = laser.startColor;
+    }
 
     // Update is called once per frame
     void Update()
@@ -58,6 +84,7 @@ public class ControllerMirror : MonoBehaviour
         rayDirection = (mappedPosition - origin).normalized;
         if (Physics.Raycast(laserOriginToMirror.transform.position, rayDirection, out hit, 100f, Physics.DefaultRaycastLayers))
         {
+            didHit = true;
             Vector3 hitPosition = laserOriginToMirror.transform.InverseTransformPoint(hit.point);
             laser.SetPosition(1, hitPosition);
             cursor.SetPosition(hitPosition);
@@ -65,6 +92,7 @@ public class ControllerMirror : MonoBehaviour
         }
         else
         {
+            didHit = false;
             rayPosition = laserOriginToMirror.transform.InverseTransformDirection(rayDirection) * maxLaserLength; 
             laser.SetPosition(1, rayPosition);
             cursor.SetPosition(rayPosition);
@@ -97,10 +125,91 @@ public class ControllerMirror : MonoBehaviour
         }
     }
 
-    void OnDrawGizmos() {
-        // Draw cube to visualize the latest calculated wall space coordinate.
-        Gizmos.DrawCube(pos, new Vector3(0.05f,0.05f,0.05f)); 
-        Gizmos.DrawCube(mappedPosition, new Vector3(0.05f,0.05f,0.05f)); 
+    public void onPointerShoot()
+    {
+        Shoot();
+    }
+
+    // Shoots a raycast. If Mole is hit, calls its Pop() function. Depending on the hit result, plays the hit/missed shooting animation
+    // and raises a "Mole Missed" event.
+    private void Shoot()
+    {
+        if (didHit == false) return;
+        Mole mole;
+
+        if (hit.collider)
+        {
+            if (hit.collider.gameObject.TryGetComponent<Mole>(out mole))
+            {
+                Mole.MolePopAnswer moleAnswer = mole.Pop(hit.point);
+
+                //if (moleAnswer == Mole.MolePopAnswer.Disabled) RaiseMoleMissedEvent(hit.point);
+                PlayShoot(moleAnswer == Mole.MolePopAnswer.Ok);
+                return;
+            }
+            //RaiseMoleMissedEvent(hit.point);
+        }
+        PlayShoot(false);
+    }
+
+    // Implementation of the behavior of the Pointer on shoot. 
+    private void PlayShoot(bool correctHit)
+    {
+        Color newColor;
+        if (correctHit) newColor = shootColor;
+        else newColor = badShootColor;
+
+        StartCoroutine(PlayShootAnimation(.5f, newColor));
+    }
+
+    // Ease function, Quart ratio.
+    private float EaseQuartOut (float k) 
+    {
+        return 1f - ((k -= 1f)*k*k*k);
+    }
+
+    // IEnumerator playing the shooting animation.
+    private IEnumerator PlayShootAnimation(float duration, Color transitionColor)
+    {
+        shootTimeLeft = duration;
+        totalShootTime = duration;
+
+        // Generation of a color gradient from the shooting color to the default color (idle).
+        Gradient colorGradient = new Gradient();
+        GradientColorKey[] colorKey = new GradientColorKey[2]{new GradientColorKey(laser.startColor, 0f), new GradientColorKey(transitionColor, 1f)};
+        GradientAlphaKey[] alphaKey = new GradientAlphaKey[2]{new GradientAlphaKey(laser.startColor.a, 0f), new GradientAlphaKey(transitionColor.a, 1f)};
+        colorGradient.SetKeys(colorKey, alphaKey);
+
+        // Playing of the animation. The laser and Cursor color and scale are interpolated following the easing curve from the shooting values (increased size, red/green color)
+        // to the idle values
+        while (shootTimeLeft > 0f)
+        {
+            float shootRatio = (totalShootTime - shootTimeLeft) / totalShootTime;
+            float newLaserWidth = 0f;
+            Color newLaserColor = new Color();
+
+            newLaserWidth = laserWidth + ((1 - EaseQuartOut(shootRatio)) * laserExtraWidthShootAnimation);
+            newLaserColor = colorGradient.Evaluate(1 - EaseQuartOut(shootRatio));
+
+            laser.startWidth = newLaserWidth;
+            laser.endWidth = newLaserWidth;
+
+            laser.startColor = newLaserColor;
+            laser.endColor = newLaserColor;
+            cursor.SetColor(newLaserColor);
+            cursor.SetScaleRatio(newLaserWidth / laserWidth);
+
+            shootTimeLeft -= Time.deltaTime;
+
+            yield return null;
+        }
+
+        // When the animation is finished, resets the laser and Cursor to their default values. 
+        laser.startWidth = laserWidth;
+        laser.endWidth = laserWidth;
+        laser.startColor = laserColor;
+        laser.endColor = laserColor;
+        cursor.SetScaleRatio(1f);
     }
 
 }
