@@ -29,6 +29,15 @@ public class ModifiersManager : MonoBehaviour
     private GameObject hideWallRight;
 
     [SerializeField]
+    private Material hideWallRightMat;
+
+    [SerializeField]
+    private Material hideWallLeftMat;
+
+    [SerializeField]
+    private UnityEngine.UI.Slider hideWallSlider;
+
+    [SerializeField]
     private Pointer rightController;
 
     [SerializeField]
@@ -69,6 +78,15 @@ public class ModifiersManager : MonoBehaviour
 
     [SerializeField]
     private GameObject physicalMirror;
+
+    [SerializeField]
+    private float hideWallhighestStart = 1.3f;
+    [SerializeField]
+    private float hideWallhighestEnd = 0.6f;
+    [SerializeField]
+    private float hideWalllowestStart = -0.2f;
+    [SerializeField]
+    private float hideWalllowestEnd = -1.05f;
 
     private EyePatch eyePatch = EyePatch.None;
     private HideWall hideWall = HideWall.None;
@@ -127,13 +145,41 @@ public class ModifiersManager : MonoBehaviour
         if (hideWall == HideWall.Left) {
             hideWallLeft.SetActive(true);
             hideWallRight.SetActive(false);
+            onHideWallSliderChanged();
         } else if (hideWall == HideWall.Right) {
             hideWallLeft.SetActive(false);
             hideWallRight.SetActive(true);
+            onHideWallSliderChanged();
         } else if (hideWall == HideWall.None) {
             hideWallLeft.SetActive(false);
             hideWallRight.SetActive(false);
         }
+    }
+
+    public void onHideWallSliderChanged() {
+        var sliderValue = (float) hideWallSlider.value;
+        var highVal = (float) hideWallSlider.maxValue;
+        var lowVal = (float) hideWallSlider.minValue;
+        var multiplier = 1 - ((sliderValue - lowVal) / highVal);
+        var startRange = hideWallhighestStart - hideWalllowestStart;
+        var endRange = hideWallhighestEnd - hideWalllowestEnd;
+
+        var newStart = (startRange * multiplier) + hideWalllowestStart;
+        var newEnd = (endRange * multiplier) + hideWalllowestEnd;
+
+        hideWallLeftMat.SetFloat("_FogMaxHeight", -newStart);
+        hideWallLeftMat.SetFloat("_FogMinHeight", -newEnd);
+        hideWallRightMat.SetFloat("_FogMaxHeight", newStart);
+        hideWallRightMat.SetFloat("_FogMinHeight", newEnd);
+
+        // 1.3:-0.2
+        // 0.6:-1.05
+
+        // 1 = 1.3, 0.6
+        // 2 = 1, 0.0
+        // 3 = 0.6, -0.3
+        // 4 = 0.35, -0.55
+        // 5 = -0.2, -1.05
     }
 
     // Sets a controller position and rotation's mirroring effect. Calls UpdateMirrorEffect to set the mirror.
