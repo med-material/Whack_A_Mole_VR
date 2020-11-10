@@ -7,11 +7,14 @@ public class MotorSpaceMirror : MonoBehaviour
 
     private LaserMapper laserMapper;
 
+    [SerializeField]
+    private LaserMapper laserMapperToMirror;
+
     // Start is called before the first frame update
     void Start()
     {
         laserMapper = this.GetComponent<LaserMapper>();
-        laserMapper.onMotorSpaceChanged.AddListener(onMotorSpaceChanged);
+        laserMapperToMirror.onMotorSpaceChanged.AddListener(onMotorSpaceChanged);
     }
 
     // Update is called once per frame
