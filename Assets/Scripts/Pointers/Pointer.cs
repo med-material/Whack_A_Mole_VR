@@ -80,6 +80,9 @@ public abstract class Pointer : MonoBehaviour
 
     private int pointerShootOrder = -1;
 
+    [System.Serializable]
+    public class OnPointerShoot : UnityEvent { }
+    public OnPointerShoot onPointerShoot;
 
     // On Awake, gets the cursor object if there is one. Also connects the PositionUpdated function to the VR update event.
     void Awake()
@@ -246,6 +249,7 @@ public abstract class Pointer : MonoBehaviour
         state = States.CoolingDown;
         StartCoroutine(WaitForCooldown());
 
+        onPointerShoot.Invoke();
         if (hit.collider)
         {
             if (hit.collider.gameObject.TryGetComponent<Mole>(out mole))
