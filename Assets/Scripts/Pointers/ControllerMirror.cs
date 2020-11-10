@@ -31,6 +31,7 @@ public class ControllerMirror : MonoBehaviour
     Vector3 origin;
     Vector3 rayDirection;
     RaycastHit hit;
+    Mole hoveredMole;
 
     // Update is called once per frame
     void Update()
@@ -60,13 +61,39 @@ public class ControllerMirror : MonoBehaviour
             Vector3 hitPosition = laserOriginToMirror.transform.InverseTransformPoint(hit.point);
             laser.SetPosition(1, hitPosition);
             cursor.SetPosition(hitPosition);
-            //hoverMole(hit);
+            hoverMole(hit);
         }
         else
         {
             rayPosition = laserOriginToMirror.transform.InverseTransformDirection(rayDirection) * maxLaserLength; 
             laser.SetPosition(1, rayPosition);
             cursor.SetPosition(rayPosition);
+        }
+    }
+
+    // Checks if a Mole is hovered and tells it to play the hovered efect.
+    private void hoverMole(RaycastHit hit)
+    {
+        Mole mole;
+        if (hit.collider.gameObject.TryGetComponent<Mole>(out mole))
+        {
+            if (mole != hoveredMole)
+            {
+                if (hoveredMole)
+                {
+                    hoveredMole.OnHoverLeave();
+                }
+                hoveredMole = mole;
+                hoveredMole.OnHoverEnter();
+            }
+        }
+        else
+        {
+            if (hoveredMole)
+            {
+                hoveredMole.OnHoverLeave();
+                hoveredMole = null;
+            }
         }
     }
 
