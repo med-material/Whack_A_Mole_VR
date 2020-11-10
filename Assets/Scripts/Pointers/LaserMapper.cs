@@ -131,9 +131,6 @@ public class LaserMapper : MonoBehaviour
 
         if (!motorCalibration) {
             transform.position = newCenter;
-            foreach (var bub in bubbleDisplay) {
-                bub.UpdateOwnPosition(newCenter);
-            }
             LogMotorSpaceChange("MotorSpace Calibration End");
             CalculateMotorSpace();
             UpdateMotorSpaceVisualizer();
@@ -180,6 +177,9 @@ public class LaserMapper : MonoBehaviour
         motorSpaceTopRight = new Vector3(motorSpaceOrigin.x + (motorSpaceWidth * multiplier), motorSpaceOrigin.y + (motorSpaceHeight * multiplier), motorSpaceOrigin.z);
         motorSpaceBottomRight = new Vector3(motorSpaceOrigin.x + (motorSpaceWidth * multiplier), motorSpaceOrigin.y - (motorSpaceHeight * multiplier), motorSpaceOrigin.z);
         motorSpaceBottomLeft = new Vector3(motorSpaceOrigin.x - (motorSpaceWidth * multiplier), motorSpaceOrigin.y - (motorSpaceHeight * multiplier), motorSpaceOrigin.z);
+        foreach (var bub in bubbleDisplay) {
+            bub.UpdateOwnPosition(transform.position);
+        }
         onMotorSpaceChanged.Invoke(new MotorSpaceInfo { width = motorSpaceWidth, height = motorSpaceHeight, pos = transform.position} );
         LogMotorSpaceChange("MotorSpace Size Change");
     }
@@ -253,19 +253,19 @@ public class LaserMapper : MonoBehaviour
 
     void OnDrawGizmos() {
         // Draw rectangle to indicate motorspace.
-        Gizmos.DrawLine(motorSpaceTopLeft, motorSpaceTopRight);
-        Gizmos.DrawLine(motorSpaceTopRight, motorSpaceBottomRight);
-        Gizmos.DrawLine(motorSpaceBottomRight, motorSpaceBottomLeft);
-        Gizmos.DrawLine(motorSpaceBottomLeft, motorSpaceTopLeft);
+        // Gizmos.DrawLine(motorSpaceTopLeft, motorSpaceTopRight);
+        // Gizmos.DrawLine(motorSpaceTopRight, motorSpaceBottomRight);
+        // Gizmos.DrawLine(motorSpaceBottomRight, motorSpaceBottomLeft);
+        // Gizmos.DrawLine(motorSpaceBottomLeft, motorSpaceTopLeft);
 
-        // Draw rectangle to indicate wallspace
-        Gizmos.DrawLine(wallSpaceTopLeft, wallSpaceTopRight);
-        Gizmos.DrawLine(wallSpaceTopRight, wallSpaceBottomRight);
-        Gizmos.DrawLine(wallSpaceBottomRight, wallSpaceBottomLeft);
-        Gizmos.DrawLine(wallSpaceBottomLeft, wallSpaceTopLeft);
+        // // Draw rectangle to indicate wallspace
+        // Gizmos.DrawLine(wallSpaceTopLeft, wallSpaceTopRight);
+        // Gizmos.DrawLine(wallSpaceTopRight, wallSpaceBottomRight);
+        // Gizmos.DrawLine(wallSpaceBottomRight, wallSpaceBottomLeft);
+        // Gizmos.DrawLine(wallSpaceBottomLeft, wallSpaceTopLeft);
 
-        // Draw cube to visualize the latest calculated wall space coordinate.
-        Gizmos.DrawCube(wallSpaceCoord, new Vector3(0.05f,0.05f,0.05f)); 
+        // // Draw cube to visualize the latest calculated wall space coordinate.
+        // Gizmos.DrawCube(wallSpaceCoord, new Vector3(0.05f,0.05f,0.05f)); 
     }
 
 
