@@ -71,6 +71,9 @@ public class ModifiersManager : MonoBehaviour
     private Transform leftControllerContainer;
 
     [SerializeField]
+    private UnityEngine.UI.Slider controllerOffsetSlider;
+
+    [SerializeField]
     private GameObject prismOffsetObject;
     private float prismOffsetAmount = -1f;
 
@@ -258,7 +261,14 @@ public class ModifiersManager : MonoBehaviour
             {"ControllerOffset", value}
         });
 
-        modifierUpdateEvent.Invoke("ControllerOffset", value.ToString());
+        //modifierUpdateEvent.Invoke("ControllerOffset", value.ToString());
+    }
+
+    public void OnControllerOffsetSliderChanged()
+    {
+        var sliderValue = (float) controllerOffsetSlider.value;
+
+        SetControllerOffset(sliderValue);
     }
 
     // Sets the prism effect. Shifts the view (around y axis) by a given angle to create a shifting between seen view and real positions.
