@@ -38,6 +38,9 @@ public class ModifiersManager : MonoBehaviour
     private UnityEngine.UI.Slider hideWallSlider;
 
     [SerializeField]
+    private UnityEngine.UI.Slider prismEffectSlider;
+
+    [SerializeField]
     private Pointer rightController;
 
     [SerializeField]
@@ -69,6 +72,7 @@ public class ModifiersManager : MonoBehaviour
 
     [SerializeField]
     private GameObject prismOffsetObject;
+    private float prismOffsetAmount = -1f;
 
     [SerializeField]
     private Camera viveCamera;
@@ -268,7 +272,14 @@ public class ModifiersManager : MonoBehaviour
             {"PrismOffset", value}
         });
 
-        modifierUpdateEvent.Invoke("PrismOffset", value.ToString());
+        //modifierUpdateEvent.Invoke("PrismOffset", value.ToString());
+    }
+
+    public void OnPrismOffsetSliderChanged()
+    {
+        var sliderValue = (float) prismEffectSlider.value;
+
+        SetPrismOffset(sliderValue);
     }
 
     // Sets the main controller. By default it is the right handed one.
