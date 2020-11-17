@@ -6,6 +6,8 @@ using UnityEngine.Events;
 
 public class BubbleDisplay : MonoBehaviour
 {
+    [SerializeField]
+    public SoundManager soundManager;
     // The parent we will follow in terms of object position.
     [SerializeField]
     private GameObject parent;
@@ -80,6 +82,7 @@ public class BubbleDisplay : MonoBehaviour
                 controllerRender.SetActive(false);
                 motorSpaceRender.color = motorActiveColor;
                 enterMotorStateEvent.Invoke(true);
+                soundManager.PlaySound(gameObject, SoundManager.Sound.laserInMotorSpace);
             }
         } else {
             if (render) {
@@ -88,6 +91,7 @@ public class BubbleDisplay : MonoBehaviour
                 controllerRender.SetActive(true);
                 motorSpaceRender.color = motorDisabledColor;
                 enterMotorStateEvent.Invoke(false);
+                soundManager.PlaySound(gameObject, SoundManager.Sound.laserOutMotorSpace);
             }
         }
     }

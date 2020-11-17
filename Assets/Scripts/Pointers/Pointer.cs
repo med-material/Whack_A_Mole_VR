@@ -65,6 +65,8 @@ public abstract class Pointer : MonoBehaviour
     private bool active = false;
     private LoggerNotifier loggerNotifier;
 
+    public SoundManager soundManager;
+
     // Laser smoothing. May be put in a new class for clean code. Left here for test for now.
 
     [SerializeField]
@@ -256,13 +258,30 @@ public abstract class Pointer : MonoBehaviour
             {
                 Mole.MolePopAnswer moleAnswer = mole.Pop(hit.point);
 
-                if (moleAnswer == Mole.MolePopAnswer.Disabled) RaiseMoleMissedEvent(hit.point);
+                if (moleAnswer == Mole.MolePopAnswer.Ok) { 
                 PlayShoot(moleAnswer == Mole.MolePopAnswer.Ok);
+                soundManager.PlaySound(gameObject, SoundManager.Sound.greenMoleHit);
+                } 
+                else if (moleAnswer == Mole.MolePopAnswer.Fake)
+                {
+                    soundManager.PlaySound(gameObject, SoundManager.Sound.redMoleHit);
+                } 
+                else if (moleAnswer == Mole.MolePopAnswer.Disabled)
+                {
+                    RaiseMoleMissedEvent(hit.point);
+                    soundManager.PlaySound(gameObject, SoundManager.Sound.neutralMoleHit);
+                }
                 return;
             }
             RaiseMoleMissedEvent(hit.point);
+            soundManager.PlaySound(gameObject, SoundManager.Sound.missedMole);
+        } 
+        else
+        {
+            soundManager.PlaySound(gameObject, SoundManager.Sound.outOfBoundClick);
         }
         PlayShoot(false);
+        
     }
 
     // Function raising a "Mole Missed" event.

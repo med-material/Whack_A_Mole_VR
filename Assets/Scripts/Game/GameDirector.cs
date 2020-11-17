@@ -24,6 +24,9 @@ public class GameDirector : MonoBehaviour
     public enum GameState {CountDown, Paused, Playing, Stopped}
 
     [SerializeField]
+    public SoundManager soundManager;
+
+    [SerializeField]
     private WallManager wallManager;
 
     [SerializeField]
@@ -279,6 +282,7 @@ public class GameDirector : MonoBehaviour
                     {"CountDown", currentCountDownLeftRounded}
                 };
                 countUpdate.Invoke(currentCountDownLeftRounded);
+                soundManager.PlaySound(gameObject, SoundManager.Sound.countdown);
                 loggerNotifier.NotifyLogger("CountDown " + currentCountDownLeftRounded.ToString(), EventLogger.EventType.GameEvent);
             }
             yield return null;
