@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 
+[System.Serializable]
 public class MotorSpaceInfo {
     public float width;
     public float height;
@@ -13,6 +14,14 @@ public class MotorSpaceInfo {
 
 public class LaserMapper : MonoBehaviour
 {
+
+    [SerializeField]
+    private MotorSpaceInfo defaultMotorSpace;
+
+    [SerializeField]
+    private MotorSpaceInfo dualtaskMotorSpace;
+
+    private MotorSpaceInfo previousMotorSpace;
 
     [SerializeField]
     private GameObject controllerRight;
@@ -268,5 +277,23 @@ public class LaserMapper : MonoBehaviour
         // Gizmos.DrawCube(wallSpaceCoord, new Vector3(0.05f,0.05f,0.05f)); 
     }
 
+    public void SetPosition(bool isRightHand) {
+        if (isRightHand) {
+            this.transform.position = new Vector3(-this.transform.position.x, this.transform.position.y, this.transform.position.z);
+            LogMotorSpaceChange("MotorSpace Set Right");
+        } else {
+            this.transform.position = new Vector3(-this.transform.position.x, this.transform.position.y, this.transform.position.z);
+            LogMotorSpaceChange("MotorSpace Set Left");
+        }
+    }
+
+    public void SetDefaultMotorSpace() {
+        motorSpaceWidth = defaultMotorSpace.width;
+        motorSpaceHeight = defaultMotorSpace.height;
+        transform.position = defaultMotorSpace.pos;
+        multiplier = defaultMotorSpace.multiplier;
+        CalculateMotorSpace();
+        UpdateMotorSpaceVisualizer();
+    }
 
 }
