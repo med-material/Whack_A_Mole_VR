@@ -169,9 +169,6 @@ public class TherapistUi : MonoBehaviour
                     break;
                 case "ShowHand":
                     break;
-                case "DualTask":
-                    modifiersManager.SetDualTask(bool.Parse((string)entry.Value));
-                    break;
                 case "EyePatch":
                     ModifiersManager.EyePatch value = ModifiersManager.EyePatch.None;
                     switch(entry.Value)

@@ -7,7 +7,7 @@ public class TestModifiers : MonoBehaviour
     private ModifiersManager modifier;
 
     private ModifiersManager.EyePatch eyePatch = ModifiersManager.EyePatch.Left;
-    private bool rightMain = true;
+    private ModifiersManager.ControllerSetup rightMain = ModifiersManager.ControllerSetup.Right;
     private bool dualTask = false;
     private float controllerOffset = -15f;
     private bool mirrorEffect = false;
@@ -31,16 +31,9 @@ public class TestModifiers : MonoBehaviour
         }
         if (Input.GetButtonDown("Fire1"))
         {
-            rightMain = !rightMain;
+            rightMain = ModifiersManager.ControllerSetup.Right;
             Debug.Log("SetMainController : " + rightMain);
             modifier.SetMainController(rightMain);
-        }
-        if (Input.GetButtonDown("Fire2"))
-        {
-            dualTask = !dualTask;
-            Debug.Log("SetDualTask : " + dualTask);
-            modifier.SetDualTask(dualTask);
-            Debug.Log(dualTask);
         }
         if (Input.GetButtonDown("Submit"))
         {

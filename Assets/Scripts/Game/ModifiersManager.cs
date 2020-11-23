@@ -19,6 +19,7 @@ It is also possible to fully hide the chaperone by editing the steamvr.vrsetting
 
 public class ModifiersManager : MonoBehaviour
 {
+    public enum ControllerSetup {Left, Both, Right};
     public enum EyePatch {Left, None, Right};
     public enum HideWall {Left, None, Right};
 
@@ -98,6 +99,7 @@ public class ModifiersManager : MonoBehaviour
 
     private EyePatch eyePatch = EyePatch.None;
     private HideWall hideWall = HideWall.None;
+    private ControllerSetup controllerSetup = ControllerSetup.Right;
     private bool mirrorEffect;
     private bool physicalMirrorEffect;
     private bool geometricMirrorEffect;
@@ -115,8 +117,7 @@ public class ModifiersManager : MonoBehaviour
             {"main", rightController},
             {"second", leftController}
         };
-        SetControllerEnabled("main");
-        SetControllerEnabled("second", false);
+        SetControllerEnabled(ControllerSetup.Right);
 
         // Initialization of the LoggerNotifier. Here we will only pass parameters to PersistentEvent, even if we will also raise Events.
         loggerNotifier = new LoggerNotifier(persistentEventsHeadersDefaults: new Dictionary<string, string>(){
@@ -233,26 +234,6 @@ public class ModifiersManager : MonoBehaviour
         mirrorController.SetActive(value);
     }
 
-    // Sets the dual task mode (if dualtask is enabled, both controllers can be used to pop moles)
-    public void SetDualTask(bool value)
-    {
-        if (dualTask == value) return;
-        dualTask = value;
-        SetControllerEnabled("second", dualTask);
-
-        if (mirrorEffect)
-        {
-            UpdateMirrorEffect();
-        }
-
-        loggerNotifier.NotifyLogger("Dual Task Set "+value, EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
-        {
-            {"DualTask", value}
-        });
-
-        modifierUpdateEvent.Invoke("DualTask", value.ToString());
-    }
-
     // Sets the prism effect. Shifts the view (around y axis) by a given angle to create a shifting between seen view and real positions.
     public void SetControllerOffset(float value)
     {
@@ -297,34 +278,36 @@ public class ModifiersManager : MonoBehaviour
         SetPrismOffset(sliderValue);
     }
 
-    // Sets the main controller. By default it is the right handed one.
-    public void SetMainController(bool rightIsMain)
-    {
-        if (rightControllerMain == rightIsMain) return;
+    public void SetMainControllerFromString(string controller) {
+        SetMainController((ModifiersManager.ControllerSetup)System.Enum.Parse( typeof(ModifiersManager.ControllerSetup), controller));
+    }
 
-        rightControllerMain = rightIsMain;
-        if (rightControllerMain)
-        {
-            controllersList["main"] = rightController;
-            controllersList["second"] = leftController;
-        }
-        else
+    // Sets the main controller. By default it is the right handed one.
+    public void SetMainController(ModifiersManager.ControllerSetup controller)
+    {
+        if (controllerSetup == controller) return;
+
+        controllerSetup = controller;
+        SetControllerEnabled(controller);
+        if (controllerSetup == ModifiersManager.ControllerSetup.Left)
         {
             controllersList["main"] = leftController;
             controllersList["second"] = rightController;
         }
-        SetControllerEnabled("main");
+        else // Right and Both
+        {
+            controllersList["main"] = rightController;
+            controllersList["second"] = leftController;
+        }
 
         if (mirrorEffect)
         {
             UpdateMirrorEffect();
         }
 
-        if (!dualTask) SetControllerEnabled("second", false);
-
-        loggerNotifier.NotifyLogger("Right Controller Set Main "+rightIsMain, EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
+        loggerNotifier.NotifyLogger("Controller Main Set "+System.Enum.GetName(typeof(ControllerSetup), controllerSetup), EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
         {
-            {"RightControllerMain", rightIsMain}
+            {"ControllerMain", System.Enum.GetName(typeof(ControllerSetup), controllerSetup)}
         });
     }
 
@@ -361,22 +344,37 @@ public class ModifiersManager : MonoBehaviour
     }
 
     // Enables/disables a given controller
-    private void SetControllerEnabled(string controllerType, bool enable = true)
+    private void SetControllerEnabled(ControllerSetup controllerType, bool enabled = true)
     {
-        if (enable)
+        bool enableRight;
+        enableRight = controllerType == ControllerSetup.Right ? true : false;
+        enableRight = controllerType == ControllerSetup.Both ? true : enableRight;
+
+        bool enableLeft;
+        enableLeft = controllerType == ControllerSetup.Left ? true : false;
+        enableLeft = controllerType == ControllerSetup.Both ? true : enableLeft;
+        Debug.Log("Enable Right: " + enableRight + " Enable Left: " + enableLeft);
+
+        if (enableRight)
         {
-            controllersList[controllerType].Enable();
-        }
-        else
-        {
-            controllersList[controllerType].Disable();
-        }
-        if (controllerType == "main") {
-            rightControllerVisual.SetActive(enable);
-            rightControllerBubbleDisplay.SetActive(enable);
+            rightControllerVisual.SetActive(true);
+            rightControllerBubbleDisplay.SetActive(true);
+            rightController.Enable();
         } else {
-            leftControllerVisual.SetActive(enable);
-            leftControllerBubbleDisplay.SetActive(enable);
+            rightController.Disable();
+            rightControllerBubbleDisplay.SetActive(false);
+            rightControllerVisual.SetActive(false);
+        }
+
+        if (enableLeft)
+        {
+            leftControllerVisual.SetActive(true);
+            leftControllerBubbleDisplay.SetActive(true);
+            leftController.Enable();
+        } else {
+            leftController.Disable();
+            leftControllerVisual.SetActive(false);
+            leftControllerBubbleDisplay.SetActive(false);
         }
     }
 

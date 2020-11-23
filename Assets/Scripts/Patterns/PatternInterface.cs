@@ -215,17 +215,13 @@ public class PatternInterface : MonoBehaviour
         {
             modifiersManager.SetMirrorEffect(bool.Parse(tempValue));
         }
-        if (action.TryGetValue("DUALTASK", out tempValue))
-        {
-            modifiersManager.SetDualTask(bool.Parse(tempValue));
-        }
         if (action.TryGetValue("CONTROLLEROFFSET", out tempValue))
         {
             modifiersManager.SetControllerOffset(ParseFloat(tempValue));
         }
         if (action.TryGetValue("MAINCONTROLLER", out tempValue))
         {
-            modifiersManager.SetMainController(bool.Parse(tempValue));
+            modifiersManager.SetMainController((ModifiersManager.ControllerSetup)System.Enum.Parse( typeof(ModifiersManager.ControllerSetup), tempValue));
         }
         if (action.TryGetValue("PRISM", out tempValue))
         {
