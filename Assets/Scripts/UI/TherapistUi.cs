@@ -55,7 +55,7 @@ public class TherapistUi : MonoBehaviour
         UpdatePatternDropDown();
 
         // Connect to the modifier updated event from the ModifiersManager
-        modifiersManager.GetModifierUpdateEvent().AddListener(ModifierUpdated);
+        //modifiersManager.GetModifierUpdateEvent().AddListener(ModifierUpdated);
         // Connect to the speed updated event from the GameDirector
         gameDirector.GetDifficultyUpdateEvent().AddListener(ModifierUpdated);
 
