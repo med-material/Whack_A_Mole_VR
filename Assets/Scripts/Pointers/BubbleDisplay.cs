@@ -79,7 +79,7 @@ public class BubbleDisplay : MonoBehaviour
             if (!render) {
                 render = true;
                 bubbleRender.SetActive(true);
-                controllerRender.SetActive(false);
+                controllerRender.SetActive(true);
                 motorSpaceRender.color = motorActiveColor;
                 enterMotorStateEvent.Invoke(true);
                 soundManager.PlaySound(gameObject, SoundManager.Sound.laserInMotorSpace);
