@@ -61,10 +61,8 @@ public class ControllerMirror : MonoBehaviour
         laserWidth = laser.startWidth;
         laserColor = laser.startColor;
         var lastChild = playerController.gameObject.transform.childCount-1;
-        var controllerGeom = Instantiate(playerController.gameObject.transform.GetChild(lastChild));
+        var controllerGeom = Instantiate(playerController.gameObject);
         controllerGeom.transform.SetParent(this.gameObject.transform);
-        //controllerGeom.transform.eulerAngles = new Vector3(0f, -180f, 0f);
-        //controllerGeom.gameObject.SetActive(true);
     }
 
     // Update is called once per frame

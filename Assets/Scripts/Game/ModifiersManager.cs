@@ -258,6 +258,7 @@ public class ModifiersManager : MonoBehaviour
     {
         controllerOffset = value;
         rightControllerContainer.localEulerAngles = new Vector3(0, controllerOffset, 0);
+        rightControllerContainer.localEulerAngles = new Vector3(0, controllerOffset, 0);
         leftControllerContainer.localEulerAngles = new Vector3(0, controllerOffset, 0);
 
         loggerNotifier.NotifyLogger("Controller Offset Set "+value, EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
