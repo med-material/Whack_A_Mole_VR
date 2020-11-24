@@ -82,7 +82,9 @@ public class BubbleDisplay : MonoBehaviour
                 controllerRender.SetActive(true);
                 motorSpaceRender.color = motorActiveColor;
                 enterMotorStateEvent.Invoke(true);
-                soundManager.PlaySound(gameObject, SoundManager.Sound.laserInMotorSpace);
+                if (soundManager != null) {
+                    soundManager.PlaySound(gameObject, SoundManager.Sound.laserInMotorSpace);
+                }
             }
         } else {
             if (render) {
@@ -91,7 +93,9 @@ public class BubbleDisplay : MonoBehaviour
                 controllerRender.SetActive(true);
                 motorSpaceRender.color = motorDisabledColor;
                 enterMotorStateEvent.Invoke(false);
-                soundManager.PlaySound(gameObject, SoundManager.Sound.laserOutMotorSpace);
+                if (soundManager != null) {
+                    soundManager.PlaySound(gameObject, SoundManager.Sound.laserOutMotorSpace);
+                }
             }
         }
     }
