@@ -288,11 +288,15 @@ public class LaserMapper : MonoBehaviour
 
     public void SetPosition(bool isRightHand) {
         if (isRightHand) {
-            this.transform.position = new Vector3(-this.transform.position.x, this.transform.position.y, this.transform.position.z);
-            LogMotorSpaceChange("MotorSpace Set Right");
+            if (this.transform.position.x < 0f) {
+                this.transform.position = new Vector3(-this.transform.position.x, this.transform.position.y, this.transform.position.z);
+                LogMotorSpaceChange("MotorSpace Set Right");
+            }
         } else {
-            this.transform.position = new Vector3(-this.transform.position.x, this.transform.position.y, this.transform.position.z);
-            LogMotorSpaceChange("MotorSpace Set Left");
+            if (this.transform.position.x > 0f) {
+                this.transform.position = new Vector3(-this.transform.position.x, this.transform.position.y, this.transform.position.z);
+                LogMotorSpaceChange("MotorSpace Set Left");
+            }
         }
         CalculateMotorSpace();
         UpdateMotorSpaceVisualizer();
