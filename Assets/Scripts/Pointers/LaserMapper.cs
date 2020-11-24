@@ -24,7 +24,7 @@ public class LaserMapper : MonoBehaviour
     private MotorSpaceInfo previousMotorSpace;
 
     [SerializeField]
-    private GameObject controllerRight;
+    private GameObject[] activeControllers;
 
     [SerializeField]
     private GameObject motorSpaceCalib;
@@ -95,7 +95,16 @@ public class LaserMapper : MonoBehaviour
     void Update()
     {
         if (motorCalibration) {
-            Vector3 newPos = controllerRight.transform.position;
+            GameObject controller = null;
+            foreach(var con in activeControllers) {
+                if (con.active) {
+                    controller = con;
+                }
+            }
+            if (controller == null) {
+                return;
+            }
+            Vector3 newPos = controller.transform.position;
             if (lastPos != Vector3.zero) distanceFromLastPoint = Vector3.Distance(lastPos, newPos);
             if  (distanceFromLastPoint > minDistancePoint) {
                 CreateCalibSphere(lastPos);
@@ -106,19 +115,19 @@ public class LaserMapper : MonoBehaviour
                 CreateCalibSphere(lastPos);
             }
 
-            if (minX == -1) minX = controllerRight.transform.position.x;
-            if (maxX == -1) maxX = controllerRight.transform.position.x;
-            if (minY == -1) minY = controllerRight.transform.position.y;
-            if (maxY == -1) maxY = controllerRight.transform.position.y;
-            if (minZ == -1) minZ = controllerRight.transform.position.z;
-            if (maxZ == -1) maxZ = controllerRight.transform.position.z;
+            if (minX == -1) minX = controller.transform.position.x;
+            if (maxX == -1) maxX = controller.transform.position.x;
+            if (minY == -1) minY = controller.transform.position.y;
+            if (maxY == -1) maxY = controller.transform.position.y;
+            if (minZ == -1) minZ = controller.transform.position.z;
+            if (maxZ == -1) maxZ = controller.transform.position.z;
 
-            if (minX > controllerRight.transform.position.x) minX = controllerRight.transform.position.x;
-            if (maxX < controllerRight.transform.position.x) maxX = controllerRight.transform.position.x;
-            if (minY > controllerRight.transform.position.y) minY = controllerRight.transform.position.y;
-            if (maxY < controllerRight.transform.position.y) maxY = controllerRight.transform.position.y;
-            if (minZ > controllerRight.transform.position.z) minZ = controllerRight.transform.position.z;
-            if (maxZ < controllerRight.transform.position.z) maxZ = controllerRight.transform.position.z;
+            if (minX > controller.transform.position.x) minX = controller.transform.position.x;
+            if (maxX < controller.transform.position.x) maxX = controller.transform.position.x;
+            if (minY > controller.transform.position.y) minY = controller.transform.position.y;
+            if (maxY < controller.transform.position.y) maxY = controller.transform.position.y;
+            if (minZ > controller.transform.position.z) minZ = controller.transform.position.z;
+            if (maxZ < controller.transform.position.z) maxZ = controller.transform.position.z;
             newCenter = new Vector3( minX + ((maxX - minX) * 0.5f) , minY + ((maxY - minY) * 0.5f), minZ + ((maxZ - minZ) * 0.5f));
             motorSpaceWidth = (maxX - minX) / 2;
             motorSpaceHeight = (maxY - minY) / 2;
@@ -285,15 +294,30 @@ public class LaserMapper : MonoBehaviour
             this.transform.position = new Vector3(-this.transform.position.x, this.transform.position.y, this.transform.position.z);
             LogMotorSpaceChange("MotorSpace Set Left");
         }
+        CalculateMotorSpace();
+        UpdateMotorSpaceVisualizer();
+    }
+
+    public void SetMotorSpace(MotorSpaceInfo motorspace) {
+        motorSpaceWidth = motorspace.width;
+        motorSpaceHeight = motorspace.height;
+        transform.position = motorspace.pos;
+        multiplier = motorspace.multiplier;
+        CalculateMotorSpace();
+        UpdateMotorSpaceVisualizer();
     }
 
     public void SetDefaultMotorSpace() {
-        motorSpaceWidth = defaultMotorSpace.width;
-        motorSpaceHeight = defaultMotorSpace.height;
-        transform.position = defaultMotorSpace.pos;
-        multiplier = defaultMotorSpace.multiplier;
-        CalculateMotorSpace();
-        UpdateMotorSpaceVisualizer();
+        SetMotorSpace(defaultMotorSpace);
+    }
+
+    public MotorSpaceInfo GetMotorSpace() {
+        MotorSpaceInfo info = new MotorSpaceInfo();
+        info.width = motorSpaceWidth;
+        info.height = motorSpaceHeight;
+        info.pos = transform.position;
+        info.multiplier = multiplier;
+        return info;
     }
 
 }

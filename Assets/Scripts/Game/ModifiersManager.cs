@@ -45,13 +45,13 @@ public class ModifiersManager : MonoBehaviour
     private Pointer rightController;
 
     [SerializeField]
-    private GameObject rightControllerVisual;
+    private GameObject[] rightControllerVisuals;
 
     [SerializeField]
-    private GameObject rightControllerBubbleDisplay;
+    private GameObject mirrorControllerR;
 
     [SerializeField]
-    private GameObject mirrorController;
+    private GameObject mirrorControllerL;
 
     [SerializeField]
     private GameObject mirrorMotorSpace;
@@ -60,10 +60,7 @@ public class ModifiersManager : MonoBehaviour
     private Pointer leftController;
 
     [SerializeField]
-    private GameObject leftControllerVisual;
-
-    [SerializeField]
-    private GameObject leftControllerBubbleDisplay;
+    private GameObject[] leftControllerVisuals;
 
     [SerializeField]
     private Transform rightControllerContainer;
@@ -231,7 +228,22 @@ public class ModifiersManager : MonoBehaviour
         if (geometricMirrorEffect == value) return;
         geometricMirrorEffect = value;
         mirrorMotorSpace.SetActive(value);
-        mirrorController.SetActive(value);
+        UpdateGeometricMirror(value);
+    }
+
+    public void UpdateGeometricMirror(bool enable) {
+        if (enable) {
+            if (controllerSetup == ModifiersManager.ControllerSetup.Right) {
+                mirrorControllerR.SetActive(true);
+                mirrorControllerL.SetActive(false);
+            } else {
+                mirrorControllerL.SetActive(true);
+                mirrorControllerR.SetActive(false);
+            }
+        } else {
+            mirrorControllerL.SetActive(false);
+            mirrorControllerR.SetActive(false);
+        }
     }
 
     // Sets the prism effect. Shifts the view (around y axis) by a given angle to create a shifting between seen view and real positions.
@@ -305,6 +317,10 @@ public class ModifiersManager : MonoBehaviour
             UpdateMirrorEffect();
         }
 
+        if (geometricMirrorEffect) {
+            UpdateGeometricMirror(geometricMirrorEffect);
+        }
+
         loggerNotifier.NotifyLogger("Controller Main Set "+System.Enum.GetName(typeof(ControllerSetup), controllerSetup), EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
         {
             {"ControllerMain", System.Enum.GetName(typeof(ControllerSetup), controllerSetup)}
@@ -357,24 +373,28 @@ public class ModifiersManager : MonoBehaviour
 
         if (enableRight)
         {
-            rightControllerVisual.SetActive(true);
-            rightControllerBubbleDisplay.SetActive(true);
             rightController.Enable();
+            foreach (var obj in rightControllerVisuals) {
+                obj.SetActive(true);
+            }
         } else {
             rightController.Disable();
-            rightControllerBubbleDisplay.SetActive(false);
-            rightControllerVisual.SetActive(false);
+            foreach (var obj in rightControllerVisuals) {
+                obj.SetActive(false);
+            }
         }
 
         if (enableLeft)
         {
-            leftControllerVisual.SetActive(true);
-            leftControllerBubbleDisplay.SetActive(true);
             leftController.Enable();
+            foreach (var obj in leftControllerVisuals) {
+                obj.SetActive(true);
+            }
         } else {
             leftController.Disable();
-            leftControllerVisual.SetActive(false);
-            leftControllerBubbleDisplay.SetActive(false);
+            foreach (var obj in leftControllerVisuals) {
+                obj.SetActive(false);
+            }
         }
     }
 
