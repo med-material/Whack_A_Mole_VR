@@ -141,33 +141,33 @@ public class TherapistPanelController : MonoBehaviour
         gameModifiersContainer.UpdateSelectedButton(identifier, argument);
     }
 
-    // Plays the collapsing animation of the maximized therapist Ui.
-    public void Collapse()
-    {
-        animationPlayer.Play("PanelSlideDown");
-    }
+    // // Plays the collapsing animation of the maximized therapist Ui.
+    // public void Collapse()
+    // {
+    //     animationPlayer.Play("PanelSlideDown");
+    // }
 
-    // At the end of the collapsing animation, plays the extending animation of the minimized UI
-    public void OnCollapseFinished()
-    {
-        maximizedContainer.SetActive(false);
-        minimizedContainer.SetActive(true);
-        animationPlayer.Play("MinimizedSlideUp");
-    }
+    // // At the end of the collapsing animation, plays the extending animation of the minimized UI
+    // public void OnCollapseFinished()
+    // {
+    //     maximizedContainer.SetActive(false);
+    //     minimizedContainer.SetActive(true);
+    //     animationPlayer.Play("MinimizedSlideUp");
+    // }
 
-    // Plays the collapsing animation of the minimized therapist Ui.
-    public void MinimizedCollapse()
-    {
-        animationPlayer.Play("MinimizedSlideDown");
-    }
+    // // Plays the collapsing animation of the minimized therapist Ui.
+    // public void MinimizedCollapse()
+    // {
+    //     animationPlayer.Play("MinimizedSlideDown");
+    // }
 
-    // At the end of the collapsing animation, plays the extending animation of the maximized UI
-    public void OnMinimizedCollapseFinished()
-    {
-        minimizedContainer.SetActive(false);
-        maximizedContainer.SetActive(true);
-        animationPlayer.Play("PanelSlideUp");
-    }
+    // // At the end of the collapsing animation, plays the extending animation of the maximized UI
+    // public void OnMinimizedCollapseFinished()
+    // {
+    //     minimizedContainer.SetActive(false);
+    //     maximizedContainer.SetActive(true);
+    //     animationPlayer.Play("PanelSlideUp");
+    // }
 
     // Tells the TherapistUi to stop the game and switch to the ProfilePanel.
     public void SwitchToProfilePanel()

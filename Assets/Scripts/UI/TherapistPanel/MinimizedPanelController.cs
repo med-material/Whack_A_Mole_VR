@@ -9,6 +9,10 @@ Class dedicated to the minimized container (panel shown when the therapist ui is
 
 public class MinimizedPanelController : MonoBehaviour
 {
+
+    [SerializeField]
+    private GameDirector gameDirector;
+
     [SerializeField]
     private Image gameStateSprite;
 
@@ -32,6 +36,37 @@ public class MinimizedPanelController : MonoBehaviour
 
     private bool gamePlaying = false;
 
+    void OnEnable()
+    {
+        gameDirector.timeUpdate.AddListener(onTimeChanged);
+        gameDirector.stateUpdate.AddListener(onStateChanged);
+        gameDirector.participantChanged.AddListener(onParticipantChanged);
+        gameDirector.testChanged.AddListener(onTestChanged);
+        onTestChanged(gameDirector.GetTest());
+        onParticipantChanged(gameDirector.GetParticipant());
+    }
+
+    public void onTimeChanged(float newTime) {
+        GameTimeUpdate(newTime);
+    }
+
+    public void onStateChanged(GameDirector.GameState newState) {
+        if (newState == GameDirector.GameState.Stopped) {
+            GameStop();
+        } else if (newState == GameDirector.GameState.Playing) {
+            GameStart();
+        } else if (newState == GameDirector.GameState.Paused) {
+            GamePause();
+        }
+    }
+
+    public void onParticipantChanged(int newParticipant) {
+        participantText.text = "Participant " + newParticipant.ToString();
+    }
+
+    public void onTestChanged(int newTest) {
+        testIdText.text = "Test " + newTest.ToString();
+    }
 
     // When the game starts, updates the "state sprite" to the "playing" icon.
     public void GameStart()
@@ -49,38 +84,11 @@ public class MinimizedPanelController : MonoBehaviour
     }
 
     // When the game pauses, updates the "state sprite" to the "paused" icon.
-    public void GamePause(bool pause)
+    public void GamePause()
     {
-        if(pause)
-        {
-            gameStateSprite.sprite = pauseSprite;
-            gameStateText.text = "Paused";
-            gamePlaying = false;
-        }
-        else
-        {
-            gameStateSprite.sprite = playSprite;
-            gamePlaying = true;
-        }
-        
-    }
-
-    // Updates displayed information such as the participant Id and the test Id
-    public void UpdateDisplayedInfos(Dictionary<string, object> data)
-    {
-        foreach(KeyValuePair<string, object> entry in data)
-        {
-            switch(entry.Key)
-            {
-                case "participant":
-                    participantText.text = "Participant " + entry.Value.ToString();
-                    break;
-
-                case "test":
-                    testIdText.text = "Test " + entry.Value.ToString();
-                    break;
-            }
-        }
+        gameStateSprite.sprite = pauseSprite;
+        gameStateText.text = "Paused";
+        gamePlaying = false;
     }
 
     // Updates the displayed time, sets it to a mm:ss format.
@@ -89,9 +97,9 @@ public class MinimizedPanelController : MonoBehaviour
         if (!gamePlaying) return;
         string value = "";
 
-        value += Mathf.FloorToInt(time / 60f);
+        value += Mathf.FloorToInt(time / 60f).ToString("00");
         value += ":";
-        value += Mathf.Floor(time % 60f);
+        value += Mathf.Floor(time % 60f).ToString("00");
         gameStateText.text = value;
     }
 }

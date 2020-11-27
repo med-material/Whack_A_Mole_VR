@@ -15,6 +15,12 @@ public class StateUpdateEvent : UnityEvent<GameDirector.GameState> {}
 [System.Serializable]
 public class SpeedUpdateEvent : UnityEvent<string, string> {}
 
+[System.Serializable]
+public class ParticipantChangeEvent : UnityEvent<int> {}
+
+[System.Serializable]
+public class TestChangeEvent : UnityEvent<int> {}
+
 /*
 Base class of the game. Launches and stops the game. Contains the different game's parameters.
 */
@@ -62,6 +68,10 @@ public class GameDirector : MonoBehaviour
     private LoggerNotifier loggerNotifier;
     private PatternManager patternManager;
     private SpeedUpdateEvent speedUpdateEvent = new SpeedUpdateEvent();
+    public ParticipantChangeEvent participantChanged = new ParticipantChangeEvent();
+    public TestChangeEvent testChanged = new TestChangeEvent();
+    private int participantId = 0;
+    private int testId = 0;
 
     private Dictionary<string, Dictionary<string, float>> difficulties = new Dictionary<string, Dictionary<string, float>>(){
         {"Slow", new Dictionary<string, float>(){
@@ -91,13 +101,16 @@ public class GameDirector : MonoBehaviour
 
     void Start()
     {
+
         // Initialization of the LoggerNotifier. Here we will only pass parameters to PersistentEvent, even if we will also raise Events.
         loggerNotifier = new LoggerNotifier(persistentEventsHeadersDefaults: new Dictionary<string, string>(){
             {"GameState", "NULL"},
             {"GameDuration", "NULL"},
             {"GameSpeed", "NULL"},
             {"GameTimeSpent", "NULL"},
-            {"GameTimeLeft", "NULL"}
+            {"GameTimeLeft", "NULL"},
+            {"ParticipantId", "NULL"},
+            {"TestId", "NULL"}
         });
         // Initialization of the starting values of the parameters.
         loggerNotifier.InitPersistentEventParameters(new Dictionary<string, object>(){
@@ -105,7 +118,9 @@ public class GameDirector : MonoBehaviour
             {"GameDuration", gameDuration.ToString()},
             {"GameSpeed", gameDifficulty},
             {"GameTimeSpent", 0},
-            {"GameTimeLeft",gameDuration}
+            {"GameTimeLeft",gameDuration},
+            {"ParticipantId", 0},
+            {"TestId", 0}
         });
     }
 
@@ -191,6 +206,35 @@ public class GameDirector : MonoBehaviour
     {
         if (gameState == GameState.Playing) return;
         gameDuration = duration;
+    }
+
+    public void SetParticipant(int participant)
+    {
+        participantId = participant;
+        loggerNotifier.NotifyLogger("Participant ID Updated", EventLogger.EventType.DefaultEvent, new Dictionary<string, object>()
+        {
+            {"ParticipantId", 0},
+        });
+        participantChanged.Invoke(participantId);
+    }
+
+    public int GetParticipant()
+    {
+        return participantId;
+    }
+
+    public void SetTest(int test)
+    {
+        testId = test;
+        loggerNotifier.NotifyLogger("Test ID Updated", EventLogger.EventType.DefaultEvent, new Dictionary<string, object>()
+        {
+            {"TestId", 0},
+        });
+        testChanged.Invoke(testId);
+    }
+
+    public int GetTest() {
+        return testId;
     }
 
     // Sets the game difficulty.

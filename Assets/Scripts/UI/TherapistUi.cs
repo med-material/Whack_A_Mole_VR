@@ -23,8 +23,8 @@ public class TherapistUi : MonoBehaviour
     [SerializeField]
     private TherapistPanelController therapistPanelController;
 
-    [SerializeField]
-    private MinimizedPanelController minimizedPanelController;
+    //[SerializeField]
+    //private MinimizedPanelController minimizedPanelController;
 
     [SerializeField]
     private WarningPanel warningPanel;
@@ -42,7 +42,7 @@ public class TherapistUi : MonoBehaviour
     private WallManager wallManager;
 
     private GameDirector.GameState currentGameState = GameDirector.GameState.Stopped;
-    private LoggerNotifier loggerNotifier;
+    //private LoggerNotifier loggerNotifier;
     private Animation animationPlayer;
     
 
@@ -58,17 +58,6 @@ public class TherapistUi : MonoBehaviour
         //modifiersManager.GetModifierUpdateEvent().AddListener(ModifierUpdated);
         // Connect to the speed updated event from the GameDirector
         gameDirector.GetDifficultyUpdateEvent().AddListener(ModifierUpdated);
-
-        // Initialization of the LoggerNotifier. Here we will only raise PersistentEvent.
-        loggerNotifier = new LoggerNotifier(persistentEventsHeadersDefaults: new Dictionary<string, string>(){
-            {"ParticipantId", "NULL"},
-            {"TestId", "NULL"}
-        });
-        // Initialization of the starting values of the parameters.
-        loggerNotifier.InitPersistentEventParameters(new Dictionary<string, object>(){
-            {"ParticipantId", 0},
-            {"TestId", 0}
-        });
     }
 
     public void UpdateDeviceWarningDisplay(bool display)
@@ -138,16 +127,22 @@ public class TherapistUi : MonoBehaviour
                 case "GameDuration":
                     gameDirector.SetGameDuration(float.Parse((string)entry.Value) * 60f);
                     break;
+                case "participant":
+                    gameDirector.SetParticipant(int.Parse((string)entry.Value));
+                    break;
+                case "test":
+                    gameDirector.SetTest(int.Parse((string)entry.Value));
+                    break;
                 default:
                     // Raise an event.
-                    loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>()
-                    {
-                        {entry.Key, entry.Value}
-                    });
+                    //loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>()
+                    //{
+                    //    {entry.Key, entry.Value}
+                    //});
                     break;
             }
         }
-        minimizedPanelController.UpdateDisplayedInfos(data);
+        //minimizedPanelController.UpdateDisplayedInfos(data);
         playerPanel.UpdateDisplayedInfos(data);
     }
 
@@ -237,7 +232,7 @@ public class TherapistUi : MonoBehaviour
     public void GameTimeUpdate(float time)
     {
         therapistPanelController.GameTimeUpdate(time);
-        minimizedPanelController.GameTimeUpdate(time);
+        //minimizedPanelController.GameTimeUpdate(time);
     }
 
     // Switches between the therapist panel and the profile panel.
@@ -263,7 +258,7 @@ public class TherapistUi : MonoBehaviour
     private void GameCountDown()
     {
         therapistPanelController.GameCountDown();
-        minimizedPanelController.GameStart();
+        //minimizedPanelController.GameStart();
         playerPanel.SetPausedContainer(false);
         playerPanel.SetCountDownContainer(true);
         playerPanel.SetEnablePanel(true);
@@ -273,7 +268,7 @@ public class TherapistUi : MonoBehaviour
     private void GameStarted()
     {
         therapistPanelController.GameStart();
-        minimizedPanelController.GameStart();
+        //minimizedPanelController.GameStart();
         playerPanel.SetEnablePanel(false);
     }
 
@@ -281,7 +276,7 @@ public class TherapistUi : MonoBehaviour
     private void GameStopped()
     {
         therapistPanelController.GameStop();
-        minimizedPanelController.GameStop();
+        //minimizedPanelController.GameStop();
         playerPanel.SetPausedContainer(false);
         playerPanel.SetCountDownContainer(false);
         playerPanel.SetEnablePanel();
@@ -291,7 +286,7 @@ public class TherapistUi : MonoBehaviour
     private void GamePausedUnpaused(bool pause = true)
     {
         therapistPanelController.GamePause(pause);
-        minimizedPanelController.GamePause(pause);
+        //minimizedPanelController.GamePause(pause);
         playerPanel.SetCountDownContainer(false);
         playerPanel.SetPausedContainer(pause);
         playerPanel.SetEnablePanel(pause);
