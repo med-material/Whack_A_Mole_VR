@@ -25,6 +25,9 @@ public class SampleLogger : MonoBehaviour
     [SerializeField]
     private GazeLogger gazeLogger;
 
+    [SerializeField]
+    private ViewportLogger viewportLogger;
+
     private TrackerHub trackerHub = new TrackerHub();
     private LoggingManager loggingManager;
 
@@ -116,6 +119,13 @@ public class SampleLogger : MonoBehaviour
             if (gazeLogger != null) {
                 Dictionary<string, object> gazeLogs = gazeLogger.GetGazeData();
                 foreach (KeyValuePair<string, object> pair in gazeLogs)
+                {
+                    sampleLog[pair.Key] = pair.Value;
+                }
+            }
+            if (viewportLogger != null) {
+                Dictionary<string, object> viewportLogs = viewportLogger.GetViewportData();
+                foreach (KeyValuePair<string, object> pair in viewportLogs)
                 {
                     sampleLog[pair.Key] = pair.Value;
                 }
