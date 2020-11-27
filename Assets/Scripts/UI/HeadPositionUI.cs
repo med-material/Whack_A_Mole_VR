@@ -31,7 +31,7 @@ public class HeadPositionUI : MonoBehaviour
     void Update()
     {
         headPosText.text = string.Format(headPosTemplate, headObject.transform.position.x.ToString("0.00"), headObject.transform.position.y.ToString("0.00"), headObject.transform.position.z.ToString("0.00"));
-        headRotText.text = string.Format(headRotTemplate, headObject.transform.eulerAngles.x.ToString("0.00"), headObject.transform.eulerAngles.y.ToString("0.00"), headObject.transform.eulerAngles.z.ToString("0.00"));
+        headRotText.text = string.Format(headRotTemplate, headObject.transform.eulerAngles.x.ToString("0"), headObject.transform.eulerAngles.y.ToString("0"), headObject.transform.eulerAngles.z.ToString("0"));
     }
 
     public void LogCurrentPosition() {
