@@ -15,9 +15,6 @@ public class ControllerMirror : MonoBehaviour
     private GameObject laserOriginToMirror;
 
     [SerializeField]
-    private LaserMapper laserMapperToMirror;
-
-    [SerializeField]
     private LaserMapper laserMapper;
 
     [SerializeField]
@@ -63,14 +60,14 @@ public class ControllerMirror : MonoBehaviour
         pointerToMirror.onPointerShoot.AddListener(onPointerShoot);
         laserWidth = laser.startWidth;
         laserColor = laser.startColor;
-        var lastChild = playerController.gameObject.transform.childCount-1;
+        //var lastChild = playerController.gameObject.transform.childCount-1;
         //var controllerGeom = Instantiate(playerController.gameObject.transform.GetChild(lastChild));
         //controllerGeom.transform.SetParent(this.gameObject.transform);
         //controllerGeom.transform.position = new Vector3(0f,0f,0f);
         //controllerGeom.transform.eulerAngles = new Vector3(0f, 0f, 0f);
-        var motorspace = laserMapperToMirror.GetMotorSpace();
-        motorspace.pos = new Vector3(-motorspace.pos.x, motorspace.pos.y, motorspace.pos.z);
-        laserMapper.SetMotorSpace(motorspace);
+        //var motorspace = laserMapperToMirror.GetMotorSpace();
+        //motorspace.pos = new Vector3(-motorspace.pos.x, motorspace.pos.y, motorspace.pos.z);
+        //laserMapper.SetMotorSpace(motorspace);
     }
 
     // Update is called once per frame

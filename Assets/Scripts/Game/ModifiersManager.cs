@@ -54,7 +54,7 @@ public class ModifiersManager : MonoBehaviour
     private GameObject mirrorControllerL;
 
     [SerializeField]
-    private GameObject mirrorMotorSpace;
+    private MotorSpaceManager motorSpaceManager;
 
     [SerializeField]
     private Pointer leftController;
@@ -227,7 +227,7 @@ public class ModifiersManager : MonoBehaviour
     {
         if (geometricMirrorEffect == value) return;
         geometricMirrorEffect = value;
-        mirrorMotorSpace.SetActive(value);
+        motorSpaceManager.SetMirror(value);
         UpdateGeometricMirror(value);
     }
 
@@ -291,6 +291,7 @@ public class ModifiersManager : MonoBehaviour
     }
 
     public void SetMainControllerFromString(string controller) {
+        Debug.Log("Called");
         SetMainController((ModifiersManager.ControllerSetup)System.Enum.Parse( typeof(ModifiersManager.ControllerSetup), controller));
     }
 

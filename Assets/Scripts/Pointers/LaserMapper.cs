@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.Events;
 
 [System.Serializable]
@@ -45,8 +44,6 @@ public class LaserMapper : MonoBehaviour
     private float motorSpaceHeight = 1f;
 
 
-    [SerializeField]
-    private Slider motorSpaceSlider;
     private float multiplier = 1f;
 
     private Vector3 motorSpaceTopLeft = new Vector3(0f,0f,0f);
@@ -90,6 +87,7 @@ public class LaserMapper : MonoBehaviour
     {
         CalculateMotorSpace();
         UpdateMotorSpaceVisualizer();
+        onMotorSpaceChanged.Invoke(new MotorSpaceInfo { width = motorSpaceWidth, height = motorSpaceHeight, pos = transform.position} );
     }
 
     void Update()
@@ -229,11 +227,8 @@ public class LaserMapper : MonoBehaviour
         CalculateWallSpace(wall);
     }
 
-    public void OnSliderSizeValueChanged() {
-        var sliderValue = (float) motorSpaceSlider.value;
-        var highVal = (float) motorSpaceSlider.maxValue;
-        var lowVal = (float) motorSpaceSlider.minValue;
-        multiplier = (sliderValue - lowVal) / highVal;
+    public void SetMultiplier(float m) {
+        multiplier = m;
         CalculateMotorSpace();
         UpdateMotorSpaceVisualizer();
     }
@@ -286,21 +281,21 @@ public class LaserMapper : MonoBehaviour
         // Gizmos.DrawCube(wallSpaceCoord, new Vector3(0.05f,0.05f,0.05f)); 
     }
 
-    public void SetPosition(bool isRightHand) {
-        if (isRightHand) {
-            if (this.transform.position.x < 0f) {
-                this.transform.position = new Vector3(-this.transform.position.x, this.transform.position.y, this.transform.position.z);
-                LogMotorSpaceChange("MotorSpace Set Right");
-            }
-        } else {
-            if (this.transform.position.x > 0f) {
-                this.transform.position = new Vector3(-this.transform.position.x, this.transform.position.y, this.transform.position.z);
-                LogMotorSpaceChange("MotorSpace Set Left");
-            }
-        }
-        CalculateMotorSpace();
-        UpdateMotorSpaceVisualizer();
-    }
+    // public void SetPosition(bool isRightHand) {
+    //     if (isRightHand) {
+    //         if (this.transform.position.x < 0f) {
+    //             this.transform.position = new Vector3(-this.transform.position.x, this.transform.position.y, this.transform.position.z);
+    //             LogMotorSpaceChange("MotorSpace Set Right");
+    //         }
+    //     } else {
+    //         if (this.transform.position.x > 0f) {
+    //             this.transform.position = new Vector3(-this.transform.position.x, this.transform.position.y, this.transform.position.z);
+    //             LogMotorSpaceChange("MotorSpace Set Left");
+    //         }
+    //     }
+    //     CalculateMotorSpace();
+    //     UpdateMotorSpaceVisualizer();
+    // }
 
     public void SetMotorSpace(MotorSpaceInfo motorspace) {
         motorSpaceWidth = motorspace.width;
