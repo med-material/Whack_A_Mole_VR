@@ -54,6 +54,9 @@ public class LaserMapper : MonoBehaviour
     [SerializeField]
     private float wallSpaceMargin = 1f;
 
+    [SerializeField]
+    private WallManager wallManager;
+
     private Vector3 wallSpaceTopLeft = new Vector3(0f,0f,0f);
     private Vector3 wallSpaceTopRight = new Vector3(0f,0f,0f);
     private Vector3 wallSpaceBottomRight = new Vector3(0f,0f,0f);
@@ -83,8 +86,9 @@ public class LaserMapper : MonoBehaviour
     public OnMotorSpaceChanged onMotorSpaceChanged;
 
     // Start is called before the first frame update
-    void Start()
+    void OnEnable()
     {
+        OnWallUpdated(wallManager.CreateWallInfo());
         CalculateMotorSpace();
         UpdateMotorSpaceVisualizer();
         onMotorSpaceChanged.Invoke(new MotorSpaceInfo { width = motorSpaceWidth, height = motorSpaceHeight, pos = transform.position} );
@@ -197,7 +201,7 @@ public class LaserMapper : MonoBehaviour
             bub.UpdateOwnPosition(transform.position);
         }
         onMotorSpaceChanged.Invoke(new MotorSpaceInfo { width = motorSpaceWidth, height = motorSpaceHeight, pos = transform.position} );
-        LogMotorSpaceChange("MotorSpace Size Change");
+        LogMotorSpaceChange("MotorSpace Size Update");
     }
 
     void UpdateMotorSpaceVisualizer() {

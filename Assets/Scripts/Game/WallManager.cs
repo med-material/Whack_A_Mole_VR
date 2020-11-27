@@ -185,7 +185,7 @@ public class WallManager : MonoBehaviour
         stateUpdateEvent.Invoke(wallInfo);
     }
 
-    private WallInfo CreateWallInfo() {
+    public WallInfo CreateWallInfo() {
         var wallInfo = new WallInfo();
         wallInfo.active = active;
         wallInfo.moles = moles;
