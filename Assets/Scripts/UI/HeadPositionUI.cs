@@ -17,14 +17,19 @@ public class HeadPositionUI : MonoBehaviour
     [SerializeField]
     private GameObject headObject;
 
-    private LoggerNotifier loggerNotifier;
+    [SerializeField]
+    private GameObject controllerR;
+    [SerializeField]
+    private GameObject controllerL;
+
+    [SerializeField]
+    private LoggingManager loggingManager;
 
     // Start is called before the first frame update
     void Start()
     {
         headPosTemplate = headPosText.text;
         headRotTemplate = headRotText.text;
-        loggerNotifier = new LoggerNotifier();
     }
 
     // Update is called once per frame
@@ -35,6 +40,28 @@ public class HeadPositionUI : MonoBehaviour
     }
 
     public void LogCurrentPosition() {
-        loggerNotifier.NotifyLogger("Player Position Set", EventLogger.EventType.ModifierEvent);
+        loggingManager.Log("Event", new Dictionary<string, object>()
+        {
+            {"Event", "Player Position Set"},
+            {"EventType", "CalibrationEvent"},
+            {"HeadCameraPosWorldX", headObject.transform.position.x},
+            {"HeadCameraPosWorldY", headObject.transform.position.y},
+            {"HeadCameraPosWorldZ", headObject.transform.position.z},
+            {"HeadCameraRotEulerX", headObject.transform.eulerAngles.x},
+            {"HeadCameraRotEulerY", headObject.transform.eulerAngles.y},
+            {"HeadCameraRotEulerZ", headObject.transform.eulerAngles.z},
+            {"RightControllerPosWorldX", controllerR != null ? controllerR.transform.position.x : -1f},
+            {"RightControllerPosWorldY", controllerR != null ? controllerR.transform.position.x : -1f},
+            {"RightControllerPosWorldZ", controllerR != null ? controllerR.transform.position.x : -1f},
+            {"RightControllerRotEulerX", controllerR != null ? controllerR.transform.eulerAngles.x : -1f},
+            {"RightControllerRotEulerY", controllerR != null ? controllerR.transform.eulerAngles.y : -1f},
+            {"RightControllerRotEulerZ", controllerR != null ? controllerR.transform.eulerAngles.z : -1f},
+            {"LeftControllerPosWorldX", controllerL != null ? controllerL.transform.position.x : -1f},
+            {"LeftControllerPosWorldY", controllerL != null ? controllerL.transform.position.x : -1f},
+            {"LeftControllerPosWorldZ", controllerL != null ? controllerL.transform.position.x : -1f},
+            {"LeftControllerRotEulerX", controllerL != null ? controllerL.transform.eulerAngles.x : -1f},
+            {"LeftControllerRotEulerY", controllerL != null ? controllerL.transform.eulerAngles.y : -1f},
+            {"LeftControllerRotEulerZ", controllerL != null ? controllerL.transform.eulerAngles.z : -1f},
+        });
     }
 }
