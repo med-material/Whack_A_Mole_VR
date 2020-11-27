@@ -125,7 +125,8 @@ public class ModifiersManager : MonoBehaviour
             {"PrismOffset", "No Controller Offset Defined"},
             {"DualTask", "No Dual Task Defined"},
             {"HideWall", "No Hide Wall Defined"},
-            {"HideWallAmount", "No Hide Wall Amount Defined"}
+            {"HideWallAmount", "No Hide Wall Amount Defined"},
+            {"GeometricMirror", "No GeometricMirror Defined"}
         });
         // Initialization of the starting values of the parameters.
         loggerNotifier.InitPersistentEventParameters(new Dictionary<string, object>(){
@@ -137,6 +138,7 @@ public class ModifiersManager : MonoBehaviour
             {"DualTask", dualTask},
             {"HideWall", System.Enum.GetName(typeof(ModifiersManager.HideWall), hideWall)},
             {"HideWallAmount", hideWallAmount},
+            {"GeometricMirror", geometricMirrorEffect}
         });
     }
 
@@ -229,6 +231,10 @@ public class ModifiersManager : MonoBehaviour
         geometricMirrorEffect = value;
         motorSpaceManager.SetMirror(value);
         UpdateGeometricMirror(value);
+        loggerNotifier.NotifyLogger("Geometric Mirror Set " + value.ToString(), EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
+        {
+            {"GeometricMirror", value.ToString()}
+        });
     }
 
     public void UpdateGeometricMirror(bool enable) {
