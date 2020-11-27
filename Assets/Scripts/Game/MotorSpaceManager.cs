@@ -27,18 +27,6 @@ public class MotorSpaceManager : MonoBehaviour
 
     bool isMirror = false;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     public void SetActiveMotorSpace(string newMotorSpace) {
         motorspace = (MotorSpaceManager.ActiveMotorSpace)System.Enum.Parse( typeof(MotorSpaceManager.ActiveMotorSpace), newMotorSpace);
         bool R = motorspace == ActiveMotorSpace.R ? true : false;
