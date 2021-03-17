@@ -185,6 +185,11 @@ public class GameDirector : MonoBehaviour
             {"SessionDuration", gameDuration - currentGameTimeLeft},
             {"SessionState", "Interrupted"},
             {"ProfileName", props["Name"]},
+            {"Age", props["Age"]},
+            {"Gender", props["Gender"]},
+            {"Handedness", props["Handedness"]},
+            {"InjuryDate", props["InjuryDate"]},
+            {"ProfileGroup", props["Group"]},
             {"ProfileID", profileManager.GetSelectedProfileId()},
             {"ParticipantID", participantId},
             {"testID", testId}
@@ -418,6 +423,11 @@ public class GameDirector : MonoBehaviour
         {
             {"SessionDuration", gameDuration - currentGameTimeLeft},
             {"ProfileName", props["Name"]},
+            {"Age", props["Age"]},
+            {"Gender", props["Gender"]},
+            {"Handedness", props["Handedness"]},
+            {"InjuryDate", props["InjuryDate"]},
+            {"ProfileGroup", props["Group"]},
             {"ProfileID", profileManager.GetSelectedProfileId()},
             {"SessionState", "Finished"},
             {"ParticipantID", participantId},
