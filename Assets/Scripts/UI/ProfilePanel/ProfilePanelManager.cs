@@ -11,19 +11,19 @@ public class ProfilePanelManager : MonoBehaviour
 {
 
     public enum Handedness {
-        Null,
+        NULL,
         Right,
         Left
     }
 
     public enum Gender {
-        Null,
+        NULL,
         Female,
         Male
     }
 
     public enum Group {
-        Null,
+        NULL,
         TestGroup,
         ControlGroup
     }
@@ -33,11 +33,11 @@ public class ProfilePanelManager : MonoBehaviour
     private ProfileCreationManager profileCreationManager;
     private TherapistUi therapistUi;
 
-    private Handedness handedness = Handedness.Null;
-    private Gender gender = Gender.Null;
-    private Group group = Group.Null;
-    private string injuryDate = "";
-    private string age = "";
+    private Handedness handedness = Handedness.NULL;
+    private Gender gender = Gender.NULL;
+    private Group group = Group.NULL;
+    private string injuryDate = "NULL";
+    private string age = "NULL";
 
     [SerializeField]
     private InputField ageField;
@@ -86,15 +86,41 @@ public class ProfilePanelManager : MonoBehaviour
         SwitchToTherapistPanel(profileManager.GetSelectedProfileProperties()["Name"]);
     }
 
+    private string ParseDate(string year, string month, string day) {
+        string date = "NULL";
+        if (System.Int32.TryParse(year, out int y)) {
+            date = y.ToString();
+        } else {
+            return date;
+        }
+
+        if (System.Int32.TryParse(month, out int m)) {
+            date = date + "-" + m.ToString();
+        } else {
+            date = date + "-" + "01";
+        }
+
+        if (System.Int32.TryParse(day, out int d)) {
+            date = date + "-" + d.ToString();
+        } else {
+            date = date + "-" + "01";
+        }
+
+        return date;
+    }
+
     // Asks the ProfileManager to create a new profile. If the profile is created, tells the ProfileScrollViewManager to create a
     // new profile button accordingly.
     public bool ProfileCreated(string name, string mail, Dictionary<string, string> properties)
     {
-        if (injuryYearField.text != "") {
-            injuryDate = injuryYearField.text + "-" + injuryMonthField.text + "-" + injuryDayField.text;
+        injuryDate = ParseDate(injuryYearField.text, injuryMonthField.text, injuryDayField.text);
+
+        if (System.Int32.TryParse(ageField.text, out int a)) {
+            age = a.ToString();
         } else {
-            injuryDate = "";
+            age = "NULL";
         }
+
         properties["Age"] = age;
         properties["Gender"] = System.Enum.GetName(typeof(Gender), gender);
         properties["Handedness"] = System.Enum.GetName(typeof(Handedness), handedness);
@@ -137,7 +163,7 @@ public class ProfilePanelManager : MonoBehaviour
     }
 
     public void SetHandednessNull() {
-        handedness = Handedness.Null;
+        handedness = Handedness.NULL;
     }
 
     public void SetGenderMale() {
@@ -149,7 +175,7 @@ public class ProfilePanelManager : MonoBehaviour
     }
 
     public void SetGenderNull() {
-        gender = Gender.Null;
+        gender = Gender.NULL;
     }
 
     public void SetGroupTest() {
@@ -161,6 +187,6 @@ public class ProfilePanelManager : MonoBehaviour
     }
 
     public void SetGroupNull() {
-        group = Group.Null;
+        group = Group.NULL;
     }
 }
