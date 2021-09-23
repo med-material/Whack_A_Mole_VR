@@ -15,6 +15,10 @@ public class MotorInfoUI : MonoBehaviour
     private string infoLeftTemplate;
 
     [SerializeField]
+    private Text infoError;
+    private string infoErrorTemplate;
+
+    [SerializeField]
     private Color errorColor;
     private Color defaultColor;
 
@@ -26,8 +30,10 @@ public class MotorInfoUI : MonoBehaviour
 
     private string textR;
     private string textL;
+    private string textError;
     private Color colorR;
     private Color colorL;
+    private Color colorError;
     private Vector3 lastPosRight = Vector3.zero;
     private Vector3 lastPosLeft = Vector3.zero;
 
@@ -38,13 +44,15 @@ public class MotorInfoUI : MonoBehaviour
     void Start()
     {
         infoRightTemplate = infoRight.text;
-        infoLeftTemplate = infoLeft.text;   
+        infoLeftTemplate = infoLeft.text;
+        infoErrorTemplate = infoError.text;
         defaultColor = infoRight.color;
     }
 
     // Update is called once per frame
     void Update()
     {
+        /*Right Controller*/
         if (controllerRight.transform.position != lastPosRight) {
             textR = controllerRight.transform.position.x.ToString("0.00");
             colorR = defaultColor;
@@ -53,6 +61,8 @@ public class MotorInfoUI : MonoBehaviour
             textR = "OFF";
             colorR = errorColor;
         }
+
+        /*Left Controller*/
         if (controllerLeft.transform.position != lastPosLeft) {
             textL = controllerLeft.transform.position.x.ToString("0.00");
             colorL = defaultColor;
@@ -61,10 +71,25 @@ public class MotorInfoUI : MonoBehaviour
             textL = "OFF";
             colorL = errorColor;
         }
+
+        //Detect if the controller are swapped
+        if (controllerRight.transform.position.x < controllerLeft.transform.position.x
+            || controllerLeft.transform.position.x > controllerRight.transform.position.x)
+        {
+            colorL = errorColor;
+            colorR = errorColor;
+            colorError = errorColor;
+            textError = "Controller Swapped !";
+        } else {
+            colorError = Color.clear;
+        }
+
         infoRight.text = string.Format(infoRightTemplate, textR);
         infoLeft.text = string.Format(infoLeftTemplate, textL);
+        infoError.text = string.Format(infoErrorTemplate, textError);
         infoRight.color = colorR;
         infoLeft.color = colorL;
+        infoError.color = colorError;
     }
 
 }
