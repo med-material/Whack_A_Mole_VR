@@ -70,7 +70,7 @@ public class EventLogger : MonoBehaviour
     public void UpdateEmail(string newEmail)
     {
         if (email == newEmail) return;
-        email = newEmail.Replace("\n","").Replace("\r",""); // sanitize e-mail, to not contain newline characters.
+        email = newEmail.Replace("\n", "").Replace("\r", ""); // sanitize e-mail, to not contain newline characters.
         loggingManager.SetEmail(email);
         loggingManager.Log("Meta", "Email", email, LogMode.Overwrite);
     }

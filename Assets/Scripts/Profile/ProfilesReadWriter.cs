@@ -120,6 +120,9 @@ public class ProfilesReadWriter
             string[] lines = reader.ReadToEnd().Split("\n"[0]);
             Dictionary<string, string> properties = new Dictionary<string, string>();
 
+            for (int i = 0; i < lines.Length; i++)
+                lines[i] = lines[i].Replace("\r", string.Empty);
+
             foreach (string line in lines)
             {
                 if (line == "") break;
