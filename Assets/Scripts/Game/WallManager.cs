@@ -357,6 +357,10 @@ public class WallManager : MonoBehaviour
         return mole;
     }
 
+    public Dictionary<int, Mole> GetMoles()
+    {
+        return moles;
+    }
     private void disableMoles()
     {
         foreach(Mole mole in moles.Values)

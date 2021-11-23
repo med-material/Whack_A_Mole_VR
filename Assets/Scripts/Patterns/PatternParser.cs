@@ -13,7 +13,7 @@ Example: Dictionary[3.75, List[Dictionary["FUNCTION": "MOLE", "X":"1", "Y":"5", 
 
 public class PatternParser
 {
-    public enum Paradigm { Time }
+    public enum Paradigm { Time , Progression }
 
     private static Paradigm paradigm;
 
@@ -40,6 +40,7 @@ public class PatternParser
         Dictionary<float, List<Dictionary<string, string>>> parsedPattern = new Dictionary<float, List<Dictionary<string, string>>>();
         float playTime = 0f;
         float moleDelay = 0f;
+        float lifeTime = 0f;
         SetMoleCount(0);
 
         paradigm = Paradigm.Time;
@@ -65,8 +66,17 @@ public class PatternParser
             // If property = "WAIT", adds duration to the play time and ignores the rest.
             if (keyValue[0] == "WAIT")
             {
-                float waitTime = float.Parse(extractedProperties["TIME"], System.Globalization.CultureInfo.InvariantCulture);
-                playTime += waitTime;
+                string[] parameterValue = uncommentedLine.Split(new char[] { '(', ')', '=' });
+                if (parameterValue[1] == "TIME")
+                {
+                    float waitTime = float.Parse(extractedProperties["TIME"], System.Globalization.CultureInfo.InvariantCulture);
+                    playTime += waitTime;
+                }
+                else if(parameterValue[1] == "HIT")
+                {
+                    paradigm = Paradigm.Progression;
+                    playTime += lifeTime;
+                }
                 continue;
             }
             else if (keyValue[0] == "MOLE")
@@ -82,6 +92,7 @@ public class PatternParser
                 }
 
                 moleDelay = tempPlayTime + float.Parse(extractedProperties["LIFETIME"], System.Globalization.CultureInfo.InvariantCulture);
+                lifeTime = float.Parse(extractedProperties["LIFETIME"], System.Globalization.CultureInfo.InvariantCulture);
             }
             else if (keyValue[0] == "DISTRACTOR")
             {

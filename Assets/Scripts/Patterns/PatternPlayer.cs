@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using System;
 
 /*
 Class dedicated to play the pattern at runtime from the dictionary given by the pattern parser.
@@ -12,23 +13,35 @@ public class PatternPlayer: MonoBehaviour
 {
     private Dictionary<float, List<Dictionary<string, string>>> pattern = new Dictionary<float, List<Dictionary<string, string>>>();
     private List<float> sortedKeys = new List<float>();
+    private List<int> moleIdList = new List<int>();
+    private Dictionary<int, Mole> molesList = new Dictionary<int, Mole>();
     private float waitTimeLeft = 0f;
     private float waitForDuration = -1f;
     private int playIndex = 0;
+    private int tempMoleID = 1;
     private bool isRunning = false;
     private bool isPaused = false;
     private PatternInterface patternInterface;
     private WallManager wallManager;
+    private PatternParser patternParser;
 
     void Awake()
     {
         patternInterface = FindObjectOfType<PatternInterface>();
         wallManager = FindObjectOfType<WallManager>();
+        patternParser = new PatternParser();
     }
 
     void Update()
     {
+        // Whether we are in a Progression or Time paradigm we always call the TimeParadigm,
+        // because the pattern still needs to act normally if the moles are not hit and play the next step when a mole expires
         TimeParadigm();
+
+        if (patternParser.GetParadigm() == PatternParser.Paradigm.Progression)
+        {
+            ProgressionParadigm();
+        }
     }
 
     // Plays the loaded pattern if one is actually loaded.
@@ -93,6 +106,8 @@ public class PatternPlayer: MonoBehaviour
         waitForDuration = -1f;
         playIndex = 0;
         waitTimeLeft = 0f;
+        tempMoleID = 1;
+        molesList.Clear();
     }
 
     // Returns the time to wait before playing the next action when the loaded pattern is playing.
@@ -111,6 +126,23 @@ public class PatternPlayer: MonoBehaviour
         foreach (Dictionary<string, string> action in pattern[sortedKeys[playIndex]])
         {
             patternInterface.PlayAction(new Dictionary<string, string>(action));
+            moleIdList = patternInterface.GetMoleIdList();
+        }
+
+        // Create a List of all the moles that are enabled in the Pattern with an Unique ID
+        foreach (var moleCoord in moleIdList)
+        {
+            var moles = wallManager.GetMoles();
+            Mole mole = moles[moleCoord];
+            var spawnOrder = mole.GetSpawnOrder();
+
+            //Add the active moles in the List at each step
+            if (spawnOrder == playIndex)
+            {
+                int moleId = Convert.ToInt32(string.Format("{0}{1}", tempMoleID, moleCoord));
+                molesList.Add(moleId, mole);
+                tempMoleID++;
+            }
         }
 
         if (playIndex < sortedKeys.Count - 1)
@@ -140,6 +172,51 @@ public class PatternPlayer: MonoBehaviour
             waitForDuration = -1f;
             waitTimeLeft = 0f;
             PlayStep();
+        }
+    }
+
+    //Progression Paradigm : make the next moles appear immediately after all the current moles have been hit
+    public void ProgressionParadigm()
+    {
+        var moles = wallManager.GetMoles();
+
+        foreach (var mole in moles.Values)
+        {
+            var moleState = mole.GetState();
+
+            // Check if there is still moles enabled on the Wall
+            if (moleState == Mole.States.Enabled && !mole.IsFake())
+            {
+                return;
+            }
+        }
+
+        // Browse the list of all enabled moles
+        foreach (var mole in molesList.Values)
+        {
+            var moleState = mole.GetState();
+            var spawnOrder = mole.GetSpawnOrder();
+
+            if (moleState == Mole.States.Popping || moleState == Mole.States.Disabling)
+            {
+                //Check if there are Distractors moles and destroy them without playing the next step
+                foreach (var fake in molesList.Where(fake => fake.Value.IsFake() && fake.Value.GetState() == Mole.States.Enabled)) {
+                    fake.Value.Disable();
+                }
+
+                // Play the next Step when all moles Enabled moles where hit
+                mole.Disable();
+                waitForDuration = -1f;
+                waitTimeLeft = 0f;
+                PlayStep();
+            }
+
+            // Check if we are at the last Index of the Pattern and if all the moles have been hit or has expired
+            if ((playIndex == sortedKeys.Count && moleState == Mole.States.Popped) || (playIndex == sortedKeys.Count - 1 && moleState == Mole.States.Expired))
+            {
+                // Stop the Game
+                patternInterface.CallStop();
+            }
         }
     }
 }
