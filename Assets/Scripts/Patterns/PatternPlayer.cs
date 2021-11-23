@@ -13,35 +13,22 @@ public class PatternPlayer: MonoBehaviour
     private Dictionary<float, List<Dictionary<string, string>>> pattern = new Dictionary<float, List<Dictionary<string, string>>>();
     private List<float> sortedKeys = new List<float>();
     private float waitTimeLeft = 0f;
+    private float waitForDuration = -1f;
     private int playIndex = 0;
     private bool isRunning = false;
     private bool isPaused = false;
     private PatternInterface patternInterface;
-    private float waitForDuration = -1f;
+    private WallManager wallManager;
 
     void Awake()
     {
         patternInterface = FindObjectOfType<PatternInterface>();
+        wallManager = FindObjectOfType<WallManager>();
     }
 
     void Update()
     {
-        // Check whether we need to wait.
-        if (waitForDuration == -1f) return;
-
-        // if our wait time is 0, we initialize it.
-        if (waitTimeLeft == 0f) waitTimeLeft = waitForDuration;
-
-        // if wait time is above 0, we wait.
-        // if wait time is below 0, wait time is over.
-        if (waitTimeLeft > 0)
-        {
-            if (!isPaused) waitTimeLeft -= Time.deltaTime;
-        } else {
-            waitForDuration = -1f;
-            waitTimeLeft = 0f;
-            PlayStep();
-        }
+        TimeParadigm();
     }
 
     // Plays the loaded pattern if one is actually loaded.
@@ -118,7 +105,10 @@ public class PatternPlayer: MonoBehaviour
     // Plays a step from the pattern and triggers the wait to play the next step (if the current step isn't the last).
     private void PlayStep()
     {
-        foreach(Dictionary<string, string> action in pattern[sortedKeys[playIndex]])
+        // Increase the Spawn Order of the moles at each step
+        wallManager.SetSpawnOrder(playIndex);
+
+        foreach (Dictionary<string, string> action in pattern[sortedKeys[playIndex]])
         {
             patternInterface.PlayAction(new Dictionary<string, string>(action));
         }
@@ -130,4 +120,26 @@ public class PatternPlayer: MonoBehaviour
         }
     }
 
+    //Time Paradigm : Create each moles with their respective Lifetime
+    public void TimeParadigm()
+    {
+        // Check whether we need to wait.
+        if (waitForDuration == -1f) return;
+
+        // if our wait time is 0, we initialize it.
+        if (waitTimeLeft == 0f) waitTimeLeft = waitForDuration;
+
+        // if wait time is above 0, we wait.
+        // if wait time is below 0, wait time is over.
+        if (waitTimeLeft > 0)
+        {
+            if (!isPaused) waitTimeLeft -= Time.deltaTime;
+        }
+        else
+        {
+            waitForDuration = -1f;
+            waitTimeLeft = 0f;
+            PlayStep();
+        }
+    }
 }

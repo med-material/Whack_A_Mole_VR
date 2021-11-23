@@ -97,6 +97,7 @@ public class WallManager : MonoBehaviour
     private float updateCooldownDuration = .1f;
     private LoggerNotifier loggerNotifier;
     private int moleCount = 0;
+    private int spawnOrder = 0;
     private bool wallVisible = true;
 
     // Wall boundaries
@@ -283,7 +284,7 @@ public class WallManager : MonoBehaviour
     {
         if (!active) return;
         if (!moles.ContainsKey(moleId)) return;
-        moles[moleId].Enable(lifeTime, moleExpiringDuration, isFake, moleCount);
+        moles[moleId].Enable(lifeTime, moleExpiringDuration, isFake, spawnOrder);
         moleCount++;
     }
 
@@ -294,6 +295,11 @@ public class WallManager : MonoBehaviour
         {
             mole.SetPause(pause);
         }
+    }
+
+    public void SetSpawnOrder(int value)
+    {
+        spawnOrder = value;
     }
 
     public void UpdateMoleCount(int newRowCount = -1, int newColumnCount = -1)

@@ -13,17 +13,42 @@ Example: Dictionary[3.75, List[Dictionary["FUNCTION": "MOLE", "X":"1", "Y":"5", 
 
 public class PatternParser
 {
+    public enum Paradigm { Time }
+
+    private static Paradigm paradigm;
+
+    public Paradigm GetParadigm()
+    {
+        return paradigm;
+    }
+
+    private static int moleCount;
+
+    public int GetMoleCount()
+    {
+        return moleCount;
+    }
+
+    private void SetMoleCount(int value)
+    {
+        moleCount = value;
+    }
+
     // Parses the pattern file into a readable file for the PatternInterface.
     public Dictionary<float, List<Dictionary<string, string>>> ParsePattern(string[] patternStrings)
     {
         Dictionary<float, List<Dictionary<string, string>>> parsedPattern = new Dictionary<float, List<Dictionary<string, string>>>();
         float playTime = 0f;
         float moleDelay = 0f;
+        SetMoleCount(0);
+
+        paradigm = Paradigm.Time;
 
         // For each line in the file.
         foreach (string line in patternStrings)
         {
             string uncommentedLine = line;
+
             // Removes the comments. If the line is empty, ignores the line.
             if (line == "") continue;
             uncommentedLine = RemoveComments(line);
@@ -46,14 +71,22 @@ public class PatternParser
             }
             else if (keyValue[0] == "MOLE")
             {
+                moleCount++;
+                SetMoleCount(moleCount);
+
                 // If property = "MOLE", checks if it has the property STARTDELAY and if it does, takes it into account.
-                if(extractedProperties.ContainsKey("STARTDELAY"))
+                if (extractedProperties.ContainsKey("STARTDELAY"))
                 {
                     tempPlayTime += float.Parse(extractedProperties["STARTDELAY"], System.Globalization.CultureInfo.InvariantCulture);
                     extractedProperties.Remove("STARTDELAY");
                 }
 
                 moleDelay = tempPlayTime + float.Parse(extractedProperties["LIFETIME"], System.Globalization.CultureInfo.InvariantCulture);
+            }
+            else if (keyValue[0] == "DISTRACTOR")
+            {
+                moleCount++;
+                SetMoleCount(moleCount);
             }
 
             // Add the extracted property to the dictionary
@@ -99,7 +132,14 @@ public class PatternParser
         foreach (Match match in matches)
         {
             string[] parameterValue = match.ToString().Split('=');
-            properties.Add(parameterValue[0], parameterValue[1]);
+            if (parameterValue.Length == 2)
+            {
+                properties.Add(parameterValue[0], parameterValue[1]);
+            }
+            else if (parameterValue.Length == 1)
+            {
+                properties.Add(parameterValue[0], "null");
+            }
         }
         return properties;
     }
