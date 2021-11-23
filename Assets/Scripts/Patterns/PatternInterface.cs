@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using System.Globalization;
 
@@ -10,7 +9,6 @@ The dictionary has a mandatory "FUNCTION" key containing the action to do, then 
 */
 public class PatternInterface : MonoBehaviour
 {
-    private PatternPlayer patternPlayer;
     private WallManager wallManager;
     private ModifiersManager modifiersManager;
     private GameDirector gameDirector;
@@ -32,7 +30,6 @@ public class PatternInterface : MonoBehaviour
 
     void Awake()
     {
-        patternPlayer = FindObjectOfType<PatternPlayer>();
         wallManager = FindObjectOfType<WallManager>();
         modifiersManager = FindObjectOfType<ModifiersManager>();
         gameDirector = FindObjectOfType<GameDirector>();
