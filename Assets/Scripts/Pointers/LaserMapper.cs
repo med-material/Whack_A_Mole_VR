@@ -94,6 +94,8 @@ public class LaserMapper : MonoBehaviour
     private float gainY = -1f;
     private List<GameObject> calibPointList = new List<GameObject>();
 
+    private Queue<IEnumerator> coroutineQueue = new Queue<IEnumerator>();
+
     [SerializeField]
     private LoggingManager loggingManager;
 
@@ -107,7 +109,12 @@ public class LaserMapper : MonoBehaviour
     }
     void OnEnable()
     {
-        StartCoroutine(ScaleMotorSpace(defaultMotorSpace, 0.5f));
+        StartCoroutine(CoroutineCoordinator());
+        coroutineQueue = new Queue<IEnumerator>();
+        if (defaultMotorSpace.pos != Vector3.zero)
+        {
+            SetDefaultMotorSpace();
+        }
 
         wallManager.stateUpdateEvent.AddListener(OnWallUpdated);
         OnWallUpdated(wallManager.CreateWallInfo());
@@ -330,12 +337,12 @@ public class LaserMapper : MonoBehaviour
     }
 
     public void SetMotorSpace(MotorSpaceInfo motorspace) {
-        StartCoroutine(ScaleMotorSpace(motorspace, 1.5f));
+        coroutineQueue.Enqueue(ScaleMotorSpace(motorspace, 1.5f));
 
         multiplier = motorspace.multiplier;
+        UpdateMotorSpaceVisualizer(motorspace.mode);
         CalculateMotorSpace(motorspace.mode);
         CalculateGain();
-        UpdateMotorSpaceVisualizer(motorspace.mode);
     }
 
     public void SetDefaultMotorSpace(MotorSpaceInfo motorspace = null) {
@@ -377,5 +384,15 @@ public class LaserMapper : MonoBehaviour
             yield return null;
         }
         ShowMotorspace(false);
+    }
+
+    private IEnumerator CoroutineCoordinator()
+    {
+        while (true)
+        {
+            while (coroutineQueue.Count > 0)
+                yield return StartCoroutine(coroutineQueue.Dequeue());
+            yield return null;
+        }
     }
 }
