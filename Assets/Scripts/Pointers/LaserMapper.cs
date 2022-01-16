@@ -103,11 +103,12 @@ public class LaserMapper : MonoBehaviour
 
     // Start is called before the first frame update
     void Start() {
-        SetDefaultMotorSpace();
         ShowMotorspace(showMotorspace);
     }
     void OnEnable()
     {
+        StartCoroutine(ScaleMotorSpace(defaultMotorSpace, 0.5f));
+
         wallManager.stateUpdateEvent.AddListener(OnWallUpdated);
         OnWallUpdated(wallManager.CreateWallInfo());
         //CalculateMotorSpace();
@@ -329,9 +330,8 @@ public class LaserMapper : MonoBehaviour
     }
 
     public void SetMotorSpace(MotorSpaceInfo motorspace) {
-        motorSpaceWidth = motorspace.width;
-        motorSpaceHeight = motorspace.height;
-        transform.position = motorspace.pos;
+        StartCoroutine(ScaleMotorSpace(motorspace, 1.5f));
+
         multiplier = motorspace.multiplier;
         CalculateMotorSpace(motorspace.mode);
         CalculateGain();
@@ -354,4 +354,28 @@ public class LaserMapper : MonoBehaviour
         return info;
     }
 
+    private IEnumerator ScaleMotorSpace(MotorSpaceInfo motorspace, float duration) {
+        float timer = 0;
+        float rate = 1 / duration;
+
+        var motorSpacedPosition = transform.position;
+        var destinationPosition = motorspace.pos;
+
+        while (timer < 1)
+        {
+            ShowMotorspace(true);
+
+            timer += Time.deltaTime * rate;
+
+            motorSpaceHeight = Mathf.Lerp(motorSpaceHeight, motorspace.height, timer);
+            motorSpaceWidth = Mathf.Lerp(motorSpaceWidth, motorspace.width, timer);
+            transform.position = Vector3.Lerp(motorSpacedPosition, destinationPosition, timer);
+
+            SetMotorSpaceHeight(motorSpaceHeight);
+            SetMotorSpaceWidth(motorSpaceWidth);
+
+            yield return null;
+        }
+        ShowMotorspace(false);
+    }
 }

@@ -28,6 +28,15 @@ public class BubbleDisplay : MonoBehaviour
     private GameObject controllerRender;
 
     [SerializeField]
+    private GameObject OutOfBoundContainer;
+
+    [SerializeField]
+    private GameObject OutOfBoundPrefab;
+
+    [SerializeField]
+    private int numberOfObjects;
+
+    [SerializeField]
     private bool parentX = true;
 
     [SerializeField]
@@ -71,10 +80,16 @@ public class BubbleDisplay : MonoBehaviour
     public EnterMotorSpaceEvent enterMotorStateEvent;
     
     private bool render = true;
+
     // Start is called before the first frame update
     void Awake()
     {
         ownPosition = transform.position;
+
+        for (int i = 0; i < numberOfObjects; i++)
+        {
+            Instantiate(OutOfBoundPrefab, ownPosition, Quaternion.identity, OutOfBoundContainer.transform);
+        }
     }
 
     // Update is called once per frame
@@ -87,7 +102,8 @@ public class BubbleDisplay : MonoBehaviour
 
         Vector3 newPos = new Vector3(newPosX, newPosY, newPosZ);
         if (laserMapper.CoordinateWithinMotorSpace(newPos)) {
-            laserMapper.ShowMotorspace(false);
+            StartCoroutine(FadeOutObject(OutOfBoundContainer, 3.0f));
+            StartCoroutine(OutOfBoundAnimation(false));
             this.transform.position = new Vector3(newPosX + offsetX, newPosY + offsetY, newPosZ + offsetZ);
             if (!render) {
                 render = true;
@@ -103,7 +119,8 @@ public class BubbleDisplay : MonoBehaviour
                 }
             }
         } else {
-            laserMapper.ShowMotorspace(true);
+            StartCoroutine(FadeInObject(OutOfBoundContainer, 3.0f));
+            StartCoroutine(OutOfBoundAnimation(true));
             if (render) {
                 render = false;
                 bubbleRender.SetActive(false);
@@ -126,5 +143,86 @@ public class BubbleDisplay : MonoBehaviour
 
     public void UpdateOwnPosition(Vector3 newPosition) {
         ownPosition = newPosition;
+    }
+
+    public void InstantiateInCircle(GameObject container, Vector3 location, int howMany, float radius, float zPosition)
+    {
+        int i = 0;
+        float angleSection = (Mathf.PI * 2f / howMany);
+        foreach (Transform prefab in container.transform)
+        {
+            float angle = i * angleSection + (3 * Mathf.PI / 4);
+            Vector3 newPos = location + new Vector3(Mathf.Cos(angle) * 1.5f, Mathf.Sin(angle), 0) * radius;
+            newPos.z = zPosition;
+            prefab.transform.position = newPos;
+            i++;
+        }
+    }
+
+    public void InstantiateInCircle(GameObject container, Vector3 location, int howMany, float radius)
+    {
+        InstantiateInCircle(container, location, howMany, radius, location.z);
+    }
+
+    public void InstantiateInCircle(GameObject container, int howMany, float radius)
+    {
+        InstantiateInCircle(container, laserMapper.transform.position, howMany, radius);
+    }
+
+    private IEnumerator OutOfBoundAnimation(bool isOutOfBound)
+    {
+        while (isOutOfBound)
+        {
+            InstantiateInCircle(OutOfBoundContainer, OutOfBoundContainer.transform.childCount, laserMapper.GetMotorSpace().width + 0.1f);
+
+            foreach (Transform child in OutOfBoundContainer.transform)
+            {
+                var motorSpaceCenter = laserMapper.transform.position;
+
+                var currentPos = child.position;
+                var pointA = new Vector3(currentPos.x, currentPos.y, currentPos.z);
+                child.position = Vector3.Lerp(pointA, motorSpaceCenter, Mathf.PingPong(Time.time * 0.3f, 0.15f));
+
+                //Change the rotation of the objects to point them all to the center of the MotorSpace
+                var difference = motorSpaceCenter - child.position;
+                float rotationZ = Mathf.Atan2(difference.y, difference.x) * Mathf.Rad2Deg;
+                child.rotation = Quaternion.Euler(0.0f, 0.0f, rotationZ);
+            }
+            yield return null;
+        }
+    }
+
+    public IEnumerator FadeOutObject(GameObject gameObjects, float fadeSpeed)
+    {
+        foreach (Transform o in gameObjects.transform)
+        {
+            while (o.GetComponent<Renderer>().material.color.a > 0)
+            {
+                Color objectColor = o.GetComponent<Renderer>().material.color;
+                float fadeAmount = objectColor.a - (fadeSpeed * Time.deltaTime);
+
+                objectColor = new Color(objectColor.r, objectColor.g, objectColor.b, fadeAmount);
+                o.GetComponent<Renderer>().material.color = objectColor;
+                yield return null;
+            }
+        }
+        laserMapper.ShowMotorspace(false);
+    }
+
+    public IEnumerator FadeInObject(GameObject gameObjects, float fadeSpeed)
+    {
+        foreach (Transform o in gameObjects.transform)
+        {
+            while (o.GetComponent<Renderer>().material.color.a < 1)
+            {
+                Color objectColor = o.GetComponent<Renderer>().material.color;
+                float fadeAmount = objectColor.a + (fadeSpeed * Time.deltaTime);
+
+                objectColor = new Color(objectColor.r, objectColor.g, objectColor.b, fadeAmount);
+                o.GetComponent<Renderer>().material.color = objectColor;
+                yield return null;
+            }
+        }
+        laserMapper.ShowMotorspace(true);
     }
 }

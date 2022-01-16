@@ -35,14 +35,17 @@ public class MotorSpaceManager : MonoBehaviour
     bool isMirror = false;
 
     void Start() {
-        MotorSpaceInfo m = (MotorSpaceInfo) motorSpaceLarge.Clone();
-        MotorSpaceRight.SetDefaultMotorSpace(m);
-        m.pos = new Vector2(m.pos.x * (-1), m.pos.y); // inverse position for left side.
-        MotorSpaceLeft.SetDefaultMotorSpace(m);
+        MotorSpaceInfo mRight = (MotorSpaceInfo) motorSpaceLarge.Clone();
+        MotorSpaceRight.SetDefaultMotorSpace(mRight);
+
+        MotorSpaceInfo mLeft = (MotorSpaceInfo)mRight.Clone();
+        mLeft.pos = new Vector3(mLeft.pos.x * (-1), mLeft.pos.y, mLeft.pos.z); // inverse position for left side.
+        MotorSpaceLeft.SetDefaultMotorSpace(mLeft);
     }
 
     public void SetActiveMotorSpace(string newMotorSpace) {
         motorspace = (MotorSpaceManager.ActiveMotorSpace)System.Enum.Parse( typeof(MotorSpaceManager.ActiveMotorSpace), newMotorSpace);
+
         bool R = motorspace == ActiveMotorSpace.Right ? true : false;
         R = motorspace == ActiveMotorSpace.Both ? true : R;
         bool L = motorspace == ActiveMotorSpace.Left ? true : false;
@@ -131,10 +134,11 @@ public class MotorSpaceManager : MonoBehaviour
         MotorSpaceRight.SetMotorSpace(m);
         MotorSpaceRight.gameObject.SetActive(mRState);
 
-        m.pos = new Vector2(m.pos.x * (-1), m.pos.y);
+        MotorSpaceInfo m2 = (MotorSpaceInfo) m.Clone();
+        m2.pos = new Vector3(m2.pos.x * (-1), m2.pos.y, m2.pos.z);
 
         MotorSpaceLeft.gameObject.SetActive(true);
-        MotorSpaceLeft.SetMotorSpace(m);
+        MotorSpaceLeft.SetMotorSpace(m2);
         MotorSpaceLeft.gameObject.SetActive(mLState);
 
         if (isMirror) MotorSpaceMirrorRight.UpdateMotorSpaceToMirror(MotorSpaceRight);
