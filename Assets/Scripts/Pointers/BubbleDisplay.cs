@@ -206,11 +206,14 @@ public class BubbleDisplay : MonoBehaviour
                 yield return null;
             }
         }
+        OutOfBoundContainer.SetActive(false);
         laserMapper.ShowMotorspace(false);
     }
 
     public IEnumerator FadeInObject(GameObject gameObjects, float fadeSpeed)
     {
+        OutOfBoundContainer.SetActive(true);
+
         foreach (Transform o in gameObjects.transform)
         {
             while (o.GetComponent<Renderer>().material.color.a < 1)
