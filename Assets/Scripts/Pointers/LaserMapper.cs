@@ -368,7 +368,14 @@ public class LaserMapper : MonoBehaviour
         float rate = 1 / duration;
 
         var motorSpacedPosition = transform.position;
-        var destinationPosition = motorspace.pos;
+        var destinationPosition = Vector3.zero;
+        if (motorspace.mode == MotorCalcMode.center) {
+            destinationPosition = motorspace.pos;
+        } else if (motorspace.mode == MotorCalcMode.bottom) {
+            Debug.Log("motorspaceHeight:" + motorSpaceHeight);
+            Debug.Log("motorspace Y:" + motorspace.pos.y);
+            destinationPosition = new Vector3(motorspace.pos.x, motorspace.pos.y + motorspace.height, motorspace.pos.z);
+        }
 
         while (timer < 1)
         {
