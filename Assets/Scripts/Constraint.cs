@@ -58,11 +58,4 @@ public class Constraint : MonoBehaviour
         }
     }
 
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.C))
-        {
-            SetReset();
-        }
-    }
 }
