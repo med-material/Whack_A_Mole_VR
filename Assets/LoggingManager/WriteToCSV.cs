@@ -78,10 +78,22 @@ public class WriteToCSV
         Stopwatch writeStopwatch = new Stopwatch();
         writeStopwatch.Start();
 
-        using (var file = new StreamWriter(filePath, true))
+        try { 
+            using (var file = new StreamWriter(filePath, true))
+            {
+                file.WriteLine(headers);
+                file.Write(dataString);
+            }
+        } catch (Exception ex)
         {
-            file.WriteLine(headers);
-            file.Write(dataString);
+            Debug.LogError(ex.Message);
+            Debug.Log("Attempting to log to Documents instead.");
+            filePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments), fileName);
+            using (var file = new StreamWriter(filePath, true))
+            {
+                file.WriteLine(headers);
+                file.Write(dataString);
+            }
         }
 
         writeStopwatch.Stop();

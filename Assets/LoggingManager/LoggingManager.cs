@@ -135,14 +135,14 @@ public class LoggingManager : MonoBehaviour
         email = newEmail;
     }
 
-    public void CreateLog(string collectionLabel)
+    public void CreateLog(string collectionLabel, List<string> headers = null)
     {
         if (logsList.ContainsKey(collectionLabel))
         {
             Debug.LogWarning(collectionLabel + " already exists");
             return;
         }
-        LogStore logStore = new LogStore(collectionLabel, email, sessionID, logStringOverTime);
+        LogStore logStore = new LogStore(collectionLabel, email, sessionID, logStringOverTime, headers:headers);
         logsList.Add(collectionLabel, logStore);
     }
 
@@ -257,7 +257,7 @@ public class LoggingManager : MonoBehaviour
         }
     }
 
-    public void SaveLog(string collectionLabel, bool shouldClear)
+    public void SaveLog(string collectionLabel, bool clear)
     {
         if (logsList.ContainsKey(collectionLabel))
         {
@@ -271,8 +271,8 @@ public class LoggingManager : MonoBehaviour
             //by doing this, we are sure that the logs will be exported only once
             GenerateLogString(collectionLabel, () =>
             {
-                Save(collectionLabel, shouldClear, TargetType.CSV);
-                Save(collectionLabel, shouldClear, TargetType.MySql);
+                Save(collectionLabel, clear, TargetType.CSV);
+                Save(collectionLabel, clear, TargetType.MySql);
             });
         }
         else
@@ -281,7 +281,7 @@ public class LoggingManager : MonoBehaviour
         }
     }
 
-    public void SaveLog(string collectionLabel, bool shouldClear, TargetType targetType)
+    public void SaveLog(string collectionLabel, bool clear, TargetType targetType)
     {
         if (logsList.ContainsKey(collectionLabel))
         {
@@ -289,7 +289,7 @@ public class LoggingManager : MonoBehaviour
             //by doing this, we are sure that the logs will be exported only once
             GenerateLogString(collectionLabel, () =>
             {
-                Save(collectionLabel, shouldClear, targetType);
+                Save(collectionLabel, clear, targetType);
             });
         }
         else
@@ -298,42 +298,42 @@ public class LoggingManager : MonoBehaviour
         }
     }
 
-    private void Save(string collectionLabel, bool shouldClear, TargetType targetType)
+    private void Save(string collectionLabel, bool clear, TargetType targetType)
     {
         if (targetType == TargetType.CSV)
         {
             if (Application.platform != RuntimePlatform.WebGLPlayer)
             {
-                SaveToCSV(collectionLabel, shouldClear);
+                SaveToCSV(collectionLabel, clear);
             }
             return;
         }
         if (targetType == TargetType.MySql)
         {
-            SaveToSQL(collectionLabel, shouldClear);
+            SaveToSQL(collectionLabel, clear);
         }
     }
 
 
-    public void SaveAllLogs(bool shouldClear)
+    public void SaveAllLogs(bool clear)
     {
         foreach (KeyValuePair<string, LogStore> pair in logsList)
         {
-            SaveLog(pair.Key, shouldClear);
+            SaveLog(pair.Key, clear);
         }
     }
 
-    public void SaveAllLogs(bool shouldClear,TargetType targetType)
+    public void SaveAllLogs(bool clear,TargetType targetType)
     {
         foreach (KeyValuePair<string, LogStore> pair in logsList)
         {
-            SaveLog(pair.Key, shouldClear,targetType);
+            SaveLog(pair.Key, clear,targetType);
         }
     }
 
-    private void SaveCallback(LogStore logStore, bool shouldClear)
+    private void SaveCallback(LogStore logStore, bool clear)
     {
-        if (!shouldClear) return;
+        if (!clear) return;
 
         //checks if all the targets have been saved, if not returns
         foreach (var targetType in targetsEnabled)
@@ -351,7 +351,7 @@ public class LoggingManager : MonoBehaviour
     // Formats the logs to a CSV row format and saves them. Calls the CSV headers generation beforehand.
     // If a parameter doesn't have a value for a given row, uses the given value given previously (see 
     // UpdateHeadersAndDefaults).
-    private void SaveToCSV(string label, bool shouldClear)
+    private void SaveToCSV(string label, bool clear)
     {
         if (!enableCSVSave) return;
         if (logsList.TryGetValue(label, out LogStore logStore))
@@ -360,7 +360,7 @@ public class LoggingManager : MonoBehaviour
             writeToCsv.WriteAll(() =>
             {
                 logStore.TargetsSaved[TargetType.CSV] = true;
-                SaveCallback(logStore, shouldClear);
+                SaveCallback(logStore, clear);
             });
         }
         else
@@ -369,7 +369,7 @@ public class LoggingManager : MonoBehaviour
         }
     }
 
-    private void SaveToSQL(string label, bool shouldClear)
+    private void SaveToSQL(string label, bool clear)
     {
         if (!enableMySQLSave) { return; }
 
@@ -392,7 +392,7 @@ public class LoggingManager : MonoBehaviour
         {
             logsList[label].RemoveSavingTarget(TargetType.MySql);
             logsList[label].TargetsSaved[TargetType.MySql] = true;
-            SaveCallback(logsList[label], shouldClear);
+            SaveCallback(logsList[label], clear);
         });
     }
 

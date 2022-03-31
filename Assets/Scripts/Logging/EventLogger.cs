@@ -398,11 +398,7 @@ public class EventLogger : MonoBehaviour
     // Generates a unique ID for the test
     private string GenerateUid()
     {
-        object participantId;
-        object testId;
-        persistentLog.TryGetValue("ParticipantID", out participantId);
-        persistentLog.TryGetValue("TestID", out testId);
-        return participantId.ToString() + testId.ToString() + System.DateTime.Now.ToString("yyyy:MM:dd:HH:mm:ss").Replace(" ", "").Replace("/", "").Replace(":", "");
+        return System.DateTime.Now.ToString("yyyy:MM:dd:HH:mm:ss").Replace(" ", "").Replace("/", "").Replace(":", "");
     }
 
     // // Converts the values of the parameters (in a "object format") to a string, formatting them to the

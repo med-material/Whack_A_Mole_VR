@@ -3,7 +3,6 @@ using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Boo.Lang.Runtime;
 using UnityEngine;
 
 
@@ -55,13 +54,13 @@ public class LogStore
 
 
     public LogStore(string label, string email, string sessionID, bool createStringOverTime,
-        LogType logType = LogType.LogEachRow)
+        LogType logType = LogType.LogEachRow, List<string> headers = null)
     {
-        Init(label, email, sessionID, createStringOverTime, logType);
+        Init(label, email, sessionID, createStringOverTime, logType, headers);
     }
 
     private void Init(string label, string email, string sessionID, bool createStringOverTime,
-        LogType logType)
+        LogType logType, List<string> headers = null)
     {
         InitiateTargetsSaved();
         targetsSaving = new List<TargetType>();
@@ -78,6 +77,12 @@ public class LogStore
         logs.Add("Framecount", new List<string>());
         logs.Add("SessionID", new List<string>());
         logs.Add("Email", new List<string>());
+        if (headers != null) {
+            foreach (string header in headers)
+            {
+                logs.Add(header, new List<string>());
+            }
+        }
     }
 
 
@@ -259,7 +264,7 @@ public class LogStore
         {
             return (T)Convert.ChangeType(ExportToString(), type);
         }
-        throw new RuntimeException("Export type must be SortedDictionnary<string,List<string>> or string");
+        throw new Exception("Export type must be SortedDictionnary<string,List<string>> or string");
     }
 
     public SortedDictionary<string, List<string>> ExportLogs()
