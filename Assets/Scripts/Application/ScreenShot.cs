@@ -18,7 +18,7 @@ public class ScreenShot : MonoBehaviour
         //Press W to take a Screen Capture
         if (Input.GetKeyDown(KeyCode.W))
         {
-            ScreenCapture.CaptureScreenshot(screenName + ".png");
+            ScreenCapture.CaptureScreenshot(screenName);
             Debug.Log("Screenshot Captured");
         }
     }
