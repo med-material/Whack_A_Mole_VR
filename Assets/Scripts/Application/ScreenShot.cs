@@ -15,6 +15,7 @@ public class ScreenShot : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //Press W to take a Screen Capture
         if (Input.GetKeyDown(KeyCode.W))
         {
             ScreenCapture.CaptureScreenshot(screenName + ".png");
