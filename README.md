@@ -1,16 +1,18 @@
 # Whack-A-Mole VR Game made with Unity
 
-![Whack A Mole Game Setup](Images/game_setup.png)
+![Whack A Mole Game Setup](Images/startGame.PNG)
 
 The Whack_A_Mole VR environment provides a test for the Pupil Labs Calibration environment, used with the Pupil Labs plugin for eye-tracking in VR. 
 
 The main goal of this project is to be used in clinics for rehabilitation of visualy neglected people. By providing a playful environment, the game stimulates the patient and helps his rehabilitation, while data are collected in the background to allow for a deep analysis of the patient behavior and reactions.
 
-The game is a simple Whack-a-mole, but in VR. In the VR environment, the participant is presented a wall on which are multiple moles (represented by gray disks). When the game starts, random moles will activate by changing their color to green and emitting a sound. The participant will then need to pop the moles before they deactivate by themselves. There are also fake moles, which activates with the red color and that the patient musn't pop.
+![Whack A Mole Game Playing](Images/inGame.PNG)
 
-![Whack A Mole Game Playing](Images/game_run.png)
+The game is a simple Whack-a-mole, but in VR. In the VR environment, the participant is presented a wall on which are multiple moles (represented by gray disks). When the game starts, random moles will activate by changing their color to green and emitting a sound. The participant will then need to pop the moles by targeting them with the cursor(red square) before they deactivate by themselves. There are also fake moles, which activates with the red color and that the patient musn't pop.
 
-The environment provides many features to customise the game, with multiple parameters and modifiers:
+![Whack A Mole Game Playing](Images/duringGame.PNG)
+
+The environment provides many features to customise the game, with multiple parameters and modifiers available when you click on the modifiers button(red square):
 
 - Logging parameters: 
   - Participant ID: allows to keep track of the participant for data analysis (across sessions)
@@ -24,6 +26,8 @@ The environment provides many features to customise the game, with multiple para
   - Dual laser: allows the participant to use both controllers (left and right) at once
   - Eye patch: applies an eye patch. Disables one of the participant's eye in the VR headset. Can be set to either left, right or none
   - Prism effect: applies an offset on the participant's VR controller, meaning that the position of the VR controller between the real world and in-game will differ
+
+  ![Whack A Mole Game Playing](Images/modifiers.PNG)
 
 Many data are collected through a single game. They are by default saved to a dedicated CREATE database, but it is also possible to save them locally as a .CSV file. They can be then visualised using a dedicated R-shiny application available at this link: https://github.com/QuentinDaveau/Whack_A_Mole_RShiny. 
 
