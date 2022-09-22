@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using UnityEditor;
-
 using PupilLabs;
 
 [CustomEditor(typeof(RequestController))]

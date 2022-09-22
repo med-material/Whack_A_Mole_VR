@@ -68,8 +68,8 @@ Material:
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _FogMaxHeight: -0.70000005
-    - _FogMinHeight: 0.059999928
+    - _FogMaxHeight: -0.35999995
+    - _FogMinHeight: 0.19999999
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1

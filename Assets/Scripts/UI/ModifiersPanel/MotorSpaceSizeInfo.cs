@@ -64,7 +64,7 @@ public class MotorSpaceSizeInfo : MonoBehaviour
         mLWidth = m.width.ToString("0.00");
         mLHeight = m.height.ToString("0.00");
         if (awake) {
-        UpdateInfo();
+            UpdateInfo();
         }
     }
 
