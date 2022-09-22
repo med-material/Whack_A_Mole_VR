@@ -17,9 +17,16 @@ public class HmdCalibration : MonoBehaviour
 
     [SerializeField]
     private GameObject controllerGameObject;
+
+    [SerializeField]
+    private float ratioSpeed = 3f;
+
     bool calibrated = false;
     int timeout = 100;
     int time = 0;
+
+    [SerializeField]
+    private CanvasGroup canvasGroupToFade; // Used to make disappear all elements linked to a canvas
 
     // Start is called before the first frame update
     void Awake()
@@ -31,8 +38,7 @@ public class HmdCalibration : MonoBehaviour
         if (!calibrated) {
             if (Input.GetKeyDown(KeyCode.V))
             {
-                        calibrationUpdate.Invoke();
-                        calibrated = true;
+                CloseInstructionPanel();
             }
         }
     }
@@ -46,13 +52,30 @@ public class HmdCalibration : MonoBehaviour
             {
                 if (SteamVR_Input._default.inActions.GrabPinch.GetStateDown(controller))
                 {
-                    calibrationUpdate.Invoke();
-                    calibrated = true;
+                    CloseInstructionPanel();
                 }
             }
             if (calibrated) {
             time++;
             }
         }
+    }
+
+    //generic function if we need to change something when the instruction panel disappeared
+    private void CloseInstructionPanel(){
+        StartCoroutine(FadeOutCanvasGroup());
+        calibrationUpdate.Invoke();
+        calibrated = true;
+    }
+
+    public IEnumerator FadeOutCanvasGroup()
+    {
+        while (canvasGroupToFade.alpha > 0)
+        {
+            canvasGroupToFade.alpha -= Time.deltaTime * ratioSpeed;
+
+            yield return null;
+        }
+        canvasGroupToFade.transform.gameObject.SetActive(false);
     }
 }
