@@ -6,6 +6,7 @@ using UnityEngine.Events;
 
 public class BubbleDisplay : MonoBehaviour
 {
+    private LoggerNotifier loggerNotifier;
     [SerializeField]
     public SoundManager soundManager;
     // The parent we will follow in terms of object position.
@@ -116,6 +117,7 @@ public class BubbleDisplay : MonoBehaviour
                 controllerRender.SetActive(true);
                 motorSpaceRender.color = motorActiveColor;
                 enterMotorStateEvent.Invoke(true);
+                loggerNotifier.NotifyLogger("Pointer Inside MotorSpace", EventLogger.EventType.PointerEvent, new Dictionary<string, object>(){ });
                 if (soundManager != null) {
                     soundManager.PlaySound(gameObject, SoundManager.Sound.laserInMotorSpace);
                 }
@@ -133,6 +135,7 @@ public class BubbleDisplay : MonoBehaviour
                 controllerRender.SetActive(true);
                 motorSpaceRender.color = motorDisabledColor;
                 enterMotorStateEvent.Invoke(false);
+                loggerNotifier.NotifyLogger("Pointer Outside MotorSpace", EventLogger.EventType.PointerEvent, new Dictionary<string, object>(){ });
                 if (soundManager != null) {
                     soundManager.PlaySound(gameObject, SoundManager.Sound.laserOutMotorSpace);
                 }
