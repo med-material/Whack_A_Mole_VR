@@ -40,6 +40,12 @@ public class DiskMole : Mole
     private Texture distractorRightTexture;
 
     [SerializeField]
+    private Texture correctMoleTexture;
+
+    [SerializeField]
+    private Texture incorrectMoleTexture;
+
+    [SerializeField]
     private AudioClip enableSound;
 
     [SerializeField]
@@ -78,37 +84,47 @@ public class DiskMole : Mole
     Override of the event functions of the base class.
     */
 
-    protected override void PlayEnabling()
+    // Plays when the wall and the moles have already spawned, when the different kinds of moles are activating
+    protected override void PlayEnabling() 
     {
-        PlaySound(enableSound);
         PlayAnimation("EnableDisable");
 
         if (moleType == Mole.MoleType.Target)
         {
             meshMaterial.color = enabledColor;
-            meshMaterial.mainTexture =  textureEnabled;
+            meshMaterial.mainTexture = textureEnabled;
         }
         else if (moleType == Mole.MoleType.DistractorLeft)
         {
             meshMaterial.color = fakeEnabledColor;
-            meshMaterial.mainTexture =  distractorLeftTexture;
-        } else if (moleType == Mole.MoleType.DistractorRight)
+            meshMaterial.mainTexture = distractorLeftTexture;
+        }
+        else if (moleType == Mole.MoleType.DistractorRight)
         {
             meshMaterial.color = fakeEnabledColor;
-            meshMaterial.mainTexture =  distractorRightTexture;
+            meshMaterial.mainTexture = distractorRightTexture;
         }
         base.PlayEnabling();
     }
 
+    // Plays when activated moles exipres via their timers
     protected override void PlayDisabling()
     {
         PlaySound(enableSound);
-        PlayAnimation("EnableDisable");
+        if (moleType == Mole.MoleType.Target) 
+        {
+            PlayAnimation("PopWrongMole"); // Show negative feedback to users when a correct moles expires, to make it clear that they missed it
+        }
+        else
+        {
+            PlayAnimation("EnableDisable"); // Don't show any feedback to users when an incorrect moles expires
+        }
         meshMaterial.color = disabledColor;
-        meshMaterial.mainTexture =  textureDisabled;
+        meshMaterial.mainTexture = textureDisabled;
         base.PlayDisabling();
     }
 
+    // Plays when the cursor of the player is hovering over correct / incorrect moles, changing colors
     protected override void PlayHoverEnter() 
     {
         if (moleType == Mole.MoleType.Target)
@@ -121,6 +137,7 @@ public class DiskMole : Mole
         }
     }
 
+    // Plays when the cursor of the player was hovering over correct / incorrect moles and is now leaving, changing back colors
     protected override void PlayHoverLeave() 
     {
         if (moleType == Mole.MoleType.Target)
@@ -133,14 +150,23 @@ public class DiskMole : Mole
         }
     }
 
-    protected override void PlayPop() 
+
+    protected override void PlayPop()
     {
-        PlayAnimation("PopOscill");
+        if (moleType == Mole.MoleType.Target)
+        {
+            PlayAnimation("PopCorrectMole");  // Show positive feedback to users that shoot a correct moles, to make it clear this is a success
+        }
+        else                                  
+        {
+            PlayAnimation("PopWrongMole");    // Show negative feedback to users that shoot an incorrect moles, to make it clear this is a fail
+        }
         meshMaterial.color = disabledColor;
-        meshMaterial.mainTexture =  textureDisabled;
+        meshMaterial.mainTexture = textureDisabled;
         PlaySound(popSound);
     }
 
+    // Plays when a game is exited, and when it is launched
     protected override void PlayReset()
     {
         PlayAnimation("EnableDisable");
@@ -200,9 +226,9 @@ public class DiskMole : Mole
     }
 
     // Ease function, Quart ratio.
-    private float EaseQuartOut (float k) 
+    private float EaseQuartOut(float k)
     {
-        return 1f - ((k -= 1f)*k*k*k);
+        return 1f - ((k -= 1f) * k * k * k);
     }
 
     private IEnumerator TransitionColor(float duration, Color startColor, Color endColor)
@@ -212,8 +238,8 @@ public class DiskMole : Mole
 
         // Generation of a color gradient from the start color to the end color.
         Gradient colorGradient = new Gradient();
-        GradientColorKey[] colorKey = new GradientColorKey[2]{new GradientColorKey(startColor, 0f), new GradientColorKey(endColor, 1f)};
-        GradientAlphaKey[] alphaKey = new GradientAlphaKey[2]{new GradientAlphaKey(startColor.a, 0f), new GradientAlphaKey(endColor.a, 1f)};
+        GradientColorKey[] colorKey = new GradientColorKey[2] { new GradientColorKey(startColor, 0f), new GradientColorKey(endColor, 1f) };
+        GradientAlphaKey[] alphaKey = new GradientAlphaKey[2] { new GradientAlphaKey(startColor.a, 0f), new GradientAlphaKey(endColor.a, 1f) };
         colorGradient.SetKeys(colorKey, alphaKey);
 
         // Playing of the animation. The DiskMole color is interpolated following the easing curve
