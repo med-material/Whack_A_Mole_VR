@@ -40,6 +40,12 @@ public class DiskMole : Mole
     private Texture distractorRightTexture;
 
     [SerializeField]
+    private Texture correctMoleTexture;
+
+    [SerializeField]
+    private Texture wrongMoleTexture;
+
+    [SerializeField]
     private AudioClip enableSound;
 
     [SerializeField]
@@ -80,22 +86,22 @@ public class DiskMole : Mole
 
     protected override void PlayEnabling()
     {
-        PlaySound(enableSound);
         PlayAnimation("EnableDisable");
 
         if (moleType == Mole.MoleType.Target)
         {
             meshMaterial.color = enabledColor;
-            meshMaterial.mainTexture =  textureEnabled;
+            meshMaterial.mainTexture = textureEnabled;
         }
         else if (moleType == Mole.MoleType.DistractorLeft)
         {
             meshMaterial.color = fakeEnabledColor;
-            meshMaterial.mainTexture =  distractorLeftTexture;
-        } else if (moleType == Mole.MoleType.DistractorRight)
+            meshMaterial.mainTexture = distractorLeftTexture;
+        }
+        else if (moleType == Mole.MoleType.DistractorRight)
         {
             meshMaterial.color = fakeEnabledColor;
-            meshMaterial.mainTexture =  distractorRightTexture;
+            meshMaterial.mainTexture = distractorRightTexture;
         }
         base.PlayEnabling();
     }
@@ -103,13 +109,20 @@ public class DiskMole : Mole
     protected override void PlayDisabling()
     {
         PlaySound(enableSound);
-        PlayAnimation("EnableDisable");
+        if (moleType == Mole.MoleType.Target)
+        {
+            StartCoroutine(PlayAnim("PopWrongMole"));
+        }
+        else
+        {
+            StartCoroutine(PlayAnim("EnableDisable"));
+        }
         meshMaterial.color = disabledColor;
-        meshMaterial.mainTexture =  textureDisabled;
+        meshMaterial.mainTexture = textureDisabled;
         base.PlayDisabling();
     }
 
-    protected override void PlayHoverEnter() 
+    protected override void PlayHoverEnter()
     {
         if (moleType == Mole.MoleType.Target)
         {
@@ -121,7 +134,7 @@ public class DiskMole : Mole
         }
     }
 
-    protected override void PlayHoverLeave() 
+    protected override void PlayHoverLeave()
     {
         if (moleType == Mole.MoleType.Target)
         {
@@ -133,11 +146,18 @@ public class DiskMole : Mole
         }
     }
 
-    protected override void PlayPop() 
+    protected override void PlayPop()
     {
-        PlayAnimation("PopOscill");
+        if (moleType == Mole.MoleType.Target)
+        {
+            StartCoroutine(PlayAnim("PopCorrectMole"));
+        }
+        else
+        {
+            StartCoroutine(PlayAnim("PopWrongMole"));
+        }
         meshMaterial.color = disabledColor;
-        meshMaterial.mainTexture =  textureDisabled;
+        meshMaterial.mainTexture = textureDisabled;
         PlaySound(popSound);
     }
 
@@ -200,9 +220,9 @@ public class DiskMole : Mole
     }
 
     // Ease function, Quart ratio.
-    private float EaseQuartOut (float k) 
+    private float EaseQuartOut(float k)
     {
-        return 1f - ((k -= 1f)*k*k*k);
+        return 1f - ((k -= 1f) * k * k * k);
     }
 
     private IEnumerator TransitionColor(float duration, Color startColor, Color endColor)
@@ -212,8 +232,8 @@ public class DiskMole : Mole
 
         // Generation of a color gradient from the start color to the end color.
         Gradient colorGradient = new Gradient();
-        GradientColorKey[] colorKey = new GradientColorKey[2]{new GradientColorKey(startColor, 0f), new GradientColorKey(endColor, 1f)};
-        GradientAlphaKey[] alphaKey = new GradientAlphaKey[2]{new GradientAlphaKey(startColor.a, 0f), new GradientAlphaKey(endColor.a, 1f)};
+        GradientColorKey[] colorKey = new GradientColorKey[2] { new GradientColorKey(startColor, 0f), new GradientColorKey(endColor, 1f) };
+        GradientAlphaKey[] alphaKey = new GradientAlphaKey[2] { new GradientAlphaKey(startColor.a, 0f), new GradientAlphaKey(endColor.a, 1f) };
         colorGradient.SetKeys(colorKey, alphaKey);
 
         // Playing of the animation. The DiskMole color is interpolated following the easing curve
@@ -229,5 +249,11 @@ public class DiskMole : Mole
 
         // When the animation is finished, resets the color to its end value.
         ChangeColor(endColor);
+    }
+
+    private IEnumerator PlayAnim(string animName)
+    {
+        PlayAnimation(animName);
+        yield return null;
     }
 }
