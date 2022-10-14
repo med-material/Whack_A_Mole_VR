@@ -395,3 +395,7 @@ ASALocalRun/
 healthchecksdb
 
 # End of https://www.gitignore.io/api/unity,visualstudio,visualstudiocode
+/Assets/Scenes/testFade.unity
+/Assets/Scenes/testFade.unity.meta
+/Assets/Scripts/Game/TestScript.cs
+/Assets/Scripts/Game/TestScript.cs.meta
