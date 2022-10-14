@@ -6,7 +6,9 @@ using UnityEngine.Events;
 
 public class BubbleDisplay : MonoBehaviour
 {
-    private LoggerNotifier loggerNotifier;
+    [SerializeField]
+    private LoggingManager loggingManager;
+    
     [SerializeField]
     public SoundManager soundManager;
     // The parent we will follow in terms of object position.
@@ -117,12 +119,17 @@ public class BubbleDisplay : MonoBehaviour
                 controllerRender.SetActive(true);
                 motorSpaceRender.color = motorActiveColor;
                 enterMotorStateEvent.Invoke(true);
-                loggerNotifier.NotifyLogger("Pointer Inside MotorSpace", EventLogger.EventType.PointerEvent, new Dictionary<string, object>(){ });
+                loggingManager.Log("Event", new Dictionary<string, object>()
+                {
+                    {"Event", "Pointer Inside MotorSpace"},
+                    {"EventType", "MotorSpaceEvent"},
+                });
                 if (soundManager != null) {
                     soundManager.PlaySound(gameObject, SoundManager.Sound.laserInMotorSpace);
                 }
             }
-        } else {
+        } 
+        else {
             if (render) {   
                 StartCoroutine(FadeInObject(OutOfBoundContainer, 20f));
                 StartCoroutine(OutOfBoundAnimation(true));
@@ -135,7 +142,11 @@ public class BubbleDisplay : MonoBehaviour
                 controllerRender.SetActive(true);
                 motorSpaceRender.color = motorDisabledColor;
                 enterMotorStateEvent.Invoke(false);
-                loggerNotifier.NotifyLogger("Pointer Outside MotorSpace", EventLogger.EventType.PointerEvent, new Dictionary<string, object>(){ });
+                loggingManager.Log("Event", new Dictionary<string, object>()
+                {
+                    {"Event", "Pointer Outside MotorSpace"},
+                    {"EventType", "MotorSpaceEvent"},
+                });
                 if (soundManager != null) {
                     soundManager.PlaySound(gameObject, SoundManager.Sound.laserOutMotorSpace);
                 }
