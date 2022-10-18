@@ -43,7 +43,7 @@ public class DiskMole : Mole
     private Texture correctMoleTexture;
 
     [SerializeField]
-    private Texture wrongMoleTexture;
+    private Texture incorrectMoleTexture;
 
     [SerializeField]
     private AudioClip enableSound;
@@ -111,11 +111,15 @@ public class DiskMole : Mole
         PlaySound(enableSound);
         if (moleType == Mole.MoleType.Target)
         {
-            StartCoroutine(PlayAnim("PopWrongMole"));
+           // PlayAnimation("PopWrongMole");
+            PlayAnimation("PopCorrectMole");
+
         }
         else
         {
-            StartCoroutine(PlayAnim("EnableDisable"));
+            PlayAnimation("PopCorrectMole");
+
+          //  PlayAnimation("EnableDisable");
         }
         meshMaterial.color = disabledColor;
         meshMaterial.mainTexture = textureDisabled;
@@ -150,11 +154,11 @@ public class DiskMole : Mole
     {
         if (moleType == Mole.MoleType.Target)
         {
-            StartCoroutine(PlayAnim("PopCorrectMole"));
+            PlayAnimation("PopCorrectMole");
         }
         else
         {
-            StartCoroutine(PlayAnim("PopWrongMole"));
+            PlayAnimation("PopWrongMole");
         }
         meshMaterial.color = disabledColor;
         meshMaterial.mainTexture = textureDisabled;
@@ -249,11 +253,5 @@ public class DiskMole : Mole
 
         // When the animation is finished, resets the color to its end value.
         ChangeColor(endColor);
-    }
-
-    private IEnumerator PlayAnim(string animName)
-    {
-        PlayAnimation(animName);
-        yield return null;
     }
 }

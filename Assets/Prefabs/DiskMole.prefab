@@ -72,7 +72,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: a48703d906a9b524faeaae24b680e15f, type: 3}
-  m_Color: {r: 0.5882353, g: 0.83137256, b: 0.49411765, a: 0}
+  m_Color: {r: 0.511, g: 0.809, b: 0.49411765, a: 0}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -120,7 +120,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5408287105649101920}
   m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0, z: 0.125}
+  m_LocalPosition: {x: 0, y: 0, z: 0.143}
   m_LocalScale: {x: 0.0072000003, y: 0.072, z: 0.0072}
   m_Children: []
   m_Father: {fileID: 8304183495515368931}
@@ -414,7 +414,6 @@ MonoBehaviour:
   disabledColor: {r: 0.8235294, g: 0.8235294, b: 0.8235294, a: 1}
   enabledColor: {r: 0.43137255, g: 0.7490196, b: 0.23921569, a: 1}
   fakeEnabledColor: {r: 0.43137255, g: 0.7490196, b: 0.23921567, a: 1}
-  correctMoleColor: {r: 0.5882353, g: 0.83137256, b: 0.49411765, a: 0}
   hoverColor: {r: 0.67058825, g: 0.8784314, b: 0.5882353, a: 1}
   fakeHoverColor: {r: 0.67058825, g: 0.8784314, b: 0.5882353, a: 1}
   popColor: {r: 1, g: 1, b: 1, a: 1}
@@ -425,7 +424,8 @@ MonoBehaviour:
   distractorRightTexture: {fileID: 2800000, guid: 60c5fbcfda299a842b08d09e92659799,
     type: 3}
   correctMoleTexture: {fileID: 2800000, guid: a48703d906a9b524faeaae24b680e15f, type: 3}
-  wrongMoleTexture: {fileID: 2800000, guid: 01ed1b50fe48bdb4b93aa5c6af288eee, type: 3}
+  incorrectMoleTexture: {fileID: 2800000, guid: 01ed1b50fe48bdb4b93aa5c6af288eee,
+    type: 3}
   enableSound: {fileID: 8300000, guid: 093810481fbea044a888edafeb74156b, type: 3}
   disableSound: {fileID: 8300000, guid: 093810481fbea044a888edafeb74156b, type: 3}
   popSound: {fileID: 8300000, guid: 093810481fbea044a888edafeb74156b, type: 3}
@@ -644,7 +644,7 @@ ParentConstraint:
   m_TranslationAtRest: {x: 0.00010800001, y: 0.000020999738, z: -0.07535354}
   m_RotationAtRest: {x: -0.019783963, y: 0, z: 0}
   m_TranslationOffsets:
-  - {x: 0.0023040003, y: 0.07735355, z: 0.00044800085}
+  - {x: 0.0034560002, y: 0.14725131, z: 0.0006720092}
   m_RotationOffsets:
   - {x: 90, y: 0, z: 0}
   m_AffectTranslationX: 1
