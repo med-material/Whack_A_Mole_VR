@@ -84,7 +84,7 @@ public class DiskMole : Mole
     Override of the event functions of the base class.
     */
 
-    protected override void PlayEnabling()
+    protected override void PlayEnabling() // plays when the wall and the moles have already spawned, when the different kind of moles are activating
     {
         PlayAnimation("EnableDisable");
 
@@ -109,24 +109,20 @@ public class DiskMole : Mole
     protected override void PlayDisabling()
     {
         PlaySound(enableSound);
-        if (moleType == Mole.MoleType.Target)
+        if (moleType == Mole.MoleType.Target) 
         {
-           // PlayAnimation("PopWrongMole");
-            PlayAnimation("PopCorrectMole");
-
+            PlayAnimation("PopWrongMole"); // This animation will play if a correct mole expires via its timer
         }
         else
         {
-            PlayAnimation("PopCorrectMole");
-
-          //  PlayAnimation("EnableDisable");
+            PlayAnimation("EnableDisable"); // This animation will play if an incorrect mole expires via its timer
         }
         meshMaterial.color = disabledColor;
         meshMaterial.mainTexture = textureDisabled;
         base.PlayDisabling();
     }
 
-    protected override void PlayHoverEnter()
+    protected override void PlayHoverEnter() // Plays when the cursor of the player is hovering over correct / incorrect moles, changing colors
     {
         if (moleType == Mole.MoleType.Target)
         {
@@ -138,7 +134,7 @@ public class DiskMole : Mole
         }
     }
 
-    protected override void PlayHoverLeave()
+    protected override void PlayHoverLeave() // Plays when the cursor of the player was hovering over correct / incorrect moles and is now leaving, changing back colors
     {
         if (moleType == Mole.MoleType.Target)
         {
@@ -152,20 +148,20 @@ public class DiskMole : Mole
 
     protected override void PlayPop()
     {
-        if (moleType == Mole.MoleType.Target)
+        if (moleType == Mole.MoleType.Target) // If patient "hits" a correct mole
         {
             PlayAnimation("PopCorrectMole");
         }
-        else
+        else                                  // If patient "hits" an incorrect mole
         {
-            PlayAnimation("PopWrongMole");
+            PlayAnimation("PopWrongMole"); 
         }
         meshMaterial.color = disabledColor;
         meshMaterial.mainTexture = textureDisabled;
         PlaySound(popSound);
     }
 
-    protected override void PlayReset()
+    protected override void PlayReset() // Play when a game is exited, and when it is launched
     {
         PlayAnimation("EnableDisable");
         meshMaterial.color = disabledColor;
