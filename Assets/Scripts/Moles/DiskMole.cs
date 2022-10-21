@@ -84,7 +84,8 @@ public class DiskMole : Mole
     Override of the event functions of the base class.
     */
 
-    protected override void PlayEnabling() // plays when the wall and the moles have already spawned, when the different kind of moles are activating
+    // Plays when the wall and the moles have already spawned, when the different kinds of moles are activating
+    protected override void PlayEnabling() 
     {
         PlayAnimation("EnableDisable");
 
@@ -106,23 +107,25 @@ public class DiskMole : Mole
         base.PlayEnabling();
     }
 
+    // Plays when activated moles exipres via their timers
     protected override void PlayDisabling()
     {
         PlaySound(enableSound);
         if (moleType == Mole.MoleType.Target) 
         {
-            PlayAnimation("PopWrongMole"); // This animation will play if a correct mole expires via its timer
+            PlayAnimation("PopWrongMole"); // Show negative feedback to users when a correct moles expires, to make it clear that they missed it
         }
         else
         {
-            PlayAnimation("EnableDisable"); // This animation will play if an incorrect mole expires via its timer
+            PlayAnimation("EnableDisable"); // Don't show any feedback to users when an incorrect moles expires
         }
         meshMaterial.color = disabledColor;
         meshMaterial.mainTexture = textureDisabled;
         base.PlayDisabling();
     }
 
-    protected override void PlayHoverEnter() // Plays when the cursor of the player is hovering over correct / incorrect moles, changing colors
+    // Plays when the cursor of the player is hovering over correct / incorrect moles, changing colors
+    protected override void PlayHoverEnter() 
     {
         if (moleType == Mole.MoleType.Target)
         {
@@ -134,7 +137,8 @@ public class DiskMole : Mole
         }
     }
 
-    protected override void PlayHoverLeave() // Plays when the cursor of the player was hovering over correct / incorrect moles and is now leaving, changing back colors
+    // Plays when the cursor of the player was hovering over correct / incorrect moles and is now leaving, changing back colors
+    protected override void PlayHoverLeave() 
     {
         if (moleType == Mole.MoleType.Target)
         {
@@ -146,22 +150,24 @@ public class DiskMole : Mole
         }
     }
 
+
     protected override void PlayPop()
     {
-        if (moleType == Mole.MoleType.Target) // If patient "hits" a correct mole
+        if (moleType == Mole.MoleType.Target)
         {
-            PlayAnimation("PopCorrectMole");
+            PlayAnimation("PopCorrectMole");  // Show positive feedback to users that shoot a correct moles, to make it clear this is a success
         }
-        else                                  // If patient "hits" an incorrect mole
+        else                                  
         {
-            PlayAnimation("PopWrongMole"); 
+            PlayAnimation("PopWrongMole");    // Show negative feedback to users that shoot an incorrect moles, to make it clear this is a fail
         }
         meshMaterial.color = disabledColor;
         meshMaterial.mainTexture = textureDisabled;
         PlaySound(popSound);
     }
 
-    protected override void PlayReset() // Play when a game is exited, and when it is launched
+    // Plays when a game is exited, and when it is launched
+    protected override void PlayReset()
     {
         PlayAnimation("EnableDisable");
         meshMaterial.color = disabledColor;
