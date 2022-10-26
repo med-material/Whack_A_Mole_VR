@@ -15,6 +15,7 @@ public abstract class Mole : MonoBehaviour
 {
     public enum MolePopAnswer {Ok, Fake, Expired, Disabled, Paused}
     public enum MoleType {Target,DistractorLeft,DistractorRight}
+    public bool defaultVisibility = false;
 
     // The states may be reduced to 3 - 4 (by removing Popping, enabling...), however this could reduce the control over the Mole
     public enum States {Disabled, Enabled, Expired, Popping, Popped, Enabling, Disabling}
@@ -39,6 +40,11 @@ public abstract class Mole : MonoBehaviour
     private LoggerNotifier loggerNotifier;
     private float disabledTimeLeft = 0f;
     private bool isOnDisabledCoolDown = false;
+
+    private void Awake() 
+    {
+        SetVisibility(defaultVisibility);
+    }
 
     protected virtual void Start()
     {
@@ -66,6 +72,14 @@ public abstract class Mole : MonoBehaviour
             {"MoleSurfaceHitLocationX", "NULL"},
             {"MoleSurfaceHitLocationY", "NULL"}
         });
+    }
+
+    public void SetVisibility(bool isVisible)
+    {
+        foreach(Transform child in transform)
+        {
+            child.GetComponent<Renderer>().enabled = isVisible;
+        }
     }
 
     public void SetSpawnOrder(int newSpawnOrder)

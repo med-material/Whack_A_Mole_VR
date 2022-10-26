@@ -222,6 +222,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   disableCooldown: 3
+  diskMole: {fileID: 4180968205085921596}
   disabledColor: {r: 0.8235294, g: 0.8235294, b: 0.8235294, a: 1}
   enabledColor: {r: 0.43137255, g: 0.7490196, b: 0.23921569, a: 1}
   fakeEnabledColor: {r: 0.43137255, g: 0.7490196, b: 0.23921567, a: 1}
