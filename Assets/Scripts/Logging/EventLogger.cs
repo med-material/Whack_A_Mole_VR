@@ -137,11 +137,14 @@ public class EventLogger : MonoBehaviour
                 //loggingManager.NewFilestamp();
                 break;
             case "Mole Spawned":
-                SaveEventDatas(datas, true, true);
                 UpdateCurrentMoleLog(datas);
-                break;
-            case "Fake Mole Spawned":
                 SaveEventDatas(datas, true, true);
+                break;
+            case "DistractorRight Mole Spawned":
+                SaveEventDatas(datas);
+                break;
+            case "DistractorLeft Mole Spawned":
+                SaveEventDatas(datas);
                 break;
             case "Mole Missed":
                 datas = AddClosestActiveMole(datas);
@@ -149,7 +152,15 @@ public class EventLogger : MonoBehaviour
                 break;
             case "Mole Hit":
             case "Mole Expired":
-            case "Fake Mole Expired":
+                UpdateCurrentMoleLog(datas);
+                SaveEventDatas(datas, true, true);
+                break;
+            case "DistractorRight Mole Expired":
+                SaveEventDatas(datas);
+                break;
+            case "DistractorLeft Mole Expired":
+                SaveEventDatas(datas);
+                break;
             case "Wrong Mole Hit":
                 if (currentMoleLog.ContainsKey("CurrentMoleId"))
                 {
