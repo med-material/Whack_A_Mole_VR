@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 /*
 Main class of the therapist Ui. Controls the overall behavior of the UI and is used as an interface betweel the UI and the rest of the game.
@@ -41,16 +42,17 @@ public class TherapistUi : MonoBehaviour
     [SerializeField]
     private WallManager wallManager;
 
+    [SerializeField]
+    private GameObject warningSavingPanel;
+
+    [SerializeField]
+    private Button buttonExit;
     private GameDirector.GameState currentGameState = GameDirector.GameState.Stopped;
-    //private LoggerNotifier loggerNotifier;
     private Animation animationPlayer;
-    
-
-    // Temporary implementation
     private string profileName;
-
     void Start()
     {
+
         animationPlayer = gameObject.GetComponent<Animation>();
         UpdatePatternDropDown();
 
@@ -65,7 +67,13 @@ public class TherapistUi : MonoBehaviour
         warningPanel.UpdateWarningDisplay(display);
     }
 
-    // When the exit button is pressed, close the application
+    public void OpenWarningMessagePanel(){
+        warningSavingPanel.SetActive(true);
+        buttonExit.enabled = false;
+    }
+
+    //Check if the save is running and if it's the case, wait until the end of this one before to close the app
+    //If the save is done or something else, close the app
     public void ExitApplication()
     {
         applicationManager.CloseGame();

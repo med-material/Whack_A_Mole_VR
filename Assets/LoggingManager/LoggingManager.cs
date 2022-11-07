@@ -6,7 +6,21 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using UnityEngine.Events;
 
+public enum SaveStatus
+{
+    ReadyToSave,
+    IsSaving,
+    Saved
+}
+
+public class SaveStateInfo
+{
+	public SaveStatus status = SaveStatus.ReadyToSave;
+    public int numberOfSavedFiles;
+    public int totalNumberOfFilesToSave;
+}
 
 public enum TargetType
 {
@@ -64,6 +78,15 @@ public class LoggingManager : MonoBehaviour
     private List<TargetType> targetsEnabled;
     private Dictionary<string, Dictionary<TargetType, bool>> originsSavedPerLog;
 
+    [Serializable]
+	public class OnSaveInfoChanged : UnityEvent<SaveStateInfo> {}
+	public OnSaveInfoChanged onSaveInfoChanged;
+
+    public SaveStateInfo saveStateInfo = new SaveStateInfo();
+
+    private int numberOfSavedFiles;
+    private int totalNumberOfFilesToSave;
+
     // Start is called before the first frame update
     void Awake()
     {
@@ -95,9 +118,9 @@ public class LoggingManager : MonoBehaviour
         {
             savePath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
         }
-        
-    }
 
+        onSaveInfoChanged.Invoke(new SaveStateInfo { status = SaveStatus.ReadyToSave, numberOfSavedFiles = 0, totalNumberOfFilesToSave = 0} );
+    }
 
     public void NewFilestamp()
     {
@@ -332,6 +355,15 @@ public class LoggingManager : MonoBehaviour
 
     public void SaveAllLogs(bool clear,TargetType targetType)
     {
+        totalNumberOfFilesToSave = logsList.Count;
+        numberOfSavedFiles = 0;
+
+        saveStateInfo.status = SaveStatus.IsSaving;
+        saveStateInfo.numberOfSavedFiles = numberOfSavedFiles;
+        saveStateInfo.totalNumberOfFilesToSave = totalNumberOfFilesToSave;
+
+        onSaveInfoChanged.Invoke(saveStateInfo);
+
         foreach (KeyValuePair<string, LogStore> pair in logsList)
         {
             SaveLog(pair.Key, clear,targetType);
@@ -353,6 +385,23 @@ public class LoggingManager : MonoBehaviour
         //All targets have been saved, we can clear the logs
         logStore.Clear();
         logStore.ResetTargetsSaved();
+        numberOfSavedFiles++;
+        if(numberOfSavedFiles == totalNumberOfFilesToSave)
+        {
+            saveStateInfo.status = SaveStatus.Saved;
+            saveStateInfo.numberOfSavedFiles = numberOfSavedFiles;
+            saveStateInfo.totalNumberOfFilesToSave = totalNumberOfFilesToSave;
+
+            onSaveInfoChanged.Invoke(saveStateInfo);        
+        }
+        else
+        {
+            saveStateInfo.status = SaveStatus.IsSaving;
+            saveStateInfo.numberOfSavedFiles = numberOfSavedFiles;
+            saveStateInfo.totalNumberOfFilesToSave = totalNumberOfFilesToSave;
+
+            onSaveInfoChanged.Invoke(saveStateInfo);
+        }
     }
 
     // Formats the logs to a CSV row format and saves them. Calls the CSV headers generation beforehand.
@@ -402,6 +451,4 @@ public class LoggingManager : MonoBehaviour
             SaveCallback(logsList[label], clear);
         });
     }
-
-
 }
