@@ -78,7 +78,8 @@ public abstract class Mole : MonoBehaviour
     {
         foreach(Transform child in transform)
         {
-            child.GetComponent<Renderer>().enabled = isVisible;
+            if (child.GetComponent<Renderer>()!=null)
+                child.GetComponent<Renderer>().enabled=isVisible;
         }
     }
 

@@ -40,6 +40,12 @@ public class DiskMole : Mole
     private Texture distractorRightTexture;
 
     [SerializeField]
+    private Texture correctMoleTexture;
+
+    [SerializeField]
+    private Texture incorrectMoleTexture;
+
+    [SerializeField]
     private AudioClip enableSound;
 
     [SerializeField]
@@ -103,9 +109,16 @@ public class DiskMole : Mole
     protected override void PlayDisabling()
     {
         PlaySound(enableSound);
-        PlayAnimation("EnableDisable");
-        meshMaterial.color = disabledColor;
-        meshMaterial.mainTexture =  textureDisabled;
+        if (moleType==Mole.MoleType.Target)
+        {
+            PlayAnimation("PopWrongMole"); // Show negative feedback to users when a correct moles expires, to make it clear that they missed it
+        }
+        else
+        {
+            PlayAnimation("EnableDisable"); // Don't show any feedback to users when an incorrect moles expires
+        }
+        meshMaterial.color=disabledColor;
+        meshMaterial.mainTexture=textureDisabled;
         base.PlayDisabling();
     }
 
@@ -135,9 +148,16 @@ public class DiskMole : Mole
 
     protected override void PlayPop() 
     {
-        PlayAnimation("PopOscill");
-        meshMaterial.color = disabledColor;
-        meshMaterial.mainTexture =  textureDisabled;
+        if (moleType==Mole.MoleType.Target)
+        {
+            PlayAnimation("PopCorrectMole");  // Show positive feedback to users that shoot a correct moles, to make it clear this is a success
+        }
+        else
+        {
+            PlayAnimation("PopWrongMole");    // Show negative feedback to users that shoot an incorrect moles, to make it clear this is a fail
+        }
+        meshMaterial.color=disabledColor;
+        meshMaterial.mainTexture=textureDisabled;
         PlaySound(popSound);
     }
 
