@@ -137,22 +137,6 @@ public class LoggingManager : MonoBehaviour
         this.savePath = path;
     }
 
-    private void GenerateLogString(string collectionLabel, Action callback)
-    {
-        var context = System.Threading.SynchronizationContext.Current;
-        new Thread(() =>
-        {
-            logsList[collectionLabel].ExportAll<string>();
-            //runs the callback in the main Thread
-            context.Post(_ =>
-            {
-                callback();
-            }, null);
-
-        }).Start();
-    }
-
-
     public void SetEmail(string newEmail)
     {
         email = newEmail;
@@ -237,8 +221,6 @@ public class LoggingManager : MonoBehaviour
         return true;
     }
 
-
-
     public void ClearAllLogs()
     {
         foreach (KeyValuePair<string, LogStore> pair in logsList)
@@ -280,81 +262,27 @@ public class LoggingManager : MonoBehaviour
         }
     }
 
-    public void SaveLog(string collectionLabel, bool clear)
-    {
-        // override targetsEnabled to make sure all targets are enabled.
-        targetsEnabled = new List<TargetType>() {TargetType.CSV, TargetType.MySql};
-
-        if (logsList.ContainsKey(collectionLabel))
-        {
- 
-            foreach (var targetType in targetsEnabled)
-            {
-                logsList[collectionLabel].AddSavingTarget(targetType);
-            }
-
-            //we generate the string and then we save the logs in the callback
-            //by doing this, we are sure that the logs will be exported only once
-            GenerateLogString(collectionLabel, () =>
-            {
-                Save(collectionLabel, clear, TargetType.CSV);
-                Save(collectionLabel, clear, TargetType.MySql);
-            });
-        }
-        else
-        {
-            Debug.LogError("No Collection Called " + collectionLabel);
-        }
-    }
-
-    public void SaveLog(string collectionLabel, bool clear, TargetType targetType)
-    {
-
-        // override targetsEnabled so that we only save and make checks against one target.
-        targetsEnabled = new List<TargetType>() {targetType};
-
-        if (logsList.ContainsKey(collectionLabel))
-        {
-            //we generate the string and then we save the logs in the callback
-            //by doing this, we are sure that the logs will be exported only once
-            GenerateLogString(collectionLabel, () =>
-            {
-                Save(collectionLabel, clear, targetType);
-            });
-        }
-        else
-        {
-            Debug.LogError("No Collection Called " + collectionLabel);
-        }
-    }
-
-    private void Save(string collectionLabel, bool clear, TargetType targetType)
-    {
-        if (targetType == TargetType.CSV)
-        {
-            if (Application.platform != RuntimePlatform.WebGLPlayer)
-            {
-                SaveToCSV(collectionLabel, clear);
-            }
-            return;
-        }
-        if (targetType == TargetType.MySql)
-        {
-            SaveToSQL(collectionLabel, clear);
-        }
-    }
-
-
     public void SaveAllLogs(bool clear)
     {
-        foreach (KeyValuePair<string, LogStore> pair in logsList)
+         List<string> labelList = new List<string>();
+
+        foreach(KeyValuePair<string, LogStore> key in logsList)
         {
-            SaveLog(pair.Key, clear);
+            labelList.Add(key.Key);
         }
+
+        for(int i = 0; i < labelList.Count; i++)
+        {
+            SaveLog(labelList[i], clear);
+        }
+
+        labelList.Clear();
     }
 
     public void SaveAllLogs(bool clear,TargetType targetType)
     {
+        List<string> labelList = new List<string>();
+
         totalNumberOfFilesToSave = logsList.Count;
         numberOfSavedFiles = 0;
 
@@ -364,27 +292,139 @@ public class LoggingManager : MonoBehaviour
 
         onSaveInfoChanged.Invoke(saveStateInfo);
 
-        foreach (KeyValuePair<string, LogStore> pair in logsList)
+        foreach(KeyValuePair<string, LogStore> key in logsList)
         {
-            SaveLog(pair.Key, clear,targetType);
+            labelList.Add(key.Key);
+        }
+
+        for(int i = 0; i < labelList.Count; i++)
+        {
+            SaveLog(labelList[i], clear, targetType);
+        }
+
+        labelList.Clear();
+    }
+
+    public void SaveLog(string collectionLabel, bool clear)
+    {
+        if (logsList.ContainsKey(collectionLabel))
+        {
+            //while the game is running, the LogStores with LogType OneRowOverwrite need to stay at 0 in the RowCount property.
+            //when we want to save, we need to call EndRow function to specify that the LogStore is full.
+            //So, during the save, the RowCount of these LogStores will be equals to 1.
+            if(logsList[collectionLabel].LogType == LogType.OneRowOverwrite)
+            {
+                logsList[collectionLabel].EndRow();
+            }
+            LogStore tmpLogStore = logsList[collectionLabel];
+            if(clear)
+            {
+                logsList.Remove(collectionLabel);
+            }
+            Save(collectionLabel, tmpLogStore, TargetType.CSV);
+            Save(collectionLabel, tmpLogStore, TargetType.MySql);
+
+            //meta collection is a special collection that contains all informations about the game and the patient.
+            //we need to have this collection in the logsList before that the game start.
+            //if we remove Meta collection in the logsList, we create it again after its removal.
+            if(collectionLabel == "Meta")
+            {
+                AddMetaCollectionToList();
+            }
+        }
+        else
+        {
+            Debug.LogError("No Collection Called " + collectionLabel);
         }
     }
 
-    private void SaveCallback(LogStore logStore, bool clear)
+    public void SaveLog(string collectionLabel, bool clear, TargetType targetType)
     {
-        if (!clear) return;
-
-        //checks if all the targets have been saved, if not returns
-        foreach (var targetType in targetsEnabled)
+        if(logsList.ContainsKey(collectionLabel))
         {
-            if (!logStore.TargetsSaved[targetType])
+            //while the game is running, the LogStores with LogType OneRowOverwrite need to stay at 0 in the RowCount property.
+            //when we want to save, we need to call EndRow function to specify that the LogStore is full.
+            //So, during the save, the RowCount of these LogStores will be equals to 1.
+            if(logsList[collectionLabel].LogType == LogType.OneRowOverwrite)
             {
-                return;
+                logsList[collectionLabel].EndRow();
+            }
+            LogStore tmpLogStore = logsList[collectionLabel];
+            if(clear)
+            {
+                logsList.Remove(collectionLabel);
+            }
+            Save(collectionLabel, tmpLogStore, targetType);
+
+            //meta collection is a special collection that contains all informations about the game and the patient.
+            //we need to have this collection in the logsList before that the game start.
+            //if we remove Meta collection in the logsList, we create it again after its removal.
+            if(collectionLabel == "Meta")
+            {
+                AddMetaCollectionToList();
             }
         }
-        //All targets have been saved, we can clear the logs
-        logStore.Clear();
-        logStore.ResetTargetsSaved();
+        else
+        {
+            Debug.LogError("No Collection Called " + collectionLabel);
+        }
+    }
+
+    private void Save(string collectionLabel, LogStore logStore, TargetType targetType)
+    {
+        if (targetType == TargetType.CSV)
+        {
+            if (Application.platform != RuntimePlatform.WebGLPlayer)
+            {
+                SaveToCSV(collectionLabel, logStore);
+            }
+            return;
+        }
+        if (targetType == TargetType.MySql)
+        {
+            SaveToSQL(collectionLabel, logStore);
+        }
+    }
+
+    // Formats the logs to a CSV row format and saves them. Calls the CSV headers generation beforehand.
+    // If a parameter doesn't have a value for a given row, uses the given value given previously (see 
+    // UpdateHeadersAndDefaults).
+    private void SaveToCSV(string label, LogStore logStore)
+    {
+        if (!enableCSVSave) return;
+
+        if (logStore.RowCount == 0)
+        {
+            Debug.LogError("Collection " + label + " is empty. Aborting.");
+            return;
+        }
+
+        WriteToCSV writeToCsv = new WriteToCSV(logStore, savePath, filePrefix, fileExtension);
+        writeToCsv.WriteAll(() =>
+        {
+            UpdateSaveInfos();
+        });
+    }
+
+    private void SaveToSQL(string label, LogStore logStore)
+    {
+        if (!enableMySQLSave) { return; }
+
+        if (logStore.RowCount == 0)
+        {
+            Debug.LogError("Collection " + label + " is empty. Aborting.");
+            return;
+        }
+
+        connectToMySQL.AddToUploadQueue(logStore, label);
+        connectToMySQL.UploadNow(() =>
+        {
+            UpdateSaveInfos();
+        });
+    }
+
+    private void UpdateSaveInfos()
+    {
         numberOfSavedFiles++;
         if(numberOfSavedFiles == totalNumberOfFilesToSave)
         {
@@ -402,53 +442,5 @@ public class LoggingManager : MonoBehaviour
 
             onSaveInfoChanged.Invoke(saveStateInfo);
         }
-    }
-
-    // Formats the logs to a CSV row format and saves them. Calls the CSV headers generation beforehand.
-    // If a parameter doesn't have a value for a given row, uses the given value given previously (see 
-    // UpdateHeadersAndDefaults).
-    private void SaveToCSV(string label, bool clear)
-    {
-        if (!enableCSVSave) return;
-        if (logsList.TryGetValue(label, out LogStore logStore))
-        {
-            WriteToCSV writeToCsv = new WriteToCSV(logStore, savePath, filePrefix, fileExtension);
-            writeToCsv.WriteAll(() =>
-            {
-                logStore.TargetsSaved[TargetType.CSV] = true;
-                SaveCallback(logStore, clear);
-            });
-        }
-        else
-        {
-            Debug.LogWarning("Trying to save to CSV " + label + " collection but it doesn't exist.");
-        }
-    }
-
-    private void SaveToSQL(string label, bool clear)
-    {
-        if (!enableMySQLSave) { return; }
-
-        if (!logsList.ContainsKey(label))
-        {
-            Debug.LogError("Could not find collection " + label + ". Aborting.");
-            logsList[label].RemoveSavingTarget(TargetType.MySql);
-            return;
-        }
-
-        if (logsList[label].RowCount == 0)
-        {
-            Debug.LogError("Collection " + label + " is empty. Aborting.");
-            logsList[label].RemoveSavingTarget(TargetType.MySql);
-            return;
-        }
-
-        connectToMySQL.AddToUploadQueue(logsList[label], label);
-        connectToMySQL.UploadNow(() =>
-        {
-            logsList[label].RemoveSavingTarget(TargetType.MySql);
-            logsList[label].TargetsSaved[TargetType.MySql] = true;
-            SaveCallback(logsList[label], clear);
-        });
     }
 }
