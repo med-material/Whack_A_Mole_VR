@@ -36,6 +36,9 @@ public class WallSettings {
 
 public class WallManager : MonoBehaviour
 {
+    [SerializeField]
+    private LoggingManager loggingManager;
+
     [Header("Default Wall Settings")]
     [SerializeField]
     private WallSettings defaultWall = new WallSettings();
@@ -439,6 +442,17 @@ public class WallManager : MonoBehaviour
                 lowestY = mole.transform.position.y < lowestY ? mole.transform.position.y : lowestY;
                 lowestZ = mole.transform.position.z < lowestZ ? mole.transform.position.z : lowestZ;
                 highestZ = mole.transform.position.z < highestZ ? mole.transform.position.z : highestZ;
+
+                loggingManager.Log("Event", new Dictionary<string, object>()
+                {
+                    {"Event", "Mole Created"},
+                    {"EventType", "MoleEvent"},
+                    {"MolePositionWorldX", mole.transform.position.x},
+                    {"MolePositionWorldY", mole.transform.position.y},
+                    {"MolePositionWorldZ", mole.transform.position.z},
+                    {"MoleIndexX", (int)Mathf.Floor(moleId/100)},
+                    {"MoleIndexY", moleId % 100},
+                });
             }
         }
         //stateUpdateEvent.Invoke(true, moles);
