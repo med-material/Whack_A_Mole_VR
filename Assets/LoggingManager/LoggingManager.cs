@@ -20,6 +20,11 @@ public class SaveStateInfo
 	public SaveStatus status = SaveStatus.ReadyToSave;
     public int numberOfSavedFiles;
     public int totalNumberOfFilesToSave;
+
+    public object Clone()
+    {
+        return this.MemberwiseClone();
+    }
 }
 
 public enum TargetType
@@ -84,9 +89,6 @@ public class LoggingManager : MonoBehaviour
 
     public SaveStateInfo saveStateInfo = new SaveStateInfo();
 
-    private int numberOfSavedFiles;
-    private int totalNumberOfFilesToSave;
-
     // Start is called before the first frame update
     void Awake()
     {
@@ -118,8 +120,6 @@ public class LoggingManager : MonoBehaviour
         {
             savePath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
         }
-
-        onSaveInfoChanged.Invoke(new SaveStateInfo { status = SaveStatus.ReadyToSave, numberOfSavedFiles = 0, totalNumberOfFilesToSave = 0} );
     }
 
     public void NewFilestamp()
@@ -283,15 +283,6 @@ public class LoggingManager : MonoBehaviour
     {
         List<string> labelList = new List<string>();
 
-        totalNumberOfFilesToSave = logsList.Count;
-        numberOfSavedFiles = 0;
-
-        saveStateInfo.status = SaveStatus.IsSaving;
-        saveStateInfo.numberOfSavedFiles = numberOfSavedFiles;
-        saveStateInfo.totalNumberOfFilesToSave = totalNumberOfFilesToSave;
-
-        onSaveInfoChanged.Invoke(saveStateInfo);
-
         foreach(KeyValuePair<string, LogStore> key in logsList)
         {
             labelList.Add(key.Key);
@@ -309,6 +300,11 @@ public class LoggingManager : MonoBehaviour
     {
         if (logsList.ContainsKey(collectionLabel))
         {
+            saveStateInfo.status = SaveStatus.IsSaving;
+            saveStateInfo.totalNumberOfFilesToSave++;
+
+            onSaveInfoChanged.Invoke((SaveStateInfo)saveStateInfo.Clone());
+
             //while the game is running, the LogStores with LogType OneRowOverwrite need to stay at 0 in the RowCount property.
             //when we want to save, we need to call EndRow function to specify that the LogStore is full.
             //So, during the save, the RowCount of these LogStores will be equals to 1.
@@ -342,6 +338,11 @@ public class LoggingManager : MonoBehaviour
     {
         if(logsList.ContainsKey(collectionLabel))
         {
+            saveStateInfo.status = SaveStatus.IsSaving;
+            saveStateInfo.totalNumberOfFilesToSave++;
+
+            onSaveInfoChanged.Invoke((SaveStateInfo)saveStateInfo.Clone());
+
             //while the game is running, the LogStores with LogType OneRowOverwrite need to stay at 0 in the RowCount property.
             //when we want to save, we need to call EndRow function to specify that the LogStore is full.
             //So, during the save, the RowCount of these LogStores will be equals to 1.
@@ -425,22 +426,20 @@ public class LoggingManager : MonoBehaviour
 
     private void UpdateSaveInfos()
     {
-        numberOfSavedFiles++;
-        if(numberOfSavedFiles == totalNumberOfFilesToSave)
+        saveStateInfo.numberOfSavedFiles++;
+
+        if(saveStateInfo.numberOfSavedFiles == saveStateInfo.totalNumberOfFilesToSave)
         {
             saveStateInfo.status = SaveStatus.Saved;
-            saveStateInfo.numberOfSavedFiles = numberOfSavedFiles;
-            saveStateInfo.totalNumberOfFilesToSave = totalNumberOfFilesToSave;
 
-            onSaveInfoChanged.Invoke(saveStateInfo);        
+            onSaveInfoChanged.Invoke((SaveStateInfo)saveStateInfo.Clone());
+               
+            saveStateInfo.numberOfSavedFiles = 0;
+            saveStateInfo.totalNumberOfFilesToSave = 0;     
         }
         else
         {
-            saveStateInfo.status = SaveStatus.IsSaving;
-            saveStateInfo.numberOfSavedFiles = numberOfSavedFiles;
-            saveStateInfo.totalNumberOfFilesToSave = totalNumberOfFilesToSave;
-
-            onSaveInfoChanged.Invoke(saveStateInfo);
+            onSaveInfoChanged.Invoke((SaveStateInfo)saveStateInfo.Clone());
         }
     }
 }
