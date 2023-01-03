@@ -21,3 +21,4 @@ MonoBehaviour:
   poseUpdateMode: 8
   activateFirstActionSetOnStart: 1
   editorAppKey: application.generated.unity.whack_a_mole_vr.exe
+  autoEnableVR: 1

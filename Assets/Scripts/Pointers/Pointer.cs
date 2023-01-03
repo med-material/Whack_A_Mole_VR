@@ -190,7 +190,7 @@ public abstract class Pointer : MonoBehaviour
 
         if(SteamVR.active)
         {
-            if (SteamVR_Input._default.inActions.GrabPinch.GetStateDown(controller))
+            if (SteamVR_Actions._default.GrabPinch.GetStateDown(controller))
             {
                 if (state == States.Idle)
                 {

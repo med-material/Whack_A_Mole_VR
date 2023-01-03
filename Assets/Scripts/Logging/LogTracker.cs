@@ -72,7 +72,7 @@ public class LogTracker : MonoBehaviour
             trigger = false;
             if(SteamVR.active)
             {
-                if (SteamVR_Input._default.inActions.GrabPinch.GetStateDown(controller))
+                if (SteamVR_Actions._default.GrabPinch.GetStateDown(controller))
                 {
                     trigger = true;
                 }

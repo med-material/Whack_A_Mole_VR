@@ -29,7 +29,7 @@ public class ControllerModifierManager : MonoBehaviour
         // Disables default position update
         gameObject.GetComponent<SteamVR_Behaviour_Pose>().enabled = false;
         // Uses its own position update
-        SteamVR_Input.OnPosesUpdated += OnPoseUpdated;
+        SteamVR_Input.onPosesUpdated += OnPoseUpdated;
         isMirroring = true;
     }
 
@@ -38,7 +38,7 @@ public class ControllerModifierManager : MonoBehaviour
     {
         if (!isMirroring) return;
         gameObject.GetComponent<SteamVR_Behaviour_Pose>().enabled = true;
-        SteamVR_Input.OnPosesUpdated -= OnPoseUpdated;
+        SteamVR_Input.onPosesUpdated -= OnPoseUpdated;
         isMirroring = false;
     }
 
