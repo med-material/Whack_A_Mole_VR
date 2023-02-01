@@ -26,10 +26,12 @@ public class Constraint : MonoBehaviour
             if (!calibrated) {
             /*ROTATION*/
             // Get current head heading in scene (y-only, to avoid tilting the floor)
-            float offsetAngle = steamCamera.rotation.eulerAngles.y;
+            //float offsetAngle = steamCamera.rotation.eulerAngles.y;
 
             // Now rotate CameraRig in opposite direction to compensate
-            cameraRig.Rotate(0f, -offsetAngle, 0f);
+            //cameraRig.Rotate(0f, -offsetAngle, 0f);
+
+            Valve.VR.OpenVR.Chaperone.ResetZeroPose(Valve.VR.ETrackingUniverseOrigin.TrackingUniverseSeated);
 
             float offsetX = steamCamera.transform.position.x;
             float offsetZ = steamCamera.transform.position.z;
