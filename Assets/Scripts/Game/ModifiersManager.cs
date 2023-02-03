@@ -562,6 +562,14 @@ public class ModifiersManager : MonoBehaviour
         }
     }
 
+    public void LogStartController()
+    {
+        loggerNotifier.NotifyLogger("Controller Main Set "+System.Enum.GetName(typeof(ControllerSetup), controllerSetup), EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
+        {
+            {"ControllerMain", System.Enum.GetName(typeof(ControllerSetup), controllerSetup)}
+        });
+    }
+
     // Sets the eye patch. Forces the camera to render a black screen for a short duration and disables an eye while the screen is black.
     // If the image wasn't forced black we would have a frozen image of the game in the disabled eye.
 

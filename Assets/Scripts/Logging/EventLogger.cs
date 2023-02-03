@@ -33,7 +33,7 @@ public class EventLogger : MonoBehaviour
     private PupilLabs.TimeSync timeSync;
 
     private float previousEventTime = -1;
-    private TrackerHub trackerHub = new TrackerHub();
+    private TrackerHub trackerHub;
     private Dictionary<string, object> persistentLog = new Dictionary<string, object>();
     private Dictionary<string, object> currentMoleLog = new Dictionary<string, object>();
     private Dictionary<string, Dictionary<int, string>> logs = new Dictionary<string, Dictionary<int, string>>();
@@ -51,6 +51,7 @@ public class EventLogger : MonoBehaviour
         // connectToMySQL = gameObject.GetComponent<ConnectToMySQL>();
         loggingManager = gameObject.GetComponent<LoggingManager>();
         wallStateTracker = gameObject.GetComponent<WallStateTracker>();
+        trackerHub = gameObject.GetComponent<TrackerHub>();
 
         // logs.Add("TimeStamp", new Dictionary<int, string>());
         // logs.Add("Time", new Dictionary<int, string>());
@@ -62,8 +63,6 @@ public class EventLogger : MonoBehaviour
         // logs.Add("GameId", new Dictionary<int, string>());
         // persistentLog.Add("ParticipantId", 0);
         // persistentLog.Add("TestId", 0);
-
-        trackerHub.Init();
     }
 
     void Start()

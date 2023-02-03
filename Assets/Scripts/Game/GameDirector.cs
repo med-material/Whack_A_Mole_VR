@@ -184,6 +184,7 @@ public class GameDirector : MonoBehaviour
         {
             {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
         });
+        modifiersManager.LogStartController();
     }
 
     // Stops the game.

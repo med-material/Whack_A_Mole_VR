@@ -7,18 +7,11 @@ using UnityEngine;
 Class dedicated to collect datas from the LogTrackers (see LogTracker class).
 */
 
-public class TrackerHub: UnityEngine.Object
+public class TrackerHub: MonoBehaviour
 {
+    [SerializeField]
     private List<LogTracker> trackers = new List<LogTracker>();
 
-    // On init, finds and references all LogTracker present in the scene.
-    public void Init()
-    {
-        foreach (LogTracker tracker in FindObjectsOfType<LogTracker>())
-        {
-            trackers.Add(tracker);
-        }
-    }
 
     // Returns the logs from the LogTrackers after formatting.
     public Dictionary<string, object> GetTracks()

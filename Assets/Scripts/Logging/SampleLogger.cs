@@ -28,7 +28,7 @@ public class SampleLogger : MonoBehaviour
     [SerializeField]
     private ViewportLogger viewportLogger;
 
-    private TrackerHub trackerHub = new TrackerHub();
+    private TrackerHub trackerHub;
     private LoggingManager loggingManager;
 
     // private Dictionary<string, Dictionary<int, string>> logs = new Dictionary<string, Dictionary<int, string>>();
@@ -39,6 +39,7 @@ public class SampleLogger : MonoBehaviour
     void Awake()
     {
         loggingManager = GetComponent<LoggingManager>();
+        trackerHub = GetComponent<TrackerHub>();
         // if (savePath == "") {
         //     savePath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments) + "//" + "whack_a_mole_logs";
         //     if(!Directory.Exists(savePath)) {    
@@ -52,8 +53,6 @@ public class SampleLogger : MonoBehaviour
         // logs.Add("Event", new Dictionary<int, string>());
         // logs.Add("PupilTime", new Dictionary<int, string>());
         // logs.Add("UnityToPupilTimeOffset", new Dictionary<int, string>());
-
-        trackerHub.Init();
     }
 
     // // Update is called once per frame
