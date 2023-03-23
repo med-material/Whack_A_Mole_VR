@@ -21,6 +21,8 @@ public class WallInfo {
     public float heightOffset;
 }
 
+
+
 [System.Serializable]
 public class WallSettings {
     public Mole moleObject;
@@ -361,6 +363,7 @@ public class WallManager : MonoBehaviour
     {
         return moles;
     }
+
     private void disableMoles()
     {
         foreach(Mole mole in moles.Values)
@@ -439,7 +442,10 @@ public class WallManager : MonoBehaviour
         }
         //stateUpdateEvent.Invoke(true, moles);
         var wallInfo = CreateWallInfo();
+
         stateUpdateEvent.Invoke(wallInfo);
+        Debug.Log("WallInfo envoyer");
+
         wallGenerator.GenerateWall();
     }
 
@@ -487,5 +493,17 @@ public class WallManager : MonoBehaviour
             Clear();
             Enable();
         }
+    }
+
+    private WallInfo GiveWallDimension()
+    {
+        WallInfo wallInfo = new WallInfo();
+        wallInfo.lowestZ = lowestZ;
+        wallInfo.highestZ = highestZ;
+        wallInfo.lowestX = lowestX;
+        wallInfo.highestX = highestX;
+        wallInfo.lowestY = lowestY;
+        wallInfo.highestY = highestY;
+        return wallInfo;
     }
 }
