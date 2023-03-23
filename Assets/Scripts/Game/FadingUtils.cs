@@ -34,6 +34,8 @@ public static class FadingUtils
         SpriteRenderer,
         MeshRenderer,
         Text,
+        //LineRenderer,
+        //TrailRenderer
         ERROR
     }
 

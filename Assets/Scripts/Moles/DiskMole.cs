@@ -1,6 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.Events;
 
 /*
 An implementation of the Mole abstract class. Defines different parameters to modify and
@@ -62,6 +65,12 @@ public class DiskMole : Mole
     private Coroutine colorAnimation;
     private string playingClip = "";
 
+    public static event Action<PointToDraw, Vector3, int> trajectoryLinesUpdate;
+    public static event Action trajectoryReset;
+
+    // public static event Action<T> correctStreak;
+    // public static event Action<T> correctStreakReset;
+
     protected override void Start()
     {
         animationPlayer = gameObject.GetComponent<Animation>();
@@ -91,6 +100,7 @@ public class DiskMole : Mole
 
         if (moleType == Mole.MoleType.Target)
         {
+            trajectoryLinesUpdate.Invoke(PointToDraw.Add, transform.position, GetId()); // adds a point to the line
             meshMaterial.color = enabledColor;
             meshMaterial.mainTexture =  textureEnabled;
         }
@@ -112,6 +122,7 @@ public class DiskMole : Mole
         if (moleType==Mole.MoleType.Target)
         {
             PlayAnimation("PopWrongMole"); // Show negative feedback to users when a correct moles expires, to make it clear that they missed it
+            trajectoryLinesUpdate.Invoke(PointToDraw.Remove, transform.position, GetId()); // remove a point from the line
         }
         else
         {
@@ -151,6 +162,7 @@ public class DiskMole : Mole
         if (moleType==Mole.MoleType.Target)
         {
             PlayAnimation("PopCorrectMole");  // Show positive feedback to users that shoot a correct moles, to make it clear this is a success
+            trajectoryLinesUpdate.Invoke(PointToDraw.Remove, transform.position, GetId()); // remove a point from the line
         }
         else
         {
@@ -166,6 +178,7 @@ public class DiskMole : Mole
         PlayAnimation("EnableDisable");
         meshMaterial.color = disabledColor;
         meshMaterial.mainTexture = textureDisabled;
+        trajectoryReset.Invoke();
     }
 
     // Plays a sound.
