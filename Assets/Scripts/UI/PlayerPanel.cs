@@ -39,12 +39,15 @@ public class PlayerPanel : MonoBehaviour
     private Text instructionText;
     private string instructionTextDefault;
 
+    [SerializeField]
+    private HighlightPerformance highlightPerformance;
+
     private Canvas panelCanvas;
 
 
     void Awake()
     {
-        panelCanvas = gameObject.GetComponentInChildren<Canvas>();
+        panelCanvas = gameObject.transform.GetChild(0).GetComponent<Canvas>();
         countDownTextTemplate = countDownText.text;
         instructionTextDefault = instructionText.text;
     }
@@ -126,6 +129,7 @@ public class PlayerPanel : MonoBehaviour
 
     public void SetMessage(string text, float time) {
         SetInstructionText(text);
+        highlightPerformance.ShowResults();
         StartCoroutine(WaitShowMessage(time, text));
     }
 

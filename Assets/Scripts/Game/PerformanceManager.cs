@@ -28,6 +28,7 @@ public class PerformanceManager : MonoBehaviour
     private float averageSpeed = 0f;
     private int nbShoot = 0;
     private Queue<float> lastSpeeds = new Queue<float>();
+    private Queue<float> taskFeedbacks = new Queue<float>();
 
     private void Awake()
     {
@@ -141,6 +142,10 @@ public class PerformanceManager : MonoBehaviour
         return feedback;
     }
 
+    public Queue<float> GetTaskFeedbacks() {
+        return taskFeedbacks;
+    }
+
     public void CalculateFeedback()
     {
         float minDistance = 0.3f;
@@ -181,7 +186,7 @@ public class PerformanceManager : MonoBehaviour
             }
 
         }
-
+        taskFeedbacks.Enqueue(feedback);
         ResetShoot();
     }
 }
