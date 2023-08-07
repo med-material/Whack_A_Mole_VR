@@ -176,7 +176,7 @@ public class PatternInterface : MonoBehaviour
                 }
                 catch(System.Exception e)
                 {
-                    Debug.LogError("Error in SEGMENT: " + e.Message);
+                    Debug.LogError("Error in MESSAGE: " + e.Message);
                 }
                 break;
 
