@@ -96,6 +96,9 @@ public class ModifiersManager : MonoBehaviour
     private GameObject physicalMirror;
 
     [SerializeField]
+    private PlayerPanel playerPanel;
+
+    [SerializeField]
     private float hideWallHighestStart = 1.3f;
     [SerializeField]
     private float hideWallHighestEnd = 0.6f;
@@ -585,6 +588,7 @@ public class ModifiersManager : MonoBehaviour
         motorSpaceManager.SetPerformanceOperationFeedback(operationFeedback);
 
         // Task changes
+        playerPanel.SetPerformanceFeedback(taskFeedback);
 
         // Raises an Event and updates a PersistentEvent's parameter (in consequence, a PersistentEvent will also be raised)
         loggerNotifier.NotifyLogger($"Performance Feedback Set {Enum.GetName(typeof(PerformanceFeedback), value)}", EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()

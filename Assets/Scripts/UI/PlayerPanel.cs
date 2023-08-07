@@ -42,6 +42,8 @@ public class PlayerPanel : MonoBehaviour
     [SerializeField]
     private HighlightPerformance highlightPerformance;
 
+    private bool performanceFeedback = true;
+
     private Canvas panelCanvas;
 
 
@@ -123,24 +125,31 @@ public class PlayerPanel : MonoBehaviour
         countDownText.text = string.Format(countDownTextTemplate, count.ToString());
     }
 
+    public void SetPerformanceFeedback(bool value) {
+        performanceFeedback = value;
+    }
+
     public void SetInstructionText(string text) {
         instructionText.text = text;
     }    
 
     public void SetMessage(string text, float time) {
         SetInstructionText(text);
-        highlightPerformance.ShowResults();
+        if (performanceFeedback) {
+            highlightPerformance.ShowResults();
+        }
         StartCoroutine(WaitShowMessage(time, text));
     }
 
     private IEnumerator WaitShowMessage(float duration, string text) {
+        yield return new WaitForSeconds(1f);
         float currentCountDownLeft = duration;
         int currentCountDownLeftRounded = -1;
         int prevCount = -1;
         SetEnablePanel(true);
         SetCountDownContainer(true);
 
-        while (currentCountDownLeft > -0.9) {
+        while (currentCountDownLeft > -0.4) {
             prevCount = currentCountDownLeftRounded;
 
             currentCountDownLeft -= Time.deltaTime;
