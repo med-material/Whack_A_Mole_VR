@@ -28,8 +28,14 @@ public class SampleLogger : MonoBehaviour
     [SerializeField]
     private ViewportLogger viewportLogger;
 
+    [SerializeField]
+    private PerformanceManager performanceLogger;
+
     private TrackerHub trackerHub;
     private LoggingManager loggingManager;
+
+    private bool isLoggingStarted = false;
+
 
     // private Dictionary<string, Dictionary<int, string>> logs = new Dictionary<string, Dictionary<int, string>>();
 
@@ -84,18 +90,25 @@ public class SampleLogger : MonoBehaviour
         }
     }
 
-    public void StartLogging() {
+    public void StartLogging()
+    {
+        if (isLoggingStarted) return; // If the sample logger is already started, return. To avoid some useless GC alloc.
+
         trackerHub.StartTrackers();
-        //InitFile();
         StartCoroutine("SampleLog", samplingFrequency);
+        //InitFile();
+        isLoggingStarted = true;
     }
 
-    public void FinishLogging() {
+    public void FinishLogging()
+    {
         trackerHub.StopTrackers();
         StopCoroutine("SampleLog");
         //SaveCsvLogs();
         //ResetLogs();
+        isLoggingStarted = false;
     }
+
 
     // Generates a "logs" row (see class description) from the given datas. Adds mandatory parameters and 
     // the PersistentEvents parameters to the row when generating it.
@@ -125,6 +138,14 @@ public class SampleLogger : MonoBehaviour
             if (viewportLogger != null) {
                 Dictionary<string, object> viewportLogs = viewportLogger.GetViewportData();
                 foreach (KeyValuePair<string, object> pair in viewportLogs)
+                {
+                    sampleLog[pair.Key] = pair.Value;
+                }
+            }
+            if (performanceLogger != null)
+            {
+                Dictionary<string, object> performanceLogs = performanceLogger.GetPerformanceData();
+                foreach (KeyValuePair<string, object> pair in performanceLogs)
                 {
                     sampleLog[pair.Key] = pair.Value;
                 }
