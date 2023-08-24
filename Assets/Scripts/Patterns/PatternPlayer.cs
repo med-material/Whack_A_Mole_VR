@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using System;
@@ -124,12 +124,11 @@ public class PatternPlayer: MonoBehaviour
         // Clear any moles remaining in the MolesIdList.
         patternInterface.ClearMolesList();
 
+        int currentLineNumber = 1;
         foreach (Dictionary<string, string> action in pattern[sortedKeys[playIndex]])
         {
-            // As the pattern interfaces plays the actions,
-            // new moles are added to the MoleIdList by PatternInterface.
-            //Debug.Log(action["FUNCTION"]);
-            patternInterface.PlayAction(new Dictionary<string, string>(action));
+            currentLineNumber++;
+            patternInterface.PlayAction(new Dictionary<string, string>(action), currentLineNumber);
         }
 
         if (playIndex < sortedKeys.Count - 1)
