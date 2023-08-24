@@ -10,14 +10,19 @@ namespace PupilLabs
     public class TimeSync : MonoBehaviour
     {
         [SerializeField] RequestController requestCtrl;
-        
+
         public double UnityToPupilTimeOffset { get; private set; }
 
         void OnEnable()
         {
             requestCtrl.OnConnected += UpdateTimeSync;
         }
-        
+
+        void OnDisable()
+        {
+            requestCtrl.OnConnected -= UpdateTimeSync;
+        }
+
         public double GetPupilTimestamp()
         {
             if (!requestCtrl.IsConnected)
@@ -26,10 +31,20 @@ namespace PupilLabs
                 return 0;
             }
 
-            string response;
-            requestCtrl.SendCommand("t", out response);
-
-            return double.Parse(response, System.Globalization.CultureInfo.InvariantCulture.NumberFormat); ;
+            string response = string.Empty;
+            try //HACK: This try catch is here because pupil capture bug on request t command and make the game FREEZE
+            {
+                requestCtrl.SendCommand("t", out response);
+            }
+            catch (FiniteStateMachineException e)
+            {
+                Debug.LogError($"FiniteStateMachineException occurs on Pupil Capture Time Sync !");
+                Debug.LogError(e);
+            }
+            if (!string.IsNullOrEmpty(response))
+                return double.Parse(response, System.Globalization.CultureInfo.InvariantCulture.NumberFormat);
+            Debug.LogWarning("Response of t command from pupil is empty");
+            return 0;
         }
 
         public double ConvertToUnityTime(double pupilTimestamp)
