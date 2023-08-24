@@ -253,6 +253,8 @@ public class LaserMapper : MonoBehaviour
         });
     }
 
+    
+
     // Update is called once per frame
     void CalculateMotorSpace(MotorCalcMode mode = MotorCalcMode.center, bool log = true)
     {
@@ -409,6 +411,12 @@ public class LaserMapper : MonoBehaviour
     {
         foreach (var bub in bubbleDisplay)
             bub.ChangeIndicatorToDynamicReversed();
+    }
+
+    internal void DisableMotorSpaceOutOfBoundsSignifier()
+    {
+        foreach (var bub in bubbleDisplay)
+            bub.DisableMotorSpaceOutOfBoundsIndicator();
     }
 
     internal void SetPerformanceOperationFeedback(bool v)

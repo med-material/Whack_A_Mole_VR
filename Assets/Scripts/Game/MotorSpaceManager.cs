@@ -217,6 +217,19 @@ public class MotorSpaceManager : MonoBehaviour
         }
     }
 
+    internal void DisableMotorSpaceOutOfBoundsSignifier()
+    {
+        if (motorspace == ActiveMotorSpace.Right)
+            MotorSpaceRight.DisableMotorSpaceOutOfBoundsSignifier();
+        else if (motorspace == ActiveMotorSpace.Left)
+            MotorSpaceLeft.DisableMotorSpaceOutOfBoundsSignifier();
+        else if (motorspace == ActiveMotorSpace.Both)
+        {
+            MotorSpaceRight.DisableMotorSpaceOutOfBoundsSignifier();
+            MotorSpaceLeft.DisableMotorSpaceOutOfBoundsSignifier();
+        }
+    }
+
     internal void SetPerformanceOperationFeedback(bool v)
     {
         if (!v)

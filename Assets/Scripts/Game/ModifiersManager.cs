@@ -26,7 +26,7 @@ public class ModifiersManager : MonoBehaviour
     public enum ControllerSetup {Left, Both, Right, Off};
     public enum Embodiment {Hands, Cursor, Off};
     public enum MotorspaceSize {Tiny1, Tiny2, Tiny3, Small, Medium, Large};
-    public enum MotorspaceOutOfBoundsSignifier { DynamicCenter, StaticPointing, DynamicCenterReversed };
+    public enum MotorspaceOutOfBoundsSignifier { None, DynamicCenter, StaticPointing, DynamicCenterReversed };
     public enum PerformanceFeedback { None, Operation, Action, Task, All};
     public enum EyePatch {Left, None, Right};
     public enum HideWall {Left, None, Right};
@@ -370,6 +370,8 @@ public class ModifiersManager : MonoBehaviour
             motorSpaceManager.SetMotorSpaceOutOfBoundsSignifierDynamic();
         else if (signifier == ModifiersManager.MotorspaceOutOfBoundsSignifier.DynamicCenterReversed)
             motorSpaceManager.SetMotorSpaceOutOfBoundsSignifierDynamicReversed();
+        else if (signifier == ModifiersManager.MotorspaceOutOfBoundsSignifier.None)
+            motorSpaceManager.DisableMotorSpaceOutOfBoundsSignifier();
     }
 
 

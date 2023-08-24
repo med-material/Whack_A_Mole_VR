@@ -26,6 +26,7 @@ public enum MotorAction
 
 public enum ArrowType
 {
+    None,
     DynamicCenter,
     DynamicCenterReversed,
     StaticPointing
@@ -210,7 +211,7 @@ public class BubbleDisplay : MonoBehaviour
                 motorSpaceRender.color = motorActiveColor;
 
                 // Hide the out-of-bound indicator.
-                outOfBoundIndicatorManager.HideIndicator();
+                outOfBoundIndicatorManager?.HideIndicator();
                 hudPanel.Reset();
 
                 // Invoke the event for entering the MotorSpace with all relevant information.
@@ -259,7 +260,7 @@ public class BubbleDisplay : MonoBehaviour
                 motorSpaceRender.color = motorDisabledColor;
 
                 // Show the out-of-bound indicator.
-                outOfBoundIndicatorManager.ShowIndicator(newPos, laserMapper.GetWallMeshCenter(), LastLaserMapperNearestSide);
+                outOfBoundIndicatorManager?.ShowIndicator(newPos, laserMapper.GetWallMeshCenter(), LastLaserMapperNearestSide);
                 hudPanel.ActivateGradient(LastLaserMapperNearestSide, FadeAction.In);
 
                 // Invoke the event for exiting the MotorSpace with all relevant information.
@@ -323,7 +324,7 @@ public class BubbleDisplay : MonoBehaviour
         // Hide current indicator
         if (outOfBoundIndicatorManager != null)
         {
-            outOfBoundIndicatorManager.HideIndicator();
+            outOfBoundIndicatorManager?.HideIndicator();
         }
 
         outOfBoundIndicatorManager = arrowType switch
@@ -331,6 +332,7 @@ public class BubbleDisplay : MonoBehaviour
             ArrowType.StaticPointing => staticArrowIndicator,
             ArrowType.DynamicCenter => dynamicCenterPointingIndicator,
             ArrowType.DynamicCenterReversed => dynamicCenterReversedPointingIndicator,
+            ArrowType.None => null,
             _ => staticArrowIndicator,
         };
         CurrentArrowType = arrowType;
@@ -340,7 +342,7 @@ public class BubbleDisplay : MonoBehaviour
         {
             Vector3 newPos = new Vector3(newPosX, newPosY, newPosZ);
             Side side = laserMapper.NearestSide(newPos);
-            outOfBoundIndicatorManager.ShowIndicator(newPos, laserMapper.transform.position, side);
+            outOfBoundIndicatorManager?.ShowIndicator(newPos, laserMapper.transform.position, side);
         }
     }
 
@@ -365,8 +367,16 @@ public class BubbleDisplay : MonoBehaviour
         Debug.Log("Changed Out Of Bounds indicator to dynamic reversed");
     }
 
+    internal void DisableMotorSpaceOutOfBoundsIndicator()
+    {
+        ChangeIndicator(ArrowType.None);
+        Debug.Log("Changed Out Of Bounds indicator to dynamic reversed");
+    }
+
     internal void SetPerformanceOperationFeedback(bool v)
     {
         pointerTrailHandler.SetConfigVisibility(v);
     }
+
+    
 }
