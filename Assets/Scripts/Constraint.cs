@@ -42,8 +42,7 @@ public class Constraint : MonoBehaviour
             float xChange = transform.position.x - offsetX;
             float zChange = transform.position.z - offsetZ;
 
-            Debug.Log("transform.position.x: " + transform.position.x.ToString());
-            Debug.Log("offsetX: " + offsetX.ToString());
+
 
             /*FIT HEIGHT TO MOTORSPACE*/
             // instead of moving the motorspace, we should move players

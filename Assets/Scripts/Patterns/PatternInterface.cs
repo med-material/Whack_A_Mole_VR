@@ -79,120 +79,75 @@ public class PatternInterface : MonoBehaviour
     }
 
     // Plays an action
-    public void PlayAction(Dictionary<string, string> action)
+    public void PlayAction(Dictionary<string, string> action, int lineNumber = 0)
     {
         string[] keys = new string[action.Keys.Count];
         action.Keys.CopyTo(keys, 0);
 
         // If one of the argument is "RAND", replaces it with the random variable.
-        foreach(string key in keys)
+        foreach (string key in keys)
         {
             if (action[key] == "RAND") action[key] = randVar.ToString();
         }
 
-        // Matches the "FUNCTION" key, corresponding to the action to do.
-        switch(action["FUNCTION"])
+        try
         {
-                        
-            case "START":
-                CallPlay();
-                break;
-            
-            case "STOP":
-                CallStop();
-                break;
-            
-            case "WALL":
-                try
-                {
+            // Matches the "FUNCTION" key, corresponding to the action to do.
+            switch (action["FUNCTION"])
+            {
+                case "START":
+                    CallPlay();
+                    break;
+
+                case "STOP":
+                    CallStop();
+                    break;
+
+                case "WALL":
                     SetWall(action);
-                }
-                catch(System.Exception e)
-                {
-                    Debug.LogError("Error in WALL: " + e.Message);
-                }
-                break;
-            
-            case "MOLE":
-                try
-                {
+                    break;
+
+                case "MOLE":
                     Debug.Log(action["X"] + action["Y"]);
                     SetMole(action["X"], action["Y"], action["LIFETIME"]);
-                }
-                catch(System.Exception e)
-                {
-                    Debug.LogError("Error in MOLE: " + e.Message);
-                }
-                break;
-            
-            case "DISTRACTOR":
-                try
-                {
+                    break;
+
+                case "DISTRACTOR":
                     SetDistractor(action["X"], action["Y"], action["LIFETIME"], action["TYPE"]);
-                }
-                catch(System.Exception e)
-                {
-                    Debug.LogError("Error in MOLE: " + e.Message);
-                }
-                break;
-            
-            case "DIFFICULTY":
-                try
-                {
+                    break;
+
+                case "DIFFICULTY":
                     SetDifficulty(action["SPEED"]);
-                }
-                catch(System.Exception e)
-                {
-                    Debug.LogError("Error in DIFFICULTY: " + e.Message);
-                }
-                break;
-            
-            case "MODIFIER":
-                try
-                {
+                    break;
+
+                case "MODIFIER":
                     SetModifier(action);
-                }
-                catch(System.Exception e)
-                {
-                    Debug.LogError("Error in MODIFIER: " + e.Message);
-                }
-                break;
+                    break;
 
-            case "SEGMENT":
-                try
-                {
+                case "SEGMENT":
                     SetSegment(action["ID"], action["LABEL"]);
-                }
-                catch(System.Exception e)
-                {
-                    Debug.LogError("Error in SEGMENT: " + e.Message);
-                }
-                break;
-            
-            case "MESSAGE":
-                try
-                {
-                    SetMessage(action["LABEL"], action["TIME"]);
-                }
-                catch(System.Exception e)
-                {
-                    Debug.LogError("Error in SEGMENT: " + e.Message);
-                }
-                break;
+                    break;
 
-            case "RANDGEN":
-                try
-                {
+                case "MESSAGE":
+                    SetMessage(action["LABEL"], action["TIME"]);
+                    break;
+
+                case "RANDGEN":
                     RegenRand(ParseFloat(action["STARTVALUE"]), ParseFloat(action["ENDVALUE"]), bool.Parse(action["ISINT"]));
-                }
-                catch(System.Exception e)
-                {
-                    Debug.LogError("Error in RANDGEN: " + e.Message);
-                }
-                break;
-                
+                    break;
+
+                default:
+                    Debug.LogWarning($"Unknown test pattern statement {action["FUNCTION"]}");
+                    break;
+            }
+        }
+        catch (System.Exception e)
+        {
+            // Log the error message along with the exact stack trace.
+            Debug.LogError($"Error in {action["FUNCTION"]} line {lineNumber} : {e.Message}\nStackTrace: {e.StackTrace}");
         }
     }
+
 
     // Calls the GameDirector to start the game
     public void CallPlay()
@@ -350,9 +305,19 @@ public class PatternInterface : MonoBehaviour
         {
             modifiersManager.SetMotorspace((ModifiersManager.MotorspaceSize)System.Enum.Parse( typeof(ModifiersManager.MotorspaceSize), tempValue));
         }
+        // Set Motorspace OutOfBounds with enum ModifiersManager.MotorspaceOutOfBoundsSignifier parsed from string
+        if (action.TryGetValue("MOTORSPACEOOBSIGNIFICANT", out tempValue))
+        {
+            modifiersManager.SetMotorspaceOutOfBoundsSignifier((ModifiersManager.MotorspaceOutOfBoundsSignifier)System.Enum.Parse(typeof(ModifiersManager.MotorspaceOutOfBoundsSignifier), tempValue));
+        }
+        if (action.TryGetValue("JUDGEMENT", out tempValue))
+        {
+            modifiersManager.SetJudgementType((JudgementType)System.Enum.Parse(typeof(JudgementType), tempValue));
+        }
+        // TYPE OF JUDGEMENT FEEDBACK : Enum with : None, Operation, Action, Task, All
         if (action.TryGetValue("PERFORMANCEFEEDBACK", out tempValue))
         {
-            modifiersManager.SetPerformanceFeedback(bool.Parse(tempValue));
+            modifiersManager.SetPerformanceFeedback((ModifiersManager.PerformanceFeedback)System.Enum.Parse(typeof(ModifiersManager.PerformanceFeedback), tempValue));
         }
         if (action.TryGetValue("EMBODIMENT", out tempValue))
         {

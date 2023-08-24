@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -24,6 +25,15 @@ public class MotorSpaceManager : MonoBehaviour
 
     [SerializeField]
     private Slider motorSpaceSlider;
+
+    [SerializeField]
+    private MotorSpaceInfo motorSpaceTiny1;
+
+    [SerializeField]
+    private MotorSpaceInfo motorSpaceTiny2;
+
+    [SerializeField]
+    private MotorSpaceInfo motorSpaceTiny3;
 
     [SerializeField]
     private MotorSpaceInfo motorSpaceSmall;
@@ -141,6 +151,21 @@ public class MotorSpaceManager : MonoBehaviour
         }
     }
 
+    public void SetMotorSpaceTiny3()
+    {
+        SetMotorSpace((MotorSpaceInfo)motorSpaceTiny3.Clone());
+    }
+
+    public void SetMotorSpaceTiny2()
+    {
+        SetMotorSpace((MotorSpaceInfo)motorSpaceTiny2.Clone());
+    }
+
+    public void SetMotorSpaceTiny1()
+    {
+        SetMotorSpace((MotorSpaceInfo)motorSpaceTiny1.Clone());
+    }
+
     public void SetMotorSpaceSmall() {
         SetMotorSpace((MotorSpaceInfo) motorSpaceSmall.Clone());
     }
@@ -151,6 +176,78 @@ public class MotorSpaceManager : MonoBehaviour
 
     public void SetMotorSpaceLarge() {
         SetMotorSpace((MotorSpaceInfo) motorSpaceLarge.Clone());
+    }
+
+    public void SetMotorSpaceOutOfBoundsSignifierStatic()
+    {
+        if(motorspace == ActiveMotorSpace.Right)
+            MotorSpaceRight.SetMotorSpaceOutOfBoundsSignifierStatic();
+        else if (motorspace == ActiveMotorSpace.Left)
+            MotorSpaceLeft.SetMotorSpaceOutOfBoundsSignifierStatic();
+        else if (motorspace == ActiveMotorSpace.Both)
+        {
+            MotorSpaceRight.SetMotorSpaceOutOfBoundsSignifierStatic();
+            MotorSpaceLeft.SetMotorSpaceOutOfBoundsSignifierStatic();
+        }
+    }
+
+    public void SetMotorSpaceOutOfBoundsSignifierDynamic()
+    {
+        if (motorspace == ActiveMotorSpace.Right)
+            MotorSpaceRight.SetMotorSpaceOutOfBoundsSignifierDynamic();
+        else if (motorspace == ActiveMotorSpace.Left)
+            MotorSpaceLeft.SetMotorSpaceOutOfBoundsSignifierDynamic();
+        else if (motorspace == ActiveMotorSpace.Both)
+        {
+            MotorSpaceRight.SetMotorSpaceOutOfBoundsSignifierDynamic();
+            MotorSpaceLeft.SetMotorSpaceOutOfBoundsSignifierDynamic();
+        }
+    }
+
+    internal void SetMotorSpaceOutOfBoundsSignifierDynamicReversed()
+    {
+        if (motorspace == ActiveMotorSpace.Right)
+            MotorSpaceRight.SetMotorSpaceOutOfBoundsSignifierDynamicReversed();
+        else if (motorspace == ActiveMotorSpace.Left)
+            MotorSpaceLeft.SetMotorSpaceOutOfBoundsSignifierDynamicReversed();
+        else if (motorspace == ActiveMotorSpace.Both)
+        {
+            MotorSpaceRight.SetMotorSpaceOutOfBoundsSignifierDynamicReversed();
+            MotorSpaceLeft.SetMotorSpaceOutOfBoundsSignifierDynamicReversed();
+        }
+    }
+
+    internal void DisableMotorSpaceOutOfBoundsSignifier()
+    {
+        if (motorspace == ActiveMotorSpace.Right)
+            MotorSpaceRight.DisableMotorSpaceOutOfBoundsSignifier();
+        else if (motorspace == ActiveMotorSpace.Left)
+            MotorSpaceLeft.DisableMotorSpaceOutOfBoundsSignifier();
+        else if (motorspace == ActiveMotorSpace.Both)
+        {
+            MotorSpaceRight.DisableMotorSpaceOutOfBoundsSignifier();
+            MotorSpaceLeft.DisableMotorSpaceOutOfBoundsSignifier();
+        }
+    }
+
+    internal void SetPerformanceOperationFeedback(bool v)
+    {
+        if (!v)
+        {
+            MotorSpaceRight.SetPerformanceOperationFeedback(false);
+            MotorSpaceLeft.SetPerformanceOperationFeedback(false);
+        } else
+        {
+            if (motorspace == ActiveMotorSpace.Right)
+                MotorSpaceRight.SetPerformanceOperationFeedback(true);
+            else if (motorspace == ActiveMotorSpace.Left)
+                MotorSpaceLeft.SetPerformanceOperationFeedback(true);
+            else if (motorspace == ActiveMotorSpace.Both)
+            {
+                MotorSpaceRight.SetPerformanceOperationFeedback(true);
+                MotorSpaceLeft.SetPerformanceOperationFeedback(true);
+            }
+        }
     }
 
     public void SetMotorSpace(MotorSpaceInfo m) {
@@ -190,4 +287,6 @@ public class MotorSpaceManager : MonoBehaviour
         }
         
     }
+
+    
 }

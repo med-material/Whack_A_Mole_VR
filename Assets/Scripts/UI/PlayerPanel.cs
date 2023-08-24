@@ -39,12 +39,19 @@ public class PlayerPanel : MonoBehaviour
     private Text instructionText;
     private string instructionTextDefault;
 
+    [SerializeField]
+    private HighlightPerformance highlightPerformance;
+
+    private bool performanceFeedback = true;
+
     private Canvas panelCanvas;
+
+    private bool gamePaused = false;
 
 
     void Awake()
     {
-        panelCanvas = gameObject.GetComponentInChildren<Canvas>();
+        panelCanvas = gameObject.transform.GetChild(0).GetComponent<Canvas>();
         countDownTextTemplate = countDownText.text;
         instructionTextDefault = instructionText.text;
     }
@@ -120,23 +127,45 @@ public class PlayerPanel : MonoBehaviour
         countDownText.text = string.Format(countDownTextTemplate, count.ToString());
     }
 
+    public void SetPerformanceFeedback(bool value) {
+        performanceFeedback = value;
+    }
+
     public void SetInstructionText(string text) {
         instructionText.text = text;
     }    
 
     public void SetMessage(string text, float time) {
         SetInstructionText(text);
+        if (performanceFeedback) {
+            highlightPerformance.ShowResults();
+        }
         StartCoroutine(WaitShowMessage(time, text));
     }
 
+    public void OnGameStateChanged(GameDirector.GameState gameState)
+    {
+        gamePaused = gameState == GameDirector.GameState.Paused;
+        Debug.Log("Game PAUSED triggered by Player Panel");
+    }
+
     private IEnumerator WaitShowMessage(float duration, string text) {
+        yield return new WaitForSeconds(4f);
+
+
         float currentCountDownLeft = duration;
         int currentCountDownLeftRounded = -1;
         int prevCount = -1;
         SetEnablePanel(true);
         SetCountDownContainer(true);
 
-        while (currentCountDownLeft > -0.9) {
+        while (currentCountDownLeft > -0.4) {
+            while (gamePaused)
+                yield return null;
+
+            SetEnablePanel(true);
+            SetCountDownContainer(true);
+
             prevCount = currentCountDownLeftRounded;
 
             currentCountDownLeft -= Time.deltaTime;
@@ -157,6 +186,9 @@ public class PlayerPanel : MonoBehaviour
             }
             yield return null;
         }
+
+        
+
         SetEnablePanel(false);
         SetCountDownContainer(false);
     }

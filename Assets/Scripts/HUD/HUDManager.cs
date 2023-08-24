@@ -31,6 +31,8 @@ public class HUDManager : MonoBehaviour
 
     private Dictionary<Side,Coroutine> coroutines = new Dictionary<Side,Coroutine>();
 
+
+    public bool enabled = true;
     // Start is called before the first frame update
     void Start()
     {
@@ -79,6 +81,8 @@ public class HUDManager : MonoBehaviour
     }  
 
     public void ActivateGradient(Side s, FadeAction f) {
+        if (!enabled) return;
+
         if (coroutines.ContainsKey(s)) { StopCoroutine(coroutines[s]); }
         if (s == Side.Left) {
             coroutines[s] = FadingUtils.FadeRoutine(handler: this, Obj: gradientL.transform.gameObject, fadeTime: timer, fadeDirection: f, fadeDelay: 0.5f);

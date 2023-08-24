@@ -3,15 +3,20 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
+using Assets.Scripts.HUD;
+using System;
+using Valve.VR;
 
-public class EnterMotorSpaceInfo {
+public class EnterMotorSpaceInfo
+{
     public Side side; // side from which it entered/exited
     public bool enter = true; // enter (true), exit (false)
     public Vector3 motorLastPos; // motorspace last position
     public Vector3 wallLastPos; // wall space last position
 }
 
-public enum MotorAction {
+public enum MotorAction
+{
     Enter,
     Inside,
     Exit,
@@ -19,11 +24,19 @@ public enum MotorAction {
     None,
 }
 
+public enum ArrowType
+{
+    None,
+    DynamicCenter,
+    DynamicCenterReversed,
+    StaticPointing
+}
+
 public class BubbleDisplay : MonoBehaviour
 {
     [SerializeField]
     private LoggingManager loggingManager;
-    
+
     [SerializeField]
     public SoundManager soundManager;
     // The parent we will follow in terms of object position.
@@ -86,6 +99,28 @@ public class BubbleDisplay : MonoBehaviour
     [SerializeField]
     private Color motorDisabledColor;
 
+    [SerializeReference]
+    private HUDManager hudPanel;
+
+    [SerializeReference]
+    private OutOfBoundIndicator staticArrowIndicator;
+
+    [SerializeReference]
+    private OutOfBoundIndicator dynamicCenterPointingIndicator;
+
+    [SerializeReference]
+    private OutOfBoundIndicator dynamicCenterReversedPointingIndicator;
+
+    private OutOfBoundIndicator outOfBoundIndicatorManager;  // The current active indicator
+    public ArrowType CurrentArrowType { get; private set; }
+
+    [SerializeReference]
+    public PointerTrailHandler pointerTrailHandler;
+
+    public Side LastLaserMapperNearestSide { get; private set; }
+    public GameObject CurrentController { get; private set; }
+
+
     private float newPosX;
     private float newPosY;
     private float newPosZ;
@@ -97,21 +132,21 @@ public class BubbleDisplay : MonoBehaviour
     private Vector3 ownPosition;
 
     [System.Serializable]
-    public class EnterMotorSpaceEvent : UnityEvent<EnterMotorSpaceInfo> {}
+    public class EnterMotorSpaceEvent : UnityEvent<EnterMotorSpaceInfo> { }
     public EnterMotorSpaceEvent enterMotorStateEvent;
-    
+
+    [System.Serializable]
+    public class PointerPositionChangedEvent : UnityEvent<Vector3> { }
+
+    public PointerPositionChangedEvent onPointerPositionChanged;
+
+
     private MotorAction action = MotorAction.None;
 
     // Start is called before the first frame update
     void Awake()
     {
         ownPosition = transform.position;
-
-        // Disable OutOfBound Animations onthe motorspace for the time being.
-        //for (int i = 0; i < numberOfObjects; i++)
-        //{
-        //    Instantiate(OutOfBoundPrefab, ownPosition, Quaternion.identity, OutOfBoundContainer.transform);
-        //}
     }
 
     void Start()
@@ -123,9 +158,22 @@ public class BubbleDisplay : MonoBehaviour
         controllerModifierManager = parent.GetComponent<ControllerModifierManager>();
         controllerModifierManager.SetControllerVisibility(true);
         motorSpaceRender.color = motorDisabledColor;
+
+        //outOfBoundIndicatorManager = staticArrowIndicator;
+        //CurrentArrowType = ArrowType.StaticPointing;
+        outOfBoundIndicatorManager = dynamicCenterPointingIndicator;
+        CurrentArrowType = ArrowType.DynamicCenter;
+        //outOfBoundIndicatorManager = dynamicCenterReversedPointingIndicator;
+        //CurrentArrowType = ArrowType.DynamicCenterReversed;
+        CurrentController = laserMapper.GetCurrentController();
     }
 
     // Update is called once per frame
+    /// <summary>
+    /// This function is called every frame to update the object's position and handle its actions based on whether it is within or outside the MotorSpace.
+    /// Actions Enter and Exit are only called once, while Inside and Outside are called every frame. So with this, we can track the object's position and actions
+    /// and we know exactly when it enters and exits the MotorSpace and when it is inside or outside.
+    /// </summary>
     void Update()
     {
         // Update our world position to be equivalent to the parent, for the axis chosen.
@@ -133,79 +181,126 @@ public class BubbleDisplay : MonoBehaviour
         newPosY = parentY ? parent.transform.position.y : ownPosition.y;
         newPosZ = parentZ ? parent.transform.position.z : ownPosition.z;
 
+        // This code takes in the position of the laser pointer and sets the position of the object to that position.
         Vector3 newPos = new Vector3(newPosX, newPosY, newPosZ);
-
+        onPointerPositionChanged?.Invoke(newPos);
         Vector3 clipPos = laserMapper.RubberClipToMotorSpace(newPos);
         this.transform.position = new Vector3(clipPos.x + offsetX, clipPos.y + offsetY, clipPos.z + offsetZ);
+
+        LastLaserMapperNearestSide = laserMapper.NearestSide(newPos);
 
         prevPosX = newPosX;
         prevPosY = newPosY;
         prevPosZ = newPosZ;
 
-        if (laserMapper.CoordinateWithinMotorSpace(newPos)) {
-            if (action == MotorAction.Outside || action == MotorAction.None) {
-                action = MotorAction.Enter;
-                Debug.Log("Enter");
-                OutOfBoundContainer.SetActive(false);
+
+        if (laserMapper.CoordinateWithinMotorSpace(newPos))  // Check if the coordinate is within the range of the motors
+        {
+            // If the object was previously outside or had no action, execute the following block.
+            if (action == MotorAction.Outside || action == MotorAction.None)
+            {
+                action = MotorAction.Enter;  // Set the action status to 'Enter'.
+
+
+                // Activating the renderers and setting color for visual feedback in the scene.
                 bubbleRender.SetActive(true);
                 laserRender.enabled = showBubble;
-                //laserMapper.ShowMotorspace(false);
                 bubbleOutline.SetActive(showBubble);
                 bubbleSphere.SetActive(showBubble);
                 controllerModifierManager.SetControllerVisibility(true);
                 motorSpaceRender.color = motorActiveColor;
-                enterMotorStateEvent.Invoke(new EnterMotorSpaceInfo { 
-                    side =  laserMapper.NearestSide(newPos), 
-                    enter =  true,
+
+                // Hide the out-of-bound indicator.
+                outOfBoundIndicatorManager?.HideIndicator();
+                hudPanel.Reset();
+
+                // Invoke the event for entering the MotorSpace with all relevant information.
+                enterMotorStateEvent.Invoke(new EnterMotorSpaceInfo
+                {
+                    side = LastLaserMapperNearestSide,
+                    enter = true,
                     motorLastPos = newPos,
                     wallLastPos = laserMapper.ConvertMotorSpaceToWallSpace(newPos),
                 });
+
+                // Log the event for entering the MotorSpace.
                 loggingManager.Log("Event", new Dictionary<string, object>()
                 {
                     {"Event", "Pointer Inside MotorSpace"},
                     {"EventType", "MotorSpaceEvent"},
+                    {"Side", LastLaserMapperNearestSide.ToString()},
+                    {"ControllerName", CurrentController.name},
+                    {"ControllerOffset", CurrentController.GetComponent<SteamVR_Behaviour_Pose>().inputSource},
                 });
-                if (soundManager != null) {
+
+                // If a sound manager exists, play the 'laserInMotorSpace' sound.
+                if (soundManager != null)
+                {
                     soundManager.PlaySound(gameObject, SoundManager.Sound.laserInMotorSpace);
                 }
+
+                // Now, as the object has entered the MotorSpace, set the action status to 'Inside'.
                 action = MotorAction.Inside;
             }
-        } 
-        else {
-            if (action == MotorAction.Inside || action == MotorAction.None) {   
-                Debug.Log("Exit");
-                action = MotorAction.Exit;
-                //laserMapper.ShowMotorspace(true);
+        }
+        else // If the coordinate is outside the range of the motors
+        {
+            if (action == MotorAction.Inside || action == MotorAction.None)
+            {
+                // If the object was previously inside the MotorSpace or had no action, execute the following block.
+
+                action = MotorAction.Exit;  // Set the action status to 'Exit'.
+
+                // Activating the renderers and setting color for visual feedback in the scene.
                 bubbleRender.SetActive(true);
                 laserRender.enabled = showBubble;
                 bubbleOutline.SetActive(showBubble);
                 bubbleSphere.SetActive(showBubble);
                 controllerModifierManager.SetControllerVisibility(true);
                 motorSpaceRender.color = motorDisabledColor;
-                enterMotorStateEvent.Invoke(new EnterMotorSpaceInfo { 
-                    side = laserMapper.NearestSide(newPos), 
-                    enter =  false,
+
+                // Show the out-of-bound indicator.
+                outOfBoundIndicatorManager?.ShowIndicator(newPos, laserMapper.GetWallMeshCenter(), LastLaserMapperNearestSide);
+                hudPanel.ActivateGradient(LastLaserMapperNearestSide, FadeAction.In);
+
+                // Invoke the event for exiting the MotorSpace with all relevant information.
+                enterMotorStateEvent.Invoke(new EnterMotorSpaceInfo
+                {
+                    side = LastLaserMapperNearestSide,
+                    enter = false,
                     motorLastPos = newPos,
                     wallLastPos = laserMapper.ConvertMotorSpaceToWallSpace(newPos),
                 });
+
+                // Log the event for exiting the MotorSpace.
                 loggingManager.Log("Event", new Dictionary<string, object>()
+                    {
+                        {"Event", "Pointer Outside MotorSpace"},
+                        {"EventType", "MotorSpaceEvent"},
+                        {"Side", LastLaserMapperNearestSide.ToString()},
+                        {"ControllerName", CurrentController.name},
+                        {"ControllerOffset", CurrentController.GetComponent<SteamVR_Behaviour_Pose>().inputSource},
+                    });
+
+                // If a sound manager exists, play the 'laserOutMotorSpace' sound.
+                if (soundManager != null)
                 {
-                    {"Event", "Pointer Outside MotorSpace"},
-                    {"EventType", "MotorSpaceEvent"},
-                });
-                if (soundManager != null) {
                     soundManager.PlaySound(gameObject, SoundManager.Sound.laserOutMotorSpace);
                 }
+
+                // Now, as the object has exited the MotorSpace, set the action status to 'Outside'.
                 action = MotorAction.Outside;
             }
         }
     }
 
-    public void Show(bool show) {
+    public void Show(bool show)
+    {
         showBubble = show;
     }
 
-    public void UpdateOwnPosition(Vector3 newPosition) {
+    public void UpdateOwnPosition(Vector3 newPosition)
+    {
         ownPosition = newPosition;
     }
 
@@ -223,71 +318,65 @@ public class BubbleDisplay : MonoBehaviour
         }
     }
 
-    public void InstantiateInCircle(GameObject container, Vector3 location, int howMany, float radius)
-    {
-        InstantiateInCircle(container, location, howMany, radius, location.z);
-    }
 
-    public void InstantiateInCircle(GameObject container, int howMany, float radius)
+    public void ChangeIndicator(ArrowType arrowType)
     {
-        InstantiateInCircle(container, laserMapper.transform.position, howMany, radius);
-    }
-
-    private IEnumerator OutOfBoundAnimation(bool isOutOfBound)
-    {
-        while (isOutOfBound)
+        // Hide current indicator
+        if (outOfBoundIndicatorManager != null)
         {
-            InstantiateInCircle(OutOfBoundContainer, OutOfBoundContainer.transform.childCount, laserMapper.GetMotorSpace().width + 0.1f);
+            outOfBoundIndicatorManager?.HideIndicator();
+        }
 
-            foreach (Transform child in OutOfBoundContainer.transform)
-            {
-                var motorSpaceCenter = laserMapper.transform.position;
+        outOfBoundIndicatorManager = arrowType switch
+        {
+            ArrowType.StaticPointing => staticArrowIndicator,
+            ArrowType.DynamicCenter => dynamicCenterPointingIndicator,
+            ArrowType.DynamicCenterReversed => dynamicCenterReversedPointingIndicator,
+            ArrowType.None => null,
+            _ => staticArrowIndicator,
+        };
+        CurrentArrowType = arrowType;
 
-                var currentPos = child.position;
-                var pointA = new Vector3(currentPos.x, currentPos.y, currentPos.z);
-                child.position = Vector3.Lerp(pointA, motorSpaceCenter, Mathf.PingPong(Time.time * 0.3f, 0.15f));
-
-                //Change the rotation of the objects to point them all to the center of the MotorSpace
-                var difference = motorSpaceCenter - child.position;
-                float rotationZ = Mathf.Atan2(difference.y, difference.x) * Mathf.Rad2Deg;
-                child.rotation = Quaternion.Euler(0.0f, 0.0f, rotationZ);
-            }
-            yield return null;
+        // If the user is outside of the MotorSpace, display the new indicator
+        if (action == MotorAction.Outside)
+        {
+            Vector3 newPos = new Vector3(newPosX, newPosY, newPosZ);
+            Side side = laserMapper.NearestSide(newPos);
+            outOfBoundIndicatorManager?.ShowIndicator(newPos, laserMapper.transform.position, side);
         }
     }
 
-    public IEnumerator FadeOutObject(GameObject gameObjects, float fadeSpeed)
-    {
-        foreach (Transform o in gameObjects.transform)
-        {
-            while (o.GetComponent<Renderer>().material.color.a > 0)
-            {
-                Color objectColor = o.GetComponent<Renderer>().material.color;
-                float fadeAmount = objectColor.a - (fadeSpeed * Time.deltaTime);
 
-                objectColor = new Color(objectColor.r, objectColor.g, objectColor.b, fadeAmount);
-                o.GetComponent<Renderer>().material.color = objectColor;
-                yield return null;
-            }
-        }
-        OutOfBoundContainer.SetActive(false);
+
+    public void ChangeIndicatorToStatic()
+    {
+        ChangeIndicator(ArrowType.StaticPointing);
+        Debug.Log("Changed Out Of Bounds indicator to static");
     }
 
-    public IEnumerator FadeInObject(GameObject gameObjects, float fadeSpeed)
+    public void ChangeIndicatorToDynamic()
     {
-        OutOfBoundContainer.SetActive(true);
-
-        foreach (Transform o in gameObjects.transform)
-        {
-            while (o.GetComponent<Renderer>().material.color.a < 1)
-            {
-                Color objectColor = o.GetComponent<Renderer>().material.color;
-                float fadeAmount = objectColor.a + (fadeSpeed * Time.deltaTime);
-
-                objectColor = new Color(objectColor.r, objectColor.g, objectColor.b, fadeAmount);
-                o.GetComponent<Renderer>().material.color = objectColor;
-                yield return null;
-            }
-        }
+        ChangeIndicator(ArrowType.DynamicCenter);
+        Debug.Log("Changed Out Of Bounds indicator to dynamic");
     }
+
+
+    internal void ChangeIndicatorToDynamicReversed()
+    {
+        ChangeIndicator(ArrowType.DynamicCenterReversed);
+        Debug.Log("Changed Out Of Bounds indicator to dynamic reversed");
+    }
+
+    internal void DisableMotorSpaceOutOfBoundsIndicator()
+    {
+        ChangeIndicator(ArrowType.None);
+        Debug.Log("Changed Out Of Bounds indicator to dynamic reversed");
+    }
+
+    internal void SetPerformanceOperationFeedback(bool v)
+    {
+        pointerTrailHandler.SetConfigVisibility(v);
+    }
+
+    
 }

@@ -139,7 +139,7 @@ public class ControllerMirror : MonoBehaviour
         }
     }
 
-    public void onPointerShoot()
+    public void onPointerShoot(ShootData shootData)
     {
         Shoot();
     }

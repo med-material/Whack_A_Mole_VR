@@ -4,15 +4,32 @@ using UnityEngine;
 using Valve.VR;
 using UnityEngine.Events;
 
+public class MoveData {
+    public Vector3 controllerPos = Vector3.zero;
+    public Vector3 cursorPos = Vector3.zero;
+    public ControllerName name;
+}
+
+public class ShootData {
+    public Vector3 position = Vector3.zero;
+    public RaycastHit hit;
+    public ControllerName name;
+    public float dwell;
+}
+
+public enum ControllerName {
+    Left,
+    Right
+}
+
 /*
 Abstract class of the VR pointer used to pop moles. Like the Mole class, calls specific empty
 functions on events to be overriden in its derived classes.
 */
-
 public abstract class Pointer : MonoBehaviour
 {
-    protected enum States {Idle, CoolingDown}
-    protected enum AimAssistStates {None, Snap, Magnetize}
+    protected enum States { Idle, CoolingDown }
+    protected enum AimAssistStates { None, Snap, Magnetize }
 
     [SerializeField]
     private SteamVR_Input_Sources controller;
@@ -55,10 +72,13 @@ public abstract class Pointer : MonoBehaviour
     [SerializeField]
     protected float shotCooldown;
 
+    [SerializeReference]
+    public PerformanceManager performanceManager;
+
     protected LineRenderer laser;
 
     protected bool performancefeedback = true;
-    
+
     [SerializeField]
     protected LaserCursor cursor;
 
@@ -81,18 +101,31 @@ public abstract class Pointer : MonoBehaviour
     private Vector3 previousDirection;
     private Vector3 currentLaserOffset = Vector3.zero;
     private Vector3 smoothingVelocity = Vector3.zero;
-    private float lastTime = -1 ;
+    private float lastTime = -1;
 
     protected int pointerShootOrder = -1;
+    protected ControllerName controllerName;
+
+    Vector3 pos;
+    Vector3 mappedPos;
 
     [System.Serializable]
-    public class OnPointerShoot : UnityEvent { }
+    public class OnPointerShoot : UnityEvent<ShootData> { }
     public OnPointerShoot onPointerShoot;
+
+    [System.Serializable]
+    public class OnPointerMove : UnityEvent<MoveData> { }
+    public OnPointerMove onPointerMove;
 
     // On Awake, gets the cursor object if there is one. Also connects the PositionUpdated function to the VR update event.
     void Awake()
     {
-        gameObject.GetComponent<SteamVR_Behaviour_Pose>().onTransformUpdated.AddListener(delegate{PositionUpdated();});
+        gameObject.GetComponent<SteamVR_Behaviour_Pose>().onTransformUpdated.AddListener(delegate { PositionUpdated(); });
+        if (gameObject.name == "Controller (right)") {
+            controllerName = ControllerName.Right;
+        } else if (gameObject.name == "Controller (left)") {
+            controllerName = ControllerName.Left;
+        }
     }
 
     // On start, inits the logger notifier.
@@ -131,15 +164,24 @@ public abstract class Pointer : MonoBehaviour
         laser = laserOrigin.GetComponent<LineRenderer>();
     }
 
-    public void SetPointerEnable(bool active) {
-        if (active) {
+    public ControllerName GetControllerName() {
+        return controllerName;
+    }
+
+    public void SetPointerEnable(bool active)
+    {
+        if (active)
+        {
             Enable();
-        } else {
+        }
+        else
+        {
             Disable();
         }
     }
 
-    public void SetPerformanceFeedback(bool perf) {
+    public void SetPerformanceActionFeedback(bool perf)
+    {
         performancefeedback = perf;
     }
 
@@ -167,15 +209,22 @@ public abstract class Pointer : MonoBehaviour
         active = false;
     }
 
-    // Function called on VR update, since it can be faster/not synchronous to Update() function. Makes the Pointer slightly more reactive.
+     // Function called on VR update, since it can be faster/not synchronous to Update() function. Makes the Pointer slightly more reactive.
     public virtual void PositionUpdated()
     {
         if (!active) return;
 
-        Vector2 pos = new Vector2(laserOrigin.transform.position.x, laserOrigin.transform.position.y);
+        Vector3 pos = new Vector2(laserOrigin.transform.position.x, laserOrigin.transform.position.y);
         Vector3 mappedPosition = laserMapper.ConvertMotorSpaceToWallSpace(pos);
         Vector3 origin = laserOrigin.transform.position;
         Vector3 rayDirection = (mappedPosition - origin).normalized;
+
+        onPointerMove.Invoke(new MoveData
+        {
+            controllerPos = pos,
+            cursorPos = mappedPosition,
+            name = controllerName
+        });
 
         RaycastHit hit;
         if (Physics.Raycast(laserOrigin.transform.position + laserOffset, rayDirection, out hit, 100f, Physics.DefaultRaycastLayers))
@@ -188,13 +237,13 @@ public abstract class Pointer : MonoBehaviour
         }
         else
         {
-            Vector3 rayPosition = laserOrigin.transform.InverseTransformDirection(rayDirection) * maxLaserLength; 
+            Vector3 rayPosition = laserOrigin.transform.InverseTransformDirection(rayDirection) * maxLaserLength;
             laser.SetPosition(1, rayPosition);
             cursor.SetPosition(rayPosition);
             //UpdateLaser(false, rayDirection: laserOrigin.transform.InverseTransformDirection(rayDirection) * maxLaserLength);
         }
 
-        if(SteamVR.active)
+        if (SteamVR.active)
         {
             if (SteamVR_Actions._default.GrabPinch.GetStateDown(controller))
             {
@@ -226,8 +275,8 @@ public abstract class Pointer : MonoBehaviour
     }
 
     // Functions to call in the class implementation to add extra animation/effect behavior on shoot/cooldown.
-    protected virtual void PlayShoot(bool correctHit) {}
-    protected virtual void PlayCooldownEnd() {}
+    protected virtual void PlayShoot(bool correctHit) { }
+    protected virtual void PlayCooldownEnd() { }
 
     // Checks if a Mole is hovered and tells it to play the hovered efect.
     protected virtual void hoverMole(RaycastHit hit)
@@ -257,34 +306,51 @@ public abstract class Pointer : MonoBehaviour
 
     // Shoots a raycast. If Mole is hit, calls its Pop() function. Depending on the hit result, plays the hit/missed shooting animation
     // and raises a "Mole Missed" event.
-    protected virtual void Shoot(RaycastHit hit)
+    protected virtual void Shoot(RaycastHit hit, float dwellduration = 0f)
     {
         Mole mole;
 
         state = States.CoolingDown;
         StartCoroutine(WaitForCooldown());
 
-        onPointerShoot.Invoke();
+        performanceManager.OnPointerShoot(new ShootData {
+            hit = hit,
+            dwell = dwellduration,
+            name = controllerName
+        });    
+
         if (hit.collider)
         {
             if (hit.collider.gameObject.TryGetComponent<Mole>(out mole))
             {
-                Mole.MolePopAnswer moleAnswer = mole.Pop(hit.point);
+                float feedback = performanceManager.GetActionJudgement(controllerName);
+                Debug.Log(feedback);
+                Mole.MolePopAnswer moleAnswer = mole.Pop(hit.point, feedback);
 
-                if (moleAnswer == Mole.MolePopAnswer.Ok) 
-                { 
+                if (moleAnswer == Mole.MolePopAnswer.Ok)
+                {
                     PlayShoot(moleAnswer == Mole.MolePopAnswer.Ok);
-                    soundManager.PlaySound(gameObject, SoundManager.Sound.greenMoleHit);
-                } 
+                    if (performancefeedback)
+                    {
+                        soundManager.PlaySoundWithPitch(gameObject, SoundManager.Sound.greenMoleHit, feedback);
+                    }
+                    else
+                    {
+                        soundManager.PlaySound(gameObject, SoundManager.Sound.greenMoleHit);
+                    }
+                }
                 else if (moleAnswer == Mole.MolePopAnswer.Fake)
                 {
                     PlayShoot(moleAnswer == Mole.MolePopAnswer.Ok);
-                    if (performancefeedback) {
+                    if (performancefeedback)
+                    {
                         soundManager.PlaySound(gameObject, SoundManager.Sound.redMoleHit);
-                    } else {
+                    }
+                    else
+                    {
                         soundManager.PlaySound(gameObject, SoundManager.Sound.greenMoleHit);
                     }
-                } 
+                }
                 else if (moleAnswer == Mole.MolePopAnswer.Disabled)
                 {
                     RaiseMoleMissedEvent(hit.point);
@@ -293,16 +359,17 @@ public abstract class Pointer : MonoBehaviour
                 return;
             }
             RaiseMoleMissedEvent(hit.point);
-            if (performancefeedback) {
+            if (performancefeedback)
+            {
                 soundManager.PlaySound(gameObject, SoundManager.Sound.missedMole);
             }
-        } 
+        }
         else
         {
             soundManager.PlaySound(gameObject, SoundManager.Sound.outOfBoundClick);
         }
         PlayShoot(false);
-        
+
     }
 
     // Function raising a "Mole Missed" event.
@@ -318,7 +385,7 @@ public abstract class Pointer : MonoBehaviour
     private Vector3 GetRayDirection()
     {
         Vector3 direction = Vector3.zero;
-        switch(aimAssistState)
+        switch (aimAssistState)
         {
             case AimAssistStates.Snap:
                 direction = GetSnappedDirection();
@@ -332,7 +399,7 @@ public abstract class Pointer : MonoBehaviour
                 break;
         }
 
-        if(directionSmoothed) direction = GetSmoothedDirection(direction);
+        if (directionSmoothed) direction = GetSmoothedDirection(direction);
 
         return direction;
     }
@@ -340,17 +407,17 @@ public abstract class Pointer : MonoBehaviour
     private Vector3 GetSmoothedDirection(Vector3 aimedDirection)
     {
         var tempPreviousDirection = previousDirection;
-        float delta = 0 ;
-        if( lastTime > 0 )
+        float delta = 0;
+        if (lastTime > 0)
         {
-            delta = Time.time - lastTime ;
+            delta = Time.time - lastTime;
         }
-        lastTime = Time.time ;
+        lastTime = Time.time;
 
         previousDirection = aimedDirection;
         currentLaserOffset += (previousDirection - tempPreviousDirection);
         currentLaserOffset = Vector3.SmoothDamp(currentLaserOffset, Vector3.zero, ref smoothingVelocity, smoothTime, 1000f, delta);
-        
+
         return aimedDirection - currentLaserOffset;
     }
 
@@ -362,7 +429,7 @@ public abstract class Pointer : MonoBehaviour
             Collider[] collidersHit = Physics.OverlapSphere(hit.point, SnapMagnetizeRadius);
 
             List<Transform> molesHit = new List<Transform>();
-            foreach(Collider collider in collidersHit)
+            foreach (Collider collider in collidersHit)
             {
                 if (collider.gameObject.GetComponent<Mole>() != null)
                 {
@@ -375,7 +442,7 @@ public abstract class Pointer : MonoBehaviour
             float closestDistance = 1000f;
             Vector3 closestMolePosition = Vector3.zero;
 
-            foreach(Transform moleTransform in molesHit)
+            foreach (Transform moleTransform in molesHit)
             {
                 float moleDistance = Vector3.Distance(hit.point, moleTransform.position);
                 if (moleDistance < closestDistance)
@@ -397,7 +464,7 @@ public abstract class Pointer : MonoBehaviour
             Collider[] collidersHit = Physics.OverlapSphere(hit.point, SnapMagnetizeRadius);
 
             List<Transform> molesHit = new List<Transform>();
-            foreach(Collider collider in collidersHit)
+            foreach (Collider collider in collidersHit)
             {
                 if (collider.gameObject.GetComponent<Mole>() != null)
                 {
@@ -410,7 +477,7 @@ public abstract class Pointer : MonoBehaviour
             float closestDistance = 1000f;
             Vector3 closestMolePosition = Vector3.zero;
 
-            foreach(Transform moleTransform in molesHit)
+            foreach (Transform moleTransform in molesHit)
             {
                 float moleDistance = Vector3.Distance(hit.point, moleTransform.position);
                 if (moleDistance < closestDistance)

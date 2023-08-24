@@ -14,9 +14,9 @@ Facilitates the creation of moles with different behaviours on specific events
 
 public abstract class Mole : MonoBehaviour
 {
-    public enum MolePopAnswer {Ok, Fake, Expired, Disabled, Paused}
+    public enum MolePopAnswer { Ok, Fake, Expired, Disabled, Paused }
 
-    public enum MoleType {Target,DistractorLeft,DistractorRight}
+    public enum MoleType { Target, DistractorLeft, DistractorRight }
     public bool defaultVisibility = false;
 
     // The states may be reduced to 3 - 4 (by removing Popping, enabling...), however this could reduce the control over the Mole
@@ -27,7 +27,7 @@ public abstract class Mole : MonoBehaviour
     // Disabling: Mole is being turned off.
     // Expired: All moles have a set expiration time after disabling, to track any shots happening after they leave.
     // Disabled: Passive state, Mole is no longer active.
-    public enum States {Enabling, Enabled, Popping, Popped, Missed, Disabling, Expired, Disabled}
+    public enum States { Enabling, Enabled, Popping, Popped, Missed, Disabling, Expired, Disabled }
 
     [SerializeField]
     private float disableCooldown = 3f;
@@ -35,7 +35,7 @@ public abstract class Mole : MonoBehaviour
     protected States state = States.Disabled;
     protected MoleType moleType = MoleType.Target;
 
-    private class StateUpdateEvent: UnityEvent<bool, Mole>{};
+    private class StateUpdateEvent : UnityEvent<bool, Mole> { };
     private StateUpdateEvent stateUpdateEvent = new StateUpdateEvent();
     private Coroutine timer;
     private float lifeTime;
@@ -51,7 +51,7 @@ public abstract class Mole : MonoBehaviour
     private bool isOnDisabledCoolDown = false;
     private bool performanceFeedback = true;
 
-    private void Awake() 
+    private void Awake()
     {
         SetVisibility(defaultVisibility);
     }
@@ -88,8 +88,8 @@ public abstract class Mole : MonoBehaviour
     {
         foreach (Transform child in transform)
         {
-            if (child.GetComponent<Renderer>()!=null)
-                child.GetComponent<Renderer>().enabled=isVisible;
+            if (child.GetComponent<Renderer>() != null)
+                child.GetComponent<Renderer>().enabled = isVisible;
         }
     }
 
@@ -131,7 +131,8 @@ public abstract class Mole : MonoBehaviour
     public bool IsFake()
     {
         bool isFake = true;
-        if (moleType == Mole.MoleType.Target) {
+        if (moleType == Mole.MoleType.Target)
+        {
             isFake = false;
         }
         return isFake;
@@ -159,10 +160,12 @@ public abstract class Mole : MonoBehaviour
 
     public void Disable()
     {
-        Debug.Log(state);
-        if (state == States.Enabled && moleType == MoleType.Target) {
+        if (state == States.Enabled && moleType == MoleType.Target)
+        {
             ChangeState(States.Missed);
-        } else {
+        }
+        else
+        {
             ChangeState(States.Disabling);
         }
     }
@@ -186,13 +189,12 @@ public abstract class Mole : MonoBehaviour
         PlayReset();
     }
 
-    // Pops the Mole. Returns an answer correspondind to its poping state.
-    public MolePopAnswer Pop(Vector3 hitPoint)
+    public MolePopAnswer Pop(Vector3 hitPoint, float feedback = 0f)
     {
         if (isPaused) return MolePopAnswer.Paused;
         if (state != States.Enabled && state != States.Enabling && state != States.Expired) return MolePopAnswer.Disabled;
 
-        Vector3 localHitPoint = Quaternion.AngleAxis(-transform.rotation.y,Vector3.up) * (hitPoint - transform.position);
+        Vector3 localHitPoint = Quaternion.AngleAxis(-transform.rotation.y, Vector3.up) * (hitPoint - transform.position);
 
         if (state == States.Expired)
         {
@@ -205,7 +207,7 @@ public abstract class Mole : MonoBehaviour
             return MolePopAnswer.Expired;
         }
 
-        if (moleType == MoleType.Target) 
+        if (moleType == MoleType.Target)
         {
             loggerNotifier.NotifyLogger("Mole Hit", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
             {
@@ -214,10 +216,10 @@ public abstract class Mole : MonoBehaviour
                 {"MoleSurfaceHitLocationY", localHitPoint.y}
             });
 
-            ChangeState(States.Popping);
+            ChangeState(States.Popping, feedback);
             return MolePopAnswer.Ok;
         }
-        else 
+        else
         {
             loggerNotifier.NotifyLogger("Fake Mole Hit", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
             {
@@ -227,7 +229,7 @@ public abstract class Mole : MonoBehaviour
                 {"MoleType", System.Enum.GetName(typeof(MoleType), moleType)}
             });
 
-            ChangeState(States.Popping);
+            ChangeState(States.Popping, feedback);
             return MolePopAnswer.Fake;
         }
     }
@@ -255,39 +257,44 @@ public abstract class Mole : MonoBehaviour
         return stateUpdateEvent;
     }
 
-    protected virtual void PlayEnable() {}
-    protected virtual void PlayDisabled() {}
-    protected virtual void PlayReset() {}
-    protected virtual void PlayHoverEnter() {}
-    protected virtual void PlayHoverLeave() {}
+    protected virtual void PlayEnable() { }
+    protected virtual void PlayDisabled() { }
+    protected virtual void PlayReset() { }
+    protected virtual void PlayHoverEnter() { }
+    protected virtual void PlayHoverLeave() { }
 
     /*
     Transition states. Need to be called at the end of its override in the derived class to
     finish the transition.
     */
 
-    protected virtual void PlayEnabling() 
+    protected virtual void PlayEnabling()
     {
         ChangeState(States.Enabled);
     }
 
-    protected virtual void PlayMissed() 
+    protected virtual void PlayMissed()
     {
         ChangeState(States.Disabling);
     }
 
-    protected virtual void PlayDisabling() 
+    protected virtual void PlayDisabling()
     {
 
         ChangeState(States.Expired);
     }
 
-    protected virtual void PlayPop() 
+    protected virtual void PlayPop(float feedback)
     {
         ChangeState(States.Popped);
     }
-     
-    private void ChangeState(States newState)
+
+    protected virtual void PlayPop()
+    {
+        ChangeState(States.Popped);
+    }
+
+    private void ChangeState(States newState, float feedback = 0f)
     {
         if (newState == state)
         {
@@ -295,13 +302,13 @@ public abstract class Mole : MonoBehaviour
         }
         LeaveState(state);
         state = newState;
-        EnterState(state);
+        EnterState(state, feedback); //donner le feedback
     }
 
     // Does certain actions when leaving a state.
     private void LeaveState(States state)
     {
-        switch(state)
+        switch (state)
         {
             case States.Disabled:
                 break;
@@ -318,9 +325,9 @@ public abstract class Mole : MonoBehaviour
     }
 
     // Does certain actions when entering a state.
-    private void EnterState(States state)
+    private void EnterState(States state, float feedback)
     {
-        switch(state)
+        switch (state)
         {
             case States.Disabled:
                 PlayDisabled();
@@ -331,7 +338,7 @@ public abstract class Mole : MonoBehaviour
                 PlayEnable();
                 break;
             case States.Popping:
-                PlayPop();
+                PlayPop(feedback);
                 break;
             case States.Enabling:
 
@@ -373,7 +380,7 @@ public abstract class Mole : MonoBehaviour
                                             {
                                                 {"MoleActivatedDuration", lifeTime},
                                                 {"MoleType", System.Enum.GetName(typeof(MoleType), moleType)}
-                                            });            
+                                            });
                 PlayMissed();
                 break;
         }
@@ -411,7 +418,7 @@ public abstract class Mole : MonoBehaviour
             yield return null;
         }
 
-        EnterState(States.Disabled);
+        EnterState(States.Disabled, 0);
     }
 
     private IEnumerator StartDisabledCooldownTimer(float duration)

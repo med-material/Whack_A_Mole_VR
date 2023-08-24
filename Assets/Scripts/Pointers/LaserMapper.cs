@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -251,6 +253,8 @@ public class LaserMapper : MonoBehaviour
         });
     }
 
+    
+
     // Update is called once per frame
     void CalculateMotorSpace(MotorCalcMode mode = MotorCalcMode.center, bool log = true)
     {
@@ -391,6 +395,37 @@ public class LaserMapper : MonoBehaviour
         UpdateMotorSpaceVisualizer();
     }
 
+    public void SetMotorSpaceOutOfBoundsSignifierStatic()
+    {
+        foreach (var bub in bubbleDisplay)
+            bub.ChangeIndicatorToStatic();
+    }
+
+    public void SetMotorSpaceOutOfBoundsSignifierDynamic()
+    {
+        foreach (var bub in bubbleDisplay)
+            bub.ChangeIndicatorToDynamic();
+    }
+
+    internal void SetMotorSpaceOutOfBoundsSignifierDynamicReversed()
+    {
+        foreach (var bub in bubbleDisplay)
+            bub.ChangeIndicatorToDynamicReversed();
+    }
+
+    internal void DisableMotorSpaceOutOfBoundsSignifier()
+    {
+        foreach (var bub in bubbleDisplay)
+            bub.DisableMotorSpaceOutOfBoundsIndicator();
+    }
+
+    internal void SetPerformanceOperationFeedback(bool v)
+    {
+        foreach (var bub in bubbleDisplay)
+            bub.SetPerformanceOperationFeedback(v);
+    }
+
+
     public Vector3 ConvertMotorSpaceToWallSpace(Vector3 coord) {
         // We convert our motorspace and our coordinate to be within a range where 0 is lowest.
         // Then we perform the normalization with division.
@@ -493,4 +528,16 @@ public class LaserMapper : MonoBehaviour
             yield return null;
         }
     }
+
+    // Get the current controller that is being used by this laser mapper instance.
+    // Should have just one controller at a time.
+    public GameObject GetCurrentController() => activeControllers.FirstOrDefault();
+
+    // Get the center position of the wall in world space.
+    public Vector3 GetWallMeshCenter()
+    {
+        return wallManager.GetWallCenter();
+    }
+
+    
 }

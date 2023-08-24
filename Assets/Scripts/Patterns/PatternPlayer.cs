@@ -124,13 +124,13 @@ public class PatternPlayer: MonoBehaviour
         // Clear any moles remaining in the MolesIdList.
         patternInterface.ClearMolesList();
 
+        int currentLineNumber = 1;
         foreach (Dictionary<string, string> action in pattern[sortedKeys[playIndex]])
         {
-            // As the pattern interfaces plays the actions,
-            // new moles are added to the MoleIdList by PatternInterface.
-            //Debug.Log(action["FUNCTION"]);
-            patternInterface.PlayAction(new Dictionary<string, string>(action));
+            currentLineNumber++;
+            patternInterface.PlayAction(new Dictionary<string, string>(action), currentLineNumber);
         }
+
 
         if (playIndex < sortedKeys.Count - 1)
         {
@@ -175,9 +175,26 @@ public class PatternPlayer: MonoBehaviour
         // If there are no more moles left, continue.
         if (patternInterface.GetTargetsList().Count > 0) {
             // Clear disabled and popped moles from targetsList
-            foreach (var mole in patternInterface.GetTargetsList().Where(mole => mole.Value.GetState() != Mole.States.Enabled)) {
-                patternInterface.RemoveFromTargetsList(mole.Value.GetId());
+            //foreach (var mole in patternInterface.GetTargetsList().Where(mole => mole.Value.GetState() != Mole.States.Enabled))
+            //{
+            //    patternInterface.RemoveFromTargetsList(mole.Value.GetId());
+            //}
+
+            var molesToRemove = new List<int>(); // assuming the id is of type int
+
+            foreach (var mole in patternInterface.GetTargetsList())
+            {
+                if (mole.Value.GetState() != Mole.States.Enabled)
+                {
+                    molesToRemove.Add(mole.Value.GetId());
+                }
             }
+
+            foreach (var moleId in molesToRemove)
+            {
+                patternInterface.RemoveFromTargetsList(moleId);
+            }
+
             return;
         }
 

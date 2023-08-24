@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR;
 using UnityEngine.Events;
+using System;
 
 [System.Serializable]
 public class ModifierUpdateEvent : UnityEvent<string, string> {}
@@ -24,7 +25,9 @@ public class ModifiersManager : MonoBehaviour
 
     public enum ControllerSetup {Left, Both, Right, Off};
     public enum Embodiment {Hands, Cursor, Off};
-    public enum MotorspaceSize {Small, Medium, Large};
+    public enum MotorspaceSize {Tiny1, Tiny2, Tiny3, Small, Medium, Large};
+    public enum MotorspaceOutOfBoundsSignifier { None, DynamicCenter, StaticPointing, DynamicCenterReversed };
+    public enum PerformanceFeedback { None, Operation, Action, Task, All};
     public enum EyePatch {Left, None, Right};
     public enum HideWall {Left, None, Right};
 
@@ -93,6 +96,12 @@ public class ModifiersManager : MonoBehaviour
     private GameObject physicalMirror;
 
     [SerializeField]
+    private PlayerPanel playerPanel;
+
+    [SerializeField]
+    private PerformanceManager performanceManager;
+
+    [SerializeField]
     private float hideWallHighestStart = 1.3f;
     [SerializeField]
     private float hideWallHighestEnd = 0.6f;
@@ -103,10 +112,12 @@ public class ModifiersManager : MonoBehaviour
     private float hideWallAmount = -1f;
     ModifiersManager.MotorspaceSize motorspaceSize = ModifiersManager.MotorspaceSize.Large;
     private Embodiment embodiment = Embodiment.Hands;
+    ModifiersManager.MotorspaceOutOfBoundsSignifier motorspaceOutOfBoundsSignifier = ModifiersManager.MotorspaceOutOfBoundsSignifier.DynamicCenter;
     private EyePatch eyePatch = EyePatch.None;
     private HideWall hideWall = HideWall.None;
     private ControllerSetup controllerSetup = ControllerSetup.Right;
-    private bool performanceFeedback = true;
+    private ModifiersManager.PerformanceFeedback performanceFeedback = PerformanceFeedback.All;
+    private JudgementType judgementType = JudgementType.MaxSpeed;
     private bool mirrorEffect;
     private bool physicalMirrorEffect;
     private bool geometricMirrorEffect;
@@ -141,6 +152,7 @@ public class ModifiersManager : MonoBehaviour
             {"HideWallAmount", "No Hide Wall Amount Defined"},
             {"GeometricMirror", "No GeometricMirror Defined"},
             {"PerformanceFeedback", "No PerformanceFeedback Defined"},
+            {"JudgementType", "No JudgementType Defined"},
             {"Embodiment", "Undefined"},
         });
         // Initialization of the starting values of the parameters.
@@ -155,12 +167,13 @@ public class ModifiersManager : MonoBehaviour
             {"HideWallAmount", hideWallAmount},
             {"GeometricMirror", geometricMirrorEffect},
             {"PerformanceFeedback", performanceFeedback},
-            {"Embodiment", System.Enum.GetName(typeof(ModifiersManager.Embodiment), embodiment)},
+            {"JudgementType", judgementType}
         });
 
         defaultModifiers = new Dictionary<string, object> () {
         {"ControllerSetup", this.controllerSetup},
         {"MotorspaceSize", this.motorspaceSize},
+        {"MotorspaceOutOfBoundsSignifier", this.motorspaceOutOfBoundsSignifier},
         {"EyePatch", this.eyePatch},
         {"HideWall", this.hideWall},
         {"HideWallAmount", 0f}, // hideWallAmount is a calculated value.
@@ -174,6 +187,7 @@ public class ModifiersManager : MonoBehaviour
         {"MotorRestrictionUpper", this.motorRestrictionUpper},
         {"MotorRestrictionLower", this.motorRestrictionLower},
         {"PerformanceFeedback", this.performanceFeedback},
+        {"JudgementType", this.judgementType},
         {"Embodiment", this.embodiment},
         };
     }
@@ -204,8 +218,10 @@ public class ModifiersManager : MonoBehaviour
         SetPrismOffset((float)state["PrismOffset"]);
         SetMainController((ModifiersManager.ControllerSetup) state["ControllerSetup"]);
         SetControllerEnabled((ModifiersManager.ControllerSetup) state["ControllerSetup"],true);
-        SetPerformanceFeedback((bool) state["PerformanceFeedback"]);
+        SetPerformanceFeedback((ModifiersManager.PerformanceFeedback) state["PerformanceFeedback"]);
+        SetJudgementType((JudgementType) state["JudgementType"]);
         SetEmbodiment((ModifiersManager.Embodiment) state["Embodiment"]);
+        SetMotorspaceOutOfBoundsSignifier((ModifiersManager.MotorspaceOutOfBoundsSignifier)state["MotorspaceOutOfBoundsSignifier"]);
     }
 
     // Sets an eye patch. Calls WaitForCameraAndUpdate coroutine to set eye patch.
@@ -266,25 +282,7 @@ public class ModifiersManager : MonoBehaviour
         });
     }
 
-    public void SetPerformanceFeedback(bool value)
-    {
-        if (performanceFeedback == value) return;
-
-        performanceFeedback = value;
-        
-        wallManager.SetPerformanceFeedback(performanceFeedback);
-        rightController.SetPerformanceFeedback(performanceFeedback);
-        leftController.SetPerformanceFeedback(performanceFeedback);
-
-        // Raises an Event and updates a PersistentEvent's parameter (in consequence, a PersistentEvent will also be raised)
-        loggerNotifier.NotifyLogger("Performance Feedback Set "+ value, EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
-        {
-            {"PerformanceFeedback", value}
-        });
-
-        modifierUpdateEvent.Invoke("PerformanceFeedback", value.ToString());
-    }
-
+    
     public void SetMotorRestriction(bool value)
     {
         // motor restriction may need to be "refreshed" when controllers change.
@@ -351,8 +349,31 @@ public class ModifiersManager : MonoBehaviour
             motorSpaceManager.SetMotorSpaceMedium();
         } else if (size == ModifiersManager.MotorspaceSize.Large) {
             motorSpaceManager.SetMotorSpaceLarge();
+        } else if (size == ModifiersManager.MotorspaceSize.Tiny1)
+        {
+            motorSpaceManager.SetMotorSpaceTiny1();
+        } else if (size == ModifiersManager.MotorspaceSize.Tiny2)
+        {
+            motorSpaceManager.SetMotorSpaceTiny2();
+        } else if (size == ModifiersManager.MotorspaceSize.Tiny3)
+        {
+            motorSpaceManager.SetMotorSpaceTiny3();
         }
     }
+
+    // Set Motorspace Out of Bounds managed by BubbleDisplay
+    public void SetMotorspaceOutOfBoundsSignifier(ModifiersManager.MotorspaceOutOfBoundsSignifier signifier)
+    {
+        if (signifier == ModifiersManager.MotorspaceOutOfBoundsSignifier.StaticPointing)
+            motorSpaceManager.SetMotorSpaceOutOfBoundsSignifierStatic();
+        else if (signifier == ModifiersManager.MotorspaceOutOfBoundsSignifier.DynamicCenter)
+            motorSpaceManager.SetMotorSpaceOutOfBoundsSignifierDynamic();
+        else if (signifier == ModifiersManager.MotorspaceOutOfBoundsSignifier.DynamicCenterReversed)
+            motorSpaceManager.SetMotorSpaceOutOfBoundsSignifierDynamicReversed();
+        else if (signifier == ModifiersManager.MotorspaceOutOfBoundsSignifier.None)
+            motorSpaceManager.DisableMotorSpaceOutOfBoundsSignifier();
+    }
+
 
     // Sets a controller position and rotation's mirroring effect. Calls UpdateMirrorEffect to set the mirror.
     public void SetMirrorEffect(bool value)
@@ -556,6 +577,68 @@ public class ModifiersManager : MonoBehaviour
         }
     }
 
+    public void SetPerformanceFeedback(PerformanceFeedback value)
+    {
+        bool actionFeedback = false;
+        bool operationFeedback = false;
+        bool taskFeedback = false;
+
+        switch (value)
+        {
+            case PerformanceFeedback.Operation:
+                operationFeedback = true;
+                break;
+            case PerformanceFeedback.Action:
+                actionFeedback = true;
+                break;
+            case PerformanceFeedback.Task:
+                taskFeedback = true;
+                break;
+            case PerformanceFeedback.All:
+                actionFeedback = operationFeedback = taskFeedback = true;
+                break;
+        }
+
+        // Apply values to all modifiers
+        wallManager.SetPerformanceFeedback(actionFeedback);
+        rightController.SetPerformanceActionFeedback(actionFeedback);
+        leftController.SetPerformanceActionFeedback(actionFeedback);
+
+        motorSpaceManager.SetPerformanceOperationFeedback(operationFeedback);
+
+        // Task changes
+        playerPanel.SetPerformanceFeedback(taskFeedback);
+
+        // Raises an Event and updates a PersistentEvent's parameter (in consequence, a PersistentEvent will also be raised)
+        loggerNotifier.NotifyLogger($"Performance Feedback Set {Enum.GetName(typeof(PerformanceFeedback), value)}", EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
+        {
+            {"PerformanceFeedback", Enum.GetName(typeof(PerformanceFeedback), value)}
+        });
+        
+        modifierUpdateEvent.Invoke($"PerformanceFeedback", Enum.GetName(typeof(PerformanceFeedback), value));
+
+        this.performanceFeedback = value;
+
+        
+    }
+
+    public void SetJudgementType(JudgementType value)
+    {
+        if (judgementType == value) return;
+        performanceManager.SetJudgementType(value);
+
+        // Raises an Event and updates a PersistentEvent's parameter (in consequence, a PersistentEvent will also be raised)
+        loggerNotifier.NotifyLogger($"Judgement Type Set {Enum.GetName(typeof(JudgementType), value)}", EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
+        {
+            {"JudgementType", Enum.GetName(typeof(JudgementType), value)}
+        });
+        
+        modifierUpdateEvent.Invoke($"JudgementType", Enum.GetName(typeof(JudgementType), value));
+
+        this.judgementType = value;
+    }
+
+
     // Sets the level of embodiment used by the game. (Show hands (including controller) or just cursor).
     public void SetEmbodiment(Embodiment value)
     {
@@ -699,4 +782,6 @@ public class ModifiersManager : MonoBehaviour
 
         modifierUpdateEvent.Invoke("EyePatch", System.Enum.GetName(typeof(ModifiersManager.EyePatch), value));
     }
+
+    
 }
