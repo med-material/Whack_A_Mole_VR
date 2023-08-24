@@ -175,8 +175,24 @@ public class PatternPlayer: MonoBehaviour
         // If there are no more moles left, continue.
         if (patternInterface.GetTargetsList().Count > 0) {
             // Clear disabled and popped moles from targetsList
-            foreach (var mole in patternInterface.GetTargetsList().Where(mole => mole.Value.GetState() != Mole.States.Enabled)) {
-                patternInterface.RemoveFromTargetsList(mole.Value.GetId());
+            //foreach (var mole in patternInterface.GetTargetsList().Where(mole => mole.Value.GetState() != Mole.States.Enabled))
+            //{
+            //    patternInterface.RemoveFromTargetsList(mole.Value.GetId());
+            //}
+
+            var molesToRemove = new List<int>(); // assuming the id is of type int
+
+            foreach (var mole in patternInterface.GetTargetsList())
+            {
+                if (mole.Value.GetState() != Mole.States.Enabled)
+                {
+                    molesToRemove.Add(mole.Value.GetId());
+                }
+            }
+
+            foreach (var moleId in molesToRemove)
+            {
+                patternInterface.RemoveFromTargetsList(moleId);
             }
             return;
         }
