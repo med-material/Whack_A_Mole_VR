@@ -21,6 +21,7 @@ public class GazeLogger : MonoBehaviour
     private int moleHitY;
     private int moleHitID;
     private double pupilTime;
+    private double unityToPupilTimeOffset;
     private Vector3 eyeCenter0;
     private Vector3 eyeCenter1;
     private Vector3 gazeNormal0;
@@ -81,7 +82,9 @@ public class GazeLogger : MonoBehaviour
                 gazeHitPosition = hit.point;
                 objectHit = hit.transform.gameObject;
             }
-            gazeData["PupilTime"] = timeSync != null ? timeSync.GetPupilTimestamp().ToString().Replace(",", ".") : "NULL";
+            // We cannot ask timeSync for a timestamp directly, because it leads to too many requests. Instead
+            // we should just rely on the pupil time stamp we get from the ReceiveGaze() connection.
+            //gazeData["PupilTime"] = timeSync != null ? timeSync.GetPupilTimestamp().ToString().Replace(",", ".") : "NULL";
             gazeData["UnityToPupilTimeOffset"] = timeSync != null ? timeSync.UnityToPupilTimeOffset.ToString().Replace(",", ".") : "NULL";
             gazeData["PupilTimeSample"] = pupilTime;
             gazeData["GazeConfidence"] = gazeConfidence;
