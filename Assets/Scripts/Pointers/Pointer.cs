@@ -88,7 +88,8 @@ public abstract class Pointer : MonoBehaviour
     [System.Serializable]
     public class OnPointerShoot : UnityEvent { }
     public OnPointerShoot onPointerShoot;
-
+    
+   
     // On Awake, gets the cursor object if there is one. Also connects the PositionUpdated function to the VR update event.
     void Awake()
     {
