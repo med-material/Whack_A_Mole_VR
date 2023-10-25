@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR;
@@ -25,11 +26,53 @@ public class BasicPointer : Pointer
     private float dwellTimer = 0f;
     private delegate void Del();
     private string hover = "";
-
+    public Vector3 CalculateDirection()
+    {
+        Vector3 direction = Vector3.zero;
+        if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
+        {
+            direction.y += 0.25f;
+        }
+        if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
+        {
+            direction.x -= 0.25f;
+        }
+        if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
+        {
+            direction.y -= 0.25f;
+        }
+        if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
+        {
+            direction.x += 0.25f;
+        }
+        return direction.normalized;
+    }
+    [SerializeField]
+    private GameObject Cube;
+    
     // Function called on VR update, since it can be faster/not synchronous to Update() function. Makes the Pointer slightly more reactive.
-    public override void PositionUpdated()
+    public void Update()
     {
         if (!active) return;
+        if (active)
+        {
+            float v = Input.GetAxisRaw("Vertical");
+            float h = Input.GetAxisRaw("Horizontal");
+            float mouseSpeed = 1;
+
+            if (Input.GetKey(KeyCode.LeftAlt))
+            {
+                float h1 = mouseSpeed * Input.GetAxis("Mouse X");
+                float v1 = mouseSpeed * Input.GetAxis("Mouse Y");
+
+                Cube.transform.Translate(h1, v1, 0);
+            }
+            else
+            {
+                Vector3 direction = new Vector3(h, v, 0f).normalized;
+                Cube.transform.Translate(direction * 1 * Time.deltaTime);
+            }
+        };
 
         Vector2 pos = new Vector2(laserOrigin.transform.position.x, laserOrigin.transform.position.y);
         Vector3 mappedPosition = laserMapper.ConvertMotorSpaceToWallSpace(pos);
@@ -52,8 +95,7 @@ public class BasicPointer : Pointer
             cursor.SetPosition(rayPosition);
             //UpdateLaser(false, rayDirection: laserOrigin.transform.InverseTransformDirection(rayDirection) * maxLaserLength);
         }
-        if(SteamVR.active)
-        {
+        
             if (hit.collider) {
                 Mole mole;
                 if (hit.collider.gameObject.TryGetComponent<Mole>(out mole))
@@ -115,7 +157,7 @@ public class BasicPointer : Pointer
                         dwellTimer = dwellTimer - 0.1f;
                     }
             }
-        }
+        
     }
 
 
