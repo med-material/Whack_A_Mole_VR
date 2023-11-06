@@ -30,9 +30,65 @@ public class BasicPointer : Pointer
 
     internal Vector3 MappedPosition { get; private set; }
 
+    public Vector3 CalculateDirection()
+    {
+        Vector3 direction = Vector3.zero;
+        if (Input.GetKey(KeyCode.UpArrow))
+        {
+            direction.y += 0.25f;
+        }
+        if (Input.GetKey(KeyCode.LeftArrow))
+        {
+            direction.x -= 0.25f;
+        }
+        if (Input.GetKey(KeyCode.DownArrow))
+        {
+            direction.y -= 0.25f;
+        }
+        if (Input.GetKey(KeyCode.RightArrow))
+        {
+            direction.x += 0.25f;
+        }
+        return direction.normalized;
+    }
+
+    public void Update()
+    {
+        if (Input.GetKey(KeyCode.LeftControl))
+        {
+            if (!active) return;
+            if (active)
+            {
+                float v = Input.GetAxisRaw("Vertical");
+                float h = Input.GetAxisRaw("Horizontal");
+                float mouseSpeed = 1;
+
+                if (Input.GetKey(KeyCode.LeftAlt))
+                {
+                    float h1 = mouseSpeed * Input.GetAxis("Mouse X");
+                    float v1 = mouseSpeed * Input.GetAxis("Mouse Y");
+
+                    this.transform.Translate(h1, v1, 0);
+                }
+                else
+                {
+                    Vector3 direction = new Vector3(h, v, 0f).normalized;
+                    this.transform.Translate(direction * 1 * Time.deltaTime);
+                }
+                PointerControl();
+            }
+        }
+        
+    }
+
+    public override void PositionUpdated()
+    {
+        if (!active) return;
+        PointerControl();
+    }
 
     // Function called on VR update, since it can be faster/not synchronous to Update() function. Makes the Pointer slightly more reactive.
-    public override void PositionUpdated()
+    private void PointerControl()
     {
         if (!active) return;
 
@@ -64,8 +120,8 @@ public class BasicPointer : Pointer
             cursor.SetPosition(rayPosition);
             //UpdateLaser(false, rayDirection: laserOrigin.transform.InverseTransformDirection(rayDirection) * maxLaserLength);
         }
-        if (SteamVR.active)
-        {
+        //if (SteamVR.active)
+        //{
             if (hit.collider)
             {
                 Mole mole;
@@ -142,7 +198,7 @@ public class BasicPointer : Pointer
                     dwellduration = 0f;
                 }
             }
-        }
+        //}
     }
 
 
