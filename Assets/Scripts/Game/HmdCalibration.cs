@@ -39,8 +39,8 @@ public class HmdCalibration : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.V))
             {
                 // Debug Mode
+                Camera.main.transform.parent.position = new Vector3(0f, 1f, 0f);
                 CloseInstructionPanel();
-                Camera.current.transform.Translate(new Vector3(0f,1f,0f));
             }
         }
     }
