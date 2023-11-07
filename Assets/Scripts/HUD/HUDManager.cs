@@ -22,7 +22,7 @@ public class HUDManager : MonoBehaviour
 
     Side side = Side.None;
     
-    private bool active = false;
+    public bool active = false;
 
     private float timer = 0.35f;
 
@@ -82,6 +82,7 @@ public class HUDManager : MonoBehaviour
 
     public void ActivateGradient(Side s, FadeAction f) {
         if (!enabled) return;
+        if (!active) return;
 
         if (coroutines.ContainsKey(s)) { StopCoroutine(coroutines[s]); }
         if (s == Side.Left) {
