@@ -686,7 +686,7 @@ public class PerformanceManager : MonoBehaviour
     }
 
     // Max-based Calculator
-    private float CalculateInstantMaxSpeed(PerfData perf) {
+    private float CalculateInstantMaxUnitSpeed(PerfData perf) {
 
         // if we don't have a previous position, abort calculation.
         if (perf.actionStartPos == Vector3.zero) return -1f;
@@ -694,6 +694,18 @@ public class PerformanceManager : MonoBehaviour
         //Debug.Log("lastPosition: " + lastPositionSpeed);
         float distance = Vector3.Distance(perf.pos, perf.posPrev);
         float speed = distance / Time.deltaTime;
+        return speed;
+    }
+
+    private float CalculateInstantMaxSpeed(PerfData perf) {
+
+        // if we don't have a previous position, abort calculation.
+        if (perf.actionStartPos == Vector3.zero) return -1f;
+
+        //Debug.Log("lastPosition: " + lastPositionSpeed);
+        float distance = Vector3.Distance(perf.pos, perf.posPrev);
+        float time = Time.time - perf.actionStartTimestamp;
+        float speed = distance / time;
         return speed;
     }
 
@@ -742,8 +754,9 @@ public class PerformanceManager : MonoBehaviour
         if (perf.posPrev == Vector3.zero) return -1f;
 
         float time = Time.time - perf.actionStartTimestamp;
+        // dont subtract dwelltime, to ensure we dont start 
+        // in negative time.
         //time = time - perf.dwelltime;
-        
 
         return time;
     }
