@@ -24,14 +24,6 @@ public enum MotorAction
     None,
 }
 
-public enum ArrowType
-{
-    None,
-    DynamicCenter,
-    DynamicCenterReversed,
-    StaticPointing
-}
-
 public class BubbleDisplay : MonoBehaviour
 {
     [SerializeField]
@@ -111,7 +103,8 @@ public class BubbleDisplay : MonoBehaviour
     [SerializeReference]
     private OutOfBoundIndicator dynamicCenterReversedPointingIndicator;
 
-    private OutOfBoundIndicator outOfBoundIndicatorManager;  // The current active indicator
+    [SerializeField]
+    private OutOfBoundManager outOfBoundManager;  // The current active indicator
     public ArrowType CurrentArrowType { get; private set; }
 
     [SerializeReference]
@@ -143,6 +136,8 @@ public class BubbleDisplay : MonoBehaviour
 
     private MotorAction action = MotorAction.None;
 
+    private bool active = false;
+
     // Start is called before the first frame update
     void Awake()
     {
@@ -158,13 +153,6 @@ public class BubbleDisplay : MonoBehaviour
         controllerModifierManager = parent.GetComponent<ControllerModifierManager>();
         controllerModifierManager.SetControllerVisibility(true);
         motorSpaceRender.color = motorDisabledColor;
-
-        //outOfBoundIndicatorManager = staticArrowIndicator;
-        //CurrentArrowType = ArrowType.StaticPointing;
-        outOfBoundIndicatorManager = dynamicCenterPointingIndicator;
-        CurrentArrowType = ArrowType.DynamicCenter;
-        //outOfBoundIndicatorManager = dynamicCenterReversedPointingIndicator;
-        //CurrentArrowType = ArrowType.DynamicCenterReversed;
         CurrentController = laserMapper.GetCurrentController();
     }
 
@@ -193,14 +181,12 @@ public class BubbleDisplay : MonoBehaviour
         prevPosY = newPosY;
         prevPosZ = newPosZ;
 
-
-        if (laserMapper.CoordinateWithinMotorSpace(newPos))  // Check if the coordinate is within the range of the motors
+         if (laserMapper.CoordinateWithinMotorSpace(newPos))  // Check if the coordinate is within the range of the motors
         {
             // If the object was previously outside or had no action, execute the following block.
             if (action == MotorAction.Outside || action == MotorAction.None)
             {
                 action = MotorAction.Enter;  // Set the action status to 'Enter'.
-
 
                 // Activating the renderers and setting color for visual feedback in the scene.
                 bubbleRender.SetActive(true);
@@ -211,7 +197,7 @@ public class BubbleDisplay : MonoBehaviour
                 motorSpaceRender.color = motorActiveColor;
 
                 // Hide the out-of-bound indicator.
-                outOfBoundIndicatorManager?.HideIndicator();
+                outOfBoundManager?.HideIndicator();
                 hudPanel.Reset();
 
                 // Invoke the event for entering the MotorSpace with all relevant information.
@@ -260,7 +246,7 @@ public class BubbleDisplay : MonoBehaviour
                 motorSpaceRender.color = motorDisabledColor;
 
                 // Show the out-of-bound indicator.
-                outOfBoundIndicatorManager?.ShowIndicator(newPos, laserMapper.GetWallMeshCenter(), LastLaserMapperNearestSide);
+                outOfBoundManager.ShowIndicator(newPos, laserMapper.GetWallMeshCenter(), LastLaserMapperNearestSide);
                 hudPanel.ActivateGradient(LastLaserMapperNearestSide, FadeAction.In);
 
                 // Invoke the event for exiting the MotorSpace with all relevant information.
@@ -294,6 +280,19 @@ public class BubbleDisplay : MonoBehaviour
         }
     }
 
+   public void ChangeIndicator(ArrowType arrowType)
+    {
+        outOfBoundManager.ChangeIndicator(arrowType);
+
+        // If the user is outside of the MotorSpace, display the new indicator
+        if (action == MotorAction.Outside)
+        {
+            Vector3 newPos = new Vector3(newPosX, newPosY, newPosZ);
+            Side side = laserMapper.NearestSide(newPos);
+            outOfBoundManager?.ShowIndicator(newPos, laserMapper.transform.position, side);
+        }
+    }
+
     public void Show(bool show)
     {
         showBubble = show;
@@ -316,61 +315,6 @@ public class BubbleDisplay : MonoBehaviour
             prefab.transform.position = newPos;
             i++;
         }
-    }
-
-
-    public void ChangeIndicator(ArrowType arrowType)
-    {
-        // Hide current indicator
-        if (outOfBoundIndicatorManager != null)
-        {
-            outOfBoundIndicatorManager?.HideIndicator();
-        }
-
-        outOfBoundIndicatorManager = arrowType switch
-        {
-            ArrowType.StaticPointing => staticArrowIndicator,
-            ArrowType.DynamicCenter => dynamicCenterPointingIndicator,
-            ArrowType.DynamicCenterReversed => dynamicCenterReversedPointingIndicator,
-            ArrowType.None => null,
-            _ => staticArrowIndicator,
-        };
-        CurrentArrowType = arrowType;
-
-        // If the user is outside of the MotorSpace, display the new indicator
-        if (action == MotorAction.Outside)
-        {
-            Vector3 newPos = new Vector3(newPosX, newPosY, newPosZ);
-            Side side = laserMapper.NearestSide(newPos);
-            outOfBoundIndicatorManager?.ShowIndicator(newPos, laserMapper.transform.position, side);
-        }
-    }
-
-
-
-    public void ChangeIndicatorToStatic()
-    {
-        ChangeIndicator(ArrowType.StaticPointing);
-        Debug.Log("Changed Out Of Bounds indicator to static");
-    }
-
-    public void ChangeIndicatorToDynamic()
-    {
-        ChangeIndicator(ArrowType.DynamicCenter);
-        Debug.Log("Changed Out Of Bounds indicator to dynamic");
-    }
-
-
-    internal void ChangeIndicatorToDynamicReversed()
-    {
-        ChangeIndicator(ArrowType.DynamicCenterReversed);
-        Debug.Log("Changed Out Of Bounds indicator to dynamic reversed");
-    }
-
-    internal void DisableMotorSpaceOutOfBoundsIndicator()
-    {
-        ChangeIndicator(ArrowType.None);
-        Debug.Log("Changed Out Of Bounds indicator to dynamic reversed");
     }
 
     internal void SetPerformanceOperationFeedback(bool v, bool withText)
