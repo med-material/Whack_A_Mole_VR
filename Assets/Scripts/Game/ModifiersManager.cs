@@ -32,6 +32,9 @@ public class ModifiersManager : MonoBehaviour
     public enum HideWall {Left, None, Right};
 
     [SerializeField]
+    private bool performanceFeedbackText = false;
+
+    [SerializeField]
     private GameObject hideWallLeft;
 
     [SerializeField]
@@ -128,6 +131,7 @@ public class ModifiersManager : MonoBehaviour
     private bool motorRestriction;
     private float motorRestrictionUpper = 1f;
     private float motorRestrictionLower = 0.5f;
+    
     private Dictionary<string, Pointer> controllersList;
     private LoggerNotifier loggerNotifier;
     private ModifierUpdateEvent modifierUpdateEvent = new ModifierUpdateEvent();
@@ -599,12 +603,13 @@ public class ModifiersManager : MonoBehaviour
                 break;
         }
 
+        bool withText = performanceFeedbackText;
         // Apply values to all modifiers
-        wallManager.SetPerformanceFeedback(actionFeedback);
-        rightController.SetPerformanceActionFeedback(actionFeedback);
-        leftController.SetPerformanceActionFeedback(actionFeedback);
+        wallManager.SetPerformanceFeedback(actionFeedback, withText);
+        rightController.SetPerformanceActionFeedback(actionFeedback, withText);
+        leftController.SetPerformanceActionFeedback(actionFeedback, withText);
 
-        motorSpaceManager.SetPerformanceOperationFeedback(operationFeedback);
+        motorSpaceManager.SetPerformanceOperationFeedback(operationFeedback, withText);
 
         // Task changes
         playerPanel.SetPerformanceFeedback(taskFeedback);

@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PointerTrailHandler : MonoBehaviour
 {
@@ -24,6 +25,8 @@ public class PointerTrailHandler : MonoBehaviour
     private TrailRenderer trailRenderer;
 
     private float speed;
+    private float perf;
+    private Text txt; 
     [SerializeField, Range(0.1f, 2f)]
     private float maxTrailLength = 1.0f; // max trail length
     [SerializeField, Range(0.1f, 2f)]
@@ -39,6 +42,10 @@ public class PointerTrailHandler : MonoBehaviour
     private bool isVisible = true;
     private bool configVisibility = true;
     private bool lastRuntimeVisibilityState;
+    private bool performanceText = false;
+    
+    [SerializeField]
+    private GameObject perfTextPrefab;
 
     private void OnEnable()
     {
@@ -82,6 +89,7 @@ public class PointerTrailHandler : MonoBehaviour
 
         ControllerName controllerName = controllerParent.GetControllerName();
         speed = performanceManager.GetInstantJudgement(controllerName);
+        perf = performanceManager.GetInstantPerformance(controllerName);
 
         UpdateRuntimeVisibility();
         // If the final visibility is true, then update the trail properties
@@ -106,6 +114,12 @@ public class PointerTrailHandler : MonoBehaviour
         if (trailRenderer != null)
         {
             float normalizedSpeed = speed;
+            if (performanceText) {
+                if (txt == null) {
+                    txt = Instantiate(perfTextPrefab, spriteRenderer.transform).GetComponentInChildren<Text>();
+                }
+                txt.text = perf.ToString("0.00");
+            }
 
             float targetDiameter = spriteRenderer.bounds.size.x;
 
@@ -174,9 +188,10 @@ public class PointerTrailHandler : MonoBehaviour
     }
 
     // Used to set the visibility of the trail from the modifiers manager
-    internal void SetConfigVisibility(bool visibility)
+    internal void SetConfigVisibility(bool visibility, bool withText)
     {
         configVisibility = visibility;
+        performanceText = withText;
         UpdateVisibility();
     }
 

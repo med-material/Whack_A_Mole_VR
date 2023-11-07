@@ -50,6 +50,7 @@ public abstract class Mole : MonoBehaviour
     private float disabledTimeLeft = 0f;
     private bool isOnDisabledCoolDown = false;
     private bool performanceFeedback = true;
+    private bool performanceText = false;
 
     private void Awake()
     {
@@ -175,9 +176,10 @@ public abstract class Mole : MonoBehaviour
         isPaused = pause;
     }
 
-    public void SetPerformanceFeedback(bool perf)
+    public void SetPerformanceFeedback(bool perf, bool withText)
     {
         performanceFeedback = perf;
+        performanceText = withText;
     }
 
     public void Reset()
@@ -189,8 +191,9 @@ public abstract class Mole : MonoBehaviour
         PlayReset();
     }
 
-    public MolePopAnswer Pop(Vector3 hitPoint, float feedback = 0f)
+    public MolePopAnswer Pop(Vector3 hitPoint, float feedback = 0f, float perf = 0f)
     {
+        if (!performanceText) perf = -1f;
         if (isPaused) return MolePopAnswer.Paused;
         if (state != States.Enabled && state != States.Enabling && state != States.Expired) return MolePopAnswer.Disabled;
 
@@ -216,7 +219,7 @@ public abstract class Mole : MonoBehaviour
                 {"MoleSurfaceHitLocationY", localHitPoint.y}
             });
 
-            ChangeState(States.Popping, feedback);
+            ChangeState(States.Popping, feedback, perf);
             return MolePopAnswer.Ok;
         }
         else
@@ -229,7 +232,7 @@ public abstract class Mole : MonoBehaviour
                 {"MoleType", System.Enum.GetName(typeof(MoleType), moleType)}
             });
 
-            ChangeState(States.Popping, feedback);
+            ChangeState(States.Popping, feedback, perf);
             return MolePopAnswer.Fake;
         }
     }
@@ -284,7 +287,7 @@ public abstract class Mole : MonoBehaviour
         ChangeState(States.Expired);
     }
 
-    protected virtual void PlayPop(float feedback)
+    protected virtual void PlayPop(float feedback, float perf)
     {
         ChangeState(States.Popped);
     }
@@ -294,7 +297,7 @@ public abstract class Mole : MonoBehaviour
         ChangeState(States.Popped);
     }
 
-    private void ChangeState(States newState, float feedback = 0f)
+    private void ChangeState(States newState, float feedback = 0f, float perf = 0f)
     {
         if (newState == state)
         {
@@ -302,7 +305,7 @@ public abstract class Mole : MonoBehaviour
         }
         LeaveState(state);
         state = newState;
-        EnterState(state, feedback); //donner le feedback
+        EnterState(state, feedback, perf); //donner le feedback
     }
 
     // Does certain actions when leaving a state.
@@ -325,7 +328,7 @@ public abstract class Mole : MonoBehaviour
     }
 
     // Does certain actions when entering a state.
-    private void EnterState(States state, float feedback)
+    private void EnterState(States state, float feedback, float perf = 0f)
     {
         switch (state)
         {
@@ -338,7 +341,7 @@ public abstract class Mole : MonoBehaviour
                 PlayEnable();
                 break;
             case States.Popping:
-                PlayPop(feedback);
+                PlayPop(feedback, perf);
                 break;
             case States.Enabling:
 

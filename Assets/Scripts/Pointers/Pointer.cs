@@ -78,6 +78,7 @@ public abstract class Pointer : MonoBehaviour
     protected LineRenderer laser;
 
     protected bool performancefeedback = true;
+    protected bool performanceText = false;
 
     [SerializeField]
     protected LaserCursor cursor;
@@ -86,6 +87,7 @@ public abstract class Pointer : MonoBehaviour
     private Mole hoveredMole;
     protected bool active = false;
     protected LoggerNotifier loggerNotifier;
+    
 
     [SerializeField]
     public SoundManager soundManager;
@@ -180,9 +182,10 @@ public abstract class Pointer : MonoBehaviour
         }
     }
 
-    public void SetPerformanceActionFeedback(bool perf)
+    public void SetPerformanceActionFeedback(bool perf, bool withText)
     {
         performancefeedback = perf;
+        performanceText = withText;
     }
 
     // Enables the pointer
@@ -324,8 +327,10 @@ public abstract class Pointer : MonoBehaviour
             if (hit.collider.gameObject.TryGetComponent<Mole>(out mole))
             {
                 float feedback = performanceManager.GetActionJudgement(controllerName);
+                float perf = performanceManager.GetActionPerformance(controllerName);
                 Debug.Log(feedback);
-                Mole.MolePopAnswer moleAnswer = mole.Pop(hit.point, feedback);
+                Debug.Log("perf: " + perf.ToString());
+                Mole.MolePopAnswer moleAnswer = mole.Pop(hit.point, feedback, perf);
 
                 if (moleAnswer == Mole.MolePopAnswer.Ok)
                 {

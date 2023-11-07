@@ -373,9 +373,9 @@ public class BubbleDisplay : MonoBehaviour
         Debug.Log("Changed Out Of Bounds indicator to dynamic reversed");
     }
 
-    internal void SetPerformanceOperationFeedback(bool v)
+    internal void SetPerformanceOperationFeedback(bool v, bool withText)
     {
-        pointerTrailHandler.SetConfigVisibility(v);
+        pointerTrailHandler.SetConfigVisibility(v, withText);
     }
 
     

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 /*
 An implementation of the Mole abstract class. Defines different parameters to modify and
@@ -68,6 +69,9 @@ public class DiskMole : Mole
 
     [SerializeField]
     private AudioClip popSound;
+
+    [SerializeField]
+    private GameObject perfText;
 
     private Shader opaqueShader;
     private Shader glowShader;
@@ -164,7 +168,7 @@ public class DiskMole : Mole
         }
     }
 
-    protected override void PlayPop(float feedback)
+    protected override void PlayPop(float feedback, float perf)
     {
         if (ShouldPerformanceFeedback()) {
             if (moleType==Mole.MoleType.Target)
@@ -172,7 +176,7 @@ public class DiskMole : Mole
                 Debug.Log(feedback);
                 Color colorFeedback = Color.Lerp(popSlow, popFast, feedback);
                 PlayAnimation("PopCorrectMole"); // Show positive feedback to users that shoot a correct moles, to make it clear this is a success
-                StartCoroutine(ChangeColorOverTime(enabledColor, colorFeedback, disabledColor, 0.15f, 0.15f, feedback));
+                StartCoroutine(ChangeColorOverTime(enabledColor, colorFeedback, disabledColor, 0.15f, 0.15f, feedback, perf));
                 meshMaterial.mainTexture = textureDisabled;
             }
             else
@@ -195,8 +199,15 @@ public class DiskMole : Mole
         meshMaterial.color = disabledColor;
         meshMaterial.mainTexture = textureDisabled;
     }
-    IEnumerator ChangeColorOverTime(Color colorStart, Color colorFeedback, Color colorEnd, float duration, float waitTime, float feedback)
+    IEnumerator ChangeColorOverTime(Color colorStart, Color colorFeedback, Color colorEnd, float duration, float waitTime, float feedback, float perf)
     {
+        // Debug Info: performance indication
+        var txt = perfText.GetComponentInChildren<Text>();
+        if (perf != -1f) {
+            perfText.SetActive(true);
+            txt.text = perf.ToString("0.00");
+        }
+
         float popScale = feedback + 1.0f;
         // float popScale = (feedback * 0.45f) + 1.05f; // other possibility
         Debug.Log("PopScale: " + popScale);
@@ -240,6 +251,7 @@ public class DiskMole : Mole
         circleOutline.color = new Color(circleOutline.color.r, circleOutline.color.g, circleOutline.color.b, 0.0f);
         ChangeColor(colorEnd);
         transform.localScale = normalSize;
+        perfText.SetActive(false);
     }
 
 

@@ -27,6 +27,8 @@ public class PerfData {
     public float movingAverage = -1f;
     public float upperThresholdAction = -1f;
     public float lowerThresholdAction = -1f;
+    public float[] instantMemoryWorstVals = new float[] { -1, -1, -1, -1, -1 };
+    public float[] instantMemoryBestVals = new float[] { -1, -1, -1, -1, -1 };
     public Queue<float> meanMemoryVals = new Queue<float>();
     public float perfBestAction = -1f;
     public float perfWorstAction = -1f;
@@ -47,6 +49,7 @@ public class PerfData {
 
     public Vector3 actionStartPos = Vector3.zero;
     public Vector3 actionEndPos = Vector3.zero;
+    public float instantStartTimestamp = -1f;
     public float actionStartTimestamp = -1f;
     public float actionEndTimestamp = -1f;
 }
@@ -98,6 +101,18 @@ public class PerformanceManager : MonoBehaviour
     }
 
     // Retrieve instant judgment value for a given controller.
+    public float GetInstantPerformance(ControllerName controllerName)
+    {
+        if (perfData.ContainsKey(controllerName))
+            return perfData[controllerName].perf;
+        else
+        {
+            Debug.LogWarning($"Instant performance for controller '{controllerName}' not found!");
+            return 0.0f;
+        }
+    }
+
+    // Retrieve instant judgment value for a given controller.
     public float GetInstantJudgement(ControllerName controllerName)
     {
         if (perfData.ContainsKey(controllerName))
@@ -105,6 +120,21 @@ public class PerformanceManager : MonoBehaviour
         else
         {
             Debug.LogWarning($"Instant judgement for controller '{controllerName}' not found!");
+            return 0.0f;
+        }
+    }
+
+    // Retrieve action judgement value for a given controller.
+    public float GetActionPerformance(ControllerName controllerName)
+    {
+        if (perfData.ContainsKey(controllerName) && perfData[controllerName].lastVals.Any())
+            return perfData[controllerName].lastVals.LastOrDefault();
+        else
+        {
+            if (!perfData.ContainsKey(controllerName))
+                Debug.LogWarning($"Action judgement for controller '{controllerName}' not found!");
+            else
+                Debug.LogWarning($"No last judgements available for controller '{controllerName}'!");
             return 0.0f;
         }
     }
@@ -389,6 +419,37 @@ public class PerformanceManager : MonoBehaviour
         perf.lowerThresholdAction = MultiplierDown * perf.movingAverage;
     }
 
+   // Updates the moving average for instant performance.
+   // The moving average 
+    private void UpdateInstantMovingAverage(float val, PerfData perf)
+    {
+        float timePassed = -1f;
+        if (perf.instantStartTimestamp == -1f) {
+            perf.instantStartTimestamp = Time.time;
+            timePassed = 0;
+        } else {
+            timePassed = Time.time - perf.instantStartTimestamp;
+        }
+
+        // convert to second
+        int second = ((int) Mathf.Floor(timePassed)) % 5;
+        perf.instantMemoryBestVals[second] = val;
+
+
+        // Add the new value to the memory queue.
+        perf.meanMemoryVals.Enqueue(val);
+        // If the queue exceeds the memory limit, remove the oldest value.
+        if (perf.meanMemoryVals.Count > meanMemoryLimit)
+        {
+            perf.meanMemoryVals.Dequeue();
+        }
+        // Compute the moving average.
+        perf.movingAverage = perf.meanMemoryVals.Average();
+        // Set upper and lower thresholds based on the moving average.
+        perf.upperThresholdAction = MultiplierUp * perf.movingAverage;
+        perf.lowerThresholdAction = MultiplierDown * perf.movingAverage;
+    }
+
     // Max-based Calculator
     /// <summary>
     /// Updates the best and worst action thresholds based on the provided value.
@@ -510,6 +571,8 @@ public class PerformanceManager : MonoBehaviour
     {
         // Early exit if value is -1 (invalid or sentinel value).
         if (val == -1f) return;
+
+
 
         // Flags to determine if the provided value is the best or worst recorded performance.
         bool best = false;

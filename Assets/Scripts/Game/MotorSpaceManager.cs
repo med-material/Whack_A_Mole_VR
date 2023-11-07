@@ -230,22 +230,22 @@ public class MotorSpaceManager : MonoBehaviour
         }
     }
 
-    internal void SetPerformanceOperationFeedback(bool v)
+    internal void SetPerformanceOperationFeedback(bool v, bool withText)
     {
         if (!v)
         {
-            MotorSpaceRight.SetPerformanceOperationFeedback(false);
-            MotorSpaceLeft.SetPerformanceOperationFeedback(false);
+            MotorSpaceRight.SetPerformanceOperationFeedback(false, withText);
+            MotorSpaceLeft.SetPerformanceOperationFeedback(false, withText);
         } else
         {
             if (motorspace == ActiveMotorSpace.Right)
-                MotorSpaceRight.SetPerformanceOperationFeedback(true);
+                MotorSpaceRight.SetPerformanceOperationFeedback(true, withText);
             else if (motorspace == ActiveMotorSpace.Left)
-                MotorSpaceLeft.SetPerformanceOperationFeedback(true);
+                MotorSpaceLeft.SetPerformanceOperationFeedback(true, withText);
             else if (motorspace == ActiveMotorSpace.Both)
             {
-                MotorSpaceRight.SetPerformanceOperationFeedback(true);
-                MotorSpaceLeft.SetPerformanceOperationFeedback(true);
+                MotorSpaceRight.SetPerformanceOperationFeedback(true, withText);
+                MotorSpaceLeft.SetPerformanceOperationFeedback(true, withText);
             }
         }
     }

@@ -419,10 +419,10 @@ public class LaserMapper : MonoBehaviour
             bub.DisableMotorSpaceOutOfBoundsIndicator();
     }
 
-    internal void SetPerformanceOperationFeedback(bool v)
+    internal void SetPerformanceOperationFeedback(bool v, bool withText)
     {
         foreach (var bub in bubbleDisplay)
-            bub.SetPerformanceOperationFeedback(v);
+            bub.SetPerformanceOperationFeedback(v, withText);
     }
 
 

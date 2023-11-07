@@ -122,6 +122,7 @@ public class WallManager : MonoBehaviour
     private int spawnOrder = 0;
     private bool wallVisible = true;
     private bool performanceFeedback = true;
+    private bool performanceText = false;
 
     // Wall boundaries
     private float highestX = -1f;
@@ -411,15 +412,16 @@ public class WallManager : MonoBehaviour
         return stateUpdateEvent;
     }
 
-    public void SetPerformanceFeedback(bool perf)
+    public void SetPerformanceFeedback(bool perf, bool withText)
     {
 
         performanceFeedback = perf;
+        performanceText = withText;
         if (moles.Count > 0)
         {
             foreach (Mole mole in moles.Values)
             {
-                mole.SetPerformanceFeedback(performanceFeedback);
+                mole.SetPerformanceFeedback(performanceFeedback, performanceText);
             }
         }
     }
@@ -498,7 +500,7 @@ public class WallManager : MonoBehaviour
                 int moleId = GetMoleId(x, y);
                 mole.SetId(moleId);
                 mole.SetNormalizedIndex(GetnormalizedIndex(x, y));
-                mole.SetPerformanceFeedback(performanceFeedback);
+                mole.SetPerformanceFeedback(performanceFeedback, performanceText);
                 mole.transform.localScale = moleScale;
                 moles.Add(moleId, mole);
 
