@@ -44,6 +44,7 @@ public abstract class LaserCursor : MonoBehaviour
         return isEnabled;
     }
 
+
     // Sets the cursor color.
     public void SetColor(Color newColor)
     {
@@ -54,6 +55,7 @@ public abstract class LaserCursor : MonoBehaviour
     // Sets the cursor's position
     public void SetPosition(Vector3 newPosition)
     {
+        if (float.IsNaN(newPosition.x)) return;
         transform.localPosition = newPosition + positionOffset;
     }
 
