@@ -250,9 +250,8 @@ public class PerformanceManager : MonoBehaviour
 
         // Update the performance data with new values from the shoot event.
         perf.dwelltime = shootData.dwell;
-        perf.actionEndPos = perf.actionStartPos;
-        perf.actionStartPos = hit.point;
-        perf.actionStartTimestamp = perf.actionEndTimestamp;
+        perf.actionEndPos = hit.point;
+        //float nextActionStartTimestamp = perf.actionEndTimestamp;
         perf.actionEndTimestamp = Time.time;
 
         // Initialize variables to hold new value and judgement value for the action.
@@ -318,6 +317,17 @@ public class PerformanceManager : MonoBehaviour
             {"ActionThresholdUpper", perf.upperThresholdAction},
             {"ActionThresholdLower", perf.lowerThresholdAction},
         });
+
+        // Here we update perf variables to reflect the beginning of a new action.
+        // Update actionStartTimestamp to reflect the beginning of a new action
+        // we must update it after making calculations, otherwise the 
+        // calculations dont have proper timestamps as their basis.
+        perf.actionStartTimestamp = perf.actionEndTimestamp;
+        perf.actionEndTimestamp = -1f;
+        //perf.actionEndPos = perf.actionStartPos;
+        perf.actionStartPos = perf.actionEndPos;
+        perf.actionEndPos = Vector3.zero;
+
     }
 
     // Set the judgement type for measuring performance DURING exec.
@@ -725,14 +735,16 @@ public class PerformanceManager : MonoBehaviour
         // TODO: Should we calculate the instant speed (frame by frame), or should we calculate speed
         // based on the distance accumulated since the beginning?
 
-        // if this is our first action, we don't have enough information to calculate speed.
+        // if this is our first action, we don't have enough information to calculate time.
         if (perf.actionStartTimestamp == -1f) return -1f;
 
         // if we don't have a previous position, abort calculation.
         if (perf.posPrev == Vector3.zero) return -1f;
 
         float time = Time.time - perf.actionStartTimestamp;
-        time = time - perf.dwelltime;
+        //time = time - perf.dwelltime;
+        
+
         return time;
     }
 
