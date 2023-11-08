@@ -21,6 +21,10 @@ public class PatternManager : MonoBehaviour
     private PatternPlayer patternPlayer;
     private LoggerNotifier loggerNotifier;
     private PatternUpdateEvent patternUpdateEvent = new PatternUpdateEvent();
+
+    [SerializeField]
+    private bool debugMode = false;
+
     [SerializeField]
     private LoggingManager loggingManager;
 
@@ -40,6 +44,8 @@ public class PatternManager : MonoBehaviour
         patternReadWriter = new PatternReadWriter();
         patternParser = new PatternParser();
         patternPlayer = FindObjectOfType<PatternPlayer>();
+
+        patternPlayer.SetDebugMode(debugMode);
     }
 
     void Start()

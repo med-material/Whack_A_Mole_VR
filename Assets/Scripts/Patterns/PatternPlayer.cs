@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using System.Linq;
 using System;
 
@@ -22,6 +23,10 @@ public class PatternPlayer: MonoBehaviour
     private WallManager wallManager;
     private PatternParser patternParser;
 
+    [SerializeField]
+    private GameObject debugTextPrefab;
+    private Text debugText;
+
     void Awake()
     {
         patternInterface = FindObjectOfType<PatternInterface>();
@@ -31,6 +36,10 @@ public class PatternPlayer: MonoBehaviour
 
     void Update()
     {
+        if (isRunning) {
+            UpdateDebugText("[Update] Pattern Playing..");
+        }
+
         if (patternParser.GetParadigm() == PatternParser.Paradigm.Progression)
         {
             ProgressionParadigm();
@@ -39,6 +48,46 @@ public class PatternPlayer: MonoBehaviour
         // Whether we are in a Progression or Time paradigm we always call the TimeParadigm,
         // because the pattern still needs to act normally if the moles are not hit and play the next step when a mole expires
         TimeParadigm();
+
+    }
+
+    public void SetDebugMode(bool debugMode) {
+        if (debugMode) {
+                if (debugText == null) {
+                    debugText = Instantiate(debugTextPrefab, this.transform).GetComponentInChildren<Text>();
+                }
+                UpdateDebugText("Pattern Debug Mode Initialized.");
+        } else {
+            if (debugText != null) {
+                Destroy(debugText);
+            }
+        }
+    }
+
+    private void UpdateDebugText(string text) {
+        if (isRunning) {
+            float lookahead = 5;
+            string playIndexText = "PlayIndex: " + playIndex.ToString() + " / " + pattern.Count;
+            string command = "Command: " + "\n";
+            for (int i = 0; i < lookahead; i++) {
+                if (playIndex + i < sortedKeys.Count) {
+                    command = command + (playIndex + i).ToString() + ": ";
+                    foreach (Dictionary<string, string> action in pattern[sortedKeys[playIndex + i]])
+                    {
+                        command = command + action["FUNCTION"] + " ";
+                    }
+                    command = command + "\n";
+                }
+            }
+            string waitTime = "WaitTimeLeft: " + waitTimeLeft.ToString("0.00");
+            string waitDur = "waitForDuration " + waitForDuration.ToString("0.00");
+            debugText.text = text + "\n" + playIndexText + "\n" + waitTime + "\n" + waitDur + "\n" + command;
+        } else {
+            debugText.text = text;
+        }
+        // Time since start of treatment program: 
+        // Play index:
+        // Time until next line:
 
     }
 

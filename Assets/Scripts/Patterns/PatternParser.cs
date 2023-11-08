@@ -73,7 +73,7 @@ public class PatternParser
                 else if(parameterValue[1] == "HIT")
                 {
                     paradigm = Paradigm.Progression;
-                    playTime += lifeTime;
+                    playTime += lifeTime; // why do we do this
                 }
                 continue;
             }
@@ -91,6 +91,7 @@ public class PatternParser
 
                 moleDelay = tempPlayTime + float.Parse(extractedProperties["LIFETIME"], System.Globalization.CultureInfo.InvariantCulture);
                 lifeTime = float.Parse(extractedProperties["LIFETIME"], System.Globalization.CultureInfo.InvariantCulture);
+                // what about the lifetime variable for this
             }
             else if (keyValue[0] == "DISTRACTOR")
             {
