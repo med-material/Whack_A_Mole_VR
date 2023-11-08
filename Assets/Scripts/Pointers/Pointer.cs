@@ -108,6 +108,8 @@ public abstract class Pointer : MonoBehaviour
     protected int pointerShootOrder = -1;
     protected ControllerName controllerName;
 
+    public SteamVR_Action_Vibration hapticAction;
+
     Vector3 pos;
     Vector3 mappedPos;
 
@@ -168,6 +170,17 @@ public abstract class Pointer : MonoBehaviour
 
     public ControllerName GetControllerName() {
         return controllerName;
+    }
+
+    public void Pulse (float duration, float frequency, float amplitude)
+    {
+        if (!SteamVR.active) return;
+        // duration in seconds
+        // frequency in hz
+        // amplitude in 75
+
+        hapticAction.Execute(0, duration, frequency, amplitude, controller);
+
     }
 
     public void SetPointerEnable(bool active)
@@ -338,6 +351,7 @@ public abstract class Pointer : MonoBehaviour
                     if (performancefeedback)
                     {
                         soundManager.PlaySoundWithPitch(gameObject, SoundManager.Sound.greenMoleHit, feedback);
+                        Pulse(duration:0.2f, frequency:150, amplitude:feedback * 50);
                     }
                     else
                     {
