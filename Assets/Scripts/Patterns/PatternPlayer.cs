@@ -264,7 +264,7 @@ public class PatternPlayer: MonoBehaviour
             // Otherwise, if the next action contains a mole, play the next step.
             // Otherwise, wait.
             //Debug.Log(action["FUNCTION"]);
-            if (action["FUNCTION"] == "MESSAGE") {
+            if (action["FUNCTION"] == "MESSAGE" || action["FUNCTION"] == "FEEDBACK" ) {
                 waitForDuration = GetWaitTime(playIndex);
                 patternInterface.ResetTargetsList();
                 return;

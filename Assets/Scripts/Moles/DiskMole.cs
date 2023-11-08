@@ -172,7 +172,7 @@ public class DiskMole : Mole
     {
         Color colorFeedback = Color.Lerp(popSlow, popFast, feedback);
         PlayAnimation("PopCorrectMole");
-        StartCoroutine(ChangeColorOverTime(enabledColor, colorFeedback, disabledColor, 0.15f, duration-0.15f, feedback, -1f));
+        StartCoroutine(ChangeColorOverTime(enabledColor, colorFeedback, disabledColor, 0.15f, duration-1.5f, feedback, -1f));
     }
 
     protected override void PlayPop(float feedback, float perf)
