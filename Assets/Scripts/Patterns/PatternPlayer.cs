@@ -65,6 +65,8 @@ public class PatternPlayer: MonoBehaviour
     }
 
     private void UpdateDebugText(string text) {
+        if (debugText == null) return;
+
         if (isRunning) {
             float lookahead = 5;
             string playIndexText = "PlayIndex: " + playIndex.ToString() + " / " + pattern.Count;
