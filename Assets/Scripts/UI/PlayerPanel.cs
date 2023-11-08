@@ -150,7 +150,7 @@ public class PlayerPanel : MonoBehaviour
     }
 
     private IEnumerator WaitShowMessage(float duration, string text) {
-        yield return new WaitForSeconds(4f);
+        //yield return new WaitForSeconds(4f);
 
 
         float currentCountDownLeft = duration;
