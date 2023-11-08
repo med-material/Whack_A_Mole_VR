@@ -19,6 +19,7 @@ public class PatternPlayer: MonoBehaviour
     private int playIndex = 0;
     private bool isRunning = false;
     private bool isPaused = false;
+    private bool isDebug = false;
     private PatternInterface patternInterface;
     private WallManager wallManager;
     private PatternParser patternParser;
@@ -36,7 +37,7 @@ public class PatternPlayer: MonoBehaviour
 
     void Update()
     {
-        if (isRunning) {
+        if (isRunning && isDebug) {
             UpdateDebugText("[Update] Pattern Playing..");
         }
 
@@ -53,11 +54,13 @@ public class PatternPlayer: MonoBehaviour
 
     public void SetDebugMode(bool debugMode) {
         if (debugMode) {
-                if (debugText == null) {
-                    debugText = Instantiate(debugTextPrefab, this.transform).GetComponentInChildren<Text>();
-                }
-                UpdateDebugText("Pattern Debug Mode Initialized.");
+            isDebug = true;
+            if (debugText == null) {
+                debugText = Instantiate(debugTextPrefab, this.transform).GetComponentInChildren<Text>();
+            }
+            UpdateDebugText("Pattern Debug Mode Initialized.");
         } else {
+            isDebug = false;
             if (debugText != null) {
                 Destroy(debugText);
             }
@@ -65,8 +68,6 @@ public class PatternPlayer: MonoBehaviour
     }
 
     private void UpdateDebugText(string text) {
-        if (debugText == null) return;
-
         if (isRunning) {
             float lookahead = 5;
             string playIndexText = "PlayIndex: " + playIndex.ToString() + " / " + pattern.Count;
