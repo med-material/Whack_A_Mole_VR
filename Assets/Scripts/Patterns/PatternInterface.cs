@@ -107,6 +107,11 @@ public class PatternInterface : MonoBehaviour
                     SetWall(action);
                     break;
 
+                case "FEEDBACK":
+                    Debug.Log(action["TIME"]);
+                    SetFeedback(action["TIME"]);
+                    break;
+
                 case "MOLE":
                     Debug.Log(action["X"] + action["Y"]);
                     SetMole(action["X"], action["Y"], action["LIFETIME"]);
@@ -226,6 +231,12 @@ public class PatternInterface : MonoBehaviour
         var mole = wallManager.ActivateMole(moleId, ParseFloat(lifeTime), gameDirector.GetMoleExpiringDuration(), Mole.MoleType.Target);
         molesList[moleId] = mole;
         AddToTargetsList(moleId, mole);
+    }
+
+    // Spawns a Mole
+    private void SetFeedback(string time)
+    {
+        wallManager.ShowTaskFeedback(ParseFloat(time));
     }
 
     // Spawns a distractor (fake Mole)

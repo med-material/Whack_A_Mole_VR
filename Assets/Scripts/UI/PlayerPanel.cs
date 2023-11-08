@@ -39,11 +39,6 @@ public class PlayerPanel : MonoBehaviour
     private Text instructionText;
     private string instructionTextDefault;
 
-    [SerializeField]
-    private HighlightPerformance highlightPerformance;
-
-    private bool performanceFeedback = true;
-
     private Canvas panelCanvas;
 
     private bool gamePaused = false;
@@ -127,19 +122,12 @@ public class PlayerPanel : MonoBehaviour
         countDownText.text = string.Format(countDownTextTemplate, count.ToString());
     }
 
-    public void SetPerformanceFeedback(bool value) {
-        performanceFeedback = value;
-    }
-
     public void SetInstructionText(string text) {
         instructionText.text = text;
     }    
 
     public void SetMessage(string text, float time) {
         SetInstructionText(text);
-        if (performanceFeedback) {
-            highlightPerformance.ShowResults();
-        }
         StartCoroutine(WaitShowMessage(time, text));
     }
 
@@ -150,6 +138,7 @@ public class PlayerPanel : MonoBehaviour
     }
 
     private IEnumerator WaitShowMessage(float duration, string text) {
+        // we cannot just add more delay, this just makes the message overlap with other events from patternplayer.
         //yield return new WaitForSeconds(4f);
 
 

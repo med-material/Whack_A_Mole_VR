@@ -99,9 +99,6 @@ public class ModifiersManager : MonoBehaviour
     private GameObject physicalMirror;
 
     [SerializeField]
-    private PlayerPanel playerPanel;
-
-    [SerializeField]
     private PerformanceManager performanceManager;
 
     [SerializeField]
@@ -605,14 +602,14 @@ public class ModifiersManager : MonoBehaviour
 
         bool withText = performanceFeedbackText;
         // Apply values to all modifiers
-        wallManager.SetPerformanceFeedback(actionFeedback, withText);
+        wallManager.SetActionPerformanceFeedback(actionFeedback, withText);
         rightController.SetPerformanceActionFeedback(actionFeedback, withText);
         leftController.SetPerformanceActionFeedback(actionFeedback, withText);
 
         motorSpaceManager.SetPerformanceOperationFeedback(operationFeedback, withText);
 
         // Task changes
-        playerPanel.SetPerformanceFeedback(taskFeedback);
+        wallManager.SetTaskPerformanceFeedback(taskFeedback);
 
         // Raises an Event and updates a PersistentEvent's parameter (in consequence, a PersistentEvent will also be raised)
         loggerNotifier.NotifyLogger($"Performance Feedback Set {Enum.GetName(typeof(PerformanceFeedback), value)}", EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()

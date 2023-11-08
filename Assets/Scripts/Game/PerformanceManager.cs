@@ -24,6 +24,7 @@ public enum JudgementType {
 public class PerfData {
     public Queue<float> lastVals = new Queue<float>();
     public Queue<float> lastJudges = new Queue<float>();
+    public Dictionary<int, List<float>> lastJudgesByMole = new Dictionary<int, List<float>>();
     public float movingAverage = -1f;
     public float upperThresholdAction = -1f;
     public float lowerThresholdAction = -1f;
@@ -239,95 +240,96 @@ public class PerformanceManager : MonoBehaviour
             if (hit.collider.gameObject.TryGetComponent<Mole>(out mole))
             {
                 moleHit = true;  // A mole was hit.
+
+                // Retrieve performance data for the given controller name from the dictionary.
+                PerfData perf = perfData[controllerName];
+
+                // Update the performance data with new values from the shoot event.
+                perf.dwelltime = shootData.dwell;
+                perf.actionEndPos = hit.point;
+                //float nextActionStartTimestamp = perf.actionEndTimestamp;
+                perf.actionEndTimestamp = Time.time;
+
+                // Initialize variables to hold new value and judgement value for the action.
+                float newVal;
+                float judgement;
+
+                // Depending on the judgement type, calculate the new value and judgement for the action.
+                if (judgementType == JudgementType.AverageSpeed) {
+                    newVal = CalculateActionSpeed(perf);
+                    UpdateActionMovingAverage(newVal, perf);
+                    judgement = MakeActionJudgement(newVal, perf);
+                } else if (judgementType == JudgementType.MaxSpeed) {
+                    newVal = CalculateActionSpeed(perf);
+                    UpdateActionThresholds(newVal, perf);
+                    judgement = MakeActionJudgement(newVal, perf);
+                } else if (judgementType == JudgementType.Distance) {
+                    newVal = CalculateActionDistance(perf);
+                    UpdateActionThresholds(newVal, perf, thresholdMax: false);
+                    judgement = MakeActionJudgement(newVal, perf, thresholdMax: false);
+                } else if (judgementType == JudgementType.Time) {
+                    newVal = CalculateActionTime(perf);
+                    UpdateActionThresholds(newVal, perf, thresholdMax: false);
+                    judgement = MakeActionJudgement(newVal, perf, thresholdMax: false);
+                } else if (judgementType == JudgementType.MaxConstant) {
+                    newVal = 1f;
+                    judgement = 1f;
+                } else if (judgementType == JudgementType.Random)
+                {
+                    float rand = Random.Range(0f, 1f);
+                    newVal = rand;
+                    judgement = rand;
+                } else if (judgementType == JudgementType.None)
+                {
+                    newVal = -1f;
+                    judgement = 0f;
+                }
+                else {
+                    newVal = -1f;
+                    judgement = 0f;
+                }
+
+                // Store the calculated values in the performance data's queue.
+                perf.lastVals.Enqueue(newVal);
+                perf.lastJudges.Enqueue(judgement);
+
+                if (!perf.lastJudgesByMole.ContainsKey(mole.GetId())) {
+                    perf.lastJudgesByMole[mole.GetId()] = new List<float>();
+                }
+                perf.lastJudgesByMole[mole.GetId()].Add(judgement);
+
+                // Log results
+                // Log the event for entering the MotorSpace.
+                loggingManager.Log("Event", new Dictionary<string, object>()
+                {
+                    {"Event", "Action Performance"},
+                    {"JudgementType", System.Enum.GetName(typeof(JudgementType), judgementType)},
+                    {"ActionJudgement", judgement},
+                    {"ActionValue", newVal},
+                    {"ActionDwellTime", perf.dwelltime},
+                    {"ActionControllerName", controllerName},
+                    {"ActionTimeStart", perf.actionStartTimestamp},
+                    {"ActionTimeEnd", perf.actionEndTimestamp},
+                    {"ActionPositionStart", perf.actionStartPos},
+                    {"ActionPositionEnd", perf.actionEndPos},
+                    {"ActionPerformanceBest", perf.perfBestAction},
+                    {"ActionPerformanceWorst", perf.perfWorstAction},
+                    {"ActionPerformanceFraction", perf.perfActionFraction},
+                    {"ActionThresholdUpper", perf.upperThresholdAction},
+                    {"ActionThresholdLower", perf.lowerThresholdAction},
+                });
+
+                // Here we update perf variables to reflect the beginning of a new action.
+                // Update actionStartTimestamp to reflect the beginning of a new action
+                // we must update it after making calculations, otherwise the 
+                // calculations dont have proper timestamps as their basis.
+                perf.actionStartTimestamp = perf.actionEndTimestamp;
+                perf.actionEndTimestamp = -1f;
+                //perf.actionEndPos = perf.actionStartPos;
+                perf.actionStartPos = perf.actionEndPos;
+                perf.actionEndPos = Vector3.zero;
             }
         }
-
-        // If no mole was hit, exit the method early.
-        if (!moleHit) return;
-
-        // Retrieve performance data for the given controller name from the dictionary.
-        PerfData perf = perfData[controllerName];
-
-        // Update the performance data with new values from the shoot event.
-        perf.dwelltime = shootData.dwell;
-        perf.actionEndPos = hit.point;
-        //float nextActionStartTimestamp = perf.actionEndTimestamp;
-        perf.actionEndTimestamp = Time.time;
-
-        // Initialize variables to hold new value and judgement value for the action.
-        float newVal;
-        float judgement;
-
-        // Depending on the judgement type, calculate the new value and judgement for the action.
-        if (judgementType == JudgementType.AverageSpeed) {
-            newVal = CalculateActionSpeed(perf);
-            UpdateActionMovingAverage(newVal, perf);
-            judgement = MakeActionJudgement(newVal, perf);
-        } else if (judgementType == JudgementType.MaxSpeed) {
-            newVal = CalculateActionSpeed(perf);
-            UpdateActionThresholds(newVal, perf);
-            judgement = MakeActionJudgement(newVal, perf);
-        } else if (judgementType == JudgementType.Distance) {
-            newVal = CalculateActionDistance(perf);
-            UpdateActionThresholds(newVal, perf, thresholdMax: false);
-            judgement = MakeActionJudgement(newVal, perf, thresholdMax: false);
-        } else if (judgementType == JudgementType.Time) {
-            newVal = CalculateActionTime(perf);
-            UpdateActionThresholds(newVal, perf, thresholdMax: false);
-            judgement = MakeActionJudgement(newVal, perf, thresholdMax: false);
-        } else if (judgementType == JudgementType.MaxConstant) {
-            newVal = 1f;
-            judgement = 1f;
-        } else if (judgementType == JudgementType.Random)
-        {
-            float rand = Random.Range(0f, 1f);
-            newVal = rand;
-            judgement = rand;
-        } else if (judgementType == JudgementType.None)
-        {
-            newVal = -1f;
-            judgement = 0f;
-        }
-        else {
-            newVal = -1f;
-            judgement = 0f;
-        }
-
-        // Store the calculated values in the performance data's queue.
-        perf.lastVals.Enqueue(newVal);
-        perf.lastJudges.Enqueue(judgement);
-
-        // Log results
-        // Log the event for entering the MotorSpace.
-        loggingManager.Log("Event", new Dictionary<string, object>()
-        {
-            {"Event", "Action Performance"},
-            {"JudgementType", System.Enum.GetName(typeof(JudgementType), judgementType)},
-            {"ActionJudgement", judgement},
-            {"ActionValue", newVal},
-            {"ActionDwellTime", perf.dwelltime},
-            {"ActionControllerName", controllerName},
-            {"ActionTimeStart", perf.actionStartTimestamp},
-            {"ActionTimeEnd", perf.actionEndTimestamp},
-            {"ActionPositionStart", perf.actionStartPos},
-            {"ActionPositionEnd", perf.actionEndPos},
-            {"ActionPerformanceBest", perf.perfBestAction},
-            {"ActionPerformanceWorst", perf.perfWorstAction},
-            {"ActionPerformanceFraction", perf.perfActionFraction},
-            {"ActionThresholdUpper", perf.upperThresholdAction},
-            {"ActionThresholdLower", perf.lowerThresholdAction},
-        });
-
-        // Here we update perf variables to reflect the beginning of a new action.
-        // Update actionStartTimestamp to reflect the beginning of a new action
-        // we must update it after making calculations, otherwise the 
-        // calculations dont have proper timestamps as their basis.
-        perf.actionStartTimestamp = perf.actionEndTimestamp;
-        perf.actionEndTimestamp = -1f;
-        //perf.actionEndPos = perf.actionStartPos;
-        perf.actionStartPos = perf.actionEndPos;
-        perf.actionEndPos = Vector3.zero;
-
     }
 
     // Set the judgement type for measuring performance DURING exec.

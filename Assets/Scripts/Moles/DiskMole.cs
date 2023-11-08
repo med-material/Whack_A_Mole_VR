@@ -168,12 +168,18 @@ public class DiskMole : Mole
         }
     }
 
+    public override void PlayFeedback(float feedback, float duration)
+    {
+        Color colorFeedback = Color.Lerp(popSlow, popFast, feedback);
+        PlayAnimation("PopCorrectMole");
+        StartCoroutine(ChangeColorOverTime(enabledColor, colorFeedback, disabledColor, 0.15f, duration-0.15f, feedback, -1f));
+    }
+
     protected override void PlayPop(float feedback, float perf)
     {
         if (ShouldPerformanceFeedback()) {
             if (moleType==Mole.MoleType.Target)
             {
-                Debug.Log(feedback);
                 Color colorFeedback = Color.Lerp(popSlow, popFast, feedback);
                 PlayAnimation("PopCorrectMole"); // Show positive feedback to users that shoot a correct moles, to make it clear this is a success
                 StartCoroutine(ChangeColorOverTime(enabledColor, colorFeedback, disabledColor, 0.15f, 0.15f, feedback, perf));

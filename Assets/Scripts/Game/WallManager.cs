@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -47,6 +48,12 @@ public class WallManager : MonoBehaviour
 {
     [SerializeField]
     private LoggingManager loggingManager;
+
+    [SerializeField]
+    private SoundManager soundManager;
+
+    [SerializeField]
+    private PerformanceManager performanceManager;
 
     [Header("Default Wall Settings")]
     [SerializeField]
@@ -121,7 +128,8 @@ public class WallManager : MonoBehaviour
     private int moleCount = 0;
     private int spawnOrder = 0;
     private bool wallVisible = true;
-    private bool performanceFeedback = true;
+    private bool performanceFeedbackAction = true;
+    private bool performanceFeedbackTask = true;
     private bool performanceText = false;
 
     // Wall boundaries
@@ -412,17 +420,67 @@ public class WallManager : MonoBehaviour
         return stateUpdateEvent;
     }
 
-    public void SetPerformanceFeedback(bool perf, bool withText)
+    public void SetActionPerformanceFeedback(bool perf, bool withText)
     {
-
-        performanceFeedback = perf;
+        performanceFeedbackAction = perf;
         performanceText = withText;
         if (moles.Count > 0)
         {
             foreach (Mole mole in moles.Values)
             {
-                mole.SetPerformanceFeedback(performanceFeedback, performanceText);
+                mole.SetPerformanceFeedback(performanceFeedbackAction, performanceText);
             }
+        }
+    }
+
+    public void SetTaskPerformanceFeedback(bool perf)
+    {
+        performanceFeedbackTask = perf;
+    }
+
+    public void ShowTaskFeedback(float duration)
+    {
+        if (!performanceFeedbackTask) { return; }
+        Debug.Log("ShowTaskFeedback called");
+        Debug.Log("moles.count: " +  moles.Count.ToString());
+
+        // obtain perfData from performance manager
+        PerfData perfL = performanceManager.GetPerfData(ControllerName.Right);
+        PerfData perfR = performanceManager.GetPerfData(ControllerName.Left);
+
+        Dictionary<int, float> molePerf = new Dictionary<int, float>();
+        
+        foreach (Mole mole in moles.Values)
+        {    
+            var id = mole.GetId();            
+            List<float> perfs = new List<float>();
+            if (perfL.lastJudgesByMole.ContainsKey(id)) {
+                perfs.AddRange(perfL.lastJudgesByMole[id]);
+            }
+            if (perfR.lastJudgesByMole.ContainsKey(id)) {
+                perfs.AddRange(perfR.lastJudgesByMole[id]);
+            }
+            if (perfs.Count > 0) {
+                molePerf[id] = perfs.Average();
+            }
+        }
+
+        StartCoroutine(WaitShowTaskFeedback(duration, molePerf, 0.05f));
+    }
+
+    private IEnumerator WaitShowTaskFeedback(float duration, Dictionary<int, float> molePerf, float animationDelay) {
+        float timeSpent = 0f;
+
+        foreach (Mole mole in moles.Values)
+        {
+            int id = mole.GetId();
+
+            if (molePerf.ContainsKey(id)) {
+                mole.PlayFeedback(molePerf[id], duration-timeSpent);
+                soundManager.PlaySoundWithPitch(gameObject, SoundManager.Sound.greenMoleHit, molePerf[id]);
+            }
+            timeSpent += animationDelay;
+            yield return new WaitForSeconds(animationDelay);
         }
     }
 
@@ -500,7 +558,7 @@ public class WallManager : MonoBehaviour
                 int moleId = GetMoleId(x, y);
                 mole.SetId(moleId);
                 mole.SetNormalizedIndex(GetnormalizedIndex(x, y));
-                mole.SetPerformanceFeedback(performanceFeedback, performanceText);
+                mole.SetPerformanceFeedback(performanceFeedbackAction, performanceText);
                 mole.transform.localScale = moleScale;
                 moles.Add(moleId, mole);
 

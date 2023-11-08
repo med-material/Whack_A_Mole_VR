@@ -297,6 +297,11 @@ public abstract class Mole : MonoBehaviour
         ChangeState(States.Popped);
     }
 
+    public virtual void PlayFeedback(float feedback, float duration)
+    {
+
+    }
+
     private void ChangeState(States newState, float feedback = 0f, float perf = 0f)
     {
         if (newState == state)
