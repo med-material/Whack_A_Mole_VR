@@ -398,25 +398,25 @@ public class LaserMapper : MonoBehaviour
     public void SetMotorSpaceOutOfBoundsSignifierStatic()
     {
         foreach (var bub in bubbleDisplay)
-            bub.ChangeIndicator(ArrowType.StaticPointing);
+            bub.ChangeIndicator(ArrowType.StaticPointing, GetCurrentController().name);
     }
 
     public void SetMotorSpaceOutOfBoundsSignifierDynamic()
     {
         foreach (var bub in bubbleDisplay)
-            bub.ChangeIndicator(ArrowType.DynamicCenter);
+            bub.ChangeIndicator(ArrowType.DynamicCenter, GetCurrentController().name);
     }
 
     internal void SetMotorSpaceOutOfBoundsSignifierDynamicReversed()
     {
         foreach (var bub in bubbleDisplay)
-            bub.ChangeIndicator(ArrowType.DynamicCenterReversed);
+            bub.ChangeIndicator(ArrowType.DynamicCenterReversed, GetCurrentController().name);
     }
 
     internal void DisableMotorSpaceOutOfBoundsSignifier()
     {
         foreach (var bub in bubbleDisplay)
-            bub.ChangeIndicator(ArrowType.None);
+            bub.ChangeIndicator(ArrowType.None, GetCurrentController().name);
     }
 
     internal void SetPerformanceOperationFeedback(bool v, bool withText)

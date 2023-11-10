@@ -197,7 +197,7 @@ public class BubbleDisplay : MonoBehaviour
                 motorSpaceRender.color = motorActiveColor;
 
                 // Hide the out-of-bound indicator.
-                outOfBoundManager?.HideIndicator();
+                outOfBoundManager?.HideIndicator(laserMapper.GetCurrentController().name);
                 hudPanel.Reset();
 
                 // Invoke the event for entering the MotorSpace with all relevant information.
@@ -246,7 +246,7 @@ public class BubbleDisplay : MonoBehaviour
                 motorSpaceRender.color = motorDisabledColor;
 
                 // Show the out-of-bound indicator.
-                outOfBoundManager.ShowIndicator(newPos, laserMapper.GetWallMeshCenter(), LastLaserMapperNearestSide);
+                outOfBoundManager.ShowIndicator(newPos, laserMapper.GetWallMeshCenter(), LastLaserMapperNearestSide, laserMapper.GetCurrentController().name);
                 hudPanel.ActivateGradient(LastLaserMapperNearestSide, FadeAction.In);
 
                 // Invoke the event for exiting the MotorSpace with all relevant information.
@@ -280,16 +280,16 @@ public class BubbleDisplay : MonoBehaviour
         }
     }
 
-   public void ChangeIndicator(ArrowType arrowType)
+   public void ChangeIndicator(ArrowType arrowType, string controllerName)
     {
-        outOfBoundManager.ChangeIndicator(arrowType);
+        outOfBoundManager.ChangeIndicator(arrowType, controllerName);
 
         // If the user is outside of the MotorSpace, display the new indicator
         if (action == MotorAction.Outside)
         {
             Vector3 newPos = new Vector3(newPosX, newPosY, newPosZ);
             Side side = laserMapper.NearestSide(newPos);
-            outOfBoundManager?.ShowIndicator(newPos, laserMapper.transform.position, side);
+            outOfBoundManager?.ShowIndicator(newPos, laserMapper.transform.position, side, laserMapper.GetCurrentController().name);
         }
     }
 
