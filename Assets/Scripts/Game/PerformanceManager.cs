@@ -505,9 +505,6 @@ public class PerformanceManager : MonoBehaviour
             bestSum += perf.actionMemoryBestVals[i];
             worstSum += perf.actionMemoryWorstVals[i];
         }
-        Debug.Log("Best Sum: " + bestSum);
-        Debug.Log("AverageMaxSize: " + averageMaxSize);
-        Debug.Log("timePassed: " + timePassed);
 
         perf.perfBestAction = bestSum == 0f ? bestSum : bestSum / averageMaxSize;
         perf.perfWorstAction = worstSum == 0f ? worstSum : worstSum / averageMaxSize;
@@ -644,7 +641,6 @@ public class PerformanceManager : MonoBehaviour
         //}
 
         // Debugging: Log the provided value and the best action for comparison.
-        Debug.Log(val + " " + perf.perfBestAction);
 
         // Flags to indicate if the current value is the best or worst recorded action.
         bool best = false;
@@ -891,17 +887,27 @@ public class PerformanceManager : MonoBehaviour
         // based on the distance accumulated since the beginning?
 
         // if this is our first action, we don't have enough information to calculate speed.
-        if (perf.actionStartPos == Vector3.zero) return -1f;
+        if (perf.actionStartTimestamp == -1f || perf.actionStartPos == Vector3.zero || perf.pos == Vector3.zero) return -1f;
 
         // if we don't have a previous position, abort calculation.
         if (perf.posPrev == Vector3.zero) return -1f;
 
         if (perf.perf == -1f) perf.perf = 0f;
         perf.perf = perf.perf + Vector3.Distance(perf.pos, perf.posPrev);
+        //Debug.Log("Perf.pos: " +  perf.pos + "perf.posPrev: " + perf.posPrev);
 
-        float distance = perf.perf;
+        float idealDistance = Vector3.Distance(perf.actionStartPos, perf.pos);
+        float distance;
+        if (perf.perf == 0f) {
+            distance = 0f;
+        } else {
+            distance = idealDistance / perf.perf;
+        }
+
+
+        //float distance = perf.perf;
         //Debug.Log("lastPosition: " + lastPositionSpeed);
-        //float distance = Vector3.Distance(perf.actionStartPos, perf.pos);
+        
         return distance;
     }
 
@@ -924,15 +930,26 @@ public class PerformanceManager : MonoBehaviour
     }
 
     private float CalculateActionDistance(PerfData perf) {
-        if (perf.actionEndTimestamp == -1f || perf.actionEndPos == Vector3.zero) {
+        if (perf.actionStartTimestamp == -1f || perf.actionEndTimestamp == -1f || 
+            perf.actionEndPos == Vector3.zero || perf.actionStartPos == Vector3.zero) {
             // if this is our first action, we don't have enough information to calculate speed.
             return -1f;
         }
 
-        //float distance = Vector3.Distance(perf.actionStartPos, perf.actionEndPos);
-        float distance = perf.perf;
-        perf.perf = 0f;
-        return distance;
+        float idealDistance = Vector3.Distance(perf.actionStartPos, perf.actionEndPos);
+        //Debug.Log("perf.actionStartPos: " + perf.actionStartPos + "perf.actionEndPos" + perf.actionEndPos);
+        float distance = -1f;
+        if (perf.perf == 0f) {
+            distance = 0f;
+        } else {
+            // trajectory straightness calculation
+            distance = idealDistance / perf.perf; // perf.perf is the true distance.
+        }
+        //Debug.Log("perf.perf: " + perf.perf);
+        //Debug.Log("idealDistance: " + idealDistance);
+        //Debug.Log("newDistance: " + distance);
+        perf.perf = 0f; // reset true distance afterwards.
+        return distance; 
     }
 
     private float CalculateActionTime(PerfData perf) {
