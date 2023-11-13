@@ -256,6 +256,7 @@ public class DiskMole : Mole
         }
         circleOutline.color = new Color(circleOutline.color.r, circleOutline.color.g, circleOutline.color.b, 0.0f);
         ChangeColor(colorEnd);
+        checkmarkOpacity.a = 0f; // force  0 opacity at end.
         transform.localScale = normalSize;
         perfText.SetActive(false);
     }
