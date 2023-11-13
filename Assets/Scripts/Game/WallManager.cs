@@ -477,12 +477,12 @@ public class WallManager : MonoBehaviour
     private IEnumerator WaitShowTaskFeedback(float duration, Dictionary<int, float> molePerf, float animationDelay) {
         float timeSpent = 0f;
 
-        foreach (Mole mole in moles.Values)
+        foreach (int id in moles.Keys)
         {
-            int id = mole.GetId();
+            //int id = molesmole.GetId();
 
             if (molePerf[id] != -1f) {
-                mole.PlayFeedback(molePerf[id], duration-timeSpent);
+                moles[id].PlayFeedback(molePerf[id], duration-timeSpent);
                 soundManager.PlaySoundWithPitch(gameObject, SoundManager.Sound.greenMoleHit, molePerf[id]);
             }
             timeSpent += animationDelay;
