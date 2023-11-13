@@ -77,6 +77,7 @@ public abstract class Pointer : MonoBehaviour
 
     protected LineRenderer laser;
 
+    protected bool performanceFeedbackTask = true;
     protected bool performancefeedback = true;
     protected bool performanceText = false;
 
@@ -180,7 +181,6 @@ public abstract class Pointer : MonoBehaviour
         // amplitude in 75
 
         hapticAction.Execute(0, duration, frequency, amplitude, controller);
-
     }
 
     public void SetPointerEnable(bool active)
@@ -193,6 +193,11 @@ public abstract class Pointer : MonoBehaviour
         {
             Disable();
         }
+    }
+
+    public void SetTaskPerformanceFeedback(bool perf)
+    {
+        performanceFeedbackTask = perf;
     }
 
     public void SetPerformanceActionFeedback(bool perf, bool withText)
@@ -291,6 +296,7 @@ public abstract class Pointer : MonoBehaviour
     }
 
     // Functions to call in the class implementation to add extra animation/effect behavior on shoot/cooldown.
+    public virtual void ShowTaskFeedback(float duration, Dictionary<int, float> molePerf, float animationDelay) { }
     protected virtual void PlayShoot(bool correctHit) { }
     protected virtual void PlayCooldownEnd() { }
 
@@ -351,7 +357,7 @@ public abstract class Pointer : MonoBehaviour
                     if (performancefeedback)
                     {
                         soundManager.PlaySoundWithPitch(gameObject, SoundManager.Sound.greenMoleHit, feedback);
-                        Pulse(duration:0.2f, frequency:150, amplitude:feedback * 50);
+                            
                     }
                     else
                     {

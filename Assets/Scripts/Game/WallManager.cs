@@ -55,6 +55,9 @@ public class WallManager : MonoBehaviour
     [SerializeField]
     private PerformanceManager performanceManager;
 
+    [SerializeField]
+    private MotorSpaceManager motorspaceManager;
+
     [Header("Default Wall Settings")]
     [SerializeField]
     private WallSettings defaultWall = new WallSettings();
@@ -462,10 +465,13 @@ public class WallManager : MonoBehaviour
             }
             if (perfs.Count > 0) {
                 molePerf[id] = perfs.Average();
+            } else {
+                molePerf[id] = -1f;
             }
         }
 
         StartCoroutine(WaitShowTaskFeedback(duration, molePerf, 0.05f));
+        motorspaceManager.ShowTaskFeedback(duration, molePerf, 0.05f);
     }
 
     private IEnumerator WaitShowTaskFeedback(float duration, Dictionary<int, float> molePerf, float animationDelay) {
@@ -475,7 +481,7 @@ public class WallManager : MonoBehaviour
         {
             int id = mole.GetId();
 
-            if (molePerf.ContainsKey(id)) {
+            if (molePerf[id] != -1f) {
                 mole.PlayFeedback(molePerf[id], duration-timeSpent);
                 soundManager.PlaySoundWithPitch(gameObject, SoundManager.Sound.greenMoleHit, molePerf[id]);
             }

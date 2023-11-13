@@ -81,6 +81,25 @@ public class BasicPointer : Pointer
         
     }
 
+    public override void ShowTaskFeedback(float duration, Dictionary<int, float> molePerf, float animationDelay)
+    {
+        if (!performanceFeedbackTask) { return; }
+        StartCoroutine(WaitShowTaskFeedback(duration, molePerf, animationDelay));
+    }
+    
+    private IEnumerator WaitShowTaskFeedback(float duration, Dictionary<int, float> molePerf, float animationDelay) {
+        float timeSpent = 0f;
+
+        foreach (float val in molePerf.Values)
+        {
+            if (val != -1f) {
+                Pulse(duration:0.1f, frequency:150, amplitude:val * 50);
+            }
+            timeSpent += animationDelay;
+            yield return new WaitForSeconds(animationDelay);
+        }
+    }
+
     public override void PositionUpdated()
     {
         if (!active) return;
