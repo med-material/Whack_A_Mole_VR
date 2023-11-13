@@ -244,9 +244,9 @@ public class DiskMole : Mole
         yield return new WaitForSeconds(0.2f);
         // Then transition to the end color
         elapsedTime = 0;
+        Color checkmarkOpacity = checkmark.color;
         while (elapsedTime < 0.8f)
         {
-            Color checkmarkOpacity = checkmark.color;
             checkmarkOpacity.a = Mathf.Lerp(colorFeedback.a, 0, (elapsedTime / 0.8f));
             checkmark.color = checkmarkOpacity;
             circleOutline.color = new Color(circleOutline.color.r, circleOutline.color.g, circleOutline.color.b, Mathf.Lerp(colorFeedback.a, 0, (elapsedTime / 0.8f)));
@@ -257,6 +257,7 @@ public class DiskMole : Mole
         circleOutline.color = new Color(circleOutline.color.r, circleOutline.color.g, circleOutline.color.b, 0.0f);
         ChangeColor(colorEnd);
         checkmarkOpacity.a = 0f; // force  0 opacity at end.
+        checkmark.color = checkmarkOpacity;
         transform.localScale = normalSize;
         perfText.SetActive(false);
     }
