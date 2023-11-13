@@ -19,6 +19,11 @@ public enum JudgementType {
     Time
 }
 
+public enum JudgementLevel {
+    Operation,
+    Action,
+}
+
 // Data Structures
 [System.Serializable]
 public class PerfData {
@@ -28,8 +33,20 @@ public class PerfData {
     public float movingAverage = -1f;
     public float upperThresholdAction = -1f;
     public float lowerThresholdAction = -1f;
+    public float[] actionMemoryWorstVals = new float[] { -1, -1, -1, -1, -1 };
+    public float[] actionMemoryBestVals = new float[] { -1, -1, -1, -1, -1 };
+    public float actionMemoryWorstVal = -1f;
+    public float actionMemoryBestVal = -1f;
+    public float actionMemoryClock = 0.0f;
+    public int actionMemoryIndex = 0;
+    public float actionMemoryThreshold = 5f; // Each instant memory pocket corresponds to 200ms.
     public float[] instantMemoryWorstVals = new float[] { -1, -1, -1, -1, -1 };
     public float[] instantMemoryBestVals = new float[] { -1, -1, -1, -1, -1 };
+    public float instantMemoryWorstVal = -1f;
+    public float instantMemoryBestVal = -1f;
+    public float instantMemoryClock = 0.0f;
+    public int instantMemoryIndex = 0;
+    public float instantMemoryThreshold = 2f; // Each instant memory pocket corresponds to 200ms.
     public Queue<float> meanMemoryVals = new Queue<float>();
     public float perfBestAction = -1f;
     public float perfWorstAction = -1f;
@@ -258,19 +275,22 @@ public class PerformanceManager : MonoBehaviour
                 if (judgementType == JudgementType.AverageSpeed) {
                     newVal = CalculateActionSpeed(perf);
                     UpdateActionMovingAverage(newVal, perf);
-                    judgement = MakeActionJudgement(newVal, perf);
+                    judgement = MakeJudgement(newVal, perf, level:JudgementLevel.Action);
                 } else if (judgementType == JudgementType.MaxSpeed) {
                     newVal = CalculateActionSpeed(perf);
-                    UpdateActionThresholds(newVal, perf);
-                    judgement = MakeActionJudgement(newVal, perf);
+                    //UpdateActionThresholds(newVal, perf);
+                    UpdateActionMovingAverage(newVal, perf);
+                    judgement = MakeJudgement(newVal, perf, level:JudgementLevel.Action);
                 } else if (judgementType == JudgementType.Distance) {
                     newVal = CalculateActionDistance(perf);
-                    UpdateActionThresholds(newVal, perf, thresholdMax: false);
-                    judgement = MakeActionJudgement(newVal, perf, thresholdMax: false);
+                    //UpdateActionThresholds(newVal, perf, thresholdMax: false);
+                    UpdateActionMovingAverage(newVal, perf, thresholdMax: false);
+                    judgement = MakeJudgement(newVal, perf, thresholdMax: false, level:JudgementLevel.Action);
                 } else if (judgementType == JudgementType.Time) {
                     newVal = CalculateActionTime(perf);
-                    UpdateActionThresholds(newVal, perf, thresholdMax: false);
-                    judgement = MakeActionJudgement(newVal, perf, thresholdMax: false);
+                    //UpdateActionThresholds(newVal, perf, thresholdMax: false);
+                    UpdateActionMovingAverage(newVal, perf, thresholdMax: false);
+                    judgement = MakeJudgement(newVal, perf, thresholdMax: false, level:JudgementLevel.Action);
                 } else if (judgementType == JudgementType.MaxConstant) {
                     newVal = 1f;
                     judgement = 1f;
@@ -360,26 +380,30 @@ public class PerformanceManager : MonoBehaviour
         if (judgementType == JudgementType.AverageSpeed)
         {
             newPerf = CalculateInstantAvgSpeed(perf);
-            UpdateInstantAvgSpeedThresholds(newPerf, perf);
-            judgement = MakeInstantJudgement(newPerf, perf);
+            //UpdateInstantAvgSpeedThresholds(newPerf, perf);
+            UpdateInstantMovingAverage(newPerf, perf);
+            judgement = MakeJudgement(newPerf, perf, level:JudgementLevel.Operation);
         }
         else if (judgementType == JudgementType.MaxSpeed)
         {
             newPerf = CalculateInstantMaxSpeed(perf);
-            UpdateInstantThresholds(newPerf, perf);
-            judgement = MakeInstantJudgement(newPerf, perf);
+            //UpdateInstantThresholds(newPerf, perf);
+            UpdateInstantMovingAverage(newPerf, perf);
+            judgement = MakeJudgement(newPerf, perf, level:JudgementLevel.Operation);
         }
         else if (judgementType == JudgementType.Distance)
         {
             newPerf = CalculateInstantDistance(perf);
-            UpdateInstantThresholds(newPerf, perf, thresholdMax: false);
-            judgement = MakeInstantJudgement(newPerf, perf, thresholdMax: false);
+            UpdateInstantMovingAverage(newPerf, perf, thresholdMax: false);
+            //UpdateInstantThresholds(newPerf, perf, thresholdMax: false);
+            judgement = MakeJudgement(newPerf, perf, thresholdMax: false, level:JudgementLevel.Operation);
         }
         else if (judgementType == JudgementType.Time)
         {
             newPerf = CalculateInstantTime(perf);
-            UpdateInstantThresholds(newPerf, perf, thresholdMax: false);
-            judgement = MakeInstantJudgement(newPerf, perf, thresholdMax: false);
+            UpdateInstantMovingAverage(newPerf, perf, thresholdMax: false);
+            //UpdateInstantThresholds(newPerf, perf, thresholdMax: false);
+            judgement = MakeJudgement(newPerf, perf, thresholdMax: false, level:JudgementLevel.Operation);
         }
         // Special cases with constant or random values.
         else if (judgementType == JudgementType.MaxConstant)
@@ -415,26 +439,138 @@ public class PerformanceManager : MonoBehaviour
     // Average Calculator
     #region Calculators
     // Updates the moving average for action performance.
-    private void UpdateActionMovingAverage(float val, PerfData perf)
+    private void UpdateActionMovingAverage(float val, PerfData perf, bool thresholdMax = true)
     {
-        // Add the new value to the memory queue.
-        perf.meanMemoryVals.Enqueue(val);
-        // If the queue exceeds the memory limit, remove the oldest value.
-        if (perf.meanMemoryVals.Count > meanMemoryLimit)
+        // Early exit if value is invalid.
+        if (val == -1f) return;
+
+        bool update = false;
+
+        // Check and update the worst action value.
+        if (perf.actionMemoryWorstVal == -1f)
         {
-            perf.meanMemoryVals.Dequeue();
+            perf.actionMemoryWorstVal = val;
+            update = true;
         }
-        // Compute the moving average.
-        perf.movingAverage = perf.meanMemoryVals.Average();
-        // Set upper and lower thresholds based on the moving average.
-        perf.upperThresholdAction = MultiplierUp * perf.movingAverage;
-        perf.lowerThresholdAction = MultiplierDown * perf.movingAverage;
+        else if (val < perf.actionMemoryWorstVal)
+        {
+            perf.actionMemoryWorstVal = val;
+            update = true;
+        }
+
+        // Check and update the best action value.
+        if (perf.actionMemoryBestVal == -1f)
+        {
+            perf.actionMemoryBestVal = val;
+            update = true;
+        }
+        else if (val > perf.actionMemoryBestVal)
+        {
+            perf.actionMemoryBestVal = val;
+            update = true;
+        }
+
+       float timePassed = -1f;
+        if (perf.actionStartTimestamp == -1f) {
+            perf.actionStartTimestamp = Time.time;
+            timePassed = 0;
+        } else {
+            timePassed = Time.time - perf.actionStartTimestamp;
+            perf.actionMemoryClock += timePassed;
+        }
+
+        if (perf.actionMemoryClock > perf.actionMemoryThreshold) {
+            perf.actionMemoryBestVal = val;
+            perf.actionMemoryWorstVal = val;
+            perf.actionMemoryClock = 0f;
+            perf.actionMemoryIndex++;
+            update = true;
+        }
+
+        // if there is no update to any value, return early.
+        if (!update) return;
+
+
+        // Update memory every 100ms
+        int index = perf.actionMemoryIndex % 5;
+        perf.actionMemoryBestVals[index] = perf.actionMemoryBestVal;
+        perf.actionMemoryWorstVals[index] = perf.actionMemoryWorstVal;
+
+        // Determine how many of the values we can use for our average
+        int averageMaxSize = perf.actionMemoryIndex < 5 ? perf.actionMemoryIndex+1 : 5;
+
+        float bestSum = 0f;
+        float worstSum = 0f;
+        for (int i = 0; i < averageMaxSize; i++) {
+            bestSum += perf.actionMemoryBestVals[i];
+            worstSum += perf.actionMemoryWorstVals[i];
+        }
+        Debug.Log("Best Sum: " + bestSum);
+        Debug.Log("AverageMaxSize: " + averageMaxSize);
+        Debug.Log("timePassed: " + timePassed);
+
+        perf.perfBestAction = bestSum == 0f ? bestSum : bestSum / averageMaxSize;
+        perf.perfWorstAction = worstSum == 0f ? worstSum : worstSum / averageMaxSize;
+
+        // Set the action thresholds based on either prioritizing max or otherwise.
+        if (thresholdMax)
+        {
+            perf.upperThresholdAction = perf.perfBestAction;
+            perf.lowerThresholdAction = perf.perfWorstAction;
+        }
+        else
+        {
+            perf.upperThresholdAction = perf.perfWorstAction;
+            perf.lowerThresholdAction = perf.perfBestAction;
+        }
     }
 
    // Updates the moving average for instant performance.
-   // The moving average 
-    private void UpdateInstantMovingAverage(float val, PerfData perf)
+   // Threshold max determines the direction of what is considered "good".
+    private void UpdateInstantMovingAverage(float val, PerfData perf, bool thresholdMax = true)
     {
+        // Early exit if value is invalid.
+        if (val == -1f) return;
+
+        bool update = false;
+
+        // Check and update the worst action value.
+        if (perf.instantMemoryWorstVal == -1f)
+        {
+            perf.instantMemoryWorstVal = val;
+            update = true;
+        }
+        else if (val < perf.instantMemoryWorstVal)
+        {
+            perf.instantMemoryWorstVal = val;
+            update = true;
+        }
+
+        // Check and update the best action value.
+        if (perf.instantMemoryBestVal == -1f)
+        {
+            perf.instantMemoryBestVal = val;
+            update = true;
+        }
+        else if (val > perf.instantMemoryBestVal)
+        {
+            perf.instantMemoryBestVal = val;
+            update = true;
+        }
+
+        perf.instantMemoryClock += Time.deltaTime;
+
+        if (perf.instantMemoryClock > perf.instantMemoryThreshold) {
+            perf.instantMemoryBestVal = val;
+            perf.instantMemoryWorstVal = val;
+            perf.instantMemoryClock = 0f;
+            perf.instantMemoryIndex++;
+            update = true;
+        }
+
+        // if there is no update to any value, return early.
+        if (!update) return;
+
         float timePassed = -1f;
         if (perf.instantStartTimestamp == -1f) {
             perf.instantStartTimestamp = Time.time;
@@ -443,23 +579,47 @@ public class PerformanceManager : MonoBehaviour
             timePassed = Time.time - perf.instantStartTimestamp;
         }
 
-        // convert to second
-        int second = ((int) Mathf.Floor(timePassed)) % 5;
-        perf.instantMemoryBestVals[second] = val;
+        // Update memory every 100ms
+        int index = perf.instantMemoryIndex % 5;
+        perf.instantMemoryBestVals[index] = perf.instantMemoryBestVal;
+        perf.instantMemoryWorstVals[index] = perf.instantMemoryWorstVal;
 
+        // Determine how many of the values we can use for our average
+        int averageMaxSize = perf.instantMemoryIndex < 5 ? perf.instantMemoryIndex+1 : 5;
 
-        // Add the new value to the memory queue.
-        perf.meanMemoryVals.Enqueue(val);
-        // If the queue exceeds the memory limit, remove the oldest value.
-        if (perf.meanMemoryVals.Count > meanMemoryLimit)
-        {
-            perf.meanMemoryVals.Dequeue();
+        float bestSum = 0f;
+        float worstSum = 0f;
+        for (int i = 0; i < averageMaxSize; i++) {
+            bestSum += perf.instantMemoryBestVals[i];
+            worstSum += perf.instantMemoryWorstVals[i];
         }
-        // Compute the moving average.
-        perf.movingAverage = perf.meanMemoryVals.Average();
-        // Set upper and lower thresholds based on the moving average.
-        perf.upperThresholdAction = MultiplierUp * perf.movingAverage;
-        perf.lowerThresholdAction = MultiplierDown * perf.movingAverage;
+
+        perf.perfBest = bestSum == 0f ? bestSum : bestSum / averageMaxSize;
+        perf.perfWorst = worstSum == 0f ? worstSum : worstSum / averageMaxSize;
+
+        // Set the action thresholds based on either prioritizing max or otherwise.
+        if (thresholdMax)
+        {
+            perf.upperThresholdAction = perf.perfBestAction;
+            perf.lowerThresholdAction = perf.perfWorstAction;
+        }
+        else
+        {
+            perf.upperThresholdAction = perf.perfWorstAction;
+            perf.lowerThresholdAction = perf.perfBestAction;
+        }
+
+        // Set the instantaneous thresholds based on either prioritizing max or otherwise.
+        if (thresholdMax)
+        {
+            perf.upperThresholdInstant = perf.perfBest;
+            perf.lowerThresholdInstant = perf.perfWorst;
+        }
+        else
+        {
+            perf.upperThresholdInstant = perf.perfWorst;
+            perf.lowerThresholdInstant = perf.perfBest;
+        }
     }
 
     // Max-based Calculator
@@ -803,56 +963,6 @@ public class PerformanceManager : MonoBehaviour
 
     #region Judgement Calculators
     /// <summary>
-    /// Determines the judgement of an action based on the performance thresholds.
-    /// The judgement value ranges from 0 to 1, with the interpretation depending on the 'thresholdMax' parameter.
-    /// </summary>
-    /// <param name="val">The value to judge against the thresholds.</param>
-    /// <param name="perf">The performance data containing the action thresholds.</param>
-    /// <param name="thresholdMax">Determines if higher values are judged positively (true) or negatively (false).</param>
-    /// <returns>A float representing the judgement value ranging from 0 (negative) to 1 (positive).</returns>
-    private float MakeActionJudgement(float val, PerfData perf, bool thresholdMax = true)
-    {
-        float judgement;
-
-        // If there is less than the threshold to judge threshold, default to 100% postive feedback.
-        //if (perf.meanMemoryVals.Count < minimumJudgeThreshold)
-        //{
-        //    judgement = 0f;
-        //    return judgement;
-        //}
-
-        // If the value is a sentinel value (-1), return a neutral judgement.
-        if (val == -1f)
-        {
-            judgement = 0f;
-            return judgement;
-        }
-
-        // Determine the judgement based on comparison with the action thresholds.
-        if (val <= perf.lowerThresholdAction)
-        {
-            judgement = thresholdMax ? 0f : 1f;
-        }
-        else if (val >= perf.upperThresholdAction)
-        {
-            judgement = thresholdMax ? 1f : 0f;
-        }
-        else
-        {
-            // If the value is between thresholds, compute a relative judgement value.
-            judgement = (val - perf.lowerThresholdAction) / (perf.upperThresholdAction - perf.lowerThresholdAction);
-
-            // Reverse judgement if not prioritizing max.
-            if (!thresholdMax)
-            {
-                judgement = 1 - judgement;
-            }
-        }
-
-        return judgement;
-    }
-
-    /// <summary>
     /// Determines the instant judgement of a value based on the instantaneous performance thresholds.
     /// The judgement value ranges from 0 to 1, with the interpretation depending on the 'thresholdMax' parameter.
     /// </summary>
@@ -860,7 +970,7 @@ public class PerformanceManager : MonoBehaviour
     /// <param name="perf">The performance data containing the instantaneous thresholds.</param>
     /// <param name="thresholdMax">Determines if higher values are judged positively (true) or negatively (false).</param>
     /// <returns>A float representing the judgement value ranging from 0 (negative) to 1 (positive).</returns>
-    private float MakeInstantJudgement(float val, PerfData perf, bool thresholdMax = true)
+    private float MakeJudgement(float val, PerfData perf, bool thresholdMax = true, JudgementLevel level = JudgementLevel.Action)
     {
         float judgement;
 
@@ -871,19 +981,30 @@ public class PerformanceManager : MonoBehaviour
             return judgement;
         }
 
+        float upper = -1f;
+        float lower = -1f;
+        if (level == JudgementLevel.Operation) {
+            // Swap thresholds depending on whether max is up or down.
+            lower = thresholdMax ? perf.lowerThresholdInstant : perf.upperThresholdInstant;
+            upper = thresholdMax ? perf.upperThresholdInstant : perf.lowerThresholdInstant;
+        } else { // if JudgementLevel.Action
+            lower = thresholdMax ? perf.lowerThresholdAction : perf.upperThresholdAction;
+            upper = thresholdMax ? perf.upperThresholdAction : perf.lowerThresholdAction;
+        }
+
         // Determine the judgement based on comparison with the instantaneous thresholds.
-        if (val <= perf.lowerThresholdInstant)
+        if (val <= lower)
         {
             judgement = thresholdMax ? 0f : 1f;
         }
-        else if (val >= perf.upperThresholdInstant)
+        else if (val >= upper)
         {
             judgement = thresholdMax ? 1f : 0f;
         }
         else
         {
             // If the value is between thresholds, compute a relative judgement value.
-            judgement = (val - perf.lowerThresholdInstant) / (perf.upperThresholdInstant - perf.lowerThresholdInstant);
+            judgement = (val - lower) / (upper - lower);
 
             // Reverse judgement if not prioritizing max.
             if (!thresholdMax)
