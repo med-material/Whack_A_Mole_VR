@@ -363,7 +363,7 @@ public abstract class Pointer : MonoBehaviour
                     if (performancefeedback)
                     {
                         soundManager.PlaySoundWithPitch(gameObject, SoundManager.Sound.greenMoleHit, feedback);
-                            
+                        Pulse(duration:0.05f, frequency:100, amplitude:feedback * 35);    
                     }
                     else
                     {
