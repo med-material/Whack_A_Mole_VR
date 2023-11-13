@@ -419,7 +419,7 @@ public class LaserMapper : MonoBehaviour
             bub.ChangeIndicator(ArrowType.None, GetCurrentController().name);
     }
 
-    internal void SetPerformanceOperationFeedback(bool v, bool withText)
+    internal void SetOperationPerformanceFeedback(bool v, bool withText)
     {
         foreach (var bub in bubbleDisplay)
             bub.SetPerformanceOperationFeedback(v, withText);

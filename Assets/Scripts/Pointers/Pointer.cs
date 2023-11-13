@@ -77,6 +77,7 @@ public abstract class Pointer : MonoBehaviour
 
     protected LineRenderer laser;
 
+    protected bool performanceFeedbackOperation = true;
     protected bool performanceFeedbackTask = true;
     protected bool performancefeedback = true;
     protected bool performanceText = false;
@@ -195,12 +196,17 @@ public abstract class Pointer : MonoBehaviour
         }
     }
 
+    public void SetOperationPerformanceFeedback(bool perf)
+    {
+        performanceFeedbackOperation = perf;
+    }
+
     public void SetTaskPerformanceFeedback(bool perf)
     {
         performanceFeedbackTask = perf;
     }
 
-    public void SetPerformanceActionFeedback(bool perf, bool withText)
+    public void SetActionPerformanceFeedback(bool perf, bool withText)
     {
         performancefeedback = perf;
         performanceText = withText;

@@ -242,22 +242,39 @@ public class MotorSpaceManager : MonoBehaviour
         }
     }
 
-    internal void SetPerformanceOperationFeedback(bool v, bool withText)
+    internal void SetTaskPerformanceFeedback(bool val)
+    {
+            if (motorspace == ActiveMotorSpace.Right)
+                MotorSpaceRight.GetCurrentController().GetComponent<Pointer>().SetTaskPerformanceFeedback(val);
+            else if (motorspace == ActiveMotorSpace.Left)
+                MotorSpaceLeft.GetCurrentController().GetComponent<Pointer>().SetTaskPerformanceFeedback(val);
+            else if (motorspace == ActiveMotorSpace.Both)
+            {
+                MotorSpaceRight.GetCurrentController().GetComponent<Pointer>().SetTaskPerformanceFeedback(val);
+                MotorSpaceLeft.GetCurrentController().GetComponent<Pointer>().SetTaskPerformanceFeedback(val);
+            }
+    }
+
+    internal void SetOperationPerformanceFeedback(bool v, bool withText)
     {
         if (!v)
         {
-            MotorSpaceRight.SetPerformanceOperationFeedback(false, withText);
-            MotorSpaceLeft.SetPerformanceOperationFeedback(false, withText);
+            MotorSpaceRight.SetOperationPerformanceFeedback(false, withText);
+            MotorSpaceLeft.SetOperationPerformanceFeedback(false, withText);
         } else
         {
-            if (motorspace == ActiveMotorSpace.Right)
-                MotorSpaceRight.SetPerformanceOperationFeedback(true, withText);
-            else if (motorspace == ActiveMotorSpace.Left)
-                MotorSpaceLeft.SetPerformanceOperationFeedback(true, withText);
-            else if (motorspace == ActiveMotorSpace.Both)
+            if (motorspace == ActiveMotorSpace.Right) {
+                MotorSpaceRight.SetOperationPerformanceFeedback(true, withText);
+                MotorSpaceRight.GetCurrentController().GetComponent<Pointer>().SetOperationPerformanceFeedback(v);
+            } else if (motorspace == ActiveMotorSpace.Left) {
+                MotorSpaceLeft.SetOperationPerformanceFeedback(true, withText);
+                MotorSpaceLeft.GetCurrentController().GetComponent<Pointer>().SetOperationPerformanceFeedback(v);
+            } else if (motorspace == ActiveMotorSpace.Both)
             {
-                MotorSpaceRight.SetPerformanceOperationFeedback(true, withText);
-                MotorSpaceLeft.SetPerformanceOperationFeedback(true, withText);
+                MotorSpaceRight.SetOperationPerformanceFeedback(true, withText);
+                MotorSpaceRight.GetCurrentController().GetComponent<Pointer>().SetOperationPerformanceFeedback(v);
+                MotorSpaceLeft.SetOperationPerformanceFeedback(true, withText);
+                MotorSpaceLeft.GetCurrentController().GetComponent<Pointer>().SetOperationPerformanceFeedback(v);
             }
         }
     }

@@ -603,13 +603,13 @@ public class ModifiersManager : MonoBehaviour
         bool withText = performanceFeedbackText;
         // Apply values to all modifiers
         wallManager.SetActionPerformanceFeedback(actionFeedback, withText);
-        rightController.SetPerformanceActionFeedback(actionFeedback, withText);
-        leftController.SetPerformanceActionFeedback(actionFeedback, withText);
-
-        motorSpaceManager.SetPerformanceOperationFeedback(operationFeedback, withText);
+        rightController.SetActionPerformanceFeedback(actionFeedback, withText);
+        leftController.SetActionPerformanceFeedback(actionFeedback, withText);
 
         // Task changes
         wallManager.SetTaskPerformanceFeedback(taskFeedback);
+        motorSpaceManager.SetTaskPerformanceFeedback(taskFeedback);
+        motorSpaceManager.SetOperationPerformanceFeedback(taskFeedback, withText);
 
         // Raises an Event and updates a PersistentEvent's parameter (in consequence, a PersistentEvent will also be raised)
         loggerNotifier.NotifyLogger($"Performance Feedback Set {Enum.GetName(typeof(PerformanceFeedback), value)}", EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()

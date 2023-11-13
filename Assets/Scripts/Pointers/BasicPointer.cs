@@ -22,6 +22,7 @@ public class BasicPointer : Pointer
 
     private float shootTimeLeft;
     private float totalShootTime;
+    private float pulseClock = 0f;
     private float dwellTime = 3f;
     private float dwellTimer = 0f;
     private float dwellduration = 0f;
@@ -190,6 +191,7 @@ public class BasicPointer : Pointer
                     }
                     else
                     {
+                        OperationFeedback();
                         CheckHoverEnd();
                         if (dwellTimer > 0f)
                         {
@@ -232,6 +234,16 @@ public class BasicPointer : Pointer
             });
             hover = "";
 
+        }
+    }
+
+    private void OperationFeedback() {
+        if (performanceFeedbackOperation && pulseClock > 0.25f) {
+            float val = performanceManager.GetInstantJudgement(controllerName);
+            Pulse(duration:0.1f, frequency:500, amplitude:val * 35);
+            pulseClock = 0f;
+        } else {
+            pulseClock += Time.deltaTime;
         }
     }
 
