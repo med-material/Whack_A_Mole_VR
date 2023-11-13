@@ -609,7 +609,7 @@ public class ModifiersManager : MonoBehaviour
         // Task changes
         wallManager.SetTaskPerformanceFeedback(taskFeedback);
         motorSpaceManager.SetTaskPerformanceFeedback(taskFeedback);
-        motorSpaceManager.SetOperationPerformanceFeedback(taskFeedback, withText);
+        motorSpaceManager.SetOperationPerformanceFeedback(operationFeedback, withText);
 
         // Raises an Event and updates a PersistentEvent's parameter (in consequence, a PersistentEvent will also be raised)
         loggerNotifier.NotifyLogger($"Performance Feedback Set {Enum.GetName(typeof(PerformanceFeedback), value)}", EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
