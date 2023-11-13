@@ -19,6 +19,7 @@ public class PointerTrailHandler : MonoBehaviour
     [SerializeField]
     private SoundManager.Sound trailSound;
     private float currentPitch = 0.5f;  // Initial pitch
+    private float currentVolume = -1f;  // Initial volume
 
 
     private SpriteRenderer spriteRenderer;
@@ -123,10 +124,17 @@ public class PointerTrailHandler : MonoBehaviour
 
             float targetDiameter = spriteRenderer.bounds.size.x;
 
-            soundManager.ChangeVolume(trailSound, (speed > 0.1f) ? Mathf.Lerp(0f, 1, speed) : 0f);
+            float targetVolume = Mathf.Lerp(0f, 1f, normalizedSpeed);
+            if (currentVolume == -1f)  {
+                currentVolume = targetVolume;
+            } else {
+                currentVolume = Mathf.Lerp(currentVolume, targetVolume, Time.deltaTime * 2f);
+            }
+            soundManager.ChangeVolume(trailSound, currentVolume);
+            //soundManager.ChangeVolume(trailSound, (speed > 0.0f) ? Mathf.Lerp(0f, 1f, speed) : 0f);
 
             float targetPitch = Mathf.Lerp(minTargetPitch, maxTargetPitch, normalizedSpeed);
-            currentPitch = Mathf.Lerp(currentPitch, targetPitch, Time.deltaTime * 1f);
+            currentPitch = Mathf.Lerp(currentPitch, targetPitch, Time.deltaTime * 2f);
             soundManager.ChangePitch(trailSound, currentPitch);
 
             float currentLength = Mathf.Min(Mathf.Lerp(minTrailLength, maxTrailLength, normalizedSpeed), maxTrailLength);
