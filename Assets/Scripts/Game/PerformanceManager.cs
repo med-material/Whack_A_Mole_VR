@@ -776,7 +776,7 @@ public class PerformanceManager : MonoBehaviour
     }
 
     private float CalculateActionTime(PerfData perf) {
-        if (perf.actionEndTimestamp == -1f || perf.actionEndPos == Vector3.zero) {
+        if (perf.actionStartTimestamp == -1f || perf.actionEndTimestamp == -1f || perf.actionEndPos == Vector3.zero) {
             // if this is our first action, we don't have enough information to calculate speed.
             return -1f;
         }
