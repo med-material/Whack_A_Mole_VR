@@ -463,7 +463,7 @@ public class LaserMapper : MonoBehaviour
     }
 
     public void SetMotorSpace(MotorSpaceInfo motorspace) {
-        coroutineQueue.Enqueue(ScaleMotorSpace(motorspace, 0.4f));
+        coroutineQueue.Enqueue(ScaleMotorSpace(motorspace, 0.4f, showMotorspace));
 
         multiplier = motorspace.multiplier;
         UpdateMotorSpaceVisualizer(motorspace.mode);
@@ -487,7 +487,7 @@ public class LaserMapper : MonoBehaviour
         return info;
     }
 
-    private IEnumerator ScaleMotorSpace(MotorSpaceInfo motorspace, float duration) {
+    private IEnumerator ScaleMotorSpace(MotorSpaceInfo motorspace, float duration, bool visibility) {
         float timer = 0;
         float rate = 1 / duration;
 
@@ -503,7 +503,7 @@ public class LaserMapper : MonoBehaviour
 
         while (timer < 1)
         {
-            ShowMotorspace(true);
+            ShowMotorspace(visibility);
 
             timer += Time.deltaTime * rate;
 
