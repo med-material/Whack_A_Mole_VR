@@ -57,18 +57,22 @@ public class PatternParser
 
             // Splits the line to separate the property and its patameters.
             string[] keyValue = uncommentedLine.Replace(" ", "").Split(":"[0]);
+            
             if (keyValue.Length != 2) continue;
-
+            
             Dictionary<string, string> extractedProperties = ExtractProperty(keyValue[1]);
-
+            //UnityEngine.Debug.Log(string.Join(System.Environment.NewLine, extractedProperties));
             // If property = "WAIT", adds duration to the play time and ignores the rest.
             if (keyValue[0] == "WAIT")
             {
-                string[] parameterValue = uncommentedLine.Split(new char[] { '(', ')', '=' });
-                if (parameterValue[1] == "TIME")
+                string[] parameterValue = uncommentedLine.Replace(" ", "").Split(new char[] { '(', ')', '=' });
+                //UnityEngine.Debug.Log(parameterValue[1]);
+                if (parameterValue[1] == "TIME") // culprit somewhere here
                 {
+                    //UnityEngine.Debug.Log(extractedProperties["TIME"]);
                     float waitTime = float.Parse(extractedProperties["TIME"], System.Globalization.CultureInfo.InvariantCulture);
                     playTime += waitTime;
+                    //UnityEngine.Debug.Log("waitTime: " + waitTime + "playTime: " + playTime);
                 }
                 else if(parameterValue[1] == "HIT")
                 {
