@@ -238,7 +238,9 @@ public class BasicPointer : Pointer
     }
 
     private void OperationFeedback() {
-        if (performanceFeedbackOperation && pulseClock > 0.15f) {
+        if (!performanceFeedbackOperation) return;
+        
+        if (pulseClock > 0.15f) {
             float val = performanceManager.GetInstantJudgement(controllerName);
             Pulse(duration:0.05f, frequency:50, amplitude:val * 25);
             pulseClock = 0f;
