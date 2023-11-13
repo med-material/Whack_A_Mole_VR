@@ -239,10 +239,10 @@ public class BasicPointer : Pointer
 
     private void OperationFeedback() {
         if (!performanceFeedbackOperation) return;
-        
-        if (pulseClock > 0.15f) {
+
+        if (pulseClock > 0.06) {
             float val = performanceManager.GetInstantJudgement(controllerName);
-            Pulse(duration:0.05f, frequency:50, amplitude:val * 25);
+            Pulse(duration:0.02f, frequency:50, amplitude:val * 35);
             pulseClock = 0f;
         } else {
             pulseClock += Time.deltaTime;
