@@ -181,19 +181,34 @@ public class PerformanceManager : MonoBehaviour
     {
         Dictionary<string, object> data = new Dictionary<string, object>() {
             {"CtrRInstantJudgement", perfR.judge},
+            {"CtrRActionJudgement", perfR.lastJudges.LastOrDefault()},
             {"CtrRInstantPerformance", perfR.perf},
             {"CtrRInstantPerformanceFraction", perfR.perfFraction},
             {"CtrRInstantUpperThreshold", perfR.upperThresholdInstant},
             {"CtrRInstantLowerThreshold", perfR.lowerThresholdInstant},
+            {"CtrRActionUpperThreshold", perfR.upperThresholdAction},
+            {"CtrRActionLowerThreshold", perfR.lowerThresholdAction},
             {"CtrRtInstantPerformanceBest", perfR.perfBest},
             {"CtrRInstantPerformanceWorst", perfR.perfWorst},
+            {"CtrRActionPerformanceBest", perfL.perfBestAction},
+            {"CtrRActionPerformanceWorst", perfL.perfWorstAction},
+            {"CtrRActionMemoryWorstVals", string.Join(" ", perfR.actionMemoryWorstVals)},
+            {"CtrRActionMemoryBestVals", string.Join(" ", perfR.actionMemoryBestVals)},
             {"CtrLInstantJudgement", perfL.judge},
+            {"CtrLActionJudgement", perfL.lastJudges.LastOrDefault()},
             {"CtrLInstantPerformance", perfL.perf},
             {"CtrLInstantPerformanceFraction", perfL.perfFraction},
             {"CtrLInstantUpperThreshold", perfL.upperThresholdInstant},
             {"CtrLInstantLowerThreshold", perfL.lowerThresholdInstant},
+            {"CtrLActionUpperThreshold", perfL.upperThresholdAction},
+            {"CtrLActionLowerThreshold", perfL.lowerThresholdAction},
             {"CtrLInstantPerformanceBest", perfL.perfBest},
-            {"CtrLInstantPerformanceWorst", perfL.perfWorst}
+            {"CtrLInstantPerformanceWorst", perfL.perfWorst},
+            {"CtrLActionPerformanceBest", perfL.perfBestAction},
+            {"CtrLActionPerformanceWorst", perfL.perfWorstAction},
+            {"CtrLActionMemoryWorstVals", string.Join(" ", perfL.actionMemoryWorstVals)},
+            {"CtrLActionMemoryBestVals", string.Join(" ", perfL.actionMemoryBestVals)}
+            
         };
         return data;
     }
@@ -337,6 +352,8 @@ public class PerformanceManager : MonoBehaviour
                     {"ActionPerformanceFraction", perf.perfActionFraction},
                     {"ActionThresholdUpper", perf.upperThresholdAction},
                     {"ActionThresholdLower", perf.lowerThresholdAction},
+                    {"ActionMemoryWorstVals", string.Join(" ", perf.actionMemoryWorstVals)},
+                    {"ActionMemoryBestVals", string.Join(" ", perf.actionMemoryBestVals)},
                 });
 
                 // Here we update perf variables to reflect the beginning of a new action.
@@ -897,6 +914,7 @@ public class PerformanceManager : MonoBehaviour
         //Debug.Log("Perf.pos: " +  perf.pos + "perf.posPrev: " + perf.posPrev);
 
         float idealDistance = Vector3.Distance(perf.actionStartPos, perf.pos);
+
         float distance;
         if (perf.perf == 0f) {
             distance = 0f;
@@ -909,6 +927,11 @@ public class PerformanceManager : MonoBehaviour
         //Debug.Log("lastPosition: " + lastPositionSpeed);
         
         return distance;
+    }
+
+    void OnDrawGizmos() {
+        Gizmos.DrawLine(perfR.pos, perfR.posPrev);
+        Gizmos.DrawLine(perfR.actionStartPos, perfR.pos);
     }
 
     private float CalculateInstantTime(PerfData perf) {
