@@ -63,6 +63,10 @@ public class PerfData {
     public float lowerThresholdInstant = -1f;
     public Vector3 posPrev = Vector3.zero;
     public Vector3 pos = Vector3.zero;
+    public float traveldist = -1f;
+    public float idealdist = -1f;
+    // GIZMO DEBUG
+    //public List<List<Vector3>> travel = new List<List<Vector3>>();
 
     public Vector3 actionStartPos = Vector3.zero;
     public Vector3 actionEndPos = Vector3.zero;
@@ -294,8 +298,8 @@ public class PerformanceManager : MonoBehaviour
                 } else if (judgementType == JudgementType.Distance) {
                     newVal = CalculateActionDistance(perf);
                     //UpdateActionThresholds(newVal, perf, thresholdMax: false);
-                    UpdateActionMovingAverage(newVal, perf, thresholdMax: false);
-                    judgement = MakeJudgement(newVal, perf, thresholdMax: false, level:JudgementLevel.Action);
+                    UpdateActionMovingAverage(newVal, perf);
+                    judgement = MakeJudgement(newVal, perf, level:JudgementLevel.Action);
                 } else if (judgementType == JudgementType.Time) {
                     newVal = CalculateActionTime(perf);
                     //UpdateActionThresholds(newVal, perf, thresholdMax: false);
@@ -360,6 +364,13 @@ public class PerformanceManager : MonoBehaviour
                 //perf.actionEndPos = perf.actionStartPos;
                 perf.actionStartPos = perf.actionEndPos;
                 perf.actionEndPos = Vector3.zero;
+                perf.perf = 0f; // reset instant performance measure 
+                perf.traveldist = 0f; // reset accumulated travel distance
+                perf.idealdist = 0f; // reset ideal calculated distance
+                perf.pos = Vector3.zero; // reset pos
+                perf.posPrev = Vector3.zero; // reset pos
+                // GIZMO DEBUG
+                //perf.travel.Clear();
             }
         }
     }
@@ -380,8 +391,38 @@ public class PerformanceManager : MonoBehaviour
         PerfData perf = perfData[moveData.name];
 
         // Update previous position and performance with current values.
-        perf.posPrev = perf.pos;
         perf.pos = moveData.cursorPos;
+        if (perf.posPrev == Vector3.zero) perf.posPrev = perf.actionStartPos;
+
+        // accumulate distance in steps of 1cm difference.
+        if (Vector3.Distance(perf.posPrev, perf.pos) > 0.01f) {
+            // if perf.pos has no value, set it to the latest value, making perf.pos equal to perf.posPrev as starting point.
+            if (perf.pos == Vector3.zero) perf.pos = moveData.cursorPos;
+
+            if (perf.traveldist == -1f) perf.traveldist = 0f;
+            
+            // only calculate ideal distance if actionStartPos is initialized.
+            if (perf.actionStartPos != Vector3.zero) {
+                perf.traveldist += Vector3.Distance(perf.posPrev, perf.pos);
+                perf.idealdist = Vector3.Distance(perf.actionStartPos, perf.pos);
+                //Debug.Log("perf.traveldist: " + perf.traveldist + "perf.idealdist " + perf.idealdist);
+            }
+            
+            // if traveldist is 0f, idealdist should be 0f.
+            //if (perf.traveldist == 0f) perf.idealdist = 0f;
+
+            // GIZMO DEBUGGING
+            //if (perf.pos != perf.posPrev) { 
+            //    perf.travel.Add(new List<Vector3>{perf.posPrev, perf.pos});
+            //    float tempDist = 0f;
+            //    foreach (List<Vector3> pos in perfR.travel) {
+            //            tempDist += Vector3.Distance(pos[0],pos[1]);
+            //    }
+            //}
+            // update previous position to current position.
+            perf.posPrev = perf.pos;
+        }
+
         perf.perfPrev = perf.perf;
 
         // Initialize variables to hold new performance value and judgement value.
@@ -399,9 +440,9 @@ public class PerformanceManager : MonoBehaviour
         else if (judgementType == JudgementType.Distance)
         {
             newPerf = CalculateInstantDistance(perf);
-            UpdateInstantMovingAverage(newPerf, perf, thresholdMax: false);
+            UpdateInstantMovingAverage(newPerf, perf);
             //UpdateInstantThresholds(newPerf, perf, thresholdMax: false);
-            judgement = MakeJudgement(newPerf, perf, thresholdMax: false, level:JudgementLevel.Operation);
+            judgement = MakeJudgement(newPerf, perf, level:JudgementLevel.Operation);
         }
         else if (judgementType == JudgementType.Time)
         {
@@ -869,9 +910,14 @@ public class PerformanceManager : MonoBehaviour
         if (perf.actionStartPos == Vector3.zero) return -1f;
 
         //Debug.Log("lastPosition: " + lastPositionSpeed);
-        float distance = Vector3.Distance(perf.pos, perf.actionStartPos);
+        //float distance = Vector3.Distance(perf.pos, perf.actionStartPos);
         float time = Time.time - perf.actionStartTimestamp;
-        float speed = distance / time;
+        float speed;
+        if (perf.traveldist == 0f || time == 0f) {
+            speed = 0f;
+        } else {
+            speed = perf.traveldist / time;
+        }
         return speed;
     }
 
@@ -886,16 +932,12 @@ public class PerformanceManager : MonoBehaviour
         if (perf.posPrev == Vector3.zero) return -1f;
 
         if (perf.perf == -1f) perf.perf = 0f;
-        perf.perf = perf.perf + Vector3.Distance(perf.pos, perf.posPrev);
-        //Debug.Log("Perf.pos: " +  perf.pos + "perf.posPrev: " + perf.posPrev);
-
-        float idealDistance = Vector3.Distance(perf.actionStartPos, perf.pos);
 
         float distance;
-        if (perf.perf == 0f) {
+        if (perf.traveldist == 0f) {
             distance = 0f;
         } else {
-            distance = idealDistance / perf.perf;
+            distance = perf.idealdist / perf.traveldist;
         }
 
 
@@ -905,10 +947,15 @@ public class PerformanceManager : MonoBehaviour
         return distance;
     }
 
-    void OnDrawGizmos() {
-        Gizmos.DrawLine(perfR.pos, perfR.posPrev);
-        Gizmos.DrawLine(perfR.actionStartPos, perfR.pos);
-    }
+    //void OnDrawGizmos() {
+    //    foreach (List<Vector3> pos in perfR.travel) {
+    //            Gizmos.DrawLine(pos[0], pos[1]);
+    //        }
+    //    Gizmos.DrawLine(perfR.actionStartPos, perfR.pos);
+    //    Gizmos.DrawCube(perfR.actionStartPos, new Vector3(.05f, .05f, .05f));
+    //    Gizmos.DrawCube(perfR.pos, new Vector3(0.05f, 0.05f, 0.05f));
+    //    Gizmos.DrawCube(perfR.posPrev, new Vector3(0.05f, 0.05f, 0.05f));
+    //}
 
     private float CalculateInstantTime(PerfData perf) {
         // TODO: Should we calculate the instant speed (frame by frame), or should we calculate speed
@@ -938,16 +985,15 @@ public class PerformanceManager : MonoBehaviour
         float idealDistance = Vector3.Distance(perf.actionStartPos, perf.actionEndPos);
         //Debug.Log("perf.actionStartPos: " + perf.actionStartPos + "perf.actionEndPos" + perf.actionEndPos);
         float distance = -1f;
-        if (perf.perf == 0f) {
+        if (perf.traveldist == 0f) {
             distance = 0f;
         } else {
             // trajectory straightness calculation
-            distance = idealDistance / perf.perf; // perf.perf is the true distance.
+            distance = idealDistance / perf.traveldist; // perf.perf is the true distance.
         }
         //Debug.Log("perf.perf: " + perf.perf);
         //Debug.Log("idealDistance: " + idealDistance);
         //Debug.Log("newDistance: " + distance);
-        perf.perf = 0f; // reset true distance afterwards.
         return distance; 
     }
 
@@ -968,10 +1014,10 @@ public class PerformanceManager : MonoBehaviour
             return -1f;
         }
 
-        float distance = Vector3.Distance(perf.actionStartPos, perf.actionEndPos);
+        //float distance = Vector3.Distance(perf.actionStartPos, perf.actionEndPos);
         float time = perf.actionEndTimestamp - perf.actionStartTimestamp;
         time = time - perf.dwelltime; // subtract dwell time.
-        float speed = distance / time;
+        float speed = perf.traveldist / time;
 
         return speed;
     }
