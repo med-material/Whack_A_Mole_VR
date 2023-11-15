@@ -13,7 +13,6 @@ public enum JudgementType {
     None,
     MaxConstant,
     Random,
-    AverageSpeed,
     MaxSpeed,
     Distance,
     Time
@@ -78,7 +77,7 @@ public class PerformanceManager : MonoBehaviour
     private LoggingManager loggingManager;
 
     [SerializeField]
-    private JudgementType judgementType = JudgementType.AverageSpeed;
+    private JudgementType judgementType = JudgementType.MaxSpeed;
 
     // Action data
     // Dictionary holding performance data for different controllers.
@@ -287,11 +286,7 @@ public class PerformanceManager : MonoBehaviour
                 float judgement;
 
                 // Depending on the judgement type, calculate the new value and judgement for the action.
-                if (judgementType == JudgementType.AverageSpeed) {
-                    newVal = CalculateActionSpeed(perf);
-                    UpdateActionMovingAverage(newVal, perf);
-                    judgement = MakeJudgement(newVal, perf, level:JudgementLevel.Action);
-                } else if (judgementType == JudgementType.MaxSpeed) {
+                if (judgementType == JudgementType.MaxSpeed) {
                     newVal = CalculateActionSpeed(perf);
                     //UpdateActionThresholds(newVal, perf);
                     UpdateActionMovingAverage(newVal, perf);
@@ -394,14 +389,7 @@ public class PerformanceManager : MonoBehaviour
         float judgement;
 
         // Depending on the judgement type, calculate the new performance value and judgement.
-        if (judgementType == JudgementType.AverageSpeed)
-        {
-            newPerf = CalculateInstantAvgSpeed(perf);
-            //UpdateInstantAvgSpeedThresholds(newPerf, perf);
-            UpdateInstantMovingAverage(newPerf, perf);
-            judgement = MakeJudgement(newPerf, perf, level:JudgementLevel.Operation);
-        }
-        else if (judgementType == JudgementType.MaxSpeed)
+        if (judgementType == JudgementType.MaxSpeed)
         {
             newPerf = CalculateInstantMaxSpeed(perf);
             //UpdateInstantThresholds(newPerf, perf);
@@ -872,20 +860,8 @@ public class PerformanceManager : MonoBehaviour
         return speed;
     }
 
-    private float CalculateInstantMaxSpeed(PerfData perf) {
-
-        // if we don't have a previous position, abort calculation.
-        if (perf.actionStartPos == Vector3.zero) return -1f;
-
-        //Debug.Log("lastPosition: " + lastPositionSpeed);
-        float distance = Vector3.Distance(perf.pos, perf.posPrev);
-        float time = Time.time - perf.actionStartTimestamp;
-        float speed = distance / time;
-        return speed;
-    }
-
     // Calculators
-    private float CalculateInstantAvgSpeed(PerfData perf) {
+    private float CalculateInstantMaxSpeed(PerfData perf) {
         // TODO: Should we calculate the instant speed (frame by frame), or should we calculate speed
         // based on the distance accumulated since the beginning?
 
