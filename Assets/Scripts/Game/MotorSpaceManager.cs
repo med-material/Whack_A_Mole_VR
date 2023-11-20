@@ -178,7 +178,7 @@ public class MotorSpaceManager : MonoBehaviour
         SetMotorSpace((MotorSpaceInfo) motorSpaceLarge.Clone());
     }
     
-    public void ShowTaskFeedback(float duration, Dictionary<int, float> molePerf, float animationDelay) {
+    public void ShowTaskFeedback(float duration, List<(int id, float val)> molePerf, float animationDelay) {
         if(motorspace == ActiveMotorSpace.Right)
             MotorSpaceRight.GetCurrentController().GetComponent<Pointer>().ShowTaskFeedback(duration, molePerf, animationDelay);
         else if (motorspace == ActiveMotorSpace.Left)

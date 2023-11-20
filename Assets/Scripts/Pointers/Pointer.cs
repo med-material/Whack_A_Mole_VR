@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR;
@@ -302,7 +303,7 @@ public abstract class Pointer : MonoBehaviour
     }
 
     // Functions to call in the class implementation to add extra animation/effect behavior on shoot/cooldown.
-    public virtual void ShowTaskFeedback(float duration, Dictionary<int, float> molePerf, float animationDelay) { }
+    public virtual void ShowTaskFeedback(float duration, List<(int id, float val)> molePerf, float animationDelay) { }
     protected virtual void PlayShoot(bool correctHit) { }
     protected virtual void PlayCooldownEnd() { }
 

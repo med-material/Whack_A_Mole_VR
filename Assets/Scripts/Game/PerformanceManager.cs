@@ -29,6 +29,8 @@ public class PerfData {
     public Queue<float> lastVals = new Queue<float>();
     public Queue<float> lastJudges = new Queue<float>();
     public Dictionary<int, List<float>> lastJudgesByMole = new Dictionary<int, List<float>>();
+    public Dictionary<int, int> moleShootOrder = new Dictionary<int, int>(); // order number, if order number is missing, it's the other controller.
+    public int maxShot = -1;
     public float movingAverage = -1f;
     public float upperThresholdAction = -1f;
     public float lowerThresholdAction = -1f;
@@ -346,6 +348,13 @@ public class PerformanceManager : MonoBehaviour
                     perf.lastJudgesByMole[mole.GetId()] = new List<float>();
                 }
                 perf.lastJudgesByMole[mole.GetId()].Add(judgement);
+                // keeps track of the order in which moles were shot.
+                if (perfR.maxShot == -1) perfR.maxShot = 0;
+                if (perfL.maxShot == -1) perfL.maxShot = 0;
+                perfR.maxShot++; // update number of shots to max.
+                perfL.maxShot++;
+                perf.moleShootOrder.Add(perf.maxShot, mole.GetId());
+                
 
                 // Log results
                 // Log the event for entering the MotorSpace.

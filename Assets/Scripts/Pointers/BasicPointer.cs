@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -82,23 +83,23 @@ public class BasicPointer : Pointer
         
     }
 
-    public override void ShowTaskFeedback(float duration, Dictionary<int, float> molePerf, float animationDelay)
+    public override void ShowTaskFeedback(float duration, List<(int id, float val)> molePerf, float animationDelay)
     {
         if (!performanceFeedbackTask) { return; }
         StartCoroutine(WaitShowTaskFeedback(duration, molePerf, animationDelay));
     }
     
-    private IEnumerator WaitShowTaskFeedback(float duration, Dictionary<int, float> molePerf, float animationDelay) {
+    private IEnumerator WaitShowTaskFeedback(float duration, List<(int id, float val)> molePerf, float animationDelay) {
         float timeSpent = 0f;
 
-        foreach (float val in molePerf.Values)
-        {
-            if (val != -1f) {
-                Pulse(duration:0.1f, frequency:150, amplitude:val * 50);
+        foreach (var fb in molePerf) {
+            if (fb.id != -1) {
+                Pulse(duration:0.1f, frequency:150, amplitude:fb.val * 50);
+                timeSpent += animationDelay;
+                yield return new WaitForSeconds(animationDelay);
             }
-            timeSpent += animationDelay;
-            yield return new WaitForSeconds(animationDelay);
         }
+
     }
 
     public override void PositionUpdated()

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -448,45 +449,50 @@ public class WallManager : MonoBehaviour
         Debug.Log("moles.count: " +  moles.Count.ToString());
 
         // obtain perfData from performance manager
-        PerfData perfL = performanceManager.GetPerfData(ControllerName.Right);
-        PerfData perfR = performanceManager.GetPerfData(ControllerName.Left);
+        PerfData perfL = performanceManager.GetPerfData(ControllerName.Left);
+        PerfData perfR = performanceManager.GetPerfData(ControllerName.Right);
 
-        Dictionary<int, float> molePerf = new Dictionary<int, float>();
+        // Ordered list of moleIDs and their performance value.
+        List<(int id, float val)> molePerf = new List<(int id, float val)>();
+
+
+        // TODO: Currently mole performance is just averaged across both controllers.
+        // The number of shots go from 1 to max number. if maxShot is less than 1, no moles were shot.
+        if (perfR.maxShot < 1) return;
         
-        foreach (Mole mole in moles.Values)
-        {    
-            var id = mole.GetId();            
+        // perfR.maxShot and perfL.maxShot are the same value.
+        for (int i = 1; i <= perfR.maxShot; i++) {
             List<float> perfs = new List<float>();
-            if (perfL.lastJudgesByMole.ContainsKey(id)) {
-                perfs.AddRange(perfL.lastJudgesByMole[id]);
-            }
-            if (perfR.lastJudgesByMole.ContainsKey(id)) {
+
+            int id = -1;
+            if (perfR.moleShootOrder.ContainsKey(i)) {
+                id = perfR.moleShootOrder[i];
                 perfs.AddRange(perfR.lastJudgesByMole[id]);
             }
+            if (perfL.moleShootOrder.ContainsKey(i)) {
+                id = perfL.moleShootOrder[i];
+                perfs.AddRange(perfL.lastJudgesByMole[id]);
+            }
             if (perfs.Count > 0) {
-                molePerf[id] = perfs.Average();
-            } else {
-                molePerf[id] = -1f;
+                (int id, float val) perf = (id, perfs.Average());
+                molePerf.Add(perf);
             }
         }
 
-        StartCoroutine(WaitShowTaskFeedback(duration, molePerf, 0.05f));
-        motorspaceManager.ShowTaskFeedback(duration, molePerf, 0.05f);
+        StartCoroutine(WaitShowTaskFeedback(duration, molePerf, 0.15f));
+        motorspaceManager.ShowTaskFeedback(duration, molePerf, 0.15f);
     }
 
-    private IEnumerator WaitShowTaskFeedback(float duration, Dictionary<int, float> molePerf, float animationDelay) {
+    private IEnumerator WaitShowTaskFeedback(float duration, List<(int id, float val)> molePerf, float animationDelay) {
         float timeSpent = 0f;
 
-        foreach (int id in moles.Keys)
-        {
-            //int id = molesmole.GetId();
-
-            if (molePerf[id] != -1f) {
-                moles[id].PlayFeedback(molePerf[id], duration-timeSpent);
-                soundManager.PlaySoundWithPitch(gameObject, SoundManager.Sound.greenMoleHit, molePerf[id]);
+        foreach (var fb in molePerf) {
+            if (fb.id != -1) {
+                moles[fb.id].PlayFeedback(fb.val, duration-timeSpent);
+                soundManager.PlaySoundWithPitch(gameObject, SoundManager.Sound.greenMoleHit, fb.val);
+                timeSpent += animationDelay;
+                yield return new WaitForSeconds(animationDelay);
             }
-            timeSpent += animationDelay;
-            yield return new WaitForSeconds(animationDelay);
         }
     }
 
@@ -498,7 +504,7 @@ public class WallManager : MonoBehaviour
         moles.Values.CopyTo(tempMolesList, 0);
         do
         {
-            mole = tempMolesList[Random.Range(0, moles.Count)];
+            mole = tempMolesList[UnityEngine.Random.Range(0, moles.Count)];
         }
         while (!mole.CanBeActivated());
         return mole;
@@ -657,7 +663,7 @@ public class WallManager : MonoBehaviour
             for (var j = 0; j < 2; j++)
             {
                 //update the list after each iteration
-                var i = Random.Range(0, list.Count);
+                var i = UnityEngine.Random.Range(0, list.Count);
                 //activate the mole
                 //HACK: 2ND check because list.Count is 0 at the beginning in debug
                 if (list.Count > 0)
