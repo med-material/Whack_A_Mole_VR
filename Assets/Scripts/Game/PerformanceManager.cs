@@ -227,7 +227,6 @@ public class PerformanceManager : MonoBehaviour
             {"CtrLActionPeakSpeedVals", string.Join(" ", perfL.actionPeakSpeedVals)},
             {"CtrLActionMemoryWorstVals", string.Join(" ", perfL.actionMemoryWorstVals)},
             {"CtrLActionMemoryBestVals", string.Join(" ", perfL.actionMemoryBestVals)}
-            
         };
         return data;
     }
@@ -370,9 +369,8 @@ public class PerformanceManager : MonoBehaviour
                     {"ActionThresholdUpper", perf.upperThresholdAction},
                     {"ActionThresholdLower", perf.lowerThresholdAction},
                     {"ActionPeakSpeedVals", string.Join(" ", perf.actionPeakSpeedVals)},
+                    {"ActionMemoryBestVals", string.Join(" ", perf.actionMemoryBestVals)},
                     {"ActionMemoryWorstVals", string.Join(" ", perf.actionMemoryWorstVals)},
-                    {"ActionMemoryBestVals", string.Join(" ", perf.actionMemoryBestVals)},
-                    {"ActionMemoryBestVals", string.Join(" ", perf.actionMemoryBestVals)},
                 });
 
                 // Here we update perf variables to reflect the beginning of a new action.
