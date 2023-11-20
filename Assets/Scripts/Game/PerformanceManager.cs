@@ -192,7 +192,6 @@ public class PerformanceManager : MonoBehaviour
         Dictionary<string, object> data = new Dictionary<string, object>() {
             {"CtrRInstantJudgement", perfR.judge},
             {"CtrRActionJudgement", perfR.lastJudges.LastOrDefault()},
-            {"CtrRInstantPerformance", perfR.perf},
             {"CtrRSpeedDist", perfR.speeddist},
             {"CtrRSpeedTime", perfR.speedtime},
             {"CtrRTraveldist", perfR.traveldist},
