@@ -204,11 +204,11 @@ public class PerformanceManager : MonoBehaviour
             {"CtrRActionLowerThreshold", perfR.lowerThresholdAction},
             {"CtrRtInstantPerformanceBest", perfR.perfBest},
             {"CtrRInstantPerformanceWorst", perfR.perfWorst},
+            {"CtrRInstantPosition", perfR.pos},
+            {"CtrRInstantPositionPrev", perfR.posPrev},
             {"CtrRActionPerformanceBest", perfR.perfBestAction},
             {"CtrRActionPerformanceWorst", perfR.perfWorstAction},
             {"CtrRActionPeakSpeedVals", string.Join(" ", perfR.actionPeakSpeedVals)},
-            {"CtrRActionMemoryWorstVals", string.Join(" ", perfR.actionMemoryWorstVals)},
-            {"CtrRActionMemoryBestVals", string.Join(" ", perfR.actionMemoryBestVals)},
             {"CtrLInstantJudgement", perfL.judge},
             {"CtrLActionJudgement", perfL.lastJudges.LastOrDefault()},
             {"CtrLInstantPerformance", perfL.perf},
@@ -223,11 +223,11 @@ public class PerformanceManager : MonoBehaviour
             {"CtrLActionLowerThreshold", perfL.lowerThresholdAction},
             {"CtrLInstantPerformanceBest", perfL.perfBest},
             {"CtrLInstantPerformanceWorst", perfL.perfWorst},
+            {"CtrLInstantPosition", perfL.pos},
+            {"CtrLInstantPositionPrev", perfL.posPrev},
             {"CtrLActionPerformanceBest", perfL.perfBestAction},
             {"CtrLActionPerformanceWorst", perfL.perfWorstAction},
             {"CtrLActionPeakSpeedVals", string.Join(" ", perfL.actionPeakSpeedVals)},
-            {"CtrLActionMemoryWorstVals", string.Join(" ", perfL.actionMemoryWorstVals)},
-            {"CtrLActionMemoryBestVals", string.Join(" ", perfL.actionMemoryBestVals)}
         };
         return data;
     }
