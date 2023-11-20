@@ -38,15 +38,16 @@ public class PerfData {
     public float actionMemoryBestVal = -1f;
     public float actionMemoryClock = 0.0f;
     public int actionMemoryIndex = 0;
-    public float actionMemoryThreshold = 5f; // Each instant memory pocket corresponds to 200ms.
+    public float actionMemoryThreshold = 5f; // Each action memory pocket corresponds to 5s.
     public float[] instantMemoryWorstVals = new float[] { -1, -1, -1, -1, -1 };
     public float[] instantMemoryBestVals = new float[] { -1, -1, -1, -1, -1 };
     public float instantMemoryWorstVal = -1f;
     public float instantMemoryBestVal = -1f;
     public float instantMemoryClock = 0.0f;
     public int instantMemoryIndex = 0;
-    public float instantMemoryThreshold = 2f; // Each instant memory pocket corresponds to 200ms.
+    public float instantMemoryThreshold = 1f; // Each instant memory pocket corresponds to 1s.
     public Queue<float> meanMemoryVals = new Queue<float>();
+    public List<float> actionPeakSpeedVals = new List<float>();
     public float perfBestAction = -1f;
     public float perfWorstAction = -1f;
     public float perfActionFraction = -1f;
@@ -65,6 +66,10 @@ public class PerfData {
     public Vector3 pos = Vector3.zero;
     public float traveldist = -1f;
     public float idealdist = -1f;
+    public float speedClock = -1f;
+    public float speedClockFrequency = 0.01f;
+    public float speeddist = -1f;
+    public float speedtime = -1f;
     // GIZMO DEBUG
     //public List<List<Vector3>> travel = new List<List<Vector3>>();
 
@@ -186,21 +191,31 @@ public class PerformanceManager : MonoBehaviour
             {"CtrRInstantJudgement", perfR.judge},
             {"CtrRActionJudgement", perfR.lastJudges.LastOrDefault()},
             {"CtrRInstantPerformance", perfR.perf},
-            {"CtrRInstantPerformanceFraction", perfR.perfFraction},
+            {"CtrRSpeedDist", perfR.speeddist},
+            {"CtrRSpeedTime", perfR.speedtime},
+            {"CtrRTraveldist", perfR.traveldist},
+            {"CtrRIdealDist", perfR.idealdist},
+            //{"CtrRInstantPerformanceFraction", perfR.perfFraction},
+            {"CtrRInstantPerformance", perfR.perf},
             {"CtrRInstantUpperThreshold", perfR.upperThresholdInstant},
             {"CtrRInstantLowerThreshold", perfR.lowerThresholdInstant},
             {"CtrRActionUpperThreshold", perfR.upperThresholdAction},
             {"CtrRActionLowerThreshold", perfR.lowerThresholdAction},
             {"CtrRtInstantPerformanceBest", perfR.perfBest},
             {"CtrRInstantPerformanceWorst", perfR.perfWorst},
-            {"CtrRActionPerformanceBest", perfL.perfBestAction},
-            {"CtrRActionPerformanceWorst", perfL.perfWorstAction},
+            {"CtrRActionPerformanceBest", perfR.perfBestAction},
+            {"CtrRActionPerformanceWorst", perfR.perfWorstAction},
+            {"CtrRActionPeakSpeedVals", string.Join(" ", perfR.actionPeakSpeedVals)},
             {"CtrRActionMemoryWorstVals", string.Join(" ", perfR.actionMemoryWorstVals)},
             {"CtrRActionMemoryBestVals", string.Join(" ", perfR.actionMemoryBestVals)},
             {"CtrLInstantJudgement", perfL.judge},
             {"CtrLActionJudgement", perfL.lastJudges.LastOrDefault()},
             {"CtrLInstantPerformance", perfL.perf},
-            {"CtrLInstantPerformanceFraction", perfL.perfFraction},
+            {"CtrLSpeedDist", perfL.speeddist},
+            {"CtrLSpeedTime", perfL.speedtime},
+            {"CtrLTraveldist", perfL.traveldist},
+            {"CtrLIdealDist", perfL.idealdist},
+            //{"CtrLInstantPerformanceFraction", perfL.perfFraction},
             {"CtrLInstantUpperThreshold", perfL.upperThresholdInstant},
             {"CtrLInstantLowerThreshold", perfL.lowerThresholdInstant},
             {"CtrLActionUpperThreshold", perfL.upperThresholdAction},
@@ -209,6 +224,7 @@ public class PerformanceManager : MonoBehaviour
             {"CtrLInstantPerformanceWorst", perfL.perfWorst},
             {"CtrLActionPerformanceBest", perfL.perfBestAction},
             {"CtrLActionPerformanceWorst", perfL.perfWorstAction},
+            {"CtrLActionPeakSpeedVals", string.Join(" ", perfL.actionPeakSpeedVals)},
             {"CtrLActionMemoryWorstVals", string.Join(" ", perfL.actionMemoryWorstVals)},
             {"CtrLActionMemoryBestVals", string.Join(" ", perfL.actionMemoryBestVals)}
             
@@ -291,7 +307,7 @@ public class PerformanceManager : MonoBehaviour
 
                 // Depending on the judgement type, calculate the new value and judgement for the action.
                 if (judgementType == JudgementType.MaxSpeed) {
-                    newVal = CalculateActionSpeed(perf);
+                    newVal = CalculateActionMaxSpeed(perf);
                     //UpdateActionThresholds(newVal, perf);
                     UpdateActionMovingAverage(newVal, perf);
                     judgement = MakeJudgement(newVal, perf, level:JudgementLevel.Action);
@@ -349,9 +365,13 @@ public class PerformanceManager : MonoBehaviour
                     {"ActionPerformanceBest", perf.perfBestAction},
                     {"ActionPerformanceWorst", perf.perfWorstAction},
                     {"ActionPerformanceFraction", perf.perfActionFraction},
+                    {"ActionMemoryThreshold", perf.actionMemoryThreshold},
+                    {"InstantMemoryThreshold", perf.instantMemoryThreshold},
                     {"ActionThresholdUpper", perf.upperThresholdAction},
                     {"ActionThresholdLower", perf.lowerThresholdAction},
+                    {"ActionPeakSpeedVals", string.Join(" ", perf.actionPeakSpeedVals)},
                     {"ActionMemoryWorstVals", string.Join(" ", perf.actionMemoryWorstVals)},
+                    {"ActionMemoryBestVals", string.Join(" ", perf.actionMemoryBestVals)},
                     {"ActionMemoryBestVals", string.Join(" ", perf.actionMemoryBestVals)},
                 });
 
@@ -369,6 +389,7 @@ public class PerformanceManager : MonoBehaviour
                 perf.idealdist = 0f; // reset ideal calculated distance
                 perf.pos = Vector3.zero; // reset pos
                 perf.posPrev = Vector3.zero; // reset pos
+                perf.actionPeakSpeedVals.Clear(); // reset peak speed vals
                 // GIZMO DEBUG
                 //perf.travel.Clear();
             }
@@ -408,6 +429,14 @@ public class PerformanceManager : MonoBehaviour
                 //Debug.Log("perf.traveldist: " + perf.traveldist + "perf.idealdist " + perf.idealdist);
             }
             
+            // update measurements for peak speed every 1ms
+            if (perf.speedClock == -1f) perf.speedClock = 0f;
+            if (perf.speeddist == -1f) perf.speeddist = 0f;
+            if (perf.speedtime == -1f) perf.speedtime = 0f;
+            perf.speedClock += Time.deltaTime;
+            perf.speeddist += Vector3.Distance(perf.posPrev, perf.pos);
+            perf.speedtime += Time.deltaTime;
+
             // if traveldist is 0f, idealdist should be 0f.
             //if (perf.traveldist == 0f) perf.idealdist = 0f;
 
@@ -478,6 +507,13 @@ public class PerformanceManager : MonoBehaviour
         // Store the calculated performance and judgement values.
         perf.perf = newPerf;
         perf.judge = judgement;
+
+        // reset speed clock
+        if (perf.speedClock >= perf.speedClockFrequency) {
+            perf.speedClock = 0f;
+            perf.speeddist = 0f;
+            perf.speedtime = 0f;
+        }
     }
 
     #endregion
@@ -577,6 +613,8 @@ public class PerformanceManager : MonoBehaviour
 
         bool update = false;
 
+        perf.instantMemoryClock += Time.deltaTime;
+
         // Check and update the worst action value.
         if (perf.instantMemoryWorstVal == -1f)
         {
@@ -601,11 +639,11 @@ public class PerformanceManager : MonoBehaviour
             update = true;
         }
 
-        perf.instantMemoryClock += Time.deltaTime;
+
 
         if (perf.instantMemoryClock > perf.instantMemoryThreshold) {
-            perf.instantMemoryBestVal = val;
-            perf.instantMemoryWorstVal = val;
+            //perf.instantMemoryBestVal = val;
+            //perf.instantMemoryWorstVal = val;
             perf.instantMemoryClock = 0f;
             perf.instantMemoryIndex++;
             update = true;
@@ -622,8 +660,9 @@ public class PerformanceManager : MonoBehaviour
             timePassed = Time.time - perf.instantStartTimestamp;
         }
 
-        // Update memory every 100ms
+        // Update memory every 1s
         int index = perf.instantMemoryIndex % 5;
+        perf.actionPeakSpeedVals.Add(perf.instantMemoryBestVal);        
         perf.instantMemoryBestVals[index] = perf.instantMemoryBestVal;
         perf.instantMemoryWorstVals[index] = perf.instantMemoryWorstVal;
 
@@ -639,6 +678,12 @@ public class PerformanceManager : MonoBehaviour
 
         perf.perfBest = bestSum == 0f ? bestSum : bestSum / averageMaxSize;
         perf.perfWorst = worstSum == 0f ? worstSum : worstSum / averageMaxSize;
+
+        // if instantMemoryClock was reset, reset instantMemoryBestVal and worstVal as well.
+        if (perf.instantMemoryClock == 0f) {
+            perf.instantMemoryBestVal = val;
+            perf.instantMemoryWorstVal = val;
+        }
 
         // Set the action thresholds based on either prioritizing max or otherwise.
         if (thresholdMax)
@@ -902,7 +947,7 @@ public class PerformanceManager : MonoBehaviour
     }
 
     // Calculators
-    private float CalculateInstantMaxSpeed(PerfData perf) {
+    private float CalculateInstantAvgSpeed(PerfData perf) {
         // TODO: Should we calculate the instant speed (frame by frame), or should we calculate speed
         // based on the distance accumulated since the beginning?
 
@@ -917,6 +962,25 @@ public class PerformanceManager : MonoBehaviour
             speed = 0f;
         } else {
             speed = perf.traveldist / time;
+        }
+        return speed;
+    }
+
+    // Calculators
+    private float CalculateInstantMaxSpeed(PerfData perf) {
+        // TODO: Should we calculate the instant speed (frame by frame), or should we calculate speed
+        // based on the distance accumulated since the beginning?
+
+        // if we don't have a previous position, abort calculation.
+        if (perf.actionStartPos == Vector3.zero) return -1f;
+
+        //Debug.Log("lastPosition: " + lastPositionSpeed);
+        //float distance = Vector3.Distance(perf.pos, perf.actionStartPos);
+        float speed;
+        if (perf.speeddist == 0f || perf.speedtime == 0f) {
+            speed = 0f;
+        } else {
+            speed = perf.speeddist / perf.speedtime;
         }
         return speed;
     }
@@ -1008,7 +1072,7 @@ public class PerformanceManager : MonoBehaviour
         return time;
     }
 
-    private float CalculateActionSpeed(PerfData perf) {
+    private float CalculateActionAvgSpeed(PerfData perf) {
         if (perf.actionEndTimestamp == -1f || perf.actionEndPos == Vector3.zero) {
             // if this is our first action, we don't have enough information to calculate speed.
             return -1f;
@@ -1020,6 +1084,22 @@ public class PerformanceManager : MonoBehaviour
         float speed = perf.traveldist / time;
 
         return speed;
+    }
+
+    private float CalculateActionMaxSpeed(PerfData perf) {
+        if (perf.actionEndTimestamp == -1f || perf.actionEndPos == Vector3.zero) {
+            // if this is our first action, we don't have enough information to calculate speed.
+            return -1f;
+        }
+        
+        float peakspeed;
+        if (perf.actionPeakSpeedVals.Count < 1) {
+            peakspeed = -1f;
+        } else {
+            peakspeed = perf.actionPeakSpeedVals.Max();
+        }
+        
+        return peakspeed;
     }
     #endregion
 
