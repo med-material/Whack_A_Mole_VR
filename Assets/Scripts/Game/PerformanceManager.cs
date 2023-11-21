@@ -189,7 +189,7 @@ public class PerformanceManager : MonoBehaviour
     // Get performance data in a structured dictionary.
     public Dictionary<string, object> GetPerformanceData()
     {
-        Dictionary<string, object> data = new Dictionary<string, object>() {
+        return new Dictionary<string, object>() {
             {"CtrRInstantJudgement", perfR.judge},
             {"CtrRActionJudgement", perfR.lastJudges.LastOrDefault()},
             {"CtrRSpeedDist", perfR.speeddist},
@@ -208,7 +208,7 @@ public class PerformanceManager : MonoBehaviour
             {"CtrRInstantPositionPrev", perfR.posPrev},
             {"CtrRActionPerformanceBest", perfR.perfBestAction},
             {"CtrRActionPerformanceWorst", perfR.perfWorstAction},
-            {"CtrRActionPeakSpeedVals", string.Join(" ", perfR.actionPeakSpeedVals)},
+            //{"CtrRActionPeakSpeedVals", string.Join(" ", perfR.actionPeakSpeedVals)},
             {"CtrLInstantJudgement", perfL.judge},
             {"CtrLActionJudgement", perfL.lastJudges.LastOrDefault()},
             {"CtrLInstantPerformance", perfL.perf},
@@ -227,9 +227,9 @@ public class PerformanceManager : MonoBehaviour
             {"CtrLInstantPositionPrev", perfL.posPrev},
             {"CtrLActionPerformanceBest", perfL.perfBestAction},
             {"CtrLActionPerformanceWorst", perfL.perfWorstAction},
-            {"CtrLActionPeakSpeedVals", string.Join(" ", perfL.actionPeakSpeedVals)},
+            //{"CtrLActionPeakSpeedVals", string.Join(" ", perfL.actionPeakSpeedVals)},
         };
-        return data;
+        
     }
     #endregion
 
