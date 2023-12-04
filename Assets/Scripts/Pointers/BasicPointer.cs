@@ -18,6 +18,9 @@ public class BasicPointer : Pointer
 
     [SerializeField]
     private float laserExtraWidthShootAnimation = .05f;
+    
+    [SerializeField]
+    private float mouseSpeed = 0.5f;
 
     private float shootTimeLeft;
     private float totalShootTime;
@@ -25,12 +28,69 @@ public class BasicPointer : Pointer
     private float dwellTimer = 0f;
     private delegate void Del();
     private string hover = "";
+    public Vector3 CalculateDirection()
+    {
+        Vector3 direction = Vector3.zero;
+        if (Input.GetKey(KeyCode.UpArrow))
+        {
+            direction.y += 0.25f;
+        }
+        if (Input.GetKey(KeyCode.LeftArrow))
+        {
+            direction.x -= 0.25f;
+        }
+        if (Input.GetKey(KeyCode.DownArrow))
+        {
+            direction.y -= 0.25f;
+        }
+        if (Input.GetKey(KeyCode.RightArrow))
+        {
+            direction.x += 0.25f;
+        }
+        return direction.normalized;
+    }
+
+    // Function for debugging controls, using mouse or keyboard. Only active if the Left Control key is held down. Also adds mouse controls if Left Alt is held down.
+    public void Update()
+    {
+        if (Input.GetKey(KeyCode.LeftControl))
+        {
+            if (!active) return;
+            if (active)
+            {
+                float v = Input.GetAxisRaw("Vertical");
+                float h = Input.GetAxisRaw("Horizontal");
+
+                if (Input.GetKey(KeyCode.LeftAlt))
+                {
+                    float h1 = mouseSpeed * Input.GetAxis("Mouse X");
+                    float v1 = mouseSpeed * Input.GetAxis("Mouse Y");
+
+                    this.transform.Translate(h1, v1, 0);
+                }
+                else
+                {
+                    Vector3 direction = new Vector3(h, v, 0f).normalized;
+                    this.transform.Translate(direction * 1 * Time.deltaTime);
+                }
+                PointerControl();
+            }
+        }
+        
+    }
 
     // Function called on VR update, since it can be faster/not synchronous to Update() function. Makes the Pointer slightly more reactive.
     public override void PositionUpdated()
     {
         if (!active) return;
+        if (SteamVR.active)
+        {
+            PointerControl();
+        }
+    }
 
+private void PointerControl()
+    {
         Vector2 pos = new Vector2(laserOrigin.transform.position.x, laserOrigin.transform.position.y);
         Vector3 mappedPosition = laserMapper.ConvertMotorSpaceToWallSpace(pos);
         Vector3 origin = laserOrigin.transform.position;
@@ -52,9 +112,7 @@ public class BasicPointer : Pointer
             cursor.SetPosition(rayPosition);
             //UpdateLaser(false, rayDirection: laserOrigin.transform.InverseTransformDirection(rayDirection) * maxLaserLength);
         }
-        if(SteamVR.active)
-        {
-            if (hit.collider) {
+        if (hit.collider) {
                 Mole mole;
                 if (hit.collider.gameObject.TryGetComponent<Mole>(out mole))
                 {
@@ -115,9 +173,7 @@ public class BasicPointer : Pointer
                         dwellTimer = dwellTimer - 0.1f;
                     }
             }
-        }
     }
-
 
     private void CheckHoverEnd() {
         if (hover != string.Empty) {
