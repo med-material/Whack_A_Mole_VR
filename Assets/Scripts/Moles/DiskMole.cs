@@ -54,6 +54,9 @@ public class DiskMole : Mole
     [SerializeField]
     private AudioClip popSound;
 
+    [SerializeField] 
+    private ParticleSystem popVisual;
+
     private Shader opaqueShader;
     private Shader glowShader;
     private Material meshMaterial;
@@ -156,6 +159,8 @@ public class DiskMole : Mole
             if (moleType==Mole.MoleType.Target)
             {
                 PlayAnimation("PopCorrectMole");  // Show positive feedback to users that shoot a correct moles, to make it clear this is a success
+               popVisual.startColor = enabledColor;
+               popVisual.Play();
             }
             else
             {
