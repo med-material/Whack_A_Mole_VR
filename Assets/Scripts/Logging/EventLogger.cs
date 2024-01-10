@@ -61,7 +61,7 @@ public class EventLogger : MonoBehaviour
         // logs.Add("PupilTime", new Dictionary<int, string>());
         // logs.Add("UnityToPupilTimeOffset", new Dictionary<int, string>());
         // logs.Add("GameId", new Dictionary<int, string>());
-        // persistentLog.Add("ParticipantId", 0);
+        // persistentLog.Add("ParticipantID", 0);
         // persistentLog.Add("TestId", 0);
     }
 
