@@ -122,8 +122,8 @@ public class GameDirector : MonoBehaviour
             {"GameSpeed", "NULL"},
             {"GameTimeSpent", "NULL"},
             {"GameTimeLeft", "NULL"},
-            {"ParticipantId", "NULL"},
-            {"TestId", "NULL"}
+            {"ParticipantID", "NULL"},
+            {"TestID", "NULL"}
         });
         // Initialization of the starting values of the parameters.
         loggerNotifier.InitPersistentEventParameters(new Dictionary<string, object>(){
@@ -132,8 +132,8 @@ public class GameDirector : MonoBehaviour
             {"GameSpeed", gameDifficulty},
             {"GameTimeSpent", 0},
             {"GameTimeLeft",gameDuration},
-            {"ParticipantId", 0},
-            {"TestId", 0}
+            {"ParticipantID", 0},
+            {"TestID", 0}
         });
     }
 
@@ -254,7 +254,7 @@ public class GameDirector : MonoBehaviour
         participantId = participant;
         loggerNotifier.NotifyLogger("Participant ID Updated", EventLogger.EventType.DefaultEvent, new Dictionary<string, object>()
         {
-            {"ParticipantId", 0},
+            {"ParticipantID", 0},
         });
         participantChanged.Invoke(participantId);
     }
@@ -269,7 +269,7 @@ public class GameDirector : MonoBehaviour
         testId = test;
         loggerNotifier.NotifyLogger("Test ID Updated", EventLogger.EventType.DefaultEvent, new Dictionary<string, object>()
         {
-            {"TestId", 0},
+            {"TestID", 0},
         });
         testChanged.Invoke(testId);
     }

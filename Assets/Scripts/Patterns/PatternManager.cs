@@ -51,7 +51,7 @@ public class PatternManager : MonoBehaviour
     void Start()
     {
         loggerNotifier = new LoggerNotifier(persistentEventsHeadersDefaults: new Dictionary<string, string>(){
-            {"PlayedPattern", "None"}
+            {"SessionProgram", "None"}
         });
 
         foreach(InternalPattern pattern in internalPatterns) {
@@ -67,14 +67,14 @@ public class PatternManager : MonoBehaviour
         {
             Debug.LogError("No pattern loaded!");
             loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>(){
-                {"PlayedPattern", "None"}
+                {"SessionProgram", "None"}
             });
             loggingManager.Log("Meta", "SessionProgram","Random Moles");
             return false;
         }
         patternPlayer.PlayPattern();
         loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>(){
-                {"PlayedPattern", loadedPatternName}
+                {"SessionProgram", loadedPatternName}
             });
         loggingManager.Log("Meta", "SessionProgram",loadedPatternName);
         return true;

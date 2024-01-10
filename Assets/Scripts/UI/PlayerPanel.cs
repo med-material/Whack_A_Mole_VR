@@ -106,7 +106,7 @@ public class PlayerPanel : MonoBehaviour
                     participantText.text = "Participant " + entry.Value.ToString();
                     break;
 
-                case "TestId":
+                case "TestID":
                     testText.text = "Test " + entry.Value.ToString();
                     break;
                 
