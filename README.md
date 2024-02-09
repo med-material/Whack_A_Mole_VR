@@ -31,6 +31,22 @@ The environment provides many features to customise the game, with multiple para
 
 Many data are collected through a single game. They are by default saved to a dedicated CREATE database, but it is also possible to save them locally as a .CSV file. They can be then visualised using a dedicated R-shiny application available at this link: https://github.com/QuentinDaveau/Whack_A_Mole_RShiny. 
 
+## Tools for Developers
+
+The application has several tools available to debug and help developing new features.
+
+### Debug controls 
+Simple non-VR controls are implemented to use in the game for pattern and visual effects testing.
+![Control Scheme](Images/DebugControls.PNG)
+
+### WAM Test Pattern - VS Code Extension
+This extension for Visual Studio Code offers improvements to reading and coding treatment programs, with Syntax Highlighting and Auto-Completion, available at this link: https://github.com/tcaruchet/Whack_A_Mole_VR_WAMPAT_VSCodeExtension
+
+### Patterns debug mode
+The **Pattern Manager** script has a Debug Mode implemented which, if active, shows information about the state of the current treatment program, the next step, as well as the number of steps and progress through the program.
+
+![Pattern Debugger](Images/PatternManager.PNG)
+
 ## Mole Whacking Data Collection
 
 This application logs various game datas, from the activated mole position to the position travelled by the participant's laser between two mole poping. The logs are by default saved in the application main directory, however a custom path can be set from the Unity editor. These data are logged when specific events occurs.
