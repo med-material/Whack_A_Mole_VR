@@ -232,20 +232,33 @@ public class PatternPlayer: MonoBehaviour
             //    patternInterface.RemoveFromTargetsList(mole.Value.GetId());
             //}
 
-            var molesToRemove = new List<int>(); // assuming the id is of type int
+            //var molesToRemove = new List<int>(); // assuming the id is of type int
+            var newTargetsList = new Dictionary<int, Mole>(patternInterface.GetTargetsList());
 
-            foreach (var mole in patternInterface.GetTargetsList())
+            foreach (var mole in patternInterface.GetTargetsList().Where(mole => mole.Value != null && mole.Value.GetState() != Mole.States.Enabled))
             {
-                if (mole.Value.GetState() != Mole.States.Enabled)
-                {
-                    molesToRemove.Add(mole.Value.GetId());
-                }
+                newTargetsList.Remove(mole.Value.GetId());
+                //patternInterface.RemoveFromTargetsList(mole.Value.GetId());
             }
 
-            foreach (var moleId in molesToRemove)
-            {
-                patternInterface.RemoveFromTargetsList(moleId);
-            }
+            patternInterface.SetTargetsList(newTargetsList);
+
+            //foreach (var mole in patternInterface.GetTargetsList())
+            //{
+            //    if (mole.Value == null) {
+            //        patternInterface.RemoveFromTargetsList(mole.Key);
+            //        continue;
+            //    }
+            //    if (mole.Value.GetState() != Mole.States.Enabled)
+            //    {
+            //        molesToRemove.Add(mole.Value.GetId());
+             //   }
+            //}
+
+           // foreach (var moleId in molesToRemove)
+            //{
+            //    patternInterface.RemoveFromTargetsList(moleId);
+            //}
 
             return;
         }
@@ -253,7 +266,7 @@ public class PatternPlayer: MonoBehaviour
         var molesList = patternInterface.GetMolesList();
 
         // Clear all distractors.
-        foreach (var fake in molesList.Where(fake => fake.Value.IsFake() && fake.Value.GetState() == Mole.States.Enabled)) {
+        foreach (var fake in molesList.Where(fake => fake.Value != null && fake.Value.IsFake() && fake.Value.GetState() == Mole.States.Enabled)) {
             fake.Value.Disable();
         }
 
@@ -277,6 +290,7 @@ public class PatternPlayer: MonoBehaviour
         PlayStep();
     
         // Check if we are at the last Index of the Pattern and if all the moles have been hit or has expired
+        // TODO: For some reason, we do not always call stop at the end, and you will have to press stop manually..
         if ((playIndex == sortedKeys.Count) || (playIndex == sortedKeys.Count - 1))
         {
             // Stop the Game

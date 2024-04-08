@@ -41,6 +41,11 @@ public class PatternInterface : MonoBehaviour
         targetsList.Remove(moleId);
     }
 
+    public void SetTargetsList(Dictionary<int, Mole> newList)
+    {
+        targetsList = new Dictionary<int, Mole>(newList);
+    }
+
     public void ResetTargetsList() {
         targetsList = null;
     }
