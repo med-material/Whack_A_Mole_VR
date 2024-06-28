@@ -1,35 +1,47 @@
-# Whack-A-Mole VR Game made with Unity
+# Whack-A-Mole VR - Research Platform for VR Stroke Rehabilitation
 
+Whack-A-Mole VR is a research platform, data collection device, and experimental protocol game designed for upper-limb VR rehabilitation for stroke and visual neglect. It consists of:
+
+ * [Whack-A-Mole-VR - Game](https://github.com/med-material/Whack_A_Mole_VR) (This repository)
+ * [Online Dashboard for Data Analysis](https://github.com/med-material/Whack_A_Mole_RShiny)
+ * Pattern Editor and Treatment Pattern Collection (Under development)
+
+## Project Resources
+Whack-A-Mole VR is a research project maintained by [Bastian I. Hougaard](https://vbn.aau.dk/da/persons/biho) and [Hendrik Knoche](https://vbn.aau.dk/da/persons/hk),  [Lars Evald](https://pure.au.dk/portal/en/persons/lars.evald%40clin.au.dk) and [Iris Brunner](https://pure.au.dk/portal/en/persons/iris.brunner%40clin.au.dk) since 2019. The project is still under active research and development and as specified by our [license](https://github.com/med-material/Whack_A_Mole_VR/blob/master/LICENSE), we provide the Whack-A-Mole VR research platform here as-is with no warranty, for the wider XR rehab community to tinker with or run studies with. Feel free to get in touch with us, we would be happy to collaborate.
+
+Learn more about our research here:
+ * [Virtual Mirror Therapy in a VR pointing task for stroke rehabilitation.](https://vbn.aau.dk/da/publications/virtual-mirror-therapy-in-a-vr-pointing-task-for-stroke-rehabilit) Abstract from the European Stroke Organisation Conference 2022
+ * [Virtual Motor Spaces: Exploring how to amplify movements in VR](https://vbn.aau.dk/da/publications/virtual-mirror-therapy-in-a-vr-pointing-task-for-stroke-rehabilit) Extended Abstract at ICVR 2022.
+ * [Whack-A-Mole VR: Demonstration of Accessible Virtual Reality Game](https://vbn.aau.dk/da/publications/whack-a-mole-vr-demonstration-of-accessible-virtual-reality-game-). Short Paper and Demo at NordiCHI 2022.
+ * [Virtual Reality Assessment and Treatment of Spatial Neglect (VR@SN)](https://vbn.aau.dk/da/publications/virtual-reality-assessment-and-treatment-of-spatial-neglect-vrsn). Abstract at 11th World Congress for Neurorehabilitation, 2020.
+
+# Whack-A-Mole VR - Unity Project
 ![Whack A Mole Game Setup](Images/startGame.PNG)
 
-The Whack_A_Mole VR environment provides a test for the Pupil Labs Calibration environment, used with the Pupil Labs plugin for eye-tracking in VR. 
-
-The main goal of this project is to be used in clinics for rehabilitation of visualy neglected people. By providing a playful environment, the game stimulates the patient and helps his rehabilitation, while data are collected in the background to allow for a deep analysis of the patient behavior and reactions.
 
 ![Whack A Mole Game Playing](Images/inGame.PNG)
 
-The game is a simple Whack-a-mole, but in VR. In the VR environment, the participant is presented a wall on which are multiple moles (represented by gray disks). When the game starts, random moles will activate by changing their color to green and emitting a sound. The participant will then need to pop the moles by targeting them with the cursor(red square) before they deactivate by themselves. There are also fake moles, which activates with the red color and that the patient musn't pop.
+The game is a simple Whack-a-mole-style game, but in VR. The game is primarily run on VR headsets connected to a computer, from which a facilitator (clinician) controls and monitors the game, while the player is wearing the headset.  In front of the player a wall is presented which show multiple moles (represented by gray disks). When the game starts, moles will activate by changing their color to green. The player will then need to pop the moles by hovering over them with the cursor (red square) before they deactivate by themselves. There are also distractors, which activates that the player musn't pop.
 
 ![Whack A Mole Game Playing](Images/duringGame.PNG)
 
-The environment provides many features to customise the game, with multiple parameters and modifiers available when you click on the modifiers button(red square):
-
-- Logging parameters: 
-  - Participant ID: allows to keep track of the participant for data analysis (across sessions)
-  - Test ID: allows to keep track of the test number for data analysis
+The environment provides many features to customise the game, with multiple parameters and modifiers available when you click on the modifiers button.
 
 - Game modifiers: 
   - Game duration: allows to set the duration of the game
-  - Game speed: allows to set the speed of the game between three options (slow, normal, fast). The higher the speed, the more moles will spawn and the higher the fake moles's spawn coefficient will be
-  - Mirror effect: mirrors the patient's VR controller's position and rotation. All his movements will be reversed except the ones on the vertical axis
-  - Show hand: replaces the VR controller model with a hand model (not implemented yet)
-  - Dual laser: allows the participant to use both controllers (left and right) at once
-  - Eye patch: applies an eye patch. Disables one of the participant's eye in the VR headset. Can be set to either left, right or none
-  - Prism effect: applies an offset on the participant's VR controller, meaning that the position of the VR controller between the real world and in-game will differ
+  - Game speed: allows to set the speed of the game between three options (slow, normal, fast). The higher the speed, the more moles will spawn and the higher the fake moles's spawn coefficient will be.
+  - Mirror effect: mirrors the player's VR controller's position and rotation. All their movements will be reversed except the ones on the vertical axis.
+  - Geometric Mirror: Creates mirror therapy by providing a ghost secondary controller which mirrors the movements of the player.
+  - Eye patch: applies an eye patch. Disables one of the player's eye in the VR headset. Can be set to either left, right or none.
+  - Hide Wall: Controls how much of the wall is visible to the player, forcing the player to increase how much head rotation is needed.
+  - Speed: In random moles mode, this controls how fast new moles appear.
+  - Controller Offset: Offsets the controller from the user's body horisontally. Can be used to force players to move their arm more towards the right or left.
+  - Prism effect: applies a rotation of the player's camera, which mean their line of sight change relative to the position of their hand. Forces players to look more to the right or left.
+  - Motorspace Size: Changes how much movement is needed to perform the pointing task.
 
-  ![Whack A Mole Game Playing](Images/modifiers.PNG)
+![Whack A Mole Game Playing](Images/modifiers.PNG)
 
-Many data are collected through a single game. They are by default saved to a dedicated CREATE database, but it is also possible to save them locally as a .CSV file. They can be then visualised using a dedicated R-shiny application available at this link: https://github.com/QuentinDaveau/Whack_A_Mole_RShiny. 
+While players play, the game continuously collects data in the background. When a session stops or has finished, the data can either be uploaded to a database or saved locally to disk as a .CSV file. The data can then be visualized on the [online dashboard](https://github.com/med-material/Whack_A_Mole_RShiny).
 
 ## Tools for Developers
 
@@ -49,7 +61,7 @@ The **Pattern Manager** script has a Debug Mode implemented which, if active, sh
 
 ## Mole Whacking Data Collection
 
-This application logs various game datas, from the activated mole position to the position travelled by the participant's laser between two mole poping. The logs are by default saved in the application main directory, however a custom path can be set from the Unity editor. These data are logged when specific events occurs.
+This application logs various game datas, from the activated mole position to the position travelled by the player's laser between two mole poping. The logs are by default saved in the application main directory, however a custom path can be set from the Unity editor. These data are logged when specific events occurs.
 
 The events are:
 
