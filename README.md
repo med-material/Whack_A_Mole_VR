@@ -2,12 +2,12 @@
 
 Whack-A-Mole VR is a research platform, data collection device, and experimental protocol game designed for upper-limb VR rehabilitation for stroke and visual neglect. It consists of:
 
- * [Whack-A-Mole-VR - Game](https://github.com/med-material/Whack_A_Mole_VR) (This repository)
+ * [Whack-A-Mole-VR - Game](https://github.com/med-material/Whack_A_Mole_VR) (this repository)
  * [Online Dashboard for Data Analysis](https://github.com/med-material/Whack_A_Mole_RShiny)
- * Pattern Editor and Treatment Pattern Collection (Under development)
+ * Pattern Editor and Treatment Pattern Collection (under development)
 
 ## Project Resources
-Whack-A-Mole VR is a research project maintained by [Bastian I. Hougaard](https://vbn.aau.dk/da/persons/biho) and [Hendrik Knoche](https://vbn.aau.dk/da/persons/hk),  [Lars Evald](https://pure.au.dk/portal/en/persons/lars.evald%40clin.au.dk) and [Iris Brunner](https://pure.au.dk/portal/en/persons/iris.brunner%40clin.au.dk) since 2019. The project is still under active research and development and as specified by our [license](https://github.com/med-material/Whack_A_Mole_VR/blob/master/LICENSE), we provide the Whack-A-Mole VR research platform here as-is with no warranty, for the wider XR rehab community to tinker with or run studies with. Feel free to get in touch with us, we would be happy to collaborate.
+Whack-A-Mole VR is a research project maintained by [Bastian I. Hougaard](https://vbn.aau.dk/da/persons/biho), [Hendrik Knoche](https://vbn.aau.dk/da/persons/hk), [Lars Evald](https://pure.au.dk/portal/en/persons/lars.evald%40clin.au.dk) and [Iris Brunner](https://pure.au.dk/portal/en/persons/iris.brunner%40clin.au.dk) since 2019. The project is still under active research and development and as specified by our [license](https://github.com/med-material/Whack_A_Mole_VR/blob/master/LICENSE), we provide the Whack-A-Mole VR research platform here as-is with no warranty, for the wider XR rehab community to tinker with or run studies with. Feel free to get in touch with us, we would be happy to collaborate.
 
 Learn more about our research here:
  * [Virtual Mirror Therapy in a VR pointing task for stroke rehabilitation.](https://vbn.aau.dk/da/publications/virtual-mirror-therapy-in-a-vr-pointing-task-for-stroke-rehabilit) Abstract from the European Stroke Organisation Conference 2022
@@ -21,7 +21,7 @@ Learn more about our research here:
 
 ![Whack A Mole Game Playing](Images/inGame.PNG)
 
-The game is a simple Whack-a-mole-style game, but in VR. The game is primarily run on VR headsets connected to a computer, from which a facilitator (clinician) controls and monitors the game, while the player is wearing the headset.  In front of the player a wall is presented which show multiple moles (represented by gray disks). When the game starts, moles will activate by changing their color to green. The player will then need to pop the moles by hovering over them with the cursor (red square) before they deactivate by themselves. There are also distractors, which activates that the player musn't pop.
+The game is a simple Whack-a-mole-style game, but in VR. The game is primarily run on VR headsets connected to a computer, from which a facilitator (clinician) controls and monitors the game, while the player is wearing the headset.  In front of the player a wall is presented which show multiple moles (represented by gray disks). When the game starts, moles will activate by changing their color to green. The player will then need to pop the moles by hovering over them with the blue cursor (highlighted by the red square) before they deactivate by themselves. There are also distractors, which activates that the player musn't pop.
 
 ![Whack A Mole Game Playing](Images/duringGame.PNG)
 
