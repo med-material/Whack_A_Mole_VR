@@ -16,12 +16,18 @@ Learn more about our research here:
  * [Virtual Reality Assessment and Treatment of Spatial Neglect (VR@SN)](https://vbn.aau.dk/da/publications/virtual-reality-assessment-and-treatment-of-spatial-neglect-vrsn). Abstract at 11th World Congress for Neurorehabilitation, 2020.
 
 # Whack-A-Mole VR - Unity Project
+Whack-A-Mole VR is designed from ground up to be a flexible platform for studying and designing simple VR-based pointing tasks:
+ * **Visual Skins**: In its basic state, it mainly provides simple green targets that players must hit. But it's designed to be easy to adapt to other visual metaphors while maintaining the same underlying interaction: catching butterflies, picking apples, and so on.
+ * **Modifiers**: Whack-A-Mole VR provides a range of tools to modify or alter the experience, many of which are specifically designed to experimentally treat or diagnose neglect.
+ * **Scriptable Patterns**: Whack-A-Mole VR's can load different treatment programs from files known as patterns, which specify how/when targets appear and how/when different modifiers activates.
+ * **Data Collection**: Whack-A-Mole extensively logs player movements and interactions, while players are playing.
+
 ![Whack A Mole Game Setup](Images/startGame.PNG)
 
 
 ![Whack A Mole Game Playing](Images/inGame.PNG)
 
-The game is a simple Whack-a-mole-style game, but in VR. The game is primarily run on VR headsets connected to a computer, from which a facilitator (clinician) controls and monitors the game, while the player is wearing the headset.  In front of the player a wall is presented which show multiple moles (represented by gray disks). When the game starts, moles will activate by changing their color to green. The player will then need to pop the moles by hovering over them with the blue cursor (highlighted by the red square) before they deactivate by themselves. There are also distractors, which activates that the player musn't pop.
+The game is a simple Whack-a-mole-style game, but in VR. The game is primarily run on VR headsets connected to a computer, from which a facilitator (clinician) controls and monitors the game, while the player is wearing the headset.  In front of the player a wall is presented which show multiple moles (represented by gray disks). When the game starts, moles will activate by changing their color to green. The player will then need to pop the moles by hovering over them with the blue cursor (highlighted by the red square) before they deactivate by themselves. Players hit targets by moving their arm around horisontally or vertically in the air (relative pointing, a bit like using a mouse). There are also distractors, which activates that the player musn't pop.
 
 ![Whack A Mole Game Playing](Images/duringGame.PNG)
 
