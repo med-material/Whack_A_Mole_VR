@@ -1,3 +1,4 @@
+![Whack A Mole Game Playing](Assets/Textures/whack-a-mole-logo-with-text512.png)
 # Whack-A-Mole VR - Research Platform for VR Stroke Rehabilitation
 
 Whack-A-Mole VR is a research platform, data collection device, and experimental protocol game designed for upper-limb VR rehabilitation for stroke and visual neglect. It consists of:
