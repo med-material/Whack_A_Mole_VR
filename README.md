@@ -157,3 +157,9 @@ The logged data are:
 
 * **PupilTime**: The time in the PupilTime format, at the time the logging takes place.
 * **PupilTimeSample**: The time in PupilTime format, at the time we receive gaze data.
+
+Meta logs:
+* SessionState: This is the state of the game, at the time it stopped and was logged. Its values are either "Finished" (if the treatment program naturally ended) or "Interrupted" (if the treatment program was interrupted). This is different from GameState, which logs the state of the game at a given timestamp.
+* SessionDuration: the duration of the session in seconds.
+* SessionID: A unique MD5 based ID of the session.
+* SessionProgram: What program the session was running.
