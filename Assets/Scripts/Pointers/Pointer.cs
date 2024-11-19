@@ -139,6 +139,15 @@ public abstract class Pointer : MonoBehaviour
         }
     }
 
+    public void ResetShootOrder()
+    {
+        pointerShootOrder = -1;
+        loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>()
+        {
+            {"PointerShootOrder", "NULL"}
+        });
+    }
+
     public void SetPerformanceFeedback(bool perf) {
         performancefeedback = perf;
     }

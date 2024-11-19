@@ -82,6 +82,7 @@ public class GameDirector : MonoBehaviour
     public TestChangeEvent testChanged = new TestChangeEvent();
     private int participantId = 0;
     private int testId = 0;
+    private Pointer[] allPointers;
 
     private Dictionary<string, Dictionary<string, float>> difficulties = new Dictionary<string, Dictionary<string, float>>(){
         {"Slow", new Dictionary<string, float>(){
@@ -110,6 +111,17 @@ public class GameDirector : MonoBehaviour
         modifiersManager = FindObjectOfType<ModifiersManager>();
         gameDefaultDuration = gameDuration;
         constraint = FindObjectOfType<Constraint>();
+    }
+
+    private void ResetPointerShootOrder()
+    {
+        allPointers = FindObjectsOfType<Pointer>();
+
+        foreach (var pointer in allPointers)
+        {
+            pointer.ResetShootOrder();
+        }
+
     }
 
     void Start()
@@ -212,6 +224,7 @@ public class GameDirector : MonoBehaviour
         {
             {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
         });
+        ResetPointerShootOrder();
         FinishGame();
     }
 
