@@ -117,6 +117,8 @@ The logged data are:
 * **PrismEffect**: is the prism effect activated (e.g. True, False)
 * **DualTask**: is the dual task activated (e.g. True, False)
 
+* **PointerShootOrder**: counts each time the pointer performed a shot. Reset when the game finishes.
+* **MoleSpawnOrder**: counts each time a mole was spawned, including distractors. In Random mode, this is set by the dynamic order, whereas in patterns, it is set by the pattern player. Reset when the game finishes.
 * **MoleId**: the unique ID of the mole, being a four digits number
 * **MoleIndexX**: the X index of the mole
 * **MoleIndexY**: the Y index of the mole
