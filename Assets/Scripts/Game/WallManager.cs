@@ -558,4 +558,8 @@ public class WallManager : MonoBehaviour
             Enable();
         }
     }
+    public void ResetMoleSpawnOrder()
+    {
+        moleCount = 0;
+    }
 }

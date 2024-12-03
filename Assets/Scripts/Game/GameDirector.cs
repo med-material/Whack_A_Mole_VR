@@ -124,6 +124,11 @@ public class GameDirector : MonoBehaviour
 
     }
 
+    private void ResetMoleSpawnOrder()
+    {
+        wallManager.ResetMoleSpawnOrder();
+    }
+
     void Start()
     {
 
@@ -225,6 +230,7 @@ public class GameDirector : MonoBehaviour
             {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
         });
         ResetPointerShootOrder();
+        ResetMoleSpawnOrder();
         FinishGame();
     }
 
