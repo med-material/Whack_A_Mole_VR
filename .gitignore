@@ -15,6 +15,7 @@ mysql_auth.txt.meta
 
 # Visual Studio cache directory
 .vs/
+.vsconfig
 
 # Gradle cache directory
 .gradle/
