@@ -26,6 +26,9 @@ public class SampleLogger : MonoBehaviour
     private GazeLogger gazeLogger;
 
     [SerializeField]
+    public ThalmicMyo thalmicMyo;
+
+    [SerializeField]
     private ViewportLogger viewportLogger;
 
     private TrackerHub trackerHub;
@@ -59,9 +62,9 @@ public class SampleLogger : MonoBehaviour
     }
 
     // // Update is called once per frame
-    void Start ()
+    void Start()
     {
-        loggingManager.Log("Meta", "SamplingFrequency", samplingFrequency);   
+        loggingManager.Log("Meta", "SamplingFrequency", samplingFrequency);
     }
 
     // // Initialises the CSV file parameters (name and file path).
@@ -73,7 +76,7 @@ public class SampleLogger : MonoBehaviour
 
     public void OnGameDirectorStateUpdate(GameDirector.GameState newState)
     {
-        switch(newState)
+        switch (newState)
         {
             case GameDirector.GameState.Stopped:
                 FinishLogging();
@@ -110,7 +113,8 @@ public class SampleLogger : MonoBehaviour
     // the PersistentEvents parameters to the row when generating it.
     private IEnumerator SampleLog(float sampleFreq)
     {
-        while (true) {
+        while (true)
+        {
             Dictionary<string, object> sampleLog = new Dictionary<string, object>() {
                 {"Event", "Sample"},
             };
@@ -120,22 +124,35 @@ public class SampleLogger : MonoBehaviour
 
             foreach (KeyValuePair<string, object> pair in trackedLogs)
             {
-                    sampleLog[pair.Key] = pair.Value;
+                sampleLog[pair.Key] = pair.Value;
             }
 
             // Adds the parameters from GazeLogger
-            if (gazeLogger != null) {
+            if (gazeLogger != null)
+            {
                 Dictionary<string, object> gazeLogs = gazeLogger.GetGazeData();
                 foreach (KeyValuePair<string, object> pair in gazeLogs)
                 {
                     sampleLog[pair.Key] = pair.Value;
                 }
             }
-            if (viewportLogger != null) {
+
+            if (viewportLogger != null)
+            {
                 Dictionary<string, object> viewportLogs = viewportLogger.GetViewportData();
                 foreach (KeyValuePair<string, object> pair in viewportLogs)
                 {
                     sampleLog[pair.Key] = pair.Value;
+                }
+            }
+
+            // Adds the parameters from the ThalmicMyo EMG data
+            int[] EMGs = ThalmicMyo.emg;
+            if (EMGs != null || EMGs.Length == 8)
+            {
+                for (var i = 0; i < EMGs.Length; i++)
+                {
+                    sampleLog["EMG_" + i] = EMGs[i];
                 }
             }
 
@@ -238,7 +255,7 @@ public class SampleLogger : MonoBehaviour
     // // Clears the logs, "Current Mole" log, log count and unique test ID. Used to clear the logs when a new game is started.
     // private void ResetLogs()
     // {
-        
+
     //     foreach(Dictionary<int, string> dict in logs.Values)
     //     {
     //         dict.Clear();
