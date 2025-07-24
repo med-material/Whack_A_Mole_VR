@@ -9,6 +9,7 @@ public class MyoEMGLogging : MonoBehaviour
     [SerializeField] public ThalmicMyo thalmicMyo;
 
     List<string> EMGCol;
+    private bool isLoggingStarted = false;
 
     void Start()
     {
@@ -18,9 +19,32 @@ public class MyoEMGLogging : MonoBehaviour
         // Start by telling logging manager to create a new collection of logs
         // and optionally pass the column headers.
         loggingManager.CreateLog("EMG", EMGCol);
+    }
+
+    public void OnGameDirectorStateUpdate(GameDirector.GameState newState)
+    {
+        switch (newState)
+        {
+            case GameDirector.GameState.Stopped:
+                FinishLogging();
+                break;
+            case GameDirector.GameState.Playing:
+                StartLogging();
+                break;
+            case GameDirector.GameState.Paused:
+                // TODO
+                break;
+        }
+    }
+
+    private void StartLogging()
+    {
+        if (isLoggingStarted) return;
 
         // Add event handlers to the Myo device to receive EMG data.
         thalmicMyo._myo.EmgData += onReceiveData;
+
+        isLoggingStarted = true;
     }
 
     private void onReceiveData(object sender, EmgDataEventArgs data)
@@ -38,10 +62,9 @@ public class MyoEMGLogging : MonoBehaviour
         });
     }
 
-    // Write the logs to disk when the application quits.
-    void OnApplicationQuit()
+    void FinishLogging()
     {
-        Debug.Log("Application is quitting, saving EMG logs...");
-        loggingManager.SaveLog("EMG", true);
+        thalmicMyo._myo.EmgData -= onReceiveData;
+        isLoggingStarted = false;
     }
 }
