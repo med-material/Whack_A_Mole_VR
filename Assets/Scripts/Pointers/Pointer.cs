@@ -16,6 +16,7 @@ public abstract class Pointer : MonoBehaviour
 
     [SerializeField]
     private SteamVR_Input_Sources controller;
+    public SteamVR_Input_Sources Controller { get { return controller; } }
 
     [SerializeField]
     protected GameObject laserOrigin;
