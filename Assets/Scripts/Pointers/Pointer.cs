@@ -16,6 +16,7 @@ public abstract class Pointer : MonoBehaviour
 
     [SerializeField]
     private SteamVR_Input_Sources controller;
+    public SteamVR_Input_Sources Controller { get { return controller; } }
 
     [SerializeField]
     protected GameObject laserOrigin;
@@ -142,10 +143,10 @@ public abstract class Pointer : MonoBehaviour
     public void ResetShootOrder()
     {
         pointerShootOrder = -1;
-        loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>()
-        {
-            {"PointerShootOrder", "NULL"}
-        });
+        //loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>()
+        //{
+        //    {"PointerShootOrder", "NULL"}
+        //});
     }
 
     public void SetPerformanceFeedback(bool perf) {
