@@ -273,6 +273,10 @@ public class PatternInterface : MonoBehaviour
             modifiersManager.SetMainController((ModifiersManager.ControllerSetup)System.Enum.Parse( typeof(ModifiersManager.ControllerSetup), tempValue));
             motorspaceManager.SetActiveMotorSpace(tempValue);
         }
+        if (action.TryGetValue("POINTERTYPE", out tempValue))
+        {
+            modifiersManager.SetPointerType((ModifiersManager.PointerType)System.Enum.Parse(typeof(ModifiersManager.PointerType), tempValue));
+        }
         if (action.TryGetValue("PRISM", out tempValue))
         {
             modifiersManager.SetPrismOffset(ParseFloat(tempValue));
