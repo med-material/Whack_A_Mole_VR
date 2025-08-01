@@ -1,0 +1,24 @@
+name: Format Scripts
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [closed]
+    branches:
+      - master
+
+jobs:
+  format:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checks-out the repository under $GITHUB_WORKSPACE
+      - uses: actions/checkout@v2
+
+      - name: Unity Auto Format
+        uses: tyirvine/Unity-Actions-Autoformat@1.0.6
+        with:
+          path: ./Assets/Scripts/
