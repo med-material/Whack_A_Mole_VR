@@ -9,10 +9,7 @@ PointerTypeSelector manages which Pointer scripts should be enabled/disabled on 
 */
 public class PointerTypeSelector : MonoBehaviour
 {
-    [Tooltip("DefaultPointerType is not switchable while playing: must be set correctly before running.")]
-    [SerializeField] PointerType defaultPointerType = PointerType.BasicPointer;
-
-    private Dictionary<PointerType, Pointer> pointerList = new Dictionary<PointerType, Pointer>();
+    private Dictionary<ModifiersManager.PointerType, Pointer> pointerList = new Dictionary<ModifiersManager.PointerType, Pointer>();
     private SteamVR_Behaviour_Pose behaviour_Pose;
 
     void Start()
@@ -23,7 +20,7 @@ public class PointerTypeSelector : MonoBehaviour
         // Populate the pointerList dictionary with pointers found in the GameObject
         foreach (Pointer pointer in pointers)
         {
-            if (Enum.TryParse(pointer.GetType().Name, out PointerType pointerType))
+            if (Enum.TryParse(pointer.GetType().Name, out ModifiersManager.PointerType pointerType))
             {
                 pointerList[pointerType] = pointer;
             }
@@ -34,10 +31,10 @@ public class PointerTypeSelector : MonoBehaviour
         }
 
         // Activate the default pointer type at the start
-        ActivatePointer(defaultPointerType);
+        ActivatePointer(ModifiersManager.defaultPointerType);
     }
 
-    public void ActivatePointer(PointerType pointerType)
+    public void ActivatePointer(ModifiersManager.PointerType pointerType)
     {
         // Disable all pointers before activating the selected one
         pointerList.Values.ToList().ForEach(pointer => pointer.enabled = false);
@@ -46,6 +43,7 @@ public class PointerTypeSelector : MonoBehaviour
         if (pointerList.TryGetValue(pointerType, out Pointer pointer))
         {
             pointer.enabled = true;
+            pointer.Init();
             behaviour_Pose.inputSource = pointer.Controller; // Change the tracking device for the pointer
         }
         else
@@ -53,12 +51,10 @@ public class PointerTypeSelector : MonoBehaviour
             Debug.LogError($"Pointer type {pointerType} not found.");
         }
     }
-}
 
-
-// Important: Ensure to update the PointerType enum when new pointer type script is added /!\
-public enum PointerType
-{
-    BasicPointer,
-    EMGPointer
+    public Pointer GetActivePointer()
+    {
+        // Return the currently active pointer
+        return pointerList.Values.FirstOrDefault(pointer => pointer.enabled);
+    }
 }
