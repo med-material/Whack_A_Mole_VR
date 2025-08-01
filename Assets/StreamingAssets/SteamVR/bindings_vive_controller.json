@@ -1,5 +1,7 @@
 {
-   "app_key" : "application.generated.unity.steamvr.exe",
+   "action_manifest_version" : 0,
+   "alias_info" : {},
+   "app_key" : "application.generated.unity.whack_a_mole_vr.exe",
    "bindings" : {
       "/actions/buggy" : {
          "sources" : [
@@ -250,7 +252,11 @@
          ]
       }
    },
+   "category" : "steamvr_input",
    "controller_type" : "vive_controller",
    "description" : "",
-   "name" : "vive_controller"
+   "interaction_profile" : "",
+   "name" : "vive_controller",
+   "options" : {},
+   "simulated_actions" : []
 }
