@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR;
 using UnityEngine.Events;
+using System.Linq;
 
 [System.Serializable]
 public class ModifierUpdateEvent : UnityEvent<string, string> {}
@@ -27,6 +28,7 @@ public class ModifiersManager : MonoBehaviour
     public enum MotorspaceSize {Small, Medium, Large};
     public enum EyePatch {Left, None, Right};
     public enum HideWall {Left, None, Right};
+    public enum PointerType { BasicPointer, EMGPointer };
 
     [SerializeField]
     private GameObject hideWallLeft;
@@ -47,7 +49,7 @@ public class ModifiersManager : MonoBehaviour
     private UnityEngine.UI.Slider prismEffectSlider;
 
     [SerializeField]
-    private Pointer rightController;
+    private GameObject rightController;
 
     [SerializeField]
     private GameObject[] rightControllerVisuals;
@@ -65,7 +67,7 @@ public class ModifiersManager : MonoBehaviour
     private MotorSpaceManager motorSpaceManager;
 
     [SerializeField]
-    private Pointer leftController;
+    private GameObject leftController;
 
     [SerializeField]
     private GameObject[] leftControllerVisuals;
@@ -117,17 +119,25 @@ public class ModifiersManager : MonoBehaviour
     private bool motorRestriction;
     private float motorRestrictionUpper = 1f;
     private float motorRestrictionLower = 0.5f;
-    private Dictionary<string, Pointer> controllersList;
+    private Dictionary<string, GameObject> controllersList;
+    private Pointer[] rightControllerPointers;
+    private Pointer[] leftControllerPointers;
+    public const PointerType defaultPointerType = PointerType.BasicPointer;
+
     private LoggerNotifier loggerNotifier;
     private ModifierUpdateEvent modifierUpdateEvent = new ModifierUpdateEvent();
 
     void Awake()
     {
-        controllersList = new Dictionary<string, Pointer>(){
+        controllersList = new Dictionary<string, GameObject>(){
             {"main", rightController},
             {"second", leftController}
         };
-        SetControllerEnabled(ControllerSetup.Right);
+
+        leftControllerPointers = leftController.GetComponents<Pointer>();
+        rightControllerPointers = rightController.GetComponents<Pointer>();
+
+        SetControllerEnabled(controllerSetup);
 
         // Initialization of the LoggerNotifier. Here we will only pass parameters to PersistentEvent, even if we will also raise Events.
         loggerNotifier = new LoggerNotifier(persistentEventsHeadersDefaults: new Dictionary<string, string>(){
@@ -180,6 +190,12 @@ public class ModifiersManager : MonoBehaviour
 
     void Start() {
         SetDefaultModifiers();
+    }
+
+    private Pointer getActivePointer(GameObject controller)
+    {
+        // Get the PointerTypeSelector component from the controller and return the active pointer.
+        return controller.GetComponent<PointerTypeSelector>().GetActivePointer();
     }
 
     public void UpdateDefaultModifier(string modifier, object val) {
@@ -273,8 +289,9 @@ public class ModifiersManager : MonoBehaviour
         performanceFeedback = value;
         
         wallManager.SetPerformanceFeedback(performanceFeedback);
-        rightController.SetPerformanceFeedback(performanceFeedback);
-        leftController.SetPerformanceFeedback(performanceFeedback);
+        // Apply performance feedback to all pointers in rightControllerPointers using LINQ
+        rightControllerPointers.ToList().ForEach(pointer => pointer.SetPerformanceFeedback(performanceFeedback));
+        leftControllerPointers.ToList().ForEach(pointer => pointer.SetPerformanceFeedback(performanceFeedback));
 
         // Raises an Event and updates a PersistentEvent's parameter (in consequence, a PersistentEvent will also be raised)
         loggerNotifier.NotifyLogger("Performance Feedback Set "+ value, EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
@@ -358,7 +375,7 @@ public class ModifiersManager : MonoBehaviour
     public void SetMirrorEffect(bool value)
     {
         if (mirrorEffect == value) return;
-        if (!controllersList["main"].isActiveAndEnabled) return;
+        if (!getActivePointer(controllersList["main"]).isActiveAndEnabled) return;
 
         mirrorEffect = value;
         UpdateMirrorEffect();
@@ -494,8 +511,6 @@ public class ModifiersManager : MonoBehaviour
     // Sets the main controller. By default it is the right handed one.
     public void SetMainController(ModifiersManager.ControllerSetup controller)
     {
-        if (controllerSetup == controller) return;
-
         controllerSetup = controller;
         SetControllerEnabled(controller);
         if (controllerSetup == ModifiersManager.ControllerSetup.Left)
@@ -576,6 +591,8 @@ public class ModifiersManager : MonoBehaviour
     // Enables/disables a given controller
     private void SetControllerEnabled(ControllerSetup controllerType, bool enabled = true)
     {
+        controllerSetup = controllerType;
+
         bool enableRight;
         enableRight = controllerType == ControllerSetup.Right ? true : false;
         enableRight = controllerType == ControllerSetup.Both ? true : enableRight;
@@ -587,12 +604,12 @@ public class ModifiersManager : MonoBehaviour
 
         if (enableRight)
         {
-            rightController.Enable();
+            rightControllerPointers.ToList().ForEach(pointer => pointer.Enable());
             foreach (var obj in rightControllerVisuals) {
                 obj.SetActive(true);
             }
         } else {
-            rightController.Disable();
+            rightControllerPointers.ToList().ForEach(pointer => pointer.Disable());
             foreach (var obj in rightControllerVisuals) {
                 obj.SetActive(false);
             }
@@ -600,12 +617,12 @@ public class ModifiersManager : MonoBehaviour
 
         if (enableLeft)
         {
-            leftController.Enable();
+            leftControllerPointers.ToList().ForEach(pointer => pointer.Enable());
             foreach (var obj in leftControllerVisuals) {
                 obj.SetActive(true);
             }
         } else {
-            leftController.Disable();
+            leftControllerPointers.ToList().ForEach(pointer => pointer.Disable());
             foreach (var obj in leftControllerVisuals) {
                 obj.SetActive(false);
             }
