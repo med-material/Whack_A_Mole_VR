@@ -232,6 +232,12 @@ public class ModifiersManager : MonoBehaviour
         StartCoroutine(WaitForCameraAndUpdate(eyePatch));
     }
 
+    public void SetPointerType(PointerType pointerType)
+    {
+        leftController.GetComponent<PointerTypeSelector>().ActivatePointer(pointerType);
+        rightController.GetComponent<PointerTypeSelector>().ActivatePointer(pointerType);
+    }
+
     public void SetHideWall(HideWall value) {
         if (hideWall == value) return;
         hideWall = value;
