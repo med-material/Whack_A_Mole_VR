@@ -1,0 +1,44 @@
+name: Format Scripts
+
+on: 
+  push:
+    branches:
+      - "**"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      path:
+        description: 'Path to the scripts directory'
+        required: true
+        default: './Assets/Scripts/'
+      check_only:
+        description: 'Check only without making changes'
+        required: false
+        default: 'false'
+      check_severity:
+        description: 'Severity of style checks'
+        required: false
+        default: 'error'
+      squash_commit:
+        description: 'Whether to squash commits or not'
+        required: false
+        default: 'false'
+
+jobs:
+  auto-formatting: # This workflow contains a single job called "auto-formatting"
+    
+    runs-on: ubuntu-latest # The type of runner that the job will run on
+
+    steps:
+      - uses: actions/checkout@v4 # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+        with:
+          fetch-depth: 2  # Needed if you want to amend the last commit (e.g. for squash commits)
+
+      # Runs a single command using the runners shell
+      - name: Unity Auto Format
+        uses: SilvaUnCompte/CS-Unity-Actions-Autoformat@v1.0.2 # check available version before using
+        with:
+          path: ./Assets/Scripts/ # Path to your scripts directory
+          check_only: 'true' # Set to 'true' to only verify formatting without making changes (true|false, default: 'false')
+          check_severity: 'warn' # Set to 'warn' or 'error' to specify the severity of style checks (warn|error, default: 'error')
