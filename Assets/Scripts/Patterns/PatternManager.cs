@@ -1,12 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor;
 using UnityEngine.Events;
 
 
 [System.Serializable]
-public class PatternUpdateEvent : UnityEvent<string> {}
+public class PatternUpdateEvent : UnityEvent<string> { }
 
 /*
 Class managing the selected pattern. Stores it, and does the interface between the rest of the game and the
@@ -25,7 +23,8 @@ public class PatternManager : MonoBehaviour
     private LoggingManager loggingManager;
 
     [System.Serializable]
-    public struct InternalPattern {
+    public struct InternalPattern
+    {
         public string name;
         public TextAsset asset;
     }
@@ -34,7 +33,7 @@ public class PatternManager : MonoBehaviour
     private InternalPattern[] internalPatterns;
 
     private Dictionary<string, string[]> internalPatternsDict = new Dictionary<string, string[]>();
-    
+
     void Awake()
     {
         patternReadWriter = new PatternReadWriter();
@@ -48,7 +47,8 @@ public class PatternManager : MonoBehaviour
             {"PlayedPattern", "None"}
         });
 
-        foreach(InternalPattern pattern in internalPatterns) {
+        foreach (InternalPattern pattern in internalPatterns)
+        {
             internalPatternsDict.Add(pattern.name, pattern.asset.text.Split('\n'));
         }
 
@@ -63,14 +63,14 @@ public class PatternManager : MonoBehaviour
             loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>(){
                 {"PlayedPattern", "None"}
             });
-            loggingManager.Log("Meta", "SessionProgram","Random Moles");
+            loggingManager.Log("Meta", "SessionProgram", "Random Moles");
             return false;
         }
         patternPlayer.PlayPattern();
         loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>(){
                 {"PlayedPattern", loadedPatternName}
             });
-        loggingManager.Log("Meta", "SessionProgram",loadedPatternName);
+        loggingManager.Log("Meta", "SessionProgram", loadedPatternName);
         return true;
     }
 
@@ -96,7 +96,7 @@ public class PatternManager : MonoBehaviour
     {
         return patternUpdateEvent;
     }
-    
+
     // Returns if a pattern is loaded or not.
     public bool PatternLoaded()
     {
@@ -115,9 +115,12 @@ public class PatternManager : MonoBehaviour
     {
         string[] patternProperties = null;
 
-        if (internalPatternsDict.ContainsKey(patternName)) {
+        if (internalPatternsDict.ContainsKey(patternName))
+        {
             patternProperties = internalPatternsDict[patternName];
-        } else {
+        }
+        else
+        {
             patternProperties = patternReadWriter.LoadPattern(patternName);
         }
 
@@ -149,7 +152,8 @@ public class PatternManager : MonoBehaviour
     {
         List<string> patternList = new List<string>();
 
-        foreach(KeyValuePair<string, string[]> pair in internalPatternsDict) {
+        foreach (KeyValuePair<string, string[]> pair in internalPatternsDict)
+        {
             patternList.Add(pair.Key);
         }
 

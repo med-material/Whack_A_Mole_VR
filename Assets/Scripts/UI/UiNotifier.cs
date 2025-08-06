@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -31,6 +30,6 @@ public abstract class UiNotifier : MonoBehaviour
     // Raises an Event to notify any listener
     protected void NotifyTarget(object arg)
     {
-        UiNotifyTarget.Invoke(new Dictionary<string, object>{{identifier, arg}});
+        UiNotifyTarget.Invoke(new Dictionary<string, object> { { identifier, arg } });
     }
 }

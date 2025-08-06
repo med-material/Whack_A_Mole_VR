@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 /*
 Abstract class of the Pointer's cursor. The cursor is an object placed at the hit point of the laser. This class allows for
@@ -64,9 +62,9 @@ public abstract class LaserCursor : MonoBehaviour
     }
 
     // Virtual functions to be called in the class implementation if it is desired to add extra behaviors.
-    protected virtual void ExtraSetColor(Color newColor) {}
+    protected virtual void ExtraSetColor(Color newColor) { }
 
-    protected virtual void ExtraEnable() {}
+    protected virtual void ExtraEnable() { }
 
-    protected virtual void ExtraDisable() {}
+    protected virtual void ExtraDisable() { }
 }

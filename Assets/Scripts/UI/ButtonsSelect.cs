@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,7 +13,7 @@ public class ButtonsSelect : MonoBehaviour
 
     void Start()
     {
-        foreach(Button button in gameObject.GetComponentsInChildren<Button>())
+        foreach (Button button in gameObject.GetComponentsInChildren<Button>())
         {
             buttons.Add(button);
             // button.onClick.AddListener(delegate{ButtonClicked(button);});
@@ -29,7 +28,7 @@ public class ButtonsSelect : MonoBehaviour
 
     public void ButtonClicked(Button clickedButton)
     {
-        foreach(Button button in buttons)
+        foreach (Button button in buttons)
         {
             if (button == clickedButton)
             {

@@ -1,7 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using Valve.VR;
+﻿using System.Collections.Generic;
 using UnityEngine;
+using Valve.VR;
 
 /*
 Class dedicated to track the object's position and rotation it is attached to. Is called by the TrackerHub to gather datas.
@@ -39,7 +38,7 @@ public class LogTracker : MonoBehaviour
         {
             return;
         }
-        UpdateTravel(); 
+        UpdateTravel();
     }
 
     // Returns the tracking datas.
@@ -68,9 +67,10 @@ public class LogTracker : MonoBehaviour
             datas.Add("RotTravelY", rotTravel.y);
             datas.Add("RotTravelZ", rotTravel.z);
         }
-        if (trackTrigger) {
+        if (trackTrigger)
+        {
             trigger = false;
-            if(SteamVR.active)
+            if (SteamVR.active)
             {
                 if (SteamVR_Actions._default.GrabPinch.GetStateDown(controller))
                 {

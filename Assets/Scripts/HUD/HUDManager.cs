@@ -1,7 +1,5 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class HUDManager : MonoBehaviour
 {
@@ -21,7 +19,7 @@ public class HUDManager : MonoBehaviour
     private float clock = -1f;
 
     Side side = Side.None;
-    
+
     private bool active = false;
 
     private float timer = 0.35f;
@@ -29,7 +27,7 @@ public class HUDManager : MonoBehaviour
     private bool lastEnter = true;
     private Side lastSide;
 
-    private Dictionary<Side,Coroutine> coroutines = new Dictionary<Side,Coroutine>();
+    private Dictionary<Side, Coroutine> coroutines = new Dictionary<Side, Coroutine>();
 
     // Start is called before the first frame update
     void Start()
@@ -37,8 +35,9 @@ public class HUDManager : MonoBehaviour
         Reset();
     }
 
-    public void OnGameStateChanged(GameDirector.GameState newState) {
-        switch(newState)
+    public void OnGameStateChanged(GameDirector.GameState newState)
+    {
+        switch (newState)
         {
             case GameDirector.GameState.Stopped:
                 active = false;
@@ -53,7 +52,8 @@ public class HUDManager : MonoBehaviour
         }
     }
 
-    public void Reset() {
+    public void Reset()
+    {
         if (coroutines.ContainsKey(Side.Right)) { StopCoroutine(coroutines[Side.Right]); }
         FadingUtils.FadeRoutine(handler: this, Obj: gradientR.transform.gameObject, fadeTime: timer, fadeDirection: FadeAction.Out);
         if (coroutines.ContainsKey(Side.Top)) { StopCoroutine(coroutines[Side.Top]); }
@@ -64,33 +64,42 @@ public class HUDManager : MonoBehaviour
         FadingUtils.FadeRoutine(handler: this, Obj: gradientL.transform.gameObject, fadeTime: timer, fadeDirection: FadeAction.Out);
     }
 
-    public void OnMotorSpaceEnter(EnterMotorSpaceInfo m) {
+    public void OnMotorSpaceEnter(EnterMotorSpaceInfo m)
+    {
         lastEnter = m.enter;
         lastSide = m.side;
         Debug.Log("MotorSpaceEnter " + m.enter + "active " + active);
-        if (m.enter && active) {
+        if (m.enter && active)
+        {
             Debug.Log("MotorSpaceEnter " + m.side);
             //ActivateGradient(m.side, FadeAction.Out);
             Reset();
-        } else if (!m.enter && active) {
+        }
+        else if (!m.enter && active)
+        {
             Debug.Log("MotorSpaceExit " + m.side);
             ActivateGradient(m.side, FadeAction.In);
         }
-    }  
+    }
 
-    public void ActivateGradient(Side s, FadeAction f) {
+    public void ActivateGradient(Side s, FadeAction f)
+    {
         if (coroutines.ContainsKey(s)) { StopCoroutine(coroutines[s]); }
-        if (s == Side.Left) {
+        if (s == Side.Left)
+        {
             coroutines[s] = FadingUtils.FadeRoutine(handler: this, Obj: gradientL.transform.gameObject, fadeTime: timer, fadeDirection: f, fadeDelay: 0.5f);
         }
-        if (s == Side.Right) {
+        if (s == Side.Right)
+        {
             coroutines[s] = FadingUtils.FadeRoutine(handler: this, Obj: gradientR.transform.gameObject, fadeTime: timer, fadeDirection: f, fadeDelay: 0.5f);
         }
-        if (s == Side.Top) {
-            coroutines[s] =  FadingUtils.FadeRoutine(handler: this, Obj: gradientT.transform.gameObject, fadeTime: timer, fadeDirection: f, fadeDelay: 0.5f);
+        if (s == Side.Top)
+        {
+            coroutines[s] = FadingUtils.FadeRoutine(handler: this, Obj: gradientT.transform.gameObject, fadeTime: timer, fadeDirection: f, fadeDelay: 0.5f);
         }
-        if (s == Side.Bottom) {
-            coroutines[s] =  FadingUtils.FadeRoutine(handler: this, Obj: gradientB.transform.gameObject, fadeTime: timer, fadeDirection: f, fadeDelay: 0.5f);
+        if (s == Side.Bottom)
+        {
+            coroutines[s] = FadingUtils.FadeRoutine(handler: this, Obj: gradientB.transform.gameObject, fadeTime: timer, fadeDirection: f, fadeDelay: 0.5f);
         }
     }
 }

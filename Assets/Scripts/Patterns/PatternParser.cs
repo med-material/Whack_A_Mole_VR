@@ -11,7 +11,7 @@ Example: Dictionary[3.75, List[Dictionary["FUNCTION": "MOLE", "X":"1", "Y":"5", 
 
 public class PatternParser
 {
-    public enum Paradigm { Time , Progression }
+    public enum Paradigm { Time, Progression }
 
     private static Paradigm paradigm;
 
@@ -70,7 +70,7 @@ public class PatternParser
                     float waitTime = float.Parse(extractedProperties["TIME"], System.Globalization.CultureInfo.InvariantCulture);
                     playTime += waitTime;
                 }
-                else if(parameterValue[1] == "HIT")
+                else if (parameterValue[1] == "HIT")
                 {
                     paradigm = Paradigm.Progression;
                     playTime += lifeTime;
@@ -100,20 +100,20 @@ public class PatternParser
 
             // Add the extracted property to the dictionary
 
-            Dictionary<string, string> returnProperties = new Dictionary<string, string>(){{"FUNCTION",keyValue[0]}};
+            Dictionary<string, string> returnProperties = new Dictionary<string, string>() { { "FUNCTION", keyValue[0] } };
 
             foreach (KeyValuePair<string, string> property in extractedProperties)
             {
                 returnProperties.Add(property.Key, property.Value);
             }
-            
-            if(parsedPattern.ContainsKey(tempPlayTime))
+
+            if (parsedPattern.ContainsKey(tempPlayTime))
             {
                 parsedPattern[tempPlayTime].Add(returnProperties);
             }
             else
             {
-                parsedPattern.Add(tempPlayTime, new List<Dictionary<string, string>>(){returnProperties});
+                parsedPattern.Add(tempPlayTime, new List<Dictionary<string, string>>() { returnProperties });
             }
         }
 

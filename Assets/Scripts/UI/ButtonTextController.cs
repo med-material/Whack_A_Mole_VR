@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 /*
@@ -41,7 +39,7 @@ public class ButtonTextController : UiNotifier
     void Start()
     {
         defaultinfoText = infoText.GetComponent<Text>().text;
-        
+
         if (defaultValue != -1 && defaultValue <= 999)
         {
             if (defaultValue < minValue)
@@ -110,11 +108,11 @@ public class ButtonTextController : UiNotifier
     // Updates the input value. Checks if the vaule fits inside the limits and constraints set in the editor and updates the information text accordingly.
     private void UpdateinputValue()
     {
-        var inputText = inputField.GetComponent<InputField>().text;
+        string inputText = inputField.GetComponent<InputField>().text;
         if (inputText != "")
         {
-            var tempValue = int.Parse(inputField.GetComponent<InputField>().text);
-            
+            int tempValue = int.Parse(inputField.GetComponent<InputField>().text);
+
             if (tempValue < 0 || tempValue < minValue)
             {
                 return;

@@ -1,9 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.IO;
-using System;
-using System.Globalization;
 
 public class SampleLogger : MonoBehaviour
 {
@@ -45,7 +42,7 @@ public class SampleLogger : MonoBehaviour
         trackerHub = GetComponent<TrackerHub>();
         // if (savePath == "") {
         //     savePath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments) + "//" + "whack_a_mole_logs";
-        //     if(!Directory.Exists(savePath)) {    
+        //     if(!Directory.Exists(savePath)) {
         //         Directory.CreateDirectory(savePath);
         //     }
         // }
@@ -59,9 +56,9 @@ public class SampleLogger : MonoBehaviour
     }
 
     // // Update is called once per frame
-    void Start ()
+    void Start()
     {
-        loggingManager.Log("Meta", "SamplingFrequency", samplingFrequency);   
+        loggingManager.Log("Meta", "SamplingFrequency", samplingFrequency);
     }
 
     // // Initialises the CSV file parameters (name and file path).
@@ -73,7 +70,7 @@ public class SampleLogger : MonoBehaviour
 
     public void OnGameDirectorStateUpdate(GameDirector.GameState newState)
     {
-        switch(newState)
+        switch (newState)
         {
             case GameDirector.GameState.Stopped:
                 FinishLogging();
@@ -106,11 +103,12 @@ public class SampleLogger : MonoBehaviour
         isLoggingStarted = false;
     }
 
-    // Generates a "logs" row (see class description) from the given datas. Adds mandatory parameters and 
+    // Generates a "logs" row (see class description) from the given datas. Adds mandatory parameters and
     // the PersistentEvents parameters to the row when generating it.
     private IEnumerator SampleLog(float sampleFreq)
     {
-        while (true) {
+        while (true)
+        {
             Dictionary<string, object> sampleLog = new Dictionary<string, object>() {
                 {"Event", "Sample"},
             };
@@ -120,18 +118,20 @@ public class SampleLogger : MonoBehaviour
 
             foreach (KeyValuePair<string, object> pair in trackedLogs)
             {
-                    sampleLog[pair.Key] = pair.Value;
+                sampleLog[pair.Key] = pair.Value;
             }
 
             // Adds the parameters from GazeLogger
-            if (gazeLogger != null) {
+            if (gazeLogger != null)
+            {
                 Dictionary<string, object> gazeLogs = gazeLogger.GetGazeData();
                 foreach (KeyValuePair<string, object> pair in gazeLogs)
                 {
                     sampleLog[pair.Key] = pair.Value;
                 }
             }
-            if (viewportLogger != null) {
+            if (viewportLogger != null)
+            {
                 Dictionary<string, object> viewportLogs = viewportLogger.GetViewportData();
                 foreach (KeyValuePair<string, object> pair in viewportLogs)
                 {
@@ -159,8 +159,8 @@ public class SampleLogger : MonoBehaviour
     //     else if (arg is Vector3)
     //     {
     //         return ((Vector3)arg).ToString("0.0000").Replace(",", ".");
-    //     } 
-    //     else if (arg is string) 
+    //     }
+    //     else if (arg is string)
     //     {
     //         return (string)arg;
     //     }
@@ -177,7 +177,7 @@ public class SampleLogger : MonoBehaviour
     // }
 
     // // Formats the logs to a CSV row format and saves them. Calls the CSV headers generation beforehand.
-    // // If a parameter doesn't have a value for a given row, uses the given value given previously (see 
+    // // If a parameter doesn't have a value for a given row, uses the given value given previously (see
     // // UpdateHeadersAndDefaults).
     // private void SaveCsvLogs()
     // {
@@ -238,7 +238,7 @@ public class SampleLogger : MonoBehaviour
     // // Clears the logs, "Current Mole" log, log count and unique test ID. Used to clear the logs when a new game is started.
     // private void ResetLogs()
     // {
-        
+
     //     foreach(Dictionary<int, string> dict in logs.Values)
     //     {
     //         dict.Clear();

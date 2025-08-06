@@ -1,33 +1,29 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using System.IO;
-using System;
-using System.Globalization;
 
 /*
 Class dedicated to gather logs, organize, format and save them.
 The EventLogger collects logs through events (raised by LoggerNotifier). There are two types of events:
     -   "Event", the usual event. Has a mandatory event descriptor ("Mole Spawned, Game Difficulty Set to Hard...") and optionally other
         parameters (Mole coordinates in the case of a Mole activation for example). An Event corresponds to a row in the resulting logs.
-    -   "PersistentEvent", an event updating parameters that will consistently be logged. This event doesn't have an event descriptor parameter, 
-        only parameters to update, and isn't logged as a row in the resulting logs. This event is used to update parameters like Game Time 
+    -   "PersistentEvent", an event updating parameters that will consistently be logged. This event doesn't have an event descriptor parameter,
+        only parameters to update, and isn't logged as a row in the resulting logs. This event is used to update parameters like Game Time
         Duration, Game Difficuty... We want to log these parameters for every event (that's why they are called "persistent"), but we don't
-        want to log a row every time that they are updated due to their update frequency and that their update isn't worth logging (we don't 
+        want to log a row every time that they are updated due to their update frequency and that their update isn't worth logging (we don't
         want to generate a new row every frame for the Game Time Left for example).
-    
+
 The logs are currently saved in a CSV format when the game is stopped, as well as sent to the CREATE SQL database.
 Each column represents a parameter, each row represents an event.
 
 Before saving, the Event are stored in the logs Dictionary as following: Dictionary(key: string, value: Dictionary(key: int, value: string))
                                                                                             ^                            ^             ^
-                                                                                    An event parameter            A row where it     Its value 
-                                                                                                                   is referenced    for the given row 
+                                                                                    An event parameter            A row where it     Its value
+                                                                                                                   is referenced    for the given row
 */
 
 public class EventLogger : MonoBehaviour
 {
-    public enum EventType{MoleEvent, WallEvent, GameEvent, ModifierEvent, PointerEvent, DefaultEvent}
+    public enum EventType { MoleEvent, WallEvent, GameEvent, ModifierEvent, PointerEvent, DefaultEvent }
 
     [SerializeField]
     private PupilLabs.TimeSync timeSync;
@@ -105,12 +101,12 @@ public class EventLogger : MonoBehaviour
             previousEventTime = Time.time;
         }
 
-        if(datas.logEventParameters.Count > 0)
+        if (datas.logEventParameters.Count > 0)
         {
             LogEvent(datas.logEventParameters);
         }
 
-        if(datas.persistentLogEventParameters.Count > 0)
+        if (datas.persistentLogEventParameters.Count > 0)
         {
             LogPersistentEvent(datas.persistentLogEventParameters);
         }
@@ -119,7 +115,7 @@ public class EventLogger : MonoBehaviour
     // Function to log an Event. Checks the descriptor to do certains actions if needed (save the logs on Game Stopped or Game Finished for example).
     private void LogEvent(Dictionary<string, object> datas)
     {
-        switch(datas["Event"])
+        switch (datas["Event"])
         {
             case "Game Started":
                 trackerHub.StartTrackers();
@@ -200,7 +196,7 @@ public class EventLogger : MonoBehaviour
         currentMoleLog.Add("CurrentMoleToHitPositionLocalZ", "NULL");
 
         Dictionary<string, string> tempDict = new Dictionary<string, string>();
-        foreach(KeyValuePair<string, object> pair in currentMoleLog)
+        foreach (KeyValuePair<string, object> pair in currentMoleLog)
         {
             tempDict.Add(pair.Key, pair.Value.ToString().Replace(",", "."));
         }
@@ -240,7 +236,7 @@ public class EventLogger : MonoBehaviour
 
         if (includeMoleToHit)
         {
-            foreach(KeyValuePair<string, object> pair in currentMoleLog)
+            foreach (KeyValuePair<string, object> pair in currentMoleLog)
             {
                 datas.Add(pair.Key, pair.Value);
             }
@@ -259,7 +255,7 @@ public class EventLogger : MonoBehaviour
         datas["UnityToPupilTimeOffset"] = timeSync != null ? timeSync.UnityToPupilTimeOffset.ToString().Replace(",", ".") : "NULL";
         datas["GameId"] = gameId;
 
-        foreach(KeyValuePair<string, object> pair in persistentLog)
+        foreach (KeyValuePair<string, object> pair in persistentLog)
         {
             datas.Add(pair.Key, pair.Value.ToString().Replace(",", "."));
         }
@@ -267,7 +263,7 @@ public class EventLogger : MonoBehaviour
         loggingManager.Log("Event", datas);
     }
 
-    // // Generates a "logs" row (see class description) from the given datas. Adds mandatory parameters and 
+    // // Generates a "logs" row (see class description) from the given datas. Adds mandatory parameters and
     // // the PersistentEvents parameters to the row when generating it.
     // private void GenerateLine(Dictionary<string, object> log)
     // {
@@ -320,7 +316,7 @@ public class EventLogger : MonoBehaviour
     //     foreach(KeyValuePair<string, Dictionary<int, string>> pair in logs)
     //     {
     //         logCollection.Add(pair.Key, new List<string>());
-            
+
     //         for(int i = 0; i < logCount; i++)
     //         {
     //             if (pair.Value.TryGetValue(i, out temp))
@@ -352,7 +348,7 @@ public class EventLogger : MonoBehaviour
 
 
     // // Formats the logs to a CSV row format and saves them. Calls the CSV headers generation beforehand.
-    // // If a parameter doesn't have a value for a given row, uses the given value given previously (see 
+    // // If a parameter doesn't have a value for a given row, uses the given value given previously (see
     // // UpdateHeadersAndDefaults).
     // private void SaveCsvLogs()
     // {
@@ -466,7 +462,7 @@ public class EventLogger : MonoBehaviour
     // private void ResetLogs()
     // {
     //     currentMoleLog.Clear();
-        
+
     //     foreach(Dictionary<int, string> dict in logs.Values)
     //     {
     //         dict.Clear();

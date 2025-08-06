@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 /*
@@ -46,25 +44,34 @@ public class MinimizedPanelController : MonoBehaviour
         onParticipantChanged(gameDirector.GetParticipant());
     }
 
-    public void onTimeChanged(float newTime) {
+    public void onTimeChanged(float newTime)
+    {
         GameTimeUpdate(newTime);
     }
 
-    public void onStateChanged(GameDirector.GameState newState) {
-        if (newState == GameDirector.GameState.Stopped) {
+    public void onStateChanged(GameDirector.GameState newState)
+    {
+        if (newState == GameDirector.GameState.Stopped)
+        {
             GameStop();
-        } else if (newState == GameDirector.GameState.Playing) {
+        }
+        else if (newState == GameDirector.GameState.Playing)
+        {
             GameStart();
-        } else if (newState == GameDirector.GameState.Paused) {
+        }
+        else if (newState == GameDirector.GameState.Paused)
+        {
             GamePause();
         }
     }
 
-    public void onParticipantChanged(int newParticipant) {
+    public void onParticipantChanged(int newParticipant)
+    {
         participantText.text = "Participant " + newParticipant.ToString();
     }
 
-    public void onTestChanged(int newTest) {
+    public void onTestChanged(int newTest)
+    {
         testIdText.text = "Test " + newTest.ToString();
     }
 

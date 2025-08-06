@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 /*
@@ -8,7 +7,7 @@ calculate the closest active mole when a laser is shot and misses.
 */
 
 public class WallStateTracker : MonoBehaviour
-{   
+{
     private List<Mole> activeMoles = new List<Mole>();
 
     void Start()
@@ -21,7 +20,7 @@ public class WallStateTracker : MonoBehaviour
     {
         Vector3 closestMoleDist = Vector3.zero;
 
-        foreach(Mole mole in activeMoles)
+        foreach (Mole mole in activeMoles)
         {
             if ((closestMoleDist == Vector3.zero) || (closestMoleDist.magnitude > Mathf.Abs(Vector3.Distance(point, mole.transform.position))))
             {
@@ -36,7 +35,7 @@ public class WallStateTracker : MonoBehaviour
     // Function called through an event when the WallManager initialises the wall (spawns the moles).
     public void WallStateUpdate(WallInfo wallInfo)
     {
-        bool isActivating =  wallInfo.active;
+        bool isActivating = wallInfo.active;
         Dictionary<int, Mole> moleList = wallInfo.moles;
         if (isActivating)
         {

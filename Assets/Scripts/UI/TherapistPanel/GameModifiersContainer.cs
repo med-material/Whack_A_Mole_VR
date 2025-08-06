@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -34,7 +33,7 @@ public class GameModifiersContainer : MonoBehaviour
         {
             if (buttonsDict[identifier].ContainsKey(argument))
             {
-                foreach(ButtonsSelect select in buttonsSelects)
+                foreach (ButtonsSelect select in buttonsSelects)
                 {
                     if (select.ContainsButton(buttonsDict[identifier][argument]))
                     {

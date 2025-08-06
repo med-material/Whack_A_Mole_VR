@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,19 +9,22 @@ Class managing the profile panel. Does the transition between the UI panels (Pro
 public class ProfilePanelManager : MonoBehaviour
 {
 
-    public enum Handedness {
+    public enum Handedness
+    {
         NULL,
         Right,
         Left
     }
 
-    public enum Gender {
+    public enum Gender
+    {
         NULL,
         Female,
         Male
     }
 
-    public enum Group {
+    public enum Group
+    {
         NULL,
         TestGroup,
         ControlGroup
@@ -86,23 +88,33 @@ public class ProfilePanelManager : MonoBehaviour
         SwitchToTherapistPanel(profileManager.GetSelectedProfileProperties()["Name"]);
     }
 
-    private string ParseDate(string year, string month, string day) {
+    private string ParseDate(string year, string month, string day)
+    {
         string date = "NULL";
-        if (System.Int32.TryParse(year, out int y)) {
+        if (System.Int32.TryParse(year, out int y))
+        {
             date = y.ToString();
-        } else {
+        }
+        else
+        {
             return date;
         }
 
-        if (System.Int32.TryParse(month, out int m)) {
+        if (System.Int32.TryParse(month, out int m))
+        {
             date = date + "-" + m.ToString();
-        } else {
+        }
+        else
+        {
             date = date + "-" + "01";
         }
 
-        if (System.Int32.TryParse(day, out int d)) {
+        if (System.Int32.TryParse(day, out int d))
+        {
             date = date + "-" + d.ToString();
-        } else {
+        }
+        else
+        {
             date = date + "-" + "01";
         }
 
@@ -115,9 +127,12 @@ public class ProfilePanelManager : MonoBehaviour
     {
         injuryDate = ParseDate(injuryYearField.text, injuryMonthField.text, injuryDayField.text);
 
-        if (System.Int32.TryParse(ageField.text, out int a)) {
+        if (System.Int32.TryParse(ageField.text, out int a))
+        {
             age = a.ToString();
-        } else {
+        }
+        else
+        {
             age = "NULL";
         }
 
@@ -127,7 +142,7 @@ public class ProfilePanelManager : MonoBehaviour
         properties["InjuryDate"] = injuryDate;
         properties["Group"] = System.Enum.GetName(typeof(Group), group);
         string createdId = profileManager.CreateProfile(name, mail, properties);
-        if(createdId == null) return false;
+        if (createdId == null) return false;
 
         profileScrollViewManager.AddProfile(name, createdId);
         return true;
@@ -154,39 +169,48 @@ public class ProfilePanelManager : MonoBehaviour
         profileScrollViewManager.RefreshDisplayedProfiles(profileManager.GetAllProfilesNameId());
     }
 
-    public void SetHandednessRight() {
+    public void SetHandednessRight()
+    {
         handedness = Handedness.Right;
     }
 
-    public void SetHandednessLeft() {
+    public void SetHandednessLeft()
+    {
         handedness = Handedness.Left;
     }
 
-    public void SetHandednessNull() {
+    public void SetHandednessNull()
+    {
         handedness = Handedness.NULL;
     }
 
-    public void SetGenderMale() {
+    public void SetGenderMale()
+    {
         gender = Gender.Male;
     }
 
-    public void SetGenderFemale() {
+    public void SetGenderFemale()
+    {
         gender = Gender.Female;
     }
 
-    public void SetGenderNull() {
+    public void SetGenderNull()
+    {
         gender = Gender.NULL;
     }
 
-    public void SetGroupTest() {
+    public void SetGroupTest()
+    {
         group = Group.TestGroup;
     }
 
-    public void SetGroupControl() {
+    public void SetGroupControl()
+    {
         group = Group.ControlGroup;
     }
 
-    public void SetGroupNull() {
+    public void SetGroupNull()
+    {
         group = Group.NULL;
     }
 }

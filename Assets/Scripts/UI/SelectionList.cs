@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 public class SelectionList : MonoBehaviour
 {
 
-    public class SelectionItem {
+    public class SelectionItem
+    {
         public string label;
         public Toggle toggle;
     }
@@ -16,24 +16,28 @@ public class SelectionList : MonoBehaviour
     public List<SelectionItem> selectionItems = new List<SelectionItem>();
 
     [Serializable]
-    public class OnValueChanged : UnityEvent<int> {}
-    public OnValueChanged onValueChanged; 
+    public class OnValueChanged : UnityEvent<int> { }
+    public OnValueChanged onValueChanged;
 
     private int value;
 
-    public void Set(int val) {
+    public void Set(int val)
+    {
         value = val;
-        if (val < selectionItems.Count) {
+        if (val < selectionItems.Count)
+        {
             selectionItems[val].toggle.isOn = true;
         }
         onValueChanged.Invoke(value);
     }
 
-    public int Get() {
+    public int Get()
+    {
         return value;
     }
 
-    public string GetLabel(int value) {
+    public string GetLabel(int value)
+    {
         return selectionItems[value].label;
     }
 
@@ -48,9 +52,10 @@ public class SelectionList : MonoBehaviour
     public void AddItems(List<string> newItems)
     {
         Transform templateTransform = itemTemplate.GetComponent<Transform>();
-        for (int i = 0; i < newItems.Count; i++) {
+        for (int i = 0; i < newItems.Count; i++)
+        {
             SelectionItem item = new SelectionItem();
-            var obj = GameObject.Instantiate(itemTemplate);
+            GameObject obj = GameObject.Instantiate(itemTemplate);
             Toggle toggle = obj.GetComponent<Toggle>();
             toggle.onValueChanged.AddListener(x => OnSelectItem(item.toggle));
             Text text = obj.GetComponentInChildren<Text>();
@@ -64,26 +69,33 @@ public class SelectionList : MonoBehaviour
             selectionItems.Add(item);
         }
 
-        if (value < selectionItems.Count) {
+        if (value < selectionItems.Count)
+        {
             selectionItems[value].toggle.isOn = true;
         }
     }
 
-    public void SetInteractable(bool interactable) {
-        foreach(var item in selectionItems) {
+    public void SetInteractable(bool interactable)
+    {
+        foreach (SelectionItem item in selectionItems)
+        {
             item.toggle.interactable = interactable;
         }
     }
 
-    public void ClearItems() {
-        foreach(var item in selectionItems) {
+    public void ClearItems()
+    {
+        foreach (SelectionItem item in selectionItems)
+        {
             GameObject.Destroy(item.toggle.gameObject);
         }
         selectionItems.Clear();
     }
 
-    private void OnSelectItem(Toggle toggle) {
-        if (!toggle.isOn) {
+    private void OnSelectItem(Toggle toggle)
+    {
+        if (!toggle.isOn)
+        {
             return;
         }
         int selectedIndex = -1;
@@ -104,7 +116,7 @@ public class SelectionList : MonoBehaviour
 
         if (selectedIndex < 0)
             return;
-        
+
         value = selectedIndex;
         onValueChanged.Invoke(value);
 

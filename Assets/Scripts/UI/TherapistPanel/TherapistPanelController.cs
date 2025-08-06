@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -42,7 +41,7 @@ public class TherapistPanelController : MonoBehaviour
         layoutElement = gameObject.GetComponent<LayoutElement>();
         therapistUi = FindObjectOfType<TherapistUi>();
 
-        foreach(ButtonTextController controller in buttonTextContainer.GetComponentsInChildren<ButtonTextController>())
+        foreach (ButtonTextController controller in buttonTextContainer.GetComponentsInChildren<ButtonTextController>())
         {
             buttonTextControllers.Add(controller);
         }
@@ -55,8 +54,9 @@ public class TherapistPanelController : MonoBehaviour
     }
 
     // On countdown, updates the gamestate container.
-    public void GameCountDown() {
-        foreach(ButtonTextController controller in buttonTextControllers)
+    public void GameCountDown()
+    {
+        foreach (ButtonTextController controller in buttonTextControllers)
         {
             controller.Disable();
         }
@@ -67,7 +67,7 @@ public class TherapistPanelController : MonoBehaviour
     // On start, disables the ButtonTextController and updates the GameStateContainer
     public void GameStart()
     {
-        foreach(ButtonTextController controller in buttonTextControllers)
+        foreach (ButtonTextController controller in buttonTextControllers)
         {
             controller.Disable();
         }
@@ -78,7 +78,7 @@ public class TherapistPanelController : MonoBehaviour
     // On game stop, enables the ButtonTextController and updates the GameStateContainer
     public void GameStop()
     {
-        foreach(ButtonTextController controller in buttonTextControllers)
+        foreach (ButtonTextController controller in buttonTextControllers)
         {
             controller.Enable();
         }

@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class WallGenerator : MonoBehaviour
@@ -40,11 +39,13 @@ public class WallGenerator : MonoBehaviour
         rotationsList[xIndex + 1, yIndex + 1] = rotation;
     }
 
-    public void SetMeshMaterial(Material mat) {
+    public void SetMeshMaterial(Material mat)
+    {
         meshMaterial = mat;
     }
 
-    public void ResetMeshMaterial() {
+    public void ResetMeshMaterial()
+    {
         meshMaterial = startMaterial;
     }
 
@@ -66,51 +67,51 @@ public class WallGenerator : MonoBehaviour
                 // Edges
                 if (x == pointsList.GetLength(0) - 1)
                 {
-                    pointsList[x, y] = pointsList[x-1, y] - (pointsList[x-2, y] - pointsList[x-1, y]);
-                    rotationsList[x, y] = rotationsList[x-1, y];
+                    pointsList[x, y] = pointsList[x - 1, y] - (pointsList[x - 2, y] - pointsList[x - 1, y]);
+                    rotationsList[x, y] = rotationsList[x - 1, y];
                 }
 
                 if (x == 0)
                 {
-                    pointsList[x, y] = pointsList[x+1, y] - (pointsList[x+2, y] - pointsList[x+1, y]);
-                    rotationsList[x, y] = rotationsList[x+1, y];
+                    pointsList[x, y] = pointsList[x + 1, y] - (pointsList[x + 2, y] - pointsList[x + 1, y]);
+                    rotationsList[x, y] = rotationsList[x + 1, y];
                 }
 
                 if (y == pointsList.GetLength(1) - 1)
                 {
-                    pointsList[x, y] = pointsList[x, y-1] - (pointsList[x, y-2] - pointsList[x, y-1]);
-                    rotationsList[x, y] = rotationsList[x, y-1];
+                    pointsList[x, y] = pointsList[x, y - 1] - (pointsList[x, y - 2] - pointsList[x, y - 1]);
+                    rotationsList[x, y] = rotationsList[x, y - 1];
                 }
 
                 if (y == 0)
                 {
-                    pointsList[x, y] = pointsList[x, y+1] - (pointsList[x, y+2] - pointsList[x, y+1]);
-                    rotationsList[x, y] = rotationsList[x, y+1];
+                    pointsList[x, y] = pointsList[x, y + 1] - (pointsList[x, y + 2] - pointsList[x, y + 1]);
+                    rotationsList[x, y] = rotationsList[x, y + 1];
                 }
 
                 // Corners
                 if (x == pointsList.GetLength(0) - 1 && y == 0)
                 {
-                    pointsList[x, y] = pointsList[x-1, y+1] - (pointsList[x-2, y+2] - pointsList[x-1, y+1])/2;
-                    rotationsList[x, y] = rotationsList[x-1, y+1];
+                    pointsList[x, y] = pointsList[x - 1, y + 1] - (pointsList[x - 2, y + 2] - pointsList[x - 1, y + 1]) / 2;
+                    rotationsList[x, y] = rotationsList[x - 1, y + 1];
                 }
 
                 if (x == 0 && y == 0)
                 {
-                    pointsList[x, y] = pointsList[x+1, y+1] - (pointsList[x+2, y+2] - pointsList[x+1, y+1])/2;
-                    rotationsList[x, y] = rotationsList[x+1, y+1];
+                    pointsList[x, y] = pointsList[x + 1, y + 1] - (pointsList[x + 2, y + 2] - pointsList[x + 1, y + 1]) / 2;
+                    rotationsList[x, y] = rotationsList[x + 1, y + 1];
                 }
 
                 if (y == pointsList.GetLength(1) - 1 && x == 0)
                 {
-                    pointsList[x, y] = pointsList[x+1, y-1] - (pointsList[x+2, y-2] - pointsList[x+1, y-1])/2;
-                    rotationsList[x, y] = rotationsList[x+1, y-1];
+                    pointsList[x, y] = pointsList[x + 1, y - 1] - (pointsList[x + 2, y - 2] - pointsList[x + 1, y - 1]) / 2;
+                    rotationsList[x, y] = rotationsList[x + 1, y - 1];
                 }
 
                 if (x == pointsList.GetLength(0) - 1 && y == pointsList.GetLength(1) - 1)
                 {
-                    pointsList[x, y] = pointsList[x-1, y-1] - (pointsList[x-2, y-2] - pointsList[x-1, y-1])/2;
-                    rotationsList[x, y] = rotationsList[x-1, y-1];
+                    pointsList[x, y] = pointsList[x - 1, y - 1] - (pointsList[x - 2, y - 2] - pointsList[x - 1, y - 1]) / 2;
+                    rotationsList[x, y] = rotationsList[x - 1, y - 1];
                 }
             }
         }
@@ -123,9 +124,9 @@ public class WallGenerator : MonoBehaviour
                 int index = (x * pointsList.GetLength(1)) + y;
                 vertices.Add(pointsList[x, y] + ((rotationsList[x, y] * Vector3.forward) * wallRecoil));
                 uvs.Add(new Vector2((float)x / (pointsList.GetLength(0) - 1), (float)y / (pointsList.GetLength(1) - 1)));
-                
+
                 if (x == 0 || y == 0) continue;
-                
+
                 triangles.Add(index - (pointsList.GetLength(1) + 1));
                 triangles.Add(index - (pointsList.GetLength(1)));
                 triangles.Add(index);

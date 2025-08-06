@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class ControllerMirror : MonoBehaviour
@@ -75,7 +74,7 @@ public class ControllerMirror : MonoBehaviour
     {
         // Mirror position
         newPos = controllerToMirror.transform.position;
-        newPos = new Vector3 (newPos.x * -1f, newPos.y, newPos.z);
+        newPos = new Vector3(newPos.x * -1f, newPos.y, newPos.z);
 
         // mirror the y and z rotational axes, and keep the x axis intact.
         // We do this by inversing X before we pass it to Quaternion.Inverse()
@@ -107,7 +106,7 @@ public class ControllerMirror : MonoBehaviour
         else
         {
             didHit = false;
-            rayPosition = laserOriginToMirror.transform.InverseTransformDirection(rayDirection) * maxLaserLength; 
+            rayPosition = laserOriginToMirror.transform.InverseTransformDirection(rayDirection) * maxLaserLength;
             laser.SetPosition(1, rayPosition);
             cursor.SetPosition(rayPosition);
         }
@@ -166,7 +165,7 @@ public class ControllerMirror : MonoBehaviour
         PlayShoot(false);
     }
 
-    // Implementation of the behavior of the Pointer on shoot. 
+    // Implementation of the behavior of the Pointer on shoot.
     private void PlayShoot(bool correctHit)
     {
         Color newColor;
@@ -177,9 +176,9 @@ public class ControllerMirror : MonoBehaviour
     }
 
     // Ease function, Quart ratio.
-    private float EaseQuartOut (float k) 
+    private float EaseQuartOut(float k)
     {
-        return 1f - ((k -= 1f)*k*k*k);
+        return 1f - ((k -= 1f) * k * k * k);
     }
 
     // IEnumerator playing the shooting animation.
@@ -190,8 +189,8 @@ public class ControllerMirror : MonoBehaviour
 
         // Generation of a color gradient from the shooting color to the default color (idle).
         Gradient colorGradient = new Gradient();
-        GradientColorKey[] colorKey = new GradientColorKey[2]{new GradientColorKey(laser.startColor, 0f), new GradientColorKey(transitionColor, 1f)};
-        GradientAlphaKey[] alphaKey = new GradientAlphaKey[2]{new GradientAlphaKey(laser.startColor.a, 0f), new GradientAlphaKey(transitionColor.a, 1f)};
+        GradientColorKey[] colorKey = new GradientColorKey[2] { new GradientColorKey(laser.startColor, 0f), new GradientColorKey(transitionColor, 1f) };
+        GradientAlphaKey[] alphaKey = new GradientAlphaKey[2] { new GradientAlphaKey(laser.startColor.a, 0f), new GradientAlphaKey(transitionColor.a, 1f) };
         colorGradient.SetKeys(colorKey, alphaKey);
 
         // Playing of the animation. The laser and Cursor color and scale are interpolated following the easing curve from the shooting values (increased size, red/green color)
@@ -218,7 +217,7 @@ public class ControllerMirror : MonoBehaviour
             yield return null;
         }
 
-        // When the animation is finished, resets the laser and Cursor to their default values. 
+        // When the animation is finished, resets the laser and Cursor to their default values.
         laser.startWidth = laserWidth;
         laser.endWidth = laserWidth;
         laser.startColor = laserColor;

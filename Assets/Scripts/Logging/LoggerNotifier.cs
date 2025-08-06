@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using System.Collections.Generic;
 using UnityEngine.Events;
 
 [System.Serializable]
@@ -12,7 +10,7 @@ public class UpdateLogEvent : UnityEvent<LogEventContainer>
 Class dedicated to notifier the EventLogger of a new event.
 */
 
-public class LoggerNotifier: UnityEngine.Object
+public class LoggerNotifier : UnityEngine.Object
 {
     public delegate LogEventContainer UpdateGeneralValues();
     private UpdateGeneralValues updateGeneralValues;
@@ -24,16 +22,16 @@ public class LoggerNotifier: UnityEngine.Object
     // values (that will be used if, when raising the event, no value is given for the parameter). It is also possible to pass a function that will be called whan raising an event to update parameters
     // that would be passed every time (see Mole LoggerNotifier's implementation for an example). All of these parameters are optionnal, since a LoggerNotifier may be created to only raise PersistentEvent,
     // only raise Event, raise both...
-    // Once the initialisation is done, automatically detects the EventLogger and calls it so it update its headers and default values lists to take into account the headers and default values that will be 
+    // Once the initialisation is done, automatically detects the EventLogger and calls it so it update its headers and default values lists to take into account the headers and default values that will be
     // used by this LoggerNotifier.
     public LoggerNotifier(UpdateGeneralValues updateGeneralValues = null, Dictionary<string, string> eventsHeadersDefaults = null, Dictionary<string, string> persistentEventsHeadersDefaults = null)
     {
-        if(eventsHeadersDefaults is null) this.eventsHeadersDefaults = new Dictionary<string, string>();
+        if (eventsHeadersDefaults is null) this.eventsHeadersDefaults = new Dictionary<string, string>();
         else this.eventsHeadersDefaults = eventsHeadersDefaults;
-        
-        if(persistentEventsHeadersDefaults is null) this.persistentEventsHeadersDefaults = new Dictionary<string, string>();
+
+        if (persistentEventsHeadersDefaults is null) this.persistentEventsHeadersDefaults = new Dictionary<string, string>();
         else this.persistentEventsHeadersDefaults = persistentEventsHeadersDefaults;
-        
+
         this.updateGeneralValues = updateGeneralValues;
 
         EventLogger eventLogger = FindObjectOfType<EventLogger>();
@@ -64,27 +62,27 @@ public class LoggerNotifier: UnityEngine.Object
         Dictionary<string, object> resultPersistentEventParameters = new Dictionary<string, object>();
         object value;
         LogEventContainer generalDatas = new LogEventContainer();
-        
-        if(!(updateGeneralValues is null))
+
+        if (!(updateGeneralValues is null))
         {
             generalDatas = updateGeneralValues();
         }
 
-        if(eventName != "")
+        if (eventName != "")
         {
             resultEventParameters.Add("Event", eventName);
             resultEventParameters.Add("EventType", eventType);
-            foreach(KeyValuePair<string, string> headerDefault in eventsHeadersDefaults)
+            foreach (KeyValuePair<string, string> headerDefault in eventsHeadersDefaults)
             {
-                if(!(overrideEventParameters is null))
+                if (!(overrideEventParameters is null))
                 {
-                    if(overrideEventParameters.TryGetValue(headerDefault.Key, out value))
+                    if (overrideEventParameters.TryGetValue(headerDefault.Key, out value))
                     {
                         resultEventParameters.Add(headerDefault.Key, value);
                         continue;
                     }
                 }
-                
+
                 if (generalDatas.logEventParameters.TryGetValue(headerDefault.Key, out value))
                 {
                     resultEventParameters.Add(headerDefault.Key, value);
@@ -92,11 +90,11 @@ public class LoggerNotifier: UnityEngine.Object
             }
         }
 
-        foreach(KeyValuePair<string, string> headerDefault in persistentEventsHeadersDefaults)
+        foreach (KeyValuePair<string, string> headerDefault in persistentEventsHeadersDefaults)
         {
-            if(!(overrideEventParameters is null))
+            if (!(overrideEventParameters is null))
             {
-                if(overrideEventParameters.TryGetValue(headerDefault.Key, out value))
+                if (overrideEventParameters.TryGetValue(headerDefault.Key, out value))
                 {
                     resultPersistentEventParameters.Add(headerDefault.Key, value);
                     continue;
@@ -117,8 +115,8 @@ public class LoggerNotifier: UnityEngine.Object
     {
         Dictionary<string, string> resultDict = new Dictionary<string, string>();
 
-        foreach(KeyValuePair<string, string> pair in eventsHeadersDefaults) resultDict.Add(pair.Key, pair.Value);
-        foreach(KeyValuePair<string, string> pair in persistentEventsHeadersDefaults) resultDict.Add(pair.Key, pair.Value); 
+        foreach (KeyValuePair<string, string> pair in eventsHeadersDefaults) resultDict.Add(pair.Key, pair.Value);
+        foreach (KeyValuePair<string, string> pair in persistentEventsHeadersDefaults) resultDict.Add(pair.Key, pair.Value);
 
         return resultDict;
     }

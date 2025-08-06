@@ -1,9 +1,9 @@
-﻿// This script should be attached to a Camera object 
-// in Unity. Once a Quad object is specified as the 
+﻿// This script should be attached to a Camera object
+// in Unity. Once a Quad object is specified as the
 // "projectionScreen", the script computes a suitable
 // view and projection matrix for the camera.
-// The code is based on Robert Kooima's publication  
-// "Generalized Perspective Projection," 2009, 
+// The code is based on Robert Kooima's publication
+// "Generalized Perspective Projection," 2009,
 // http://csc.lsu.edu/~kooima/pdfs/gen-perspective.pdf
 
 using UnityEngine;
@@ -11,7 +11,8 @@ using UnityEngine;
 // Use the following line to apply the script in the editor:
 [ExecuteInEditMode]
 
-public class ObliqueProjectionToQuad : MonoBehaviour {
+public class ObliqueProjectionToQuad : MonoBehaviour
+{
     public GameObject projectionScreen;
     public bool estimateViewFrustum = true;
     public bool setNearClipPlane = false;
@@ -20,20 +21,22 @@ public class ObliqueProjectionToQuad : MonoBehaviour {
 
     private Camera cameraComponent;
 
-    void OnPreCull () {
-        cameraComponent = GetComponent<Camera> ();
-        if (null != projectionScreen && null != cameraComponent) {
+    void OnPreCull()
+    {
+        cameraComponent = GetComponent<Camera>();
+        if (null != projectionScreen && null != cameraComponent)
+        {
             Vector3 pa =
-                projectionScreen.transform.TransformPoint (
-                    new Vector3 (-0.5f, -0.5f, 0.0f));
+                projectionScreen.transform.TransformPoint(
+                    new Vector3(-0.5f, -0.5f, 0.0f));
             // lower left corner in world coordinates
             Vector3 pb =
-                projectionScreen.transform.TransformPoint (
-                    new Vector3 (0.5f, -0.5f, 0.0f));
+                projectionScreen.transform.TransformPoint(
+                    new Vector3(0.5f, -0.5f, 0.0f));
             // lower right corner
             Vector3 pc =
-                projectionScreen.transform.TransformPoint (
-                    new Vector3 (-0.5f, 0.5f, 0.0f));
+                projectionScreen.transform.TransformPoint(
+                    new Vector3(-0.5f, 0.5f, 0.0f));
             // upper left corner
             Vector3 pe = transform.position;
             // eye position
@@ -62,8 +65,9 @@ public class ObliqueProjectionToQuad : MonoBehaviour {
             vc = pc - pe;
 
             // are we looking at the backface of the plane object?
-            if (Vector3.Dot (-Vector3.Cross (va, vc), vb) < 0.0f) {
-                // mirror points along the x axis (most users 
+            if (Vector3.Dot(-Vector3.Cross(va, vc), vb) < 0.0f)
+            {
+                // mirror points along the x axis (most users
                 // probably expect the y axis to stay fixed)
                 vr = -vr;
                 pa = pb;
@@ -74,24 +78,25 @@ public class ObliqueProjectionToQuad : MonoBehaviour {
                 vc = pc - pe;
             }
 
-            vr.Normalize ();
-            vu.Normalize ();
-            vn = -Vector3.Cross (vr, vu);
-            // we need the minus sign because Unity 
+            vr.Normalize();
+            vu.Normalize();
+            vn = -Vector3.Cross(vr, vu);
+            // we need the minus sign because Unity
             // uses a left-handed coordinate system
-            vn.Normalize ();
+            vn.Normalize();
 
-            d = -Vector3.Dot (va, vn);
-            if (setNearClipPlane) {
-                n = Mathf.Max (minNearClipDistance, d + nearClipDistanceOffset);
+            d = -Vector3.Dot(va, vn);
+            if (setNearClipPlane)
+            {
+                n = Mathf.Max(minNearClipDistance, d + nearClipDistanceOffset);
                 cameraComponent.nearClipPlane = n;
             }
-            l = Vector3.Dot (vr, va) * n / d;
-            r = Vector3.Dot (vr, vb) * n / d;
-            b = Vector3.Dot (vu, va) * n / d;
-            t = Vector3.Dot (vu, vc) * n / d;
+            l = Vector3.Dot(vr, va) * n / d;
+            r = Vector3.Dot(vr, vb) * n / d;
+            b = Vector3.Dot(vu, va) * n / d;
+            t = Vector3.Dot(vu, vc) * n / d;
 
-            Matrix4x4 p = new Matrix4x4 (); // projection matrix 
+            Matrix4x4 p = new Matrix4x4(); // projection matrix
             p[0, 0] = 2.0f * n / (r - l);
             p[0, 1] = 0.0f;
             p[0, 2] = (r + l) / (r - l);
@@ -112,7 +117,7 @@ public class ObliqueProjectionToQuad : MonoBehaviour {
             p[3, 2] = -1.0f;
             p[3, 3] = 0.0f;
 
-            Matrix4x4 rm = new Matrix4x4 (); // rotation matrix;
+            Matrix4x4 rm = new Matrix4x4(); // rotation matrix;
             rm[0, 0] = vr.x;
             rm[0, 1] = vr.y;
             rm[0, 2] = vr.z;
@@ -133,7 +138,7 @@ public class ObliqueProjectionToQuad : MonoBehaviour {
             rm[3, 2] = 0.0f;
             rm[3, 3] = 1.0f;
 
-            Matrix4x4 tm = new Matrix4x4 (); // translation matrix;
+            Matrix4x4 tm = new Matrix4x4(); // translation matrix;
             tm[0, 0] = 1.0f;
             tm[0, 1] = 0.0f;
             tm[0, 2] = 0.0f;
@@ -157,30 +162,34 @@ public class ObliqueProjectionToQuad : MonoBehaviour {
             // set matrices
             cameraComponent.projectionMatrix = p;
             cameraComponent.worldToCameraMatrix = rm * tm;
-            // The original paper puts everything into the projection 
-            // matrix (i.e. sets it to p * rm * tm and the other 
-            // matrix to the identity), but this doesn't appear to 
+            // The original paper puts everything into the projection
+            // matrix (i.e. sets it to p * rm * tm and the other
+            // matrix to the identity), but this doesn't appear to
             // work with Unity's shadow maps.
 
-            if (estimateViewFrustum) {
+            if (estimateViewFrustum)
+            {
                 // rotate camera to screen for culling to work
-                Quaternion q = new Quaternion ();
-                q.SetLookRotation ((0.5f * (pb + pc) - pe), vu);
+                Quaternion q = new Quaternion();
+                q.SetLookRotation((0.5f * (pb + pc) - pe), vu);
                 // look at center of screen
                 cameraComponent.transform.rotation = q;
 
-                // set fieldOfView to a conservative estimate 
+                // set fieldOfView to a conservative estimate
                 // to make frustum tall enough
-                if (cameraComponent.aspect >= 1.0f) {
+                if (cameraComponent.aspect >= 1.0f)
+                {
                     cameraComponent.fieldOfView = Mathf.Rad2Deg *
-                        Mathf.Atan (((pb - pa).magnitude + (pc - pa).magnitude) /
+                        Mathf.Atan(((pb - pa).magnitude + (pc - pa).magnitude) /
                             va.magnitude);
-                } else {
-                    // take the camera aspect into account to 
-                    // make the frustum wide enough 
+                }
+                else
+                {
+                    // take the camera aspect into account to
+                    // make the frustum wide enough
                     cameraComponent.fieldOfView =
                         Mathf.Rad2Deg / cameraComponent.aspect *
-                        Mathf.Atan (((pb - pa).magnitude + (pc - pa).magnitude) /
+                        Mathf.Atan(((pb - pa).magnitude + (pc - pa).magnitude) /
                             va.magnitude);
                 }
             }

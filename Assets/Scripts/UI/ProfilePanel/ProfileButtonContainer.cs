@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 /*
@@ -10,7 +8,7 @@ and changes the displayed button depending on the mode (select, delete, restore)
 
 public class ProfileButtonContainer : MonoBehaviour
 {
-    private enum ButtonStates{Select, Delete, Restore}
+    private enum ButtonStates { Select, Delete, Restore }
 
     [SerializeField]
     private GameObject SelectButton;
@@ -85,7 +83,7 @@ public class ProfileButtonContainer : MonoBehaviour
         previousButtonState = buttonState;
         buttonState = newState;
 
-        switch(buttonState)
+        switch (buttonState)
         {
             case ButtonStates.Select:
                 SelectButton.SetActive(true);

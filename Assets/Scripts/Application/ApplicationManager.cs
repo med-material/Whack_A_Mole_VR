@@ -1,12 +1,11 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class ApplicationManager : MonoBehaviour
 {
     [SerializeField]
     //event that opens message panel and wait until the end of the save.
-	private TherapistUi therapistUi;
+    private TherapistUi therapistUi;
 
     private SaveStatus _saveStatus;
 
@@ -16,8 +15,9 @@ public class ApplicationManager : MonoBehaviour
     }
 
     //listen the variable of our Event that will impact the behaviour of our Warning Message Panel
-    public void OnSaveInfoListener(SaveStateInfo s) {
-        _saveStatus = s.status;  
+    public void OnSaveInfoListener(SaveStateInfo s)
+    {
+        _saveStatus = s.status;
     }
 
     public void CloseGame()
@@ -27,11 +27,11 @@ public class ApplicationManager : MonoBehaviour
 
     private IEnumerator QuitApplication()
     {
-        if(_saveStatus == SaveStatus.IsSaving)
+        if (_saveStatus == SaveStatus.IsSaving)
         {
-           therapistUi.OpenWarningMessagePanel();
+            therapistUi.OpenWarningMessagePanel();
         }
-        yield return new WaitUntil(() => _saveStatus == SaveStatus.Saved || _saveStatus == SaveStatus.ReadyToSave); 
+        yield return new WaitUntil(() => _saveStatus == SaveStatus.Saved || _saveStatus == SaveStatus.ReadyToSave);
         Application.Quit();
     }
 }
