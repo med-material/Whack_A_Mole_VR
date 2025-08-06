@@ -5,7 +5,8 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 
 [System.Serializable]
-public class MotorSpaceInfo {
+public class MotorSpaceInfo
+{
     public float width;
     public float height;
     public Vector3 pos;
@@ -18,7 +19,8 @@ public class MotorSpaceInfo {
     }
 }
 
-public enum MotorCalcMode {
+public enum MotorCalcMode
+{
     center,
     bottom
 }
@@ -32,7 +34,8 @@ public enum Side
     None,
 }
 
-public enum MotorRestriction {
+public enum MotorRestriction
+{
     none,
     restrict
 }
@@ -61,7 +64,7 @@ public class LaserMapper : MonoBehaviour
     private GameObject motorSpaceVisualizer;
 
     [SerializeField]
-    private Vector3 motorSpaceOffset = new Vector3(0f,0f,0f);
+    private Vector3 motorSpaceOffset = new Vector3(0f, 0f, 0f);
 
     [SerializeField]
     private float motorSpaceWidth = 1f;
@@ -69,9 +72,9 @@ public class LaserMapper : MonoBehaviour
     [SerializeField]
     private float motorSpaceHeight = 1f;
 
-    // padding is used when evaluating whether coordinates are within the motorspace. 
+    // padding is used when evaluating whether coordinates are within the motorspace.
     [SerializeField]
-    private float padding = 0.04f; 
+    private float padding = 0.04f;
 
     [SerializeField]
     private bool showMotorspace = false;
@@ -83,10 +86,10 @@ public class LaserMapper : MonoBehaviour
 
     private float multiplier = 1f;
 
-    private Vector3 motorSpaceTopLeft = new Vector3(0f,0f,0f);
-    private Vector3 motorSpaceTopRight = new Vector3(0f,0f,0f);
-    private Vector3 motorSpaceBottomRight = new Vector3(0f,0f,0f);
-    private Vector3 motorSpaceBottomLeft = new Vector3(0f,0f,0f);
+    private Vector3 motorSpaceTopLeft = new Vector3(0f, 0f, 0f);
+    private Vector3 motorSpaceTopRight = new Vector3(0f, 0f, 0f);
+    private Vector3 motorSpaceBottomRight = new Vector3(0f, 0f, 0f);
+    private Vector3 motorSpaceBottomLeft = new Vector3(0f, 0f, 0f);
 
     [SerializeField]
     private float wallSpaceMargin = 1f;
@@ -126,7 +129,8 @@ public class LaserMapper : MonoBehaviour
     public OnMotorSpaceChanged onMotorSpaceChanged;
 
     // Start is called before the first frame update
-    void Start() {
+    void Start()
+    {
         ShowMotorspace(showMotorspace);
     }
     void OnEnable()
@@ -148,23 +152,29 @@ public class LaserMapper : MonoBehaviour
 
     void Update()
     {
-        if (motorCalibration) {
+        if (motorCalibration)
+        {
             GameObject controller = null;
-            foreach(var con in activeControllers) {
-                if (con.activeSelf) {
+            foreach (GameObject con in activeControllers)
+            {
+                if (con.activeSelf)
+                {
                     controller = con;
                 }
             }
-            if (controller == null) {
+            if (controller == null)
+            {
                 return;
             }
             Vector3 newPos = controller.transform.position;
             if (lastPos != Vector3.zero) distanceFromLastPoint = Vector3.Distance(lastPos, newPos);
-            if  (distanceFromLastPoint > minDistancePoint) {
+            if (distanceFromLastPoint > minDistancePoint)
+            {
                 CreateCalibSphere(lastPos);
                 lastPos = newPos;
             }
-            if (lastPos == Vector3.zero) {
+            if (lastPos == Vector3.zero)
+            {
                 lastPos = newPos;
                 CreateCalibSphere(lastPos);
             }
@@ -182,44 +192,51 @@ public class LaserMapper : MonoBehaviour
             if (maxY < controller.transform.position.y) maxY = controller.transform.position.y;
             if (minZ > controller.transform.position.z) minZ = controller.transform.position.z;
             if (maxZ < controller.transform.position.z) maxZ = controller.transform.position.z;
-            newCenter = new Vector3( minX + ((maxX - minX) * 0.5f) , minY + ((maxY - minY) * 0.5f), minZ + ((maxZ - minZ) * 0.5f));
+            newCenter = new Vector3(minX + ((maxX - minX) * 0.5f), minY + ((maxY - minY) * 0.5f), minZ + ((maxZ - minZ) * 0.5f));
             motorSpaceWidth = (maxX - minX) / 2;
             motorSpaceHeight = (maxY - minY) / 2;
         }
     }
 
-    public void SetMotorRestriction(MotorRestriction restriction, float restrictionLower, float restrictionUpper) {
+    public void SetMotorRestriction(MotorRestriction restriction, float restrictionLower, float restrictionUpper)
+    {
         upperRestriction = restrictionUpper;
         lowerRestriction = restrictionLower;
         motorRestriction = restriction;
     }
 
-    private void CreateCalibSphere(Vector3 pos) {
-        var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+    private void CreateCalibSphere(Vector3 pos)
+    {
+        GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         sphere.transform.SetParent(motorSpaceCalib.transform);
         sphere.transform.position = pos;
         sphere.transform.localScale = new Vector3(0.025f, 0.025f, 0.025f);
         calibPointList.Add(sphere);
     }
 
-    public void ToggleMotorCalibration(bool value) {
+    public void ToggleMotorCalibration(bool value)
+    {
         if (value == motorCalibration) return;
         motorCalibration = value;
         motorSpaceCalib.SetActive(value);
 
-        if (!motorCalibration) {
+        if (!motorCalibration)
+        {
             transform.position = newCenter;
             LogMotorSpaceChange("MotorSpace Calibration End");
             CalculateMotorSpace();
             CalculateGain();
             UpdateMotorSpaceVisualizer();
             ResetCalibrationValues();
-        } else {
+        }
+        else
+        {
             LogMotorSpaceChange("MotorSpace Calibration Start");
         }
     }
 
-    private void ResetCalibrationValues() {
+    private void ResetCalibrationValues()
+    {
         minX = -1f;
         maxX = -1f;
         minY = -1f;
@@ -227,14 +244,16 @@ public class LaserMapper : MonoBehaviour
         minZ = -1f;
         maxZ = -1f;
         distanceFromLastPoint = -1f;
-        newCenter = Vector3.zero; 
-        foreach(var obj in calibPointList) {
+        newCenter = Vector3.zero;
+        foreach (GameObject obj in calibPointList)
+        {
             GameObject.Destroy(obj);
         }
 
     }
 
-    void LogMotorSpaceChange(string eventLabel) {
+    void LogMotorSpaceChange(string eventLabel)
+    {
         loggingManager.Log("Event", new Dictionary<string, object>()
         {
             {"Event", eventLabel},
@@ -254,87 +273,99 @@ public class LaserMapper : MonoBehaviour
     // Update is called once per frame
     void CalculateMotorSpace(MotorCalcMode mode = MotorCalcMode.center, bool log = true)
     {
-        var motorSpaceOrigin = transform.position + motorSpaceOffset;
+        Vector3 motorSpaceOrigin = transform.position + motorSpaceOffset;
         motorSpaceTopLeft = new Vector3(motorSpaceOrigin.x - (motorSpaceWidth * multiplier), motorSpaceOrigin.y + (motorSpaceHeight * multiplier), motorSpaceOrigin.z);
         motorSpaceTopRight = new Vector3(motorSpaceOrigin.x + (motorSpaceWidth * multiplier), motorSpaceOrigin.y + (motorSpaceHeight * multiplier), motorSpaceOrigin.z);
         motorSpaceBottomRight = new Vector3(motorSpaceOrigin.x + (motorSpaceWidth * multiplier), motorSpaceOrigin.y - (motorSpaceHeight * multiplier), motorSpaceOrigin.z);
         motorSpaceBottomLeft = new Vector3(motorSpaceOrigin.x - (motorSpaceWidth * multiplier), motorSpaceOrigin.y - (motorSpaceHeight * multiplier), motorSpaceOrigin.z);
 
-        if (mode == MotorCalcMode.bottom) {
-        motorSpaceTopLeft = new Vector3(motorSpaceOrigin.x - (motorSpaceWidth * multiplier), motorSpaceOrigin.y + (motorSpaceHeight * 2 * multiplier), motorSpaceOrigin.z);
-        motorSpaceTopRight = new Vector3(motorSpaceOrigin.x + (motorSpaceWidth * multiplier), motorSpaceOrigin.y + (motorSpaceHeight * 2 * multiplier), motorSpaceOrigin.z);
-        motorSpaceBottomRight = new Vector3(motorSpaceOrigin.x + (motorSpaceWidth * multiplier), motorSpaceOrigin.y, motorSpaceOrigin.z);
-        motorSpaceBottomLeft = new Vector3(motorSpaceOrigin.x - (motorSpaceWidth * multiplier), motorSpaceOrigin.y, motorSpaceOrigin.z);
+        if (mode == MotorCalcMode.bottom)
+        {
+            motorSpaceTopLeft = new Vector3(motorSpaceOrigin.x - (motorSpaceWidth * multiplier), motorSpaceOrigin.y + (motorSpaceHeight * 2 * multiplier), motorSpaceOrigin.z);
+            motorSpaceTopRight = new Vector3(motorSpaceOrigin.x + (motorSpaceWidth * multiplier), motorSpaceOrigin.y + (motorSpaceHeight * 2 * multiplier), motorSpaceOrigin.z);
+            motorSpaceBottomRight = new Vector3(motorSpaceOrigin.x + (motorSpaceWidth * multiplier), motorSpaceOrigin.y, motorSpaceOrigin.z);
+            motorSpaceBottomLeft = new Vector3(motorSpaceOrigin.x - (motorSpaceWidth * multiplier), motorSpaceOrigin.y, motorSpaceOrigin.z);
         }
 
-        foreach (var bub in bubbleDisplay) {
+        foreach (BubbleDisplay bub in bubbleDisplay)
+        {
             bub.UpdateOwnPosition(transform.position);
         }
-        onMotorSpaceChanged.Invoke(new MotorSpaceInfo { width = motorSpaceWidth, height = motorSpaceHeight, pos = transform.position} );
-        if (log) {
+        onMotorSpaceChanged.Invoke(new MotorSpaceInfo { width = motorSpaceWidth, height = motorSpaceHeight, pos = transform.position });
+        if (log)
+        {
             LogMotorSpaceChange("MotorSpace Size Update");
         }
     }
 
-    void UpdateMotorSpaceVisualizer(MotorCalcMode mode = MotorCalcMode.center) {
-        if (mode == MotorCalcMode.center) {
-        motorSpaceVisualizer.transform.position = transform.position + motorSpaceOffset;
-        } else if (mode == MotorCalcMode.bottom) {
+    void UpdateMotorSpaceVisualizer(MotorCalcMode mode = MotorCalcMode.center)
+    {
+        if (mode == MotorCalcMode.center)
+        {
+            motorSpaceVisualizer.transform.position = transform.position + motorSpaceOffset;
+        }
+        else if (mode == MotorCalcMode.bottom)
+        {
             Vector3 newPos = transform.position + motorSpaceOffset;
             motorSpaceVisualizer.transform.position = new Vector3(newPos.x, newPos.y + (motorSpaceHeight), newPos.z);
         }
-        var visRect = motorSpaceVisualizer.GetComponent<RectTransform>();
+        RectTransform visRect = motorSpaceVisualizer.GetComponent<RectTransform>();
         visRect.sizeDelta = new Vector2(motorSpaceWidth * 2 * multiplier, motorSpaceHeight * 2 * multiplier);
     }
 
-    public void ShowMotorspace(bool show) {
-        var visImage = motorSpaceVisualizer.GetComponentInChildren<Image>();
+    public void ShowMotorspace(bool show)
+    {
+        Image visImage = motorSpaceVisualizer.GetComponentInChildren<Image>();
         visImage.enabled = show;
     }
 
-    public bool CoordinateWithinMotorSpace(Vector3 coordinate) {
+    public bool CoordinateWithinMotorSpace(Vector3 coordinate)
+    {
         float paddingX = (motorSpaceTopRight.x - motorSpaceTopLeft.x) * padding;
         float paddingY = (motorSpaceTopLeft.y - motorSpaceBottomLeft.y) * padding;
-        return  coordinate.x < motorSpaceTopRight.x-paddingX &&
-                coordinate.x > motorSpaceTopLeft.x+paddingX && 
-                coordinate.y < motorSpaceTopLeft.y-paddingY && 
-                coordinate.y > motorSpaceBottomLeft.y+paddingY;
+        return coordinate.x < motorSpaceTopRight.x - paddingX &&
+                coordinate.x > motorSpaceTopLeft.x + paddingX &&
+                coordinate.y < motorSpaceTopLeft.y - paddingY &&
+                coordinate.y > motorSpaceBottomLeft.y + paddingY;
     }
 
-    public Vector3 ClipToMotorSpace(Vector3 coordinate) {
+    public Vector3 ClipToMotorSpace(Vector3 coordinate)
+    {
         float paddingX = (motorSpaceTopRight.x - motorSpaceTopLeft.x) * padding;
         float paddingY = (motorSpaceTopLeft.y - motorSpaceBottomLeft.y) * padding;
-        float newCoordX = coordinate.x  < motorSpaceTopRight.x-paddingX ? coordinate.x : motorSpaceTopRight.x-paddingX;
-        newCoordX = coordinate.x > motorSpaceTopLeft.x+paddingX ? newCoordX : motorSpaceTopLeft.x+paddingX;
-        float newCoordY = coordinate.y < motorSpaceTopLeft.y-paddingY ? coordinate.y : motorSpaceTopLeft.y-paddingY;
-        newCoordY = coordinate.y > motorSpaceBottomLeft.y+paddingY ? newCoordY : motorSpaceBottomLeft.y+paddingY;
-        return new Vector3(newCoordX,newCoordY,coordinate.z);
+        float newCoordX = coordinate.x < motorSpaceTopRight.x - paddingX ? coordinate.x : motorSpaceTopRight.x - paddingX;
+        newCoordX = coordinate.x > motorSpaceTopLeft.x + paddingX ? newCoordX : motorSpaceTopLeft.x + paddingX;
+        float newCoordY = coordinate.y < motorSpaceTopLeft.y - paddingY ? coordinate.y : motorSpaceTopLeft.y - paddingY;
+        newCoordY = coordinate.y > motorSpaceBottomLeft.y + paddingY ? newCoordY : motorSpaceBottomLeft.y + paddingY;
+        return new Vector3(newCoordX, newCoordY, coordinate.z);
     }
 
-    public Vector3 RubberClipToMotorSpace(Vector3 coordinate) {
+    public Vector3 RubberClipToMotorSpace(Vector3 coordinate)
+    {
         float paddingX = (motorSpaceTopRight.x - motorSpaceTopLeft.x) * padding;
         float paddingY = (motorSpaceTopLeft.y - motorSpaceBottomLeft.y) * padding;
-        float CoordXDiff = Mathf.Abs((motorSpaceTopRight.x - motorSpaceTopLeft.x) * ((coordinate.x) - (motorSpaceTopRight.x-paddingX)))+1f;
-        float newCoordX = coordinate.x  < motorSpaceTopRight.x-paddingX ? coordinate.x : motorSpaceTopRight.x-paddingX + Mathf.Log(CoordXDiff,5)/(padding*100);
-        CoordXDiff = Mathf.Abs((motorSpaceTopRight.x - motorSpaceTopLeft.x) * ((motorSpaceTopLeft.x+paddingX) - (coordinate.x)))+1f;
+        float CoordXDiff = Mathf.Abs((motorSpaceTopRight.x - motorSpaceTopLeft.x) * ((coordinate.x) - (motorSpaceTopRight.x - paddingX))) + 1f;
+        float newCoordX = coordinate.x < motorSpaceTopRight.x - paddingX ? coordinate.x : motorSpaceTopRight.x - paddingX + Mathf.Log(CoordXDiff, 5) / (padding * 100);
+        CoordXDiff = Mathf.Abs((motorSpaceTopRight.x - motorSpaceTopLeft.x) * ((motorSpaceTopLeft.x + paddingX) - (coordinate.x))) + 1f;
 
-        newCoordX = coordinate.x > motorSpaceTopLeft.x+paddingX ? newCoordX : motorSpaceTopLeft.x+paddingX - Mathf.Log(CoordXDiff,5)/(padding*100);
-        float CoordYDiff = Mathf.Abs((motorSpaceTopLeft.y - motorSpaceBottomLeft.y) * ((coordinate.y) - (motorSpaceTopLeft.y-paddingY)))+1f;
-        float newCoordY = coordinate.y < motorSpaceTopLeft.y-paddingY ? coordinate.y : motorSpaceTopLeft.y-paddingY + Mathf.Log(CoordYDiff,5)/(padding*100);
+        newCoordX = coordinate.x > motorSpaceTopLeft.x + paddingX ? newCoordX : motorSpaceTopLeft.x + paddingX - Mathf.Log(CoordXDiff, 5) / (padding * 100);
+        float CoordYDiff = Mathf.Abs((motorSpaceTopLeft.y - motorSpaceBottomLeft.y) * ((coordinate.y) - (motorSpaceTopLeft.y - paddingY))) + 1f;
+        float newCoordY = coordinate.y < motorSpaceTopLeft.y - paddingY ? coordinate.y : motorSpaceTopLeft.y - paddingY + Mathf.Log(CoordYDiff, 5) / (padding * 100);
 
-        CoordYDiff = Mathf.Abs((motorSpaceTopLeft.y - motorSpaceBottomLeft.y) * ((coordinate.y) - (motorSpaceBottomLeft.y+paddingY)))+1f;
-        newCoordY = coordinate.y > motorSpaceBottomLeft.y+paddingY ? newCoordY : motorSpaceBottomLeft.y+paddingY - Mathf.Log(CoordYDiff,5)/(padding*100);
-        return new Vector3(newCoordX,newCoordY,coordinate.z);
+        CoordYDiff = Mathf.Abs((motorSpaceTopLeft.y - motorSpaceBottomLeft.y) * ((coordinate.y) - (motorSpaceBottomLeft.y + paddingY))) + 1f;
+        newCoordY = coordinate.y > motorSpaceBottomLeft.y + paddingY ? newCoordY : motorSpaceBottomLeft.y + paddingY - Mathf.Log(CoordYDiff, 5) / (padding * 100);
+        return new Vector3(newCoordX, newCoordY, coordinate.z);
     }
 
-    public Side NearestSide(Vector3 coordinate) {
+    public Side NearestSide(Vector3 coordinate)
+    {
         float paddingX = (motorSpaceTopRight.x - motorSpaceTopLeft.x) * padding;
         float paddingY = (motorSpaceTopLeft.y - motorSpaceBottomLeft.y) * padding;
-        float Right = Mathf.Abs(coordinate.x - (motorSpaceTopRight.x-paddingX));
-        float Left = Mathf.Abs(coordinate.x - (motorSpaceTopLeft.x+paddingX));
-        float Top = Mathf.Abs(coordinate.y - (motorSpaceTopLeft.y-paddingY));
-        float Bottom = Mathf.Abs(coordinate.y - (motorSpaceBottomLeft.y+paddingY));
-        
+        float Right = Mathf.Abs(coordinate.x - (motorSpaceTopRight.x - paddingX));
+        float Left = Mathf.Abs(coordinate.x - (motorSpaceTopLeft.x + paddingX));
+        float Top = Mathf.Abs(coordinate.y - (motorSpaceTopLeft.y - paddingY));
+        float Bottom = Mathf.Abs(coordinate.y - (motorSpaceBottomLeft.y + paddingY));
+
         Side side = Side.None;
         side = Right < Left && Right < Top && Right < Bottom ? Side.Right : side;
         side = Left < Right && Left < Top && Left < Bottom ? Side.Left : side;
@@ -343,7 +374,8 @@ public class LaserMapper : MonoBehaviour
         return side;
     }
 
-    private void CalculateWallSpace(WallInfo w) {
+    private void CalculateWallSpace(WallInfo w)
+    {
         // Use the wall's own reported boundaries and add some margin.
         wallSpaceTopLeft = new Vector3(w.lowestX - wallSpaceMargin, w.highestY + wallSpaceMargin, w.lowestZ);
         wallSpaceTopRight = new Vector3(w.highestX + wallSpaceMargin, w.highestY + wallSpaceMargin, w.lowestZ);
@@ -351,62 +383,76 @@ public class LaserMapper : MonoBehaviour
         wallSpaceBottomLeft = new Vector3(w.lowestX - wallSpaceMargin, w.lowestY - wallSpaceMargin, w.lowestZ);
     }
 
-    private void CalculateGain() {
-        if (wallSpaceTopLeft == Vector3.zero) {
+    private void CalculateGain()
+    {
+        if (wallSpaceTopLeft == Vector3.zero)
+        {
             gainX = -1f;
             gainY = -1f;
-        } else if (motorSpaceTopRight == Vector3.zero) {
+        }
+        else if (motorSpaceTopRight == Vector3.zero)
+        {
             gainX = -1f;
             gainY = -1f;
-        } else {
+        }
+        else
+        {
             gainX = (wallSpaceTopRight.x - wallSpaceTopLeft.x) / (motorSpaceTopRight.x - motorSpaceTopLeft.x);
             gainY = (wallSpaceTopRight.y - wallSpaceBottomRight.y) / (motorSpaceTopRight.y - motorSpaceBottomRight.y);
         }
     }
 
     // Whenever the wall udpates we want to recalculate the wallspace.
-    public void OnWallUpdated(WallInfo wall) {
+    public void OnWallUpdated(WallInfo wall)
+    {
         CalculateWallSpace(wall);
         CalculateGain();
         LogMotorSpaceChange("Wall Size Update");
     }
 
-    public void SetMultiplier(float m) {
+    public void SetMultiplier(float m)
+    {
         multiplier = m;
         CalculateMotorSpace();
         UpdateMotorSpaceVisualizer();
     }
 
-    public void SetMotorSpaceWidth(float newWidth, bool log = true) {
+    public void SetMotorSpaceWidth(float newWidth, bool log = true)
+    {
         motorSpaceWidth = newWidth;
-        CalculateMotorSpace(log:log);
+        CalculateMotorSpace(log: log);
         CalculateGain();
         UpdateMotorSpaceVisualizer();
     }
 
-    public void SetMotorSpaceHeight(float newHeight, bool log = true) {
+    public void SetMotorSpaceHeight(float newHeight, bool log = true)
+    {
         motorSpaceHeight = newHeight;
-        CalculateMotorSpace(log:log);
+        CalculateMotorSpace(log: log);
         CalculateGain();
         UpdateMotorSpaceVisualizer();
     }
 
-    public Vector3 ConvertMotorSpaceToWallSpace(Vector3 coord) {
+    public Vector3 ConvertMotorSpaceToWallSpace(Vector3 coord)
+    {
         // We convert our motorspace and our coordinate to be within a range where 0 is lowest.
         // Then we perform the normalization with division.
         // (coordinate within range) / (total range of  motorspace)
         float coordX = coord.x;
 
-        if (motorRestriction == MotorRestriction.restrict) {
+        if (motorRestriction == MotorRestriction.restrict)
+        {
             float upperRestrictionNormalized = ((wallSpaceTopRight.x - wallSpaceTopLeft.x) * upperRestriction);
             float lowerRestrictionNormalized = ((wallSpaceTopRight.x - wallSpaceTopLeft.x) * lowerRestriction);
             float newLeft = wallSpaceTopLeft.x + lowerRestrictionNormalized;
             float newRight = wallSpaceTopLeft.x + upperRestrictionNormalized;
 
-            if ((coord.x - transform.position.x) < newLeft) {
+            if ((coord.x - transform.position.x) < newLeft)
+            {
                 coordX = (newLeft + transform.position.x);
             }
-            if ((coord.x - transform.position.x) > newRight) {
+            if ((coord.x - transform.position.x) > newRight)
+            {
                 coordX = (newRight + transform.position.x);
             }
         }
@@ -427,7 +473,8 @@ public class LaserMapper : MonoBehaviour
         return wallSpaceCoord;
     }
 
-    public void SetMotorSpace(MotorSpaceInfo motorspace) {
+    public void SetMotorSpace(MotorSpaceInfo motorspace)
+    {
         coroutineQueue.Enqueue(ScaleMotorSpace(motorspace, 0.4f));
 
         multiplier = motorspace.multiplier;
@@ -436,14 +483,17 @@ public class LaserMapper : MonoBehaviour
         CalculateGain();
     }
 
-    public void SetDefaultMotorSpace(MotorSpaceInfo motorspace = null) {
-        if (motorspace != null) {
+    public void SetDefaultMotorSpace(MotorSpaceInfo motorspace = null)
+    {
+        if (motorspace != null)
+        {
             defaultMotorSpace = motorspace;
         }
         SetMotorSpace(defaultMotorSpace);
     }
 
-    public MotorSpaceInfo GetMotorSpace() {
+    public MotorSpaceInfo GetMotorSpace()
+    {
         MotorSpaceInfo info = new MotorSpaceInfo();
         info.width = motorSpaceWidth;
         info.height = motorSpaceHeight;
@@ -452,15 +502,19 @@ public class LaserMapper : MonoBehaviour
         return info;
     }
 
-    private IEnumerator ScaleMotorSpace(MotorSpaceInfo motorspace, float duration) {
+    private IEnumerator ScaleMotorSpace(MotorSpaceInfo motorspace, float duration)
+    {
         float timer = 0;
         float rate = 1 / duration;
 
-        var motorSpacedPosition = transform.position;
-        var destinationPosition = Vector3.zero;
-        if (motorspace.mode == MotorCalcMode.center) {
+        Vector3 motorSpacedPosition = transform.position;
+        Vector3 destinationPosition = Vector3.zero;
+        if (motorspace.mode == MotorCalcMode.center)
+        {
             destinationPosition = motorspace.pos;
-        } else if (motorspace.mode == MotorCalcMode.bottom) {
+        }
+        else if (motorspace.mode == MotorCalcMode.bottom)
+        {
             Debug.Log("motorspaceHeight:" + motorSpaceHeight);
             Debug.Log("motorspace Y:" + motorspace.pos.y);
             destinationPosition = new Vector3(motorspace.pos.x, motorspace.pos.y + motorspace.height, motorspace.pos.z);

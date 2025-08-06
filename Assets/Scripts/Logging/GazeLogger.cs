@@ -1,7 +1,6 @@
-﻿using System.Collections;
+﻿using PupilLabs;
 using System.Collections.Generic;
 using UnityEngine;
-using PupilLabs;
 
 public class GazeLogger : MonoBehaviour
 {
@@ -36,7 +35,8 @@ public class GazeLogger : MonoBehaviour
     [SerializeField]
     private PupilLabs.TimeSync timeSync;
 
-    void Awake() {
+    void Awake()
+    {
         ResetGazeData();
     }
 
@@ -49,7 +49,7 @@ public class GazeLogger : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     void ReceiveGaze(GazeData gazeData)
@@ -60,7 +60,7 @@ public class GazeLogger : MonoBehaviour
             return;
         }
         isGazing = true;
-        
+
         localGazeDirection = gazeData.GazeDirection;
         gazeDistance = gazeData.GazeDistance;
         gazeConfidence = gazeData.Confidence;
@@ -71,8 +71,10 @@ public class GazeLogger : MonoBehaviour
         gazeNormal1 = gazeData.GazeNormal1;
     }
 
-    public Dictionary<string, object> GetGazeData() {
-        if (isGazing) {
+    public Dictionary<string, object> GetGazeData()
+    {
+        if (isGazing)
+        {
             worldGazeOrigin = gazeOrigin.position;
             worldGazeDirection = gazeOrigin.TransformDirection(localGazeDirection);
 
@@ -113,24 +115,30 @@ public class GazeLogger : MonoBehaviour
             gazeData["WorldGazeHitPositionX"] = gazeHitPosition.x;
             gazeData["WorldGazeHitPositionY"] = gazeHitPosition.y;
             gazeData["WorldGazeHitPositionZ"] = gazeHitPosition.z;
-            if (objectHit != null) {
+            if (objectHit != null)
+            {
                 gazeData["WorldGazeHitObjectName"] = objectHit.name;
                 gazeData["WorldGazeHitObjectMoleID"] = objectHit.TryGetComponent(out DiskMole mole) ? mole.GetId() : -1;
                 gazeData["WorldGazeHitObjectIsWall"] = objectHit.TryGetComponent(out WallManager wall) ? "TRUE" : "FALSE";
-            } else {
+            }
+            else
+            {
                 gazeData["WorldGazeHitObjectName"] = "NULL";
                 gazeData["WorldGazeHitObjectMoleID"] = -1;
                 gazeData["WorldGazeHitObjectIsWall"] = "FALSE";
             }
-        } else {
+        }
+        else
+        {
             ResetGazeData();
         }
         return gazeData;
     }
 
-    private void ResetGazeData() {
+    private void ResetGazeData()
+    {
         gazeData = new Dictionary<string, object>()
-		{
+        {
             {"PupilTime", "NULL"},
             {"UnityToPupilTimeOffset", "NULL"},
             {"GazeConfidence", "NULL"},
@@ -150,7 +158,7 @@ public class GazeLogger : MonoBehaviour
             {"LocalGazeDirectionY", "NULL"},
             {"LocalGazeDirectionZ", "NULL"},
             {"GazeDistance", "NULL"},
-			{"WorldGazeOriginX", "NULL"},
+            {"WorldGazeOriginX", "NULL"},
             {"WorldGazeOriginY", "NULL"},
             {"WorldGazeOriginZ", "NULL"},
             {"WorldGazeDirectionX", "NULL"},

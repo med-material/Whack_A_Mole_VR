@@ -1,7 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class OutOfBoundsArrow : MonoBehaviour
 {
@@ -25,55 +22,67 @@ public class OutOfBoundsArrow : MonoBehaviour
 
     private WallInfo wallInfo;
 
-    void OnEnable() {
+    void OnEnable()
+    {
         wallManager.stateUpdateEvent.AddListener(OnWallUpdated);
         OnWallUpdated(wallManager.CreateWallInfo());
     }
 
-    void OnDisable() {
+    void OnDisable()
+    {
         wallManager.stateUpdateEvent.RemoveListener(OnWallUpdated);
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (showArrow) {
-            transform.right = new Vector3(wallInfo.meshCenter.x,wallInfo.meshCenter.y,arrow.transform.position.z) - arrow.transform.position;
+        if (showArrow)
+        {
+            transform.right = new Vector3(wallInfo.meshCenter.x, wallInfo.meshCenter.y, arrow.transform.position.z) - arrow.transform.position;
         }
     }
 
-    public void Reset() {
+    public void Reset()
+    {
         if (coroutine != null) { StopCoroutine(coroutine); }
         coroutine = FadingUtils.FadeRoutine(handler: this, Obj: arrow.transform.gameObject, fadeTime: fadeTime, fadeDirection: FadeAction.Out);
         showArrow = false;
     }
 
-    private void OnWallUpdated(WallInfo w) {
+    private void OnWallUpdated(WallInfo w)
+    {
         wallInfo = w;
         active = wallInfo.active;
         if (!lastEnter && active) { ShowArrow(lastSide); }
     }
 
-    public void OnMotorSpaceEnter(EnterMotorSpaceInfo m) {
+    public void OnMotorSpaceEnter(EnterMotorSpaceInfo m)
+    {
         lastEnter = m.enter;
         lastSide = m.side;
         Debug.Log("MotorSpaceEnter " + m.enter + "active " + active);
-        if (m.enter && active) {
+        if (m.enter && active)
+        {
             Debug.Log("MotorSpaceEnter " + m.side);
             Reset();
-        } else if (!m.enter && active) {
+        }
+        else if (!m.enter && active)
+        {
             Debug.Log("MotorSpaceExit " + m.side);
             ShowArrow(m.side);
-        } else {
+        }
+        else
+        {
             Reset();
         }
     }
 
-    public void ShowArrow(Side s) {
+    public void ShowArrow(Side s)
+    {
         if (coroutine != null) { StopCoroutine(coroutine); }
         arrow.transform.rotation = Quaternion.identity;
         showArrow = true;
-        transform.right = new Vector3(wallInfo.meshCenter.x,wallInfo.meshCenter.y,arrow.transform.position.z) - arrow.transform.position;
+        transform.right = new Vector3(wallInfo.meshCenter.x, wallInfo.meshCenter.y, arrow.transform.position.z) - arrow.transform.position;
         // if (s == Side.Left) {
         //     arrow.transform.Rotate(0.0f,0.0f,180.0f);
         // } else if (s == Side.Right) {

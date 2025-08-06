@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using System.Reflection;
+﻿using UnityEngine;
 
 public class FadingHelper : MonoBehaviour
 {
@@ -42,12 +37,12 @@ public class FadingHelper : MonoBehaviour
 
     void OnEnable()
     {
-        if (autoPlay==AutoPlay.On && fadeAction==FadeAction.In && objToFade!=null) // plays fading in effect when object is enabled
+        if (autoPlay == AutoPlay.On && fadeAction == FadeAction.In && objToFade != null) // plays fading in effect when object is enabled
         {
             FadingUtils.FadeRoutine(this, objToFade, fadeTime, fadeAction, fadeDelay, setEnable);
         }
 
-        if (autoPlay==AutoPlay.On && fadeAction==FadeAction.Out && objToFade!=null) // plays fading in effect when object is enabled
+        if (autoPlay == AutoPlay.On && fadeAction == FadeAction.Out && objToFade != null) // plays fading in effect when object is enabled
         {
             FadingUtils.FadeRoutine(this, objToFade, fadeTime, fadeAction, fadeDelay, setEnable);
         }

@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class MotorSpaceMirror : MonoBehaviour
 {
@@ -10,7 +8,8 @@ public class MotorSpaceMirror : MonoBehaviour
     [SerializeField]
     private LaserMapper laserMapperToMirror;
 
-    void Awake() {
+    void Awake()
+    {
         laserMapper = this.GetComponent<LaserMapper>();
     }
 
@@ -27,8 +26,9 @@ public class MotorSpaceMirror : MonoBehaviour
         info.pos = new Vector3(-info.pos.x, info.pos.y, info.pos.z);
         laserMapper.SetMotorSpace(info);
     }
-    
-    public void UpdateMotorSpaceToMirror(LaserMapper m) {
+
+    public void UpdateMotorSpaceToMirror(LaserMapper m)
+    {
         laserMapperToMirror = m;
         MotorSpaceInfo motorspace = laserMapperToMirror.GetMotorSpace();
         motorspace.pos = new Vector3(-motorspace.pos.x, motorspace.pos.y, motorspace.pos.z);

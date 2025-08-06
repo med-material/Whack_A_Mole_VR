@@ -1,8 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using System;
 
 /*
 Class managing the profiles. Loads, saves, creates and check the profiles locally on the computer.
@@ -105,7 +103,7 @@ public class ProfilesReadWriter
         {
             return false;
         }
-        
+
     }
 
     private Dictionary<string, Dictionary<string, string>> LoadProfiles()

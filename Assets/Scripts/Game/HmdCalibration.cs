@@ -1,14 +1,13 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using Valve.VR;
 using UnityEngine.Events;
+using Valve.VR;
 
 public class HmdCalibration : MonoBehaviour
 {
 
     [System.Serializable]
-    public class CalibrationEvent : UnityEvent {}
+    public class CalibrationEvent : UnityEvent { }
     [SerializeField]
     public CalibrationEvent calibrationUpdate;
 
@@ -31,11 +30,13 @@ public class HmdCalibration : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     {
-        controllerGameObject.GetComponent<SteamVR_Behaviour_Pose>().onTransformUpdated.AddListener(delegate{PositionUpdated();});
+        controllerGameObject.GetComponent<SteamVR_Behaviour_Pose>().onTransformUpdated.AddListener(delegate { PositionUpdated(); });
     }
 
-    public void Update() {
-        if (!calibrated) {
+    public void Update()
+    {
+        if (!calibrated)
+        {
             if (Input.GetKeyDown(KeyCode.V))
             {
                 CloseInstructionPanel();
@@ -44,25 +45,29 @@ public class HmdCalibration : MonoBehaviour
     }
 
     // Update is called once per frame
-    public void PositionUpdated() {
+    public void PositionUpdated()
+    {
         // HACK: for some reason we need invoke the calibrationUpdate a couple of times..
         // need to investigate why this is..
-        if (time < timeout) {
-            if(SteamVR.active)
+        if (time < timeout)
+        {
+            if (SteamVR.active)
             {
                 if (SteamVR_Actions._default.GrabPinch.GetStateDown(controller))
                 {
                     CloseInstructionPanel();
                 }
             }
-            if (calibrated) {
-            time++;
+            if (calibrated)
+            {
+                time++;
             }
         }
     }
 
     //generic function if we need to change something when the instruction panel disappeared
-    private void CloseInstructionPanel(){
+    private void CloseInstructionPanel()
+    {
         StartCoroutine(FadeOutCanvasGroup());
         calibrationUpdate.Invoke();
         calibrated = true;

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using UnityEngine;
 using System.Globalization;
+using UnityEngine;
 
 /*
 Class doing the interface between the PatternPlayer and the different classes of the game it needs to interact with.
@@ -41,13 +41,15 @@ public class PatternInterface : MonoBehaviour
         targetsList.Remove(moleId);
     }
 
-    public void ResetTargetsList() {
+    public void ResetTargetsList()
+    {
         targetsList = null;
     }
 
     public void AddToTargetsList(int moleId, Mole mole)
     {
-        if (targetsList == null) {
+        if (targetsList == null)
+        {
             targetsList = new Dictionary<int, Mole>();
         }
         targetsList[moleId] = mole;
@@ -223,7 +225,7 @@ public class PatternInterface : MonoBehaviour
     private void SetMole(string xIndex, string yIndex, string lifeTime)
     {
         int moleId = ((int.Parse(xIndex)) * 100) + (int.Parse(yIndex));
-        var mole = wallManager.ActivateMole(moleId, ParseFloat(lifeTime), gameDirector.GetMoleExpiringDuration(), Mole.MoleType.Target);
+        Mole mole = wallManager.ActivateMole(moleId, ParseFloat(lifeTime), gameDirector.GetMoleExpiringDuration(), Mole.MoleType.Target);
         molesList[moleId] = mole;
         AddToTargetsList(moleId, mole);
     }
@@ -232,8 +234,8 @@ public class PatternInterface : MonoBehaviour
     private void SetDistractor(string xIndex, string yIndex, string lifeTime, string type)
     {
         int moleId = ((int.Parse(xIndex)) * 100) + (int.Parse(yIndex));
-        Mole.MoleType moleType = (Mole.MoleType)System.Enum.Parse( typeof(Mole.MoleType), type);
-        var mole = wallManager.ActivateMole(moleId, ParseFloat(lifeTime), gameDirector.GetMoleExpiringDuration(), moleType);
+        Mole.MoleType moleType = (Mole.MoleType)System.Enum.Parse(typeof(Mole.MoleType), type);
+        Mole mole = wallManager.ActivateMole(moleId, ParseFloat(lifeTime), gameDirector.GetMoleExpiringDuration(), moleType);
         molesList[moleId] = mole;
     }
 
@@ -246,8 +248,8 @@ public class PatternInterface : MonoBehaviour
     // Updates the game difficulty
     private void SetMessage(string message, string time)
     {
-        message = message.Replace("_"," ");
-        message = message.Replace("|","\n");
+        message = message.Replace("_", " ");
+        message = message.Replace("|", "\n");
         playerPanel.SetMessage(message, ParseFloat(time));
     }
 
@@ -255,10 +257,10 @@ public class PatternInterface : MonoBehaviour
     private void SetModifier(Dictionary<string, string> action)
     {
         string tempValue;
-        
+
         if (action.TryGetValue("EYEPATCH", out tempValue))
         {
-            modifiersManager.SetEyePatch((ModifiersManager.EyePatch)System.Enum.Parse( typeof(ModifiersManager.EyePatch), tempValue));
+            modifiersManager.SetEyePatch((ModifiersManager.EyePatch)System.Enum.Parse(typeof(ModifiersManager.EyePatch), tempValue));
         }
         if (action.TryGetValue("MIRROR", out tempValue))
         {
@@ -270,7 +272,7 @@ public class PatternInterface : MonoBehaviour
         }
         if (action.TryGetValue("MAINCONTROLLER", out tempValue))
         {
-            modifiersManager.SetMainController((ModifiersManager.ControllerSetup)System.Enum.Parse( typeof(ModifiersManager.ControllerSetup), tempValue));
+            modifiersManager.SetMainController((ModifiersManager.ControllerSetup)System.Enum.Parse(typeof(ModifiersManager.ControllerSetup), tempValue));
             motorspaceManager.SetActiveMotorSpace(tempValue);
         }
         if (action.TryGetValue("POINTERTYPE", out tempValue))
@@ -283,7 +285,7 @@ public class PatternInterface : MonoBehaviour
         }
         if (action.TryGetValue("HIDEWALL", out tempValue))
         {
-            modifiersManager.SetHideWall((ModifiersManager.HideWall)System.Enum.Parse( typeof(ModifiersManager.HideWall), tempValue));
+            modifiersManager.SetHideWall((ModifiersManager.HideWall)System.Enum.Parse(typeof(ModifiersManager.HideWall), tempValue));
         }
         if (action.TryGetValue("HIDEWALLAMOUNT", out tempValue))
         {
@@ -307,7 +309,7 @@ public class PatternInterface : MonoBehaviour
         }
         if (action.TryGetValue("MOTORSPACE", out tempValue))
         {
-            modifiersManager.SetMotorspace((ModifiersManager.MotorspaceSize)System.Enum.Parse( typeof(ModifiersManager.MotorspaceSize), tempValue));
+            modifiersManager.SetMotorspace((ModifiersManager.MotorspaceSize)System.Enum.Parse(typeof(ModifiersManager.MotorspaceSize), tempValue));
         }
         if (action.TryGetValue("PERFORMANCEFEEDBACK", out tempValue))
         {
@@ -319,7 +321,8 @@ public class PatternInterface : MonoBehaviour
         }
     }
 
-    private void SetSegment(string Idval, string label) {
+    private void SetSegment(string Idval, string label)
+    {
         loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>(){
             {"PatternSegmentID", Idval},
             {"PatternSegmentLabel", label}

@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -39,7 +38,8 @@ public class HeadPositionUI : MonoBehaviour
         headRotText.text = string.Format(headRotTemplate, headObject.transform.eulerAngles.x.ToString("0"), headObject.transform.eulerAngles.y.ToString("0"), headObject.transform.eulerAngles.z.ToString("0"));
     }
 
-    public void LogCurrentPosition() {
+    public void LogCurrentPosition()
+    {
         loggingManager.Log("Event", new Dictionary<string, object>()
         {
             {"Event", "Player Position Set"},

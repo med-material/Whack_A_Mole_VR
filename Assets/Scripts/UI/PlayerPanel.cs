@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /*
-Class dedicated to the player panel. Updates the displayed information, hides/shows the panel and switches between the 
+Class dedicated to the player panel. Updates the displayed information, hides/shows the panel and switches between the
 information panel and the "game paused" panel.
 */
 
@@ -79,7 +79,8 @@ public class PlayerPanel : MonoBehaviour
     }
 
     // Switches between the "countdown" panel and the information panel.
-    public void SetCountDownContainer(bool countDownContainer = true) {
+    public void SetCountDownContainer(bool countDownContainer = true)
+    {
         if (countDownContainer)
         {
             infoContainer.SetActive(false);
@@ -96,9 +97,9 @@ public class PlayerPanel : MonoBehaviour
     // Updates the participant Id, game duration and test Id displayed on the information panel.
     public void UpdateDisplayedInfos(Dictionary<string, object> data)
     {
-        foreach(KeyValuePair<string, object> entry in data)
+        foreach (KeyValuePair<string, object> entry in data)
         {
-            switch(entry.Key)
+            switch (entry.Key)
             {
                 case "ParticipantId":
                     participantText.text = "Participant " + entry.Value.ToString();
@@ -107,7 +108,7 @@ public class PlayerPanel : MonoBehaviour
                 case "TestId":
                     testText.text = "Test " + entry.Value.ToString();
                     break;
-                
+
                 case "GameDuration":
                     timeText.text = entry.Value.ToString() + " minutes";
                     break;
@@ -116,34 +117,40 @@ public class PlayerPanel : MonoBehaviour
     }
 
     // Updates the countdown in the countdown panel.
-    public void UpdateCountDownInfo(int count) {
+    public void UpdateCountDownInfo(int count)
+    {
         countDownText.text = string.Format(countDownTextTemplate, count.ToString());
     }
 
-    public void SetInstructionText(string text) {
+    public void SetInstructionText(string text)
+    {
         instructionText.text = text;
-    }    
+    }
 
-    public void SetMessage(string text, float time) {
+    public void SetMessage(string text, float time)
+    {
         SetInstructionText(text);
         StartCoroutine(WaitShowMessage(time, text));
     }
 
-    private IEnumerator WaitShowMessage(float duration, string text) {
+    private IEnumerator WaitShowMessage(float duration, string text)
+    {
         float currentCountDownLeft = duration;
         int currentCountDownLeftRounded = -1;
         int prevCount = -1;
         SetEnablePanel(true);
         SetCountDownContainer(true);
 
-        while (currentCountDownLeft > -0.9) {
+        while (currentCountDownLeft > -0.9)
+        {
             prevCount = currentCountDownLeftRounded;
 
             currentCountDownLeft -= Time.deltaTime;
-            currentCountDownLeftRounded = (int) Mathf.Ceil(currentCountDownLeft);
-            
-            if (currentCountDownLeftRounded != prevCount) {
-                var data = new Dictionary<string, object>()
+            currentCountDownLeftRounded = (int)Mathf.Ceil(currentCountDownLeft);
+
+            if (currentCountDownLeftRounded != prevCount)
+            {
+                Dictionary<string, object> data = new Dictionary<string, object>()
                 {
                     {"CountDown", currentCountDownLeftRounded}
                 };

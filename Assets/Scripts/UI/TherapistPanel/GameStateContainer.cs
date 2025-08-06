@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 /*
@@ -42,7 +40,8 @@ public class GameStateContainer : MonoBehaviour
     [SerializeField]
     private LoggingManager loggingManager;
 
-    void Awake() {
+    void Awake()
+    {
         countDownTextTemplate = countDownText.text;
     }
 
@@ -83,7 +82,7 @@ public class GameStateContainer : MonoBehaviour
         dataSaveContainer.SetActive(false);
         uploadingContainer.SetActive(true);
         gameStateText.text = "Uploading Data..";
-        loggingManager.SaveAllLogs(clear:true);
+        loggingManager.SaveAllLogs(clear: true);
         loggingManager.NewFilestamp();
     }
 
@@ -95,12 +94,13 @@ public class GameStateContainer : MonoBehaviour
         dataSaveContainer.SetActive(false);
         uploadingContainer.SetActive(true);
         gameStateText.text = "Hold on..";
-        loggingManager.SaveAllLogs(targetType:TargetType.CSV, clear:true);
+        loggingManager.SaveAllLogs(targetType: TargetType.CSV, clear: true);
         loggingManager.NewFilestamp();
         Reset();
     }
 
-    public void Reset() {
+    public void Reset()
+    {
         gameStateText.text = "Game is ready.";
         startContainer.SetActive(true);
         countdownContainer.SetActive(false);
@@ -139,7 +139,8 @@ public class GameStateContainer : MonoBehaviour
         gameTimeText.text = value;
     }
 
-    public void UpdateCountDown(int count) {
+    public void UpdateCountDown(int count)
+    {
         countDownText.text = string.Format(countDownTextTemplate, count.ToString());
     }
 }

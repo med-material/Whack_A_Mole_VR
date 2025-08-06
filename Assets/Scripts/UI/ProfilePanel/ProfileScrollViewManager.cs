@@ -1,7 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 /*
 Class managing the profiles scroll view (containing the profile buttons ProfileButtonContainer).
@@ -23,8 +21,8 @@ public class ProfileScrollViewManager : MonoBehaviour
     void Awake()
     {
         panelManager = FindObjectOfType<ProfilePanelManager>();
-    }
 
+    }
     // Adds a profile button with the given name and ID.
     public void AddProfile(string name, string id)
     {
@@ -43,12 +41,12 @@ public class ProfileScrollViewManager : MonoBehaviour
             children.Add(buttonsContainer.transform.GetChild(i).gameObject);
         }
 
-        foreach(GameObject child in children)
+        foreach (GameObject child in children)
         {
             Destroy(child);
         }
 
-        foreach(Dictionary<string, string> profileNameId in profilesNameIdList)
+        foreach (Dictionary<string, string> profileNameId in profilesNameIdList)
         {
             ProfileButtonContainer newButton = Instantiate(buttonPrefab, buttonsContainer.transform);
             newButton.SetButton(profileNameId["Id"], profileNameId["Name"], buttonHeight, panelManager);

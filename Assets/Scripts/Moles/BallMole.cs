@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 /*
@@ -58,7 +57,7 @@ public class BallMole : Mole
         base.PlayEnabling();
     }
 
-    protected override void PlayEnable() 
+    protected override void PlayEnable()
     {
         SwitchShader(false);
 
@@ -84,7 +83,7 @@ public class BallMole : Mole
         ChangeColor(disabledColor);
     }
 
-    protected override void PlayHoverEnter() 
+    protected override void PlayHoverEnter()
     {
         SwitchShader(true);
         if (moleType == Mole.MoleType.Target)
@@ -97,7 +96,7 @@ public class BallMole : Mole
         }
     }
 
-    protected override void PlayHoverLeave() 
+    protected override void PlayHoverLeave()
     {
         SwitchShader(false);
         if (moleType == Mole.MoleType.Target)
@@ -110,7 +109,7 @@ public class BallMole : Mole
         }
     }
 
-    protected override void PlayPop() 
+    protected override void PlayPop()
     {
         SwitchShader(true);
         if (moleType == Mole.MoleType.Target)

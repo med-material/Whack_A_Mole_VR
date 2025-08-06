@@ -1,8 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using PupilLabs;
 using UnityEngine;
 using UnityEngine.UI;
-using PupilLabs;
 
 public class EyePositionUI : MonoBehaviour
 {
@@ -39,43 +37,52 @@ public class EyePositionUI : MonoBehaviour
         eyePositionTemplate = eyePositionText.text;
     }
 
-    public void SubscribeGazeRecorder() {
+    public void SubscribeGazeRecorder()
+    {
         gazeController.OnReceive3dGaze += ReceiveGaze;
     }
 
-    public void UnsubscribeGazeRecorder() {
+    public void UnsubscribeGazeRecorder()
+    {
         gazeController.OnReceive3dGaze -= ReceiveGaze;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (updateTimer < updateTime) {
+        if (updateTimer < updateTime)
+        {
             updateTimer += Time.deltaTime;
             return;
-        } else {
+        }
+        else
+        {
             updateTimer = 0f;
-            if (localGazeDirection != Vector3.zero) {
+            if (localGazeDirection != Vector3.zero)
+            {
                 worldGazeOrigin = gazeOrigin.position;
                 worldGazeDirection = gazeOrigin.TransformDirection(localGazeDirection);
                 //if (Physics.SphereCast(worldGazeOrigin, sphereCastRadius, worldGazeDirection, out RaycastHit hit, Mathf.Infinity))
                 //{
-                    eyePositionText.text = string.Format(eyePositionTemplate, localGazeDirection.x.ToString("0.00"), localGazeDirection.y.ToString("0.00"), localGazeDirection.z.ToString("0.00"));
-                    eyeInfoText.text = string.Format(eyeInfoTemplate, gazeConfidence.ToString("0.00"), gazeNormal0.x.ToString("0.00"), gazeNormal1.x.ToString("0.00"));
+                eyePositionText.text = string.Format(eyePositionTemplate, localGazeDirection.x.ToString("0.00"), localGazeDirection.y.ToString("0.00"), localGazeDirection.z.ToString("0.00"));
+                eyeInfoText.text = string.Format(eyeInfoTemplate, gazeConfidence.ToString("0.00"), gazeNormal0.x.ToString("0.00"), gazeNormal1.x.ToString("0.00"));
                 //}
-            } else {
-                    eyePositionText.text = string.Format(eyePositionTemplate, "-", "-", "-");
-                    eyeInfoText.text = string.Format(eyeInfoTemplate, "-", "-", "-");
+            }
+            else
+            {
+                eyePositionText.text = string.Format(eyePositionTemplate, "-", "-", "-");
+                eyeInfoText.text = string.Format(eyeInfoTemplate, "-", "-", "-");
             }
         }
     }
 
-    public void ReceiveGaze(GazeData gazeData) {
+    public void ReceiveGaze(GazeData gazeData)
+    {
         if (gazeData.MappingContext != GazeData.GazeMappingContext.Binocular)
         {
             return;
         }
-        
+
         localGazeDirection = gazeData.GazeDirection;
         gazeConfidence = gazeData.Confidence;
         gazeNormal0 = gazeData.GazeNormal0;

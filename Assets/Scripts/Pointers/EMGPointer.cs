@@ -17,7 +17,7 @@ public class EMGPointer : Pointer
 
     [SerializeField]
     private float laserExtraWidthShootAnimation = .05f;
-    
+
     [SerializeField]
     private float mouseSpeed = 0.5f;
 
@@ -75,7 +75,7 @@ public class EMGPointer : Pointer
                 PointerControl();
             }
         }
-        
+
     }
 
     // Function called on VR update, since it can be faster/not synchronous to Update() function. Makes the Pointer slightly more reactive.
@@ -88,7 +88,7 @@ public class EMGPointer : Pointer
         }
     }
 
-private void PointerControl()
+    private void PointerControl()
     {
         Vector2 pos = new Vector2(laserOrigin.transform.position.x, laserOrigin.transform.position.y);
         Vector3 mappedPosition = laserMapper.ConvertMotorSpaceToWallSpace(pos);
@@ -106,31 +106,34 @@ private void PointerControl()
         }
         else
         {
-            Vector3 rayPosition = laserOrigin.transform.InverseTransformDirection(rayDirection) * maxLaserLength; 
+            Vector3 rayPosition = laserOrigin.transform.InverseTransformDirection(rayDirection) * maxLaserLength;
             laser.SetPosition(1, rayPosition);
             cursor.SetPosition(rayPosition);
             //UpdateLaser(false, rayDirection: laserOrigin.transform.InverseTransformDirection(rayDirection) * maxLaserLength);
         }
-        if (hit.collider) {
-                Mole mole;
-                if (hit.collider.gameObject.TryGetComponent<Mole>(out mole))
+        if (hit.collider)
+        {
+            Mole mole;
+            if (hit.collider.gameObject.TryGetComponent<Mole>(out mole))
+            {
+                Mole.States moleAnswer = mole.GetState();
+                if (moleAnswer == Mole.States.Enabled)
                 {
-                    Mole.States moleAnswer = mole.GetState();
-                    if (moleAnswer == Mole.States.Enabled)
+                    if (hover == string.Empty)
                     {
-                        if (hover == string.Empty) {
-                            hover =  mole.GetId().ToString();
-                            loggerNotifier.NotifyLogger("Pointer Hover Begin", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
+                        hover = mole.GetId().ToString();
+                        loggerNotifier.NotifyLogger("Pointer Hover Begin", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
                             {
                                 {"ControllerHover", hover},
                                 {"ControllerName", gameObject.name}
                             });
-                        }
+                    }
 
-                        dwellTimer = dwellTimer + 0.1f;
-                        if (dwellTimer > dwellTime) {
-                            pointerShootOrder++;
-                            loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>(){
+                    dwellTimer = dwellTimer + 0.1f;
+                    if (dwellTimer > dwellTime)
+                    {
+                        pointerShootOrder++;
+                        loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>(){
                                 {"ControllerSmoothed", directionSmoothed},
                                 {"ControllerAimAssistState", System.Enum.GetName(typeof(Pointer.AimAssistStates), aimAssistState)},
                                 {"LastShotControllerRawPointingDirectionX", transform.forward.x},
@@ -147,35 +150,46 @@ private void PointerControl()
                                 {"ControllerName", "NULL"},
                             });
 
-                            loggerNotifier.NotifyLogger("Pointer Shoot", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
+                        loggerNotifier.NotifyLogger("Pointer Shoot", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
                             {
                                 {"PointerShootOrder", pointerShootOrder},
                                 {"ControllerName", gameObject.name}
                             });
-                            Shoot(hit);
-                        }
-                    }  else {
-                        CheckHoverEnd();
-                        if (dwellTimer > 0f) {
-                        dwellTimer = dwellTimer - 0.1f;
-                        }
-                    }                 
-                } else {
+                        Shoot(hit);
+                    }
+                }
+                else
+                {
                     CheckHoverEnd();
-                    if (dwellTimer > 0f) {
+                    if (dwellTimer > 0f)
+                    {
                         dwellTimer = dwellTimer - 0.1f;
                     }
                 }
-            } else {
-                    CheckHoverEnd();
-                    if (dwellTimer > 0f) {
-                        dwellTimer = dwellTimer - 0.1f;
-                    }
             }
+            else
+            {
+                CheckHoverEnd();
+                if (dwellTimer > 0f)
+                {
+                    dwellTimer = dwellTimer - 0.1f;
+                }
+            }
+        }
+        else
+        {
+            CheckHoverEnd();
+            if (dwellTimer > 0f)
+            {
+                dwellTimer = dwellTimer - 0.1f;
+            }
+        }
     }
 
-    private void CheckHoverEnd() {
-        if (hover != string.Empty) {
+    private void CheckHoverEnd()
+    {
+        if (hover != string.Empty)
+        {
             loggerNotifier.NotifyLogger("Pointer Hover End", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
             {
                 {"ControllerHover", hover},
@@ -194,7 +208,8 @@ private void PointerControl()
         if (correctHit) newColor = shootColor;
         else newColor = badShootColor;
 
-        if (!performancefeedback) {
+        if (!performancefeedback)
+        {
             // don't show badShootColor if performance feedback is disabled.
             newColor = shootColor;
         }
@@ -203,9 +218,9 @@ private void PointerControl()
     }
 
     // Ease function, Quart ratio.
-    private float EaseQuartOut (float k) 
+    private float EaseQuartOut(float k)
     {
-        return 1f - ((k -= 1f)*k*k*k);
+        return 1f - ((k -= 1f) * k * k * k);
     }
 
     // IEnumerator playing the shooting animation.
@@ -216,8 +231,8 @@ private void PointerControl()
 
         // Generation of a color gradient from the shooting color to the default color (idle).
         Gradient colorGradient = new Gradient();
-        GradientColorKey[] colorKey = new GradientColorKey[2]{new GradientColorKey(laser.startColor, 0f), new GradientColorKey(transitionColor, 1f)};
-        GradientAlphaKey[] alphaKey = new GradientAlphaKey[2]{new GradientAlphaKey(laser.startColor.a, 0f), new GradientAlphaKey(transitionColor.a, 1f)};
+        GradientColorKey[] colorKey = new GradientColorKey[2] { new GradientColorKey(laser.startColor, 0f), new GradientColorKey(transitionColor, 1f) };
+        GradientAlphaKey[] alphaKey = new GradientAlphaKey[2] { new GradientAlphaKey(laser.startColor.a, 0f), new GradientAlphaKey(transitionColor.a, 1f) };
         colorGradient.SetKeys(colorKey, alphaKey);
 
         // Playing of the animation. The laser and Cursor color and scale are interpolated following the easing curve from the shooting values (increased size, red/green color)

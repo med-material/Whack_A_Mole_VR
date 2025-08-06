@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class ViewportLogger : MonoBehaviour
@@ -22,16 +21,17 @@ public class ViewportLogger : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
-    public Dictionary<string, object> GetViewportData() {
+    public Dictionary<string, object> GetViewportData()
+    {
         Dictionary<string, object> data = new Dictionary<string, object>() {
             {"ViewportUpperMiddleX", upperMiddle.transform.position.x},
             {"ViewportUpperMiddleY", upperMiddle.transform.position.y},

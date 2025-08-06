@@ -4,22 +4,22 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [System.Serializable]
-public class CountDownEvent : UnityEvent<int> {}
+public class CountDownEvent : UnityEvent<int> { }
 
 [System.Serializable]
-public class TimeUpdateEvent : UnityEvent<float> {}
+public class TimeUpdateEvent : UnityEvent<float> { }
 
 [System.Serializable]
-public class StateUpdateEvent : UnityEvent<GameDirector.GameState> {}
+public class StateUpdateEvent : UnityEvent<GameDirector.GameState> { }
 
 [System.Serializable]
-public class SpeedUpdateEvent : UnityEvent<string, string> {}
+public class SpeedUpdateEvent : UnityEvent<string, string> { }
 
 [System.Serializable]
-public class ParticipantChangeEvent : UnityEvent<int> {}
+public class ParticipantChangeEvent : UnityEvent<int> { }
 
 [System.Serializable]
-public class TestChangeEvent : UnityEvent<int> {}
+public class TestChangeEvent : UnityEvent<int> { }
 
 /*
 Base class of the game. Launches and stops the game. Contains the different game's parameters.
@@ -27,7 +27,7 @@ Base class of the game. Launches and stops the game. Contains the different game
 
 public class GameDirector : MonoBehaviour
 {
-    public enum GameState {CountDown, Paused, Playing, Stopped}
+    public enum GameState { CountDown, Paused, Playing, Stopped }
 
     [SerializeField]
     public SoundManager soundManager;
@@ -117,7 +117,7 @@ public class GameDirector : MonoBehaviour
     {
         allPointers = FindObjectsOfType<Pointer>();
 
-        foreach (var pointer in allPointers)
+        foreach (Pointer pointer in allPointers)
         {
             pointer.ResetShootOrder();
         }
@@ -154,14 +154,18 @@ public class GameDirector : MonoBehaviour
         });
     }
 
-    public void CountDownGame() {
+    public void CountDownGame()
+    {
         if (gameState == GameState.Playing) return;
         UpdateState(GameState.CountDown);
 
-        if (patternManager.PatternLoaded()) {
+        if (patternManager.PatternLoaded())
+        {
             // Treatment Programs build their own countdowns.
             StartGame();
-        } else {
+        }
+        else
+        {
             StartCoroutine(WaitStartGame(gameWarmUpTime));
         }
     }
@@ -175,7 +179,7 @@ public class GameDirector : MonoBehaviour
         LoadDifficulty();
         modifiersManager.LogState();
 
-        if(patternManager.PlayPattern())
+        if (patternManager.PlayPattern())
         {
             gameDuration = patternManager.GetPatternDuration();
             loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>()
@@ -195,7 +199,7 @@ public class GameDirector : MonoBehaviour
             StartMoleTimer(gameWarmUpTime);
             StartCoroutine(WaitEndGame(gameDuration));
         }
-        
+
         UpdateState(GameState.Playing);
         if (gazeRecorder != null) gazeRecorder.StartRecording();
         loggerNotifier.NotifyLogger("Game Started", EventLogger.EventType.GameEvent, new Dictionary<string, object>()
@@ -209,8 +213,8 @@ public class GameDirector : MonoBehaviour
     {
         if (gameState == GameState.Stopped) return;
 
-        var props = profileManager.GetSelectedProfileProperties();
-        var metaLog = new Dictionary<string, object>()
+        Dictionary<string, string> props = profileManager.GetSelectedProfileProperties();
+        Dictionary<string, object> metaLog = new Dictionary<string, object>()
         {
             {"SessionDuration", gameDuration - currentGameTimeLeft},
             {"SessionState", "Interrupted"},
@@ -239,7 +243,7 @@ public class GameDirector : MonoBehaviour
     {
         if (gameState == GameState.Stopped) return;
 
-        if(gameState == GameState.Playing)
+        if (gameState == GameState.Playing)
         {
             patternManager.PauseUnpausePattern(true);
             UpdateState(GameState.Paused);
@@ -249,7 +253,7 @@ public class GameDirector : MonoBehaviour
                 {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
             });
         }
-        else if(gameState == GameState.Paused)
+        else if (gameState == GameState.Paused)
         {
             patternManager.PauseUnpausePattern(false);
             UpdateState(GameState.Playing);
@@ -293,7 +297,8 @@ public class GameDirector : MonoBehaviour
         testChanged.Invoke(testId);
     }
 
-    public int GetTest() {
+    public int GetTest()
+    {
         return testId;
     }
 
@@ -305,11 +310,11 @@ public class GameDirector : MonoBehaviour
         gameDifficulty = difficulty;
         LoadDifficulty();
 
-        loggerNotifier.NotifyLogger("Game Speed Changed To "+gameDifficulty, EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
+        loggerNotifier.NotifyLogger("Game Speed Changed To " + gameDifficulty, EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
             {
                 {"GameSpeed", gameDifficulty}
             });
-        
+
         speedUpdateEvent.Invoke("GameSpeed", gameDifficulty);
     }
 
@@ -352,10 +357,14 @@ public class GameDirector : MonoBehaviour
     private void SpawnMole(float lifeTime, bool fakeCoeff)
     {
         Mole.MoleType type = Mole.MoleType.Target;
-        if (fakeCoeff) {
-            if (((int)currentGameTimeLeft) % 2 == 0) {
+        if (fakeCoeff)
+        {
+            if (((int)currentGameTimeLeft) % 2 == 0)
+            {
                 type = Mole.MoleType.DistractorLeft;
-            } else {
+            }
+            else
+            {
                 type = Mole.MoleType.DistractorRight;
             }
         }
@@ -377,21 +386,25 @@ public class GameDirector : MonoBehaviour
     }
 
     // Waits a given time before starting the game
-    private IEnumerator WaitStartGame(float duration) {
+    private IEnumerator WaitStartGame(float duration)
+    {
         float currentCountDownLeft = duration;
         int currentCountDownLeftRounded = -1;
         int prevCount = -1;
 
-        while (currentCountDownLeft > -0.9) {
+        while (currentCountDownLeft > -0.9)
+        {
             prevCount = currentCountDownLeftRounded;
 
-            if (gameState == GameState.CountDown) {
+            if (gameState == GameState.CountDown)
+            {
                 currentCountDownLeft -= Time.deltaTime;
             }
-            currentCountDownLeftRounded = (int) Mathf.Ceil(currentCountDownLeft);
-            
-            if (currentCountDownLeftRounded != prevCount) {
-                var data = new Dictionary<string, object>()
+            currentCountDownLeftRounded = (int)Mathf.Ceil(currentCountDownLeft);
+
+            if (currentCountDownLeftRounded != prevCount)
+            {
+                Dictionary<string, object> data = new Dictionary<string, object>()
                 {
                     {"CountDown", currentCountDownLeftRounded}
                 };
@@ -459,9 +472,9 @@ public class GameDirector : MonoBehaviour
 
     private void OnGameEndTimeout()
     {
-        var props = profileManager.GetSelectedProfileProperties();
+        Dictionary<string, string> props = profileManager.GetSelectedProfileProperties();
 
-        var metaLog = new Dictionary<string, object>()
+        Dictionary<string, object> metaLog = new Dictionary<string, object>()
         {
             {"SessionDuration", gameDuration - currentGameTimeLeft},
             {"ProfileName", props["Name"]},
@@ -483,7 +496,8 @@ public class GameDirector : MonoBehaviour
         FinishGame();
     }
 
-    void OnApplicationQuit() {
+    void OnApplicationQuit()
+    {
         gazeRecorder.StopRecording();
     }
 

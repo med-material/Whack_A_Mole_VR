@@ -1,14 +1,13 @@
 using System.Collections.Generic;
-using UnityEngine;
 using System.Linq;
-using System;
+using UnityEngine;
 
 /*
 Class dedicated to play the pattern at runtime from the dictionary given by the pattern parser.
 Calls the PatternInterface to call the different elements and translate the dictionary into concrete actions;
 */
 
-public class PatternPlayer: MonoBehaviour
+public class PatternPlayer : MonoBehaviour
 {
     private Dictionary<float, List<Dictionary<string, string>>> pattern = new Dictionary<float, List<Dictionary<string, string>>>();
     private List<float> sortedKeys = new List<float>();
@@ -172,16 +171,17 @@ public class PatternPlayer: MonoBehaviour
 
         // If there are still moles to be shot, return.
         // If there are no more moles left, continue.
-        if (patternInterface.GetTargetsList().Count > 0) {
+        if (patternInterface.GetTargetsList().Count > 0)
+        {
             // Clear disabled and popped moles from targetsList
             //foreach (var mole in patternInterface.GetTargetsList().Where(mole => mole.Value.GetState() != Mole.States.Enabled))
             //{
             //    patternInterface.RemoveFromTargetsList(mole.Value.GetId());
             //}
 
-            var molesToRemove = new List<int>(); // assuming the id is of type int
+            List<int> molesToRemove = new List<int>(); // assuming the id is of type int
 
-            foreach (var mole in patternInterface.GetTargetsList())
+            foreach (KeyValuePair<int, Mole> mole in patternInterface.GetTargetsList())
             {
                 if (mole.Value.GetState() != Mole.States.Enabled)
                 {
@@ -189,17 +189,18 @@ public class PatternPlayer: MonoBehaviour
                 }
             }
 
-            foreach (var moleId in molesToRemove)
+            foreach (int moleId in molesToRemove)
             {
                 patternInterface.RemoveFromTargetsList(moleId);
             }
             return;
         }
 
-        var molesList = patternInterface.GetMolesList();
+        Dictionary<int, Mole> molesList = patternInterface.GetMolesList();
 
         // Clear all distractors.
-        foreach (var fake in molesList.Where(fake => fake.Value.IsFake() && fake.Value.GetState() == Mole.States.Enabled)) {
+        foreach (KeyValuePair<int, Mole> fake in molesList.Where(fake => fake.Value.IsFake() && fake.Value.GetState() == Mole.States.Enabled))
+        {
             fake.Value.Disable();
         }
 
@@ -210,18 +211,21 @@ public class PatternPlayer: MonoBehaviour
             // Otherwise, if the next action contains a mole, play the next step.
             // Otherwise, wait.
             //Debug.Log(action["FUNCTION"]);
-            if (action["FUNCTION"] == "MESSAGE") {
+            if (action["FUNCTION"] == "MESSAGE")
+            {
                 waitForDuration = GetWaitTime(playIndex);
                 patternInterface.ResetTargetsList();
                 return;
-            } else if (action["FUNCTION"] == "MOLE") {
+            }
+            else if (action["FUNCTION"] == "MOLE")
+            {
                 waitForDuration = -1f;
                 waitTimeLeft = 0f;
                 continue;
             }
         }
         PlayStep();
-    
+
         // Check if we are at the last Index of the Pattern and if all the moles have been hit or has expired
         if ((playIndex == sortedKeys.Count) || (playIndex == sortedKeys.Count - 1))
         {

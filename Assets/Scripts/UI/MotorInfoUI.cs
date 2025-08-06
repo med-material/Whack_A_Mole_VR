@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class MotorInfoUI : MonoBehaviour
@@ -23,7 +21,7 @@ public class MotorInfoUI : MonoBehaviour
     private Color defaultColor;
 
     [SerializeField]
-    private GameObject controllerRight; 
+    private GameObject controllerRight;
 
     [SerializeField]
     private GameObject controllerLeft;
@@ -37,7 +35,8 @@ public class MotorInfoUI : MonoBehaviour
     private Vector3 lastPosRight = Vector3.zero;
     private Vector3 lastPosLeft = Vector3.zero;
 
-    void OnEnable() {
+    void OnEnable()
+    {
     }
 
     // Start is called before the first frame update
@@ -53,21 +52,27 @@ public class MotorInfoUI : MonoBehaviour
     void Update()
     {
         /*Right Controller*/
-        if (controllerRight.transform.position != lastPosRight) {
+        if (controllerRight.transform.position != lastPosRight)
+        {
             textR = controllerRight.transform.position.x.ToString("0.00");
             colorR = defaultColor;
             lastPosRight = controllerRight.transform.position;
-        } else {
+        }
+        else
+        {
             textR = "OFF";
             colorR = errorColor;
         }
 
         /*Left Controller*/
-        if (controllerLeft.transform.position != lastPosLeft) {
+        if (controllerLeft.transform.position != lastPosLeft)
+        {
             textL = controllerLeft.transform.position.x.ToString("0.00");
             colorL = defaultColor;
             lastPosLeft = controllerLeft.transform.position;
-        } else {
+        }
+        else
+        {
             textL = "OFF";
             colorL = errorColor;
         }
@@ -80,7 +85,9 @@ public class MotorInfoUI : MonoBehaviour
             colorR = errorColor;
             colorError = errorColor;
             textError = "Controller Swapped !";
-        } else {
+        }
+        else
+        {
             colorError = Color.clear;
         }
 

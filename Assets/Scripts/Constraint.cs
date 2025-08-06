@@ -14,7 +14,7 @@ public class Constraint : MonoBehaviour
     [SerializeField]
     private Transform steamController;
 
-    [SerializeField]    
+    [SerializeField]
     private Transform cameraRig;
 
     private bool calibrated = false;
@@ -23,43 +23,44 @@ public class Constraint : MonoBehaviour
     {
         if ((steamCamera != null) && (cameraRig != null))
         {
-            if (!calibrated) {
-            /*ROTATION*/
-            // Get current head heading in scene (y-only, to avoid tilting the floor)
-            //float offsetAngle = steamCamera.rotation.eulerAngles.y;
+            if (!calibrated)
+            {
+                /*ROTATION*/
+                // Get current head heading in scene (y-only, to avoid tilting the floor)
+                //float offsetAngle = steamCamera.rotation.eulerAngles.y;
 
-            // Now rotate CameraRig in opposite direction to compensate
-            //cameraRig.Rotate(0f, -offsetAngle, 0f);
+                // Now rotate CameraRig in opposite direction to compensate
+                //cameraRig.Rotate(0f, -offsetAngle, 0f);
 
-            Valve.VR.OpenVR.Chaperone.ResetZeroPose(Valve.VR.ETrackingUniverseOrigin.TrackingUniverseSeated);
+                Valve.VR.OpenVR.Chaperone.ResetZeroPose(Valve.VR.ETrackingUniverseOrigin.TrackingUniverseSeated);
 
-            float offsetX = steamCamera.transform.position.x;
-            float offsetZ = steamCamera.transform.position.z;
-             /*POSITION*/
-             // calculate how much to add or subtract from the height, to arrive at y 1.6
-             float headHeight = steamCamera.transform.localPosition.y;
-            //float heightChange = desiredHeight - headHeight;
-            float xChange = transform.position.x - offsetX;
-            float zChange = transform.position.z - offsetZ;
+                float offsetX = steamCamera.transform.position.x;
+                float offsetZ = steamCamera.transform.position.z;
+                /*POSITION*/
+                // calculate how much to add or subtract from the height, to arrive at y 1.6
+                float headHeight = steamCamera.transform.localPosition.y;
+                //float heightChange = desiredHeight - headHeight;
+                float xChange = transform.position.x - offsetX;
+                float zChange = transform.position.z - offsetZ;
 
-            Debug.Log("transform.position.x: " + transform.position.x.ToString());
-            Debug.Log("offsetX: " + offsetX.ToString());
+                Debug.Log("transform.position.x: " + transform.position.x.ToString());
+                Debug.Log("offsetX: " + offsetX.ToString());
 
-            /*FIT HEIGHT TO MOTORSPACE*/
-            // instead of moving the motorspace, we should move players
-            // such that they have the correct height for using the motorspace.
+                /*FIT HEIGHT TO MOTORSPACE*/
+                // instead of moving the motorspace, we should move players
+                // such that they have the correct height for using the motorspace.
 
-            // A: determine current player controller height
-            float controllerHeight = steamController.position.y;
-            Debug.Log("SteamController Height: " + steamController.position.y.ToString());
-            // B: determine motorspace (bottom) height
-            float heightChange = desiredHeight - controllerHeight;
+                // A: determine current player controller height
+                float controllerHeight = steamController.position.y;
+                Debug.Log("SteamController Height: " + steamController.position.y.ToString());
+                // B: determine motorspace (bottom) height
+                float heightChange = desiredHeight - controllerHeight;
 
-             // C: offset player upwards, so the controller aligns with bottom of the motorspace.
+                // C: offset player upwards, so the controller aligns with bottom of the motorspace.
 
-             transform.position = new Vector3(xChange, heightChange, zChange);
-              Debug.Log("Seat recentered!");
-            calibrated = true;
+                transform.position = new Vector3(xChange, heightChange, zChange);
+                Debug.Log("Seat recentered!");
+                calibrated = true;
             }
         }
         else

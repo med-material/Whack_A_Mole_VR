@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -7,7 +6,7 @@ using UnityEngine;
 Class dedicated to collect datas from the LogTrackers (see LogTracker class).
 */
 
-public class TrackerHub: MonoBehaviour
+public class TrackerHub : MonoBehaviour
 {
     [SerializeField]
     private List<LogTracker> trackers = new List<LogTracker>();

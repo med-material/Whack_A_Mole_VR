@@ -1,8 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Text.RegularExpressions;
 
 /*
 Class managing the Profile creation part of the profile panel. Checks if the name and mail are correct, if they are,
@@ -36,8 +36,8 @@ public class ProfileCreationManager : MonoBehaviour
     private float durationLeft;
 
     // Email match pattern taken from https://www.codeproject.com/Articles/22777/Email-Address-Validation-Using-Regular-Expression
-    private static string matchEmailPattern = 
-	    @"^(([\w-]+\.)+[\w-]+|([a-zA-Z]{1}|[\w-]{2,}))@"
+    private static string matchEmailPattern =
+        @"^(([\w-]+\.)+[\w-]+|([a-zA-Z]{1}|[\w-]{2,}))@"
         + @"((([0-1]?[0-9]{1,2}|25[0-5]|2[0-4][0-9])\.([0-1]?
 		[0-9]{1,2}|25[0-5]|2[0-4][0-9])\."
         + @"([0-1]?[0-9]{1,2}|25[0-5]|2[0-4][0-9])\.([0-1]?
@@ -61,14 +61,14 @@ public class ProfileCreationManager : MonoBehaviour
         {
             UpdateFeedBackText("Missing e-mail address !", false);
             return;
-        } 
+        }
         if (!Regex.IsMatch(mailInputField.text, matchEmailPattern))
         {
             UpdateFeedBackText("Bad e-mail address !", false);
             return;
         }
 
-        if(panelManager.ProfileCreated(nameInputField.text, mailInputField.text, new Dictionary<string, string>()))
+        if (panelManager.ProfileCreated(nameInputField.text, mailInputField.text, new Dictionary<string, string>()))
         {
             nameInputField.text = null;
             mailInputField.text = null;
@@ -102,9 +102,9 @@ public class ProfileCreationManager : MonoBehaviour
     }
 
     // Quart function
-    private float EaseQuartOut (float k) 
+    private float EaseQuartOut(float k)
     {
-        return 1f - ((k -= 1f)*k*k*k);
+        return 1f - ((k -= 1f) * k * k * k);
     }
 
     // Plays the feedback text highlight effect. Played when the feedback text is changed.
@@ -114,8 +114,8 @@ public class ProfileCreationManager : MonoBehaviour
 
         // Generation of a color gradient from the current color plus mask to the end color.
         Gradient colorGradient = new Gradient();
-        GradientColorKey[] colorKey = new GradientColorKey[2]{new GradientColorKey(feedbackTextHighlightMask, 0f), new GradientColorKey(finalColor, 1f)};
-        GradientAlphaKey[] alphaKey = new GradientAlphaKey[2]{new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f)};
+        GradientColorKey[] colorKey = new GradientColorKey[2] { new GradientColorKey(feedbackTextHighlightMask, 0f), new GradientColorKey(finalColor, 1f) };
+        GradientAlphaKey[] alphaKey = new GradientAlphaKey[2] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f) };
         colorGradient.SetKeys(colorKey, alphaKey);
 
         // Playing of the animation. The text color is interpolated following the easing curve

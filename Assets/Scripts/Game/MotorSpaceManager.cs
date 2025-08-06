@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class MotorSpaceManager : MonoBehaviour
@@ -34,8 +32,9 @@ public class MotorSpaceManager : MonoBehaviour
 
     bool isMirror = false;
 
-    void Start() {
-        MotorSpaceInfo mRight = (MotorSpaceInfo) motorSpaceLarge.Clone();
+    void Start()
+    {
+        MotorSpaceInfo mRight = (MotorSpaceInfo)motorSpaceLarge.Clone();
         MotorSpaceRight.SetDefaultMotorSpace(mRight);
 
         MotorSpaceInfo mLeft = (MotorSpaceInfo)mRight.Clone();
@@ -43,8 +42,9 @@ public class MotorSpaceManager : MonoBehaviour
         MotorSpaceLeft.SetDefaultMotorSpace(mLeft);
     }
 
-    public void SetActiveMotorSpace(string newMotorSpace) {
-        motorspace = (MotorSpaceManager.ActiveMotorSpace)System.Enum.Parse( typeof(MotorSpaceManager.ActiveMotorSpace), newMotorSpace);
+    public void SetActiveMotorSpace(string newMotorSpace)
+    {
+        motorspace = (MotorSpaceManager.ActiveMotorSpace)System.Enum.Parse(typeof(MotorSpaceManager.ActiveMotorSpace), newMotorSpace);
 
         bool R = motorspace == ActiveMotorSpace.Right ? true : false;
         R = motorspace == ActiveMotorSpace.Both ? true : R;
@@ -63,26 +63,36 @@ public class MotorSpaceManager : MonoBehaviour
         MotorSpaceMirrorLeft.gameObject.SetActive(mirrorL);
     }
 
-    public void SetMotorRestriction(MotorRestriction restriction, float lower, float upper) {
-        var mirrorUpper = 1f - lower;
-        var mirrorLower = 1f - upper;
+    public void SetMotorRestriction(MotorRestriction restriction, float lower, float upper)
+    {
+        float mirrorUpper = 1f - lower;
+        float mirrorLower = 1f - upper;
 
-        if (motorspace == ActiveMotorSpace.Right) {
+        if (motorspace == ActiveMotorSpace.Right)
+        {
             MotorSpaceRight.SetMotorRestriction(restriction, lower, upper);
-        } else if (motorspace == ActiveMotorSpace.Left) {
+        }
+        else if (motorspace == ActiveMotorSpace.Left)
+        {
             MotorSpaceLeft.SetMotorRestriction(restriction, mirrorLower, mirrorUpper);
-        } else if (motorspace == ActiveMotorSpace.Both) {
+        }
+        else if (motorspace == ActiveMotorSpace.Both)
+        {
             MotorSpaceRight.SetMotorRestriction(restriction, lower, upper);
             MotorSpaceLeft.SetMotorRestriction(restriction, mirrorLower, mirrorUpper);
         }
 
 
 
-        if (isMirror) {
-            if (motorspace == ActiveMotorSpace.Right) {
+        if (isMirror)
+        {
+            if (motorspace == ActiveMotorSpace.Right)
+            {
                 LaserMapper MotorSpaceMirrorR = MotorSpaceMirrorRight.gameObject.GetComponent<LaserMapper>();
-               MotorSpaceMirrorR.SetMotorRestriction(restriction, mirrorLower, mirrorUpper);
-            } else if (motorspace == ActiveMotorSpace.Left) {
+                MotorSpaceMirrorR.SetMotorRestriction(restriction, mirrorLower, mirrorUpper);
+            }
+            else if (motorspace == ActiveMotorSpace.Left)
+            {
                 LaserMapper MotorSpaceMirrorL = MotorSpaceMirrorLeft.gameObject.GetComponent<LaserMapper>();
                 MotorSpaceMirrorL.SetMotorRestriction(restriction, lower, upper);
             }
@@ -90,70 +100,94 @@ public class MotorSpaceManager : MonoBehaviour
 
     }
 
-    public void SetMirror(bool setMirror) {
+    public void SetMirror(bool setMirror)
+    {
         isMirror = setMirror;
-        if (!isMirror) {
+        if (!isMirror)
+        {
             MotorSpaceMirrorLeft.gameObject.SetActive(false);
             MotorSpaceMirrorRight.gameObject.SetActive(false);
             return;
         }
-        if (motorspace == ActiveMotorSpace.Both) {
+        if (motorspace == ActiveMotorSpace.Both)
+        {
             return;
         }
 
-        if (motorspace == ActiveMotorSpace.Right) {
+        if (motorspace == ActiveMotorSpace.Right)
+        {
             MotorSpaceMirrorRight.gameObject.SetActive(true);
             MotorSpaceMirrorLeft.gameObject.SetActive(false);
             MotorSpaceMirrorRight.UpdateMotorSpaceToMirror(MotorSpaceRight);
-        } else if (motorspace == ActiveMotorSpace.Left) {
+        }
+        else if (motorspace == ActiveMotorSpace.Left)
+        {
             MotorSpaceMirrorLeft.gameObject.SetActive(true);
             MotorSpaceMirrorRight.gameObject.SetActive(false);
             MotorSpaceMirrorLeft.UpdateMotorSpaceToMirror(MotorSpaceLeft);
         }
-        
+
     }
 
-    public void CalibrateActiveMotorspace(bool calibrate) {
-        if (motorspace == ActiveMotorSpace.Right) {
+    public void CalibrateActiveMotorspace(bool calibrate)
+    {
+        if (motorspace == ActiveMotorSpace.Right)
+        {
             MotorSpaceRight.ToggleMotorCalibration(calibrate);
-        } else if (motorspace == ActiveMotorSpace.Left) {
+        }
+        else if (motorspace == ActiveMotorSpace.Left)
+        {
             MotorSpaceLeft.ToggleMotorCalibration(calibrate);
-        } else if (motorspace == ActiveMotorSpace.Both) {
+        }
+        else if (motorspace == ActiveMotorSpace.Both)
+        {
             MotorSpaceRight.ToggleMotorCalibration(calibrate);
             MotorSpaceLeft.ToggleMotorCalibration(calibrate);
         }
     }
 
-    public void ResetActiveMotorspace() {
-        if (motorspace == ActiveMotorSpace.Right) {
+    public void ResetActiveMotorspace()
+    {
+        if (motorspace == ActiveMotorSpace.Right)
+        {
             MotorSpaceRight.SetDefaultMotorSpace();
-        } else if (motorspace == ActiveMotorSpace.Left) {
+        }
+        else if (motorspace == ActiveMotorSpace.Left)
+        {
             MotorSpaceLeft.SetDefaultMotorSpace();
-        } else if (motorspace == ActiveMotorSpace.Both) {
+        }
+        else if (motorspace == ActiveMotorSpace.Both)
+        {
             MotorSpaceRight.SetDefaultMotorSpace();
             MotorSpaceLeft.SetDefaultMotorSpace();
         }
     }
 
-    public void SetActiveMotorSpaceMultiplier() {
-        if (motorspace == ActiveMotorSpace.Right) {
+    public void SetActiveMotorSpaceMultiplier()
+    {
+        if (motorspace == ActiveMotorSpace.Right)
+        {
 
         }
     }
 
-    public void SetMotorSpaceSmall() {
-        SetMotorSpace((MotorSpaceInfo) motorSpaceSmall.Clone());
+    public void SetMotorSpaceSmall()
+    {
+        SetMotorSpace((MotorSpaceInfo)motorSpaceSmall.Clone());
     }
 
-    public void SetMotorSpaceMedium() {
-        SetMotorSpace((MotorSpaceInfo) motorSpaceMedium.Clone());
+    public void SetMotorSpaceMedium()
+    {
+        SetMotorSpace((MotorSpaceInfo)motorSpaceMedium.Clone());
     }
 
-    public void SetMotorSpaceLarge() {
-        SetMotorSpace((MotorSpaceInfo) motorSpaceLarge.Clone());
+    public void SetMotorSpaceLarge()
+    {
+        SetMotorSpace((MotorSpaceInfo)motorSpaceLarge.Clone());
     }
 
-    public void SetMotorSpace(MotorSpaceInfo m) {
+    public void SetMotorSpace(MotorSpaceInfo m)
+    {
         bool mRState = MotorSpaceRight.gameObject.activeSelf;
         bool mLState = MotorSpaceLeft.gameObject.activeSelf;
 
@@ -161,7 +195,7 @@ public class MotorSpaceManager : MonoBehaviour
         MotorSpaceRight.SetMotorSpace(m);
         MotorSpaceRight.gameObject.SetActive(mRState);
 
-        MotorSpaceInfo m2 = (MotorSpaceInfo) m.Clone();
+        MotorSpaceInfo m2 = (MotorSpaceInfo)m.Clone();
         m2.pos = new Vector3(m2.pos.x * (-1), m2.pos.y, m2.pos.z);
 
         MotorSpaceLeft.gameObject.SetActive(true);
@@ -172,22 +206,28 @@ public class MotorSpaceManager : MonoBehaviour
         if (isMirror) MotorSpaceMirrorLeft.UpdateMotorSpaceToMirror(MotorSpaceLeft);
     }
 
-    public void OnMultiplierSliderChanged() {
-        var sliderValue = (float) motorSpaceSlider.value;
-        var highVal = (float) motorSpaceSlider.maxValue;
-        var lowVal = (float) motorSpaceSlider.minValue;
+    public void OnMultiplierSliderChanged()
+    {
+        float sliderValue = (float)motorSpaceSlider.value;
+        float highVal = (float)motorSpaceSlider.maxValue;
+        float lowVal = (float)motorSpaceSlider.minValue;
         float multiplier = (sliderValue - lowVal) / highVal;
 
-        if (motorspace == ActiveMotorSpace.Right) {
+        if (motorspace == ActiveMotorSpace.Right)
+        {
             MotorSpaceRight.SetMultiplier(multiplier);
             if (isMirror) MotorSpaceMirrorRight.UpdateMotorSpaceToMirror(MotorSpaceRight);
-        } else if (motorspace == ActiveMotorSpace.Left) {
+        }
+        else if (motorspace == ActiveMotorSpace.Left)
+        {
             MotorSpaceLeft.SetMultiplier(multiplier);
             if (isMirror) MotorSpaceMirrorLeft.UpdateMotorSpaceToMirror(MotorSpaceLeft);
-        } else if (motorspace == ActiveMotorSpace.Both) {
+        }
+        else if (motorspace == ActiveMotorSpace.Both)
+        {
             MotorSpaceRight.SetMultiplier(multiplier);
             MotorSpaceLeft.SetMultiplier(multiplier);
         }
-        
+
     }
 }

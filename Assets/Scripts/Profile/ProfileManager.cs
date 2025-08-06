@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 /*
@@ -26,7 +25,7 @@ public class ProfileManager : MonoBehaviour
     public List<Dictionary<string, string>> GetAllProfilesNameId()
     {
         List<Dictionary<string, string>> returnList = new List<Dictionary<string, string>>();
-        foreach(KeyValuePair<string, Dictionary<string, string>> pair in readWriter.GetAllProfiles())
+        foreach (KeyValuePair<string, Dictionary<string, string>> pair in readWriter.GetAllProfiles())
         {
             returnList.Add(new Dictionary<string, string>(){
                 {"Id", pair.Key},
@@ -48,7 +47,7 @@ public class ProfileManager : MonoBehaviour
     // Creates a new profile from its name, mail and properties.
     public string CreateProfile(string name, string mail, Dictionary<string, string> properties)
     {
-        return(readWriter.CreateProfile(name, mail, properties));
+        return (readWriter.CreateProfile(name, mail, properties));
     }
 
     // Adds a profile to the deletion queue.
@@ -90,7 +89,7 @@ public class ProfileManager : MonoBehaviour
     // Deletes from the disk all profiles present in the deletion buffer.
     private void DeleteProfilesFromDeletionBuffer()
     {
-        foreach(string profile in deletionBuffer)
+        foreach (string profile in deletionBuffer)
         {
             readWriter.DeleteProfile(profile);
         }

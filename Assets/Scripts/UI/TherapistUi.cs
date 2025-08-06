@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,7 +6,8 @@ using UnityEngine.UI;
 Main class of the therapist Ui. Controls the overall behavior of the UI and is used as an interface betweel the UI and the rest of the game.
 */
 
-public enum PanelChoice {
+public enum PanelChoice
+{
     TherapistPanel,
     ModifiersPanel,
     ProfilePanel
@@ -67,7 +67,8 @@ public class TherapistUi : MonoBehaviour
         warningPanel.UpdateWarningDisplay(display);
     }
 
-    public void OpenWarningMessagePanel(){
+    public void OpenWarningMessagePanel()
+    {
         warningSavingPanel.SetActive(true);
         buttonExit.enabled = false;
     }
@@ -100,7 +101,7 @@ public class TherapistUi : MonoBehaviour
     // If game state updated event is raised (by the gameDirector), updates the UI accordingly.
     public void OnGameDirectorStateUpdate(GameDirector.GameState newState)
     {
-        switch(newState)
+        switch (newState)
         {
             case GameDirector.GameState.CountDown:
                 GameCountDown();
@@ -109,7 +110,7 @@ public class TherapistUi : MonoBehaviour
                 GameStopped();
                 break;
             case GameDirector.GameState.Playing:
-                if(currentGameState == GameDirector.GameState.Paused)
+                if (currentGameState == GameDirector.GameState.Paused)
                 {
                     GamePausedUnpaused(false);
                 }
@@ -128,9 +129,9 @@ public class TherapistUi : MonoBehaviour
     // When game data updated event is raised, notifies the gameDirector and updates the UI.
     public void UpdateGameDatas(Dictionary<string, object> data)
     {
-        foreach(KeyValuePair<string, object> entry in data)
+        foreach (KeyValuePair<string, object> entry in data)
         {
-            switch(entry.Key)
+            switch (entry.Key)
             {
                 case "GameDuration":
                     gameDirector.SetGameDuration(float.Parse((string)entry.Value) * 60f);
@@ -157,9 +158,9 @@ public class TherapistUi : MonoBehaviour
     // When the game modifier updated event is raised, notifies the modifiersManager.
     public void SetGameModifier(Dictionary<string, object> data)
     {
-        foreach(KeyValuePair<string, object> entry in data)
+        foreach (KeyValuePair<string, object> entry in data)
         {
-            switch(entry.Key)
+            switch (entry.Key)
             {
                 case "MirrorEffect":
                     modifiersManager.SetMirrorEffect(bool.Parse((string)entry.Value));
@@ -177,7 +178,7 @@ public class TherapistUi : MonoBehaviour
                     break;
                 case "EyePatch":
                     ModifiersManager.EyePatch value = ModifiersManager.EyePatch.None;
-                    switch(entry.Value)
+                    switch (entry.Value)
                     {
                         case "Left":
                             value = ModifiersManager.EyePatch.Left;
@@ -194,7 +195,7 @@ public class TherapistUi : MonoBehaviour
                     break;
                 case "HideWall":
                     ModifiersManager.HideWall wallValue = ModifiersManager.HideWall.None;
-                    switch(entry.Value)
+                    switch (entry.Value)
                     {
                         case "Left":
                             wallValue = ModifiersManager.HideWall.Left;
@@ -254,11 +255,16 @@ public class TherapistUi : MonoBehaviour
     public void SwitchPanel(PanelChoice choice, string name = null)
     {
         if (name != null) profileName = name;
-        if (choice == PanelChoice.TherapistPanel) {
-         animationPlayer.Play("ToTherapist");
-        } else if (choice == PanelChoice.ProfilePanel) {
-         animationPlayer.Play("ToProfile");
-        } else if (choice == PanelChoice.ModifiersPanel) {
+        if (choice == PanelChoice.TherapistPanel)
+        {
+            animationPlayer.Play("ToTherapist");
+        }
+        else if (choice == PanelChoice.ProfilePanel)
+        {
+            animationPlayer.Play("ToProfile");
+        }
+        else if (choice == PanelChoice.ModifiersPanel)
+        {
             animationPlayer.Play("ToModifier");
         }
     }

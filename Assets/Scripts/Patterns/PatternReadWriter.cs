@@ -1,7 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using System.Collections.Generic;
 using System.IO;
+using UnityEngine;
 
 /*
 Class dedicated to load the pattern files. Caould be used to also save custom patterns created in-game

@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 /*
 Class managing the profile deletion button. Simply switches the button between the "delete profile" and "go back" modes.

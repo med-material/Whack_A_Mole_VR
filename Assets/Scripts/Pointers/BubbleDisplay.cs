@@ -1,17 +1,19 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
-public class EnterMotorSpaceInfo {
+public class EnterMotorSpaceInfo
+{
     public Side side; // side from which it entered/exited
     public bool enter = true; // enter (true), exit (false)
     public Vector3 motorLastPos; // motorspace last position
     public Vector3 wallLastPos; // wall space last position
 }
 
-public enum MotorAction {
+public enum MotorAction
+{
     Enter,
     Inside,
     Exit,
@@ -23,7 +25,7 @@ public class BubbleDisplay : MonoBehaviour
 {
     [SerializeField]
     private LoggingManager loggingManager;
-    
+
     [SerializeField]
     public SoundManager soundManager;
     // The parent we will follow in terms of object position.
@@ -97,9 +99,9 @@ public class BubbleDisplay : MonoBehaviour
     private Vector3 ownPosition;
 
     [System.Serializable]
-    public class EnterMotorSpaceEvent : UnityEvent<EnterMotorSpaceInfo> {}
+    public class EnterMotorSpaceEvent : UnityEvent<EnterMotorSpaceInfo> { }
     public EnterMotorSpaceEvent enterMotorStateEvent;
-    
+
     private MotorAction action = MotorAction.None;
 
     // Start is called before the first frame update
@@ -142,8 +144,10 @@ public class BubbleDisplay : MonoBehaviour
         prevPosY = newPosY;
         prevPosZ = newPosZ;
 
-        if (laserMapper.CoordinateWithinMotorSpace(newPos)) {
-            if (action == MotorAction.Outside || action == MotorAction.None) {
+        if (laserMapper.CoordinateWithinMotorSpace(newPos))
+        {
+            if (action == MotorAction.Outside || action == MotorAction.None)
+            {
                 action = MotorAction.Enter;
                 Debug.Log("Enter");
                 OutOfBoundContainer.SetActive(false);
@@ -154,9 +158,10 @@ public class BubbleDisplay : MonoBehaviour
                 bubbleSphere.SetActive(showBubble);
                 controllerModifierManager.SetControllerVisibility(true);
                 motorSpaceRender.color = motorActiveColor;
-                enterMotorStateEvent.Invoke(new EnterMotorSpaceInfo { 
-                    side =  laserMapper.NearestSide(newPos), 
-                    enter =  true,
+                enterMotorStateEvent.Invoke(new EnterMotorSpaceInfo
+                {
+                    side = laserMapper.NearestSide(newPos),
+                    enter = true,
                     motorLastPos = newPos,
                     wallLastPos = laserMapper.ConvertMotorSpaceToWallSpace(newPos),
                 });
@@ -165,14 +170,17 @@ public class BubbleDisplay : MonoBehaviour
                     {"Event", "Pointer Inside MotorSpace"},
                     {"EventType", "MotorSpaceEvent"},
                 });
-                if (soundManager != null) {
+                if (soundManager != null)
+                {
                     soundManager.PlaySound(gameObject, SoundManager.Sound.laserInMotorSpace);
                 }
                 action = MotorAction.Inside;
             }
-        } 
-        else {
-            if (action == MotorAction.Inside || action == MotorAction.None) {   
+        }
+        else
+        {
+            if (action == MotorAction.Inside || action == MotorAction.None)
+            {
                 Debug.Log("Exit");
                 action = MotorAction.Exit;
                 //laserMapper.ShowMotorspace(true);
@@ -182,9 +190,10 @@ public class BubbleDisplay : MonoBehaviour
                 bubbleSphere.SetActive(showBubble);
                 controllerModifierManager.SetControllerVisibility(true);
                 motorSpaceRender.color = motorDisabledColor;
-                enterMotorStateEvent.Invoke(new EnterMotorSpaceInfo { 
-                    side = laserMapper.NearestSide(newPos), 
-                    enter =  false,
+                enterMotorStateEvent.Invoke(new EnterMotorSpaceInfo
+                {
+                    side = laserMapper.NearestSide(newPos),
+                    enter = false,
                     motorLastPos = newPos,
                     wallLastPos = laserMapper.ConvertMotorSpaceToWallSpace(newPos),
                 });
@@ -193,7 +202,8 @@ public class BubbleDisplay : MonoBehaviour
                     {"Event", "Pointer Outside MotorSpace"},
                     {"EventType", "MotorSpaceEvent"},
                 });
-                if (soundManager != null) {
+                if (soundManager != null)
+                {
                     soundManager.PlaySound(gameObject, SoundManager.Sound.laserOutMotorSpace);
                 }
                 action = MotorAction.Outside;
@@ -201,11 +211,13 @@ public class BubbleDisplay : MonoBehaviour
         }
     }
 
-    public void Show(bool show) {
+    public void Show(bool show)
+    {
         showBubble = show;
     }
 
-    public void UpdateOwnPosition(Vector3 newPosition) {
+    public void UpdateOwnPosition(Vector3 newPosition)
+    {
         ownPosition = newPosition;
     }
 

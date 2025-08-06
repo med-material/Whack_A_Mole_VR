@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using Valve.VR;
 
 public class ControllerModifierManager : MonoBehaviour
@@ -20,19 +18,25 @@ public class ControllerModifierManager : MonoBehaviour
         controllerPointer = gameObject.GetComponent<Pointer>();
     }
 
-    public void SetEmbodiment(ModifiersManager.Embodiment e) {
+    public void SetEmbodiment(ModifiersManager.Embodiment e)
+    {
         embodiment = e;
 
-        if (embodiment == ModifiersManager.Embodiment.Hands) {
+        if (embodiment == ModifiersManager.Embodiment.Hands)
+        {
             SetControllerVisibility(true);
-        } else {
+        }
+        else
+        {
             // cursor only.
             SetControllerVisibility(false);
         }
     }
 
-    public void SetControllerVisibility(bool visible) {
-        if (embodiment == ModifiersManager.Embodiment.Cursor) {
+    public void SetControllerVisibility(bool visible)
+    {
+        if (embodiment == ModifiersManager.Embodiment.Cursor)
+        {
             // if hands embodiment is disabled, force visibility to false.
             visible = false;
         }
@@ -67,7 +71,7 @@ public class ControllerModifierManager : MonoBehaviour
     // On VR update, update the position and rotation so they are mirrored. The "mirroring plane" has the angle of the wall and the position of the head.
     private void OnPoseUpdated(bool obj)
     {
-        if(controllerPointer)
+        if (controllerPointer)
         {
             controllerPointer.PositionUpdated();
         }
@@ -87,7 +91,7 @@ public class ControllerModifierManager : MonoBehaviour
 
         // Reverts the rotation of the controller on the y and z axis, taking into account the rotation of the y axis of the wall.
         // The x axis osn't reverted otherwise the pointer will point down when pointing up.
-        Vector3 mirroredControllerAngle = new Vector3(controllerAngles.x, (2 * wallTransform.eulerAngles.y) - controllerAngles.y , -controllerAngles.z);
+        Vector3 mirroredControllerAngle = new Vector3(controllerAngles.x, (2 * wallTransform.eulerAngles.y) - controllerAngles.y, -controllerAngles.z);
 
         //Sets the rotation of the mirored controller
         transform.localRotation = Quaternion.Euler(mirroredControllerAngle);

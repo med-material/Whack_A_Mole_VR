@@ -1,8 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
+﻿using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 public class SliderValue : MonoBehaviour
 {
@@ -17,7 +15,7 @@ public class SliderValue : MonoBehaviour
     void Awake()
     {
         slider = GetComponent<Slider>();
-        slider.onValueChanged.AddListener(delegate {OnSliderValueChange ();});
+        slider.onValueChanged.AddListener(delegate { OnSliderValueChange(); });
         onValueChanged.Invoke(slider.value.ToString("0"));
     }
 
