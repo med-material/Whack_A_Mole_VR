@@ -15,8 +15,9 @@ Facilitates the creation of moles with different behaviours on specific events
 public abstract class Mole : MonoBehaviour
 {
     public enum MolePopAnswer { Ok, Fake, Expired, Disabled, Paused }
+    public enum MoleCategory { Valid, Distractor }
+    public enum MoleType { Target, DistractorLeft, DistractorRight, PalmarGrasp, PinchGrasp, WristFlexion, WristExtension }
 
-    public enum MoleType { Target, DistractorLeft, DistractorRight }
     public bool defaultVisibility = false;
 
     // The states may be reduced to 3 - 4 (by removing Popping, enabling...), however this could reduce the control over the Mole
@@ -32,8 +33,6 @@ public abstract class Mole : MonoBehaviour
     [SerializeField]
     private float disableCooldown = 3f;
 
-    protected States state = States.Disabled;
-    protected MoleType moleType = MoleType.Target;
 
     private class StateUpdateEvent : UnityEvent<bool, Mole> { };
     private StateUpdateEvent stateUpdateEvent = new StateUpdateEvent();
@@ -50,9 +49,30 @@ public abstract class Mole : MonoBehaviour
     private float disabledTimeLeft = 0f;
     private bool isOnDisabledCoolDown = false;
     private bool performanceFeedback = true;
+    private MoleType _moleType = MoleType.Target;
+
+    protected States state = States.Disabled;
+    protected MoleCategory moleCategory { get; private set; } // Can't be set directly, only through moleType setter.
+    protected MoleType moleType
+    {
+        get => _moleType;
+        set
+        {
+            _moleType = value;
+            if (value == MoleType.DistractorLeft || value == MoleType.DistractorRight)
+            {
+                moleCategory = MoleCategory.Distractor;
+            }
+            else
+            {
+                moleCategory = MoleCategory.Valid;
+            }
+        }
+    }
 
     private void Awake()
     {
+        moleType = MoleType.Target;
         SetVisibility(defaultVisibility);
     }
 
@@ -131,7 +151,7 @@ public abstract class Mole : MonoBehaviour
     public bool IsFake()
     {
         bool isFake = true;
-        if (moleType == Mole.MoleType.Target)
+        if (moleCategory == MoleCategory.Valid)
         {
             isFake = false;
         }
@@ -161,7 +181,7 @@ public abstract class Mole : MonoBehaviour
     public void Disable()
     {
         Debug.Log(state);
-        if (state == States.Enabled && moleType == MoleType.Target)
+        if (state == States.Enabled && moleCategory == MoleCategory.Valid)
         {
             ChangeState(States.Missed);
         }
@@ -209,7 +229,7 @@ public abstract class Mole : MonoBehaviour
             return MolePopAnswer.Expired;
         }
 
-        if (moleType == MoleType.Target)
+        if (moleCategory == MoleCategory.Valid)
         {
             loggerNotifier.NotifyLogger("Mole Hit", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
             {
@@ -264,6 +284,7 @@ public abstract class Mole : MonoBehaviour
     protected virtual void PlayReset() { }
     protected virtual void PlayHoverEnter() { }
     protected virtual void PlayHoverLeave() { }
+    public virtual void SetLoadingValue(float percent) { }
 
     /*
     Transition states. Need to be called at the end of its override in the derived class to
@@ -339,7 +360,7 @@ public abstract class Mole : MonoBehaviour
                 break;
             case States.Enabling:
 
-                if (moleType == MoleType.Target) loggerNotifier.NotifyLogger("Mole Spawned", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
+                if (moleCategory == MoleCategory.Valid) loggerNotifier.NotifyLogger("Mole Spawned", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
                             {
                                 {"MoleType", System.Enum.GetName(typeof(MoleType), moleType)}
                             });
@@ -348,13 +369,13 @@ public abstract class Mole : MonoBehaviour
                                 {"MoleType", System.Enum.GetName(typeof(MoleType), moleType)}
                             });
 
-                if (moleType == MoleType.Target) stateUpdateEvent.Invoke(true, this);
+                if (moleCategory == MoleCategory.Valid) stateUpdateEvent.Invoke(true, this);
 
                 timer = StartCoroutine(StartActivatedTimer(lifeTime));
                 PlayEnabling();
                 break;
             case States.Disabling:
-                if (moleType == MoleType.Target) loggerNotifier.NotifyLogger("Mole Expired", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
+                if (moleCategory == MoleCategory.Valid) loggerNotifier.NotifyLogger("Mole Expired", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
                             {
                                 {"MoleActivatedDuration", lifeTime},
                                 {"MoleType", System.Enum.GetName(typeof(MoleType), moleType)}
@@ -365,7 +386,7 @@ public abstract class Mole : MonoBehaviour
                                 {"MoleType", System.Enum.GetName(typeof(MoleType), moleType)}
                             });
 
-                if (moleType == MoleType.Target) stateUpdateEvent.Invoke(false, this);
+                if (moleCategory == MoleCategory.Valid) stateUpdateEvent.Invoke(false, this);
 
                 PlayDisabling();
                 break;
