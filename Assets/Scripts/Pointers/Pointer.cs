@@ -56,6 +56,9 @@ public abstract class Pointer : MonoBehaviour
     [SerializeField]
     protected float shotCooldown;
 
+    [SerializeField]
+    protected float dwellTime = 2f;
+
     protected LineRenderer laser;
 
     protected bool performancefeedback = true;
@@ -67,6 +70,7 @@ public abstract class Pointer : MonoBehaviour
     private Mole hoveredMole;
     protected bool active = false;
     protected LoggerNotifier loggerNotifier;
+    protected float dwellStartTimer = 0f;
 
     [SerializeField]
     public SoundManager soundManager;
@@ -90,15 +94,11 @@ public abstract class Pointer : MonoBehaviour
     public class OnPointerShoot : UnityEvent { }
     public OnPointerShoot onPointerShoot;
 
-    // On Init, gets the cursor object if there is one. Also connects the PositionUpdated function to the VR update event.
-    public void Init()
-    {
-        gameObject.GetComponent<SteamVR_Behaviour_Pose>().onTransformUpdated.AddListener(delegate { PositionUpdated(); });
-    }
-
     // On start, inits the logger notifier.
     void Start()
     {
+        gameObject.GetComponent<SteamVR_Behaviour_Pose>().onTransformUpdated.AddListener(delegate { PositionUpdated(); });
+
         loggerNotifier = new LoggerNotifier(eventsHeadersDefaults: new Dictionary<string, string>(){
             {"HitPositionWorldX", "NULL"},
             {"HitPositionWorldY", "NULL"},
@@ -162,7 +162,6 @@ public abstract class Pointer : MonoBehaviour
     public void Enable()
     {
         if (active) return;
-
         if (cursor) cursor.Enable();
 
         //if (laser) laser.enabled = true;
@@ -175,7 +174,6 @@ public abstract class Pointer : MonoBehaviour
     public void Disable()
     {
         if (!active) return;
-
         if (cursor) cursor.Disable();
 
         //if (laser) laser.enabled = false;
@@ -234,6 +232,7 @@ public abstract class Pointer : MonoBehaviour
                     {
                         {"PointerShootOrder", pointerShootOrder}
                     });
+                    Debug.Log("Pointer Shoot !!!!");
                     Shoot(hit);
                 }
             }
@@ -257,6 +256,7 @@ public abstract class Pointer : MonoBehaviour
                     hoveredMole.OnHoverLeave();
                 }
                 hoveredMole = mole;
+                dwellStartTimer = Time.time;
                 hoveredMole.OnHoverEnter();
             }
         }
