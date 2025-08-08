@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 /*
 An implementation of the Mole abstract class. Defines different parameters to modify and
@@ -56,6 +57,23 @@ public class DiskMole : Mole
     [SerializeField]
     private ParticleSystem popVisual;
 
+    [SerializeField]
+    private Image loadingImg;
+
+    [SerializeField]
+
+    private GameObject gestureInfoContainer;
+
+    [SerializeField]
+    private GestureInfo[] gestureInfos;
+
+    [System.Serializable]
+    public class GestureInfo
+    {
+        public MoleType key;
+        public GameObject value;
+    }
+
     private Shader opaqueShader;
     private Shader glowShader;
     private Material meshMaterial;
@@ -73,14 +91,29 @@ public class DiskMole : Mole
         audioSource = gameObject.GetComponent<AudioSource>();
         PlayAnimation("EnableDisable");
         meshMaterial.color = disabledColor;
-
+        showGestureInfo(false);
         base.Start();
     }
 
-    //public void EndPlayPop()
-    //{
-    //    base.PlayPop();
-    //}
+    private void updateGestureInfo()
+    {
+        foreach (GestureInfo gestureInfo in gestureInfos)
+        {
+            gestureInfo.value.SetActive(gestureInfo.key == moleType);
+        }
+    }
+
+    private void showGestureInfo(bool status) // TODO: make this more elegant!
+    {
+        if (moleType == MoleType.PalmarGrasp || moleType == MoleType.PinchGrasp || moleType == MoleType.WristExtension || moleType == MoleType.WristFlexion)
+        {
+            gestureInfoContainer.SetActive(status);
+        }
+        else
+        {
+            gestureInfoContainer.SetActive(false);
+        }
+    }
 
     /*
     Override of the event functions of the base class.
@@ -88,10 +121,13 @@ public class DiskMole : Mole
 
     protected override void PlayEnabling()
     {
+        showGestureInfo(false);
+        updateGestureInfo();
+        SetLoadingValue(0);
         PlaySound(enableSound);
         PlayAnimation("EnableDisable");
 
-        if (moleType == Mole.MoleType.Target)
+        if (moleCategory == MoleCategory.Valid)
         {
             meshMaterial.color = enabledColor;
             meshMaterial.mainTexture = textureEnabled;
@@ -111,6 +147,8 @@ public class DiskMole : Mole
 
     protected override void PlayDisabling()
     {
+        showGestureInfo(false);
+        SetLoadingValue(0);
         PlaySound(enableSound);
         PlayAnimation("EnableDisable"); // Don't show any feedback to users when an incorrect moles expires
         meshMaterial.color = disabledColor;
@@ -120,6 +158,9 @@ public class DiskMole : Mole
 
     protected override void PlayMissed()
     {
+        showGestureInfo(false);
+        SetLoadingValue(0);
+
         meshMaterial.color = disabledColor;
         meshMaterial.mainTexture = textureDisabled;
         if (ShouldPerformanceFeedback())
@@ -131,7 +172,10 @@ public class DiskMole : Mole
 
     protected override void PlayHoverEnter()
     {
-        if (moleType == Mole.MoleType.Target)
+        showGestureInfo(true);
+        SetLoadingValue(0);
+
+        if (moleCategory == MoleCategory.Valid)
         {
             meshMaterial.color = hoverColor;
         }
@@ -143,7 +187,10 @@ public class DiskMole : Mole
 
     protected override void PlayHoverLeave()
     {
-        if (moleType == Mole.MoleType.Target)
+        showGestureInfo(false);
+        SetLoadingValue(0);
+
+        if (moleCategory == MoleCategory.Valid)
         {
             meshMaterial.color = enabledColor;
         }
@@ -155,10 +202,12 @@ public class DiskMole : Mole
 
     protected override void PlayPop()
     {
-        Debug.Log(ShouldPerformanceFeedback());
+        showGestureInfo(false);
+        SetLoadingValue(0);
+
         if (ShouldPerformanceFeedback())
         {
-            if (moleType == Mole.MoleType.Target)
+            if (moleCategory == MoleCategory.Valid)
             {
                 PlayAnimation("PopCorrectMole");  // Show positive feedback to users that shoot a correct moles, to make it clear this is a success
                 popVisual.startColor = enabledColor;
@@ -177,9 +226,16 @@ public class DiskMole : Mole
 
     protected override void PlayReset()
     {
+        showGestureInfo(false);
+        SetLoadingValue(0);
         PlayAnimation("EnableDisable");
         meshMaterial.color = disabledColor;
         meshMaterial.mainTexture = textureDisabled;
+    }
+
+    public override void SetLoadingValue(float percent)
+    {
+        if (loadingImg != null) loadingImg.fillAmount = percent;
     }
 
     // Plays a sound.

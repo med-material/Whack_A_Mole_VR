@@ -37,13 +37,13 @@ public class PointerTypeSelector : MonoBehaviour
     public void ActivatePointer(ModifiersManager.PointerType pointerType)
     {
         // Disable all pointers before activating the selected one
-        pointerList.Values.ToList().ForEach(pointer => pointer.enabled = false);
+        pointerList.Values.ToList().ForEach(pointer => { pointer.enabled = false; pointer.Disable(); });
 
         // Enable the selected pointer
         if (pointerList.TryGetValue(pointerType, out Pointer pointer))
         {
             pointer.enabled = true;
-            pointer.Init();
+            pointer.Enable();
             behaviour_Pose.inputSource = pointer.Controller; // Change the tracking device for the pointer
         }
         else
