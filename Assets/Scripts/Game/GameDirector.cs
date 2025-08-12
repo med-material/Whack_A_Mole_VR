@@ -356,7 +356,7 @@ public class GameDirector : MonoBehaviour
 
     private void SpawnMole(float lifeTime, bool fakeCoeff)
     {
-        Mole.MoleType type = Mole.MoleType.Target;
+        Mole.MoleType type = Mole.MoleType.SimpleTarget;
         if (fakeCoeff)
         {
             if (((int)currentGameTimeLeft) % 2 == 0)
