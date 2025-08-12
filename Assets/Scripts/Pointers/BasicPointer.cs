@@ -24,8 +24,6 @@ public class BasicPointer : Pointer
 
     private float shootTimeLeft;
     private float totalShootTime;
-    private float dwellTime = 3f;
-    private float dwellTimer = 0f;
     private delegate void Del();
     private string hover = "";
     public Vector3 CalculateDirection()
@@ -130,8 +128,8 @@ public class BasicPointer : Pointer
                             });
                     }
 
-                    dwellTimer = dwellTimer + 0.1f;
-                    if (dwellTimer > dwellTime)
+                    mole.SetLoadingValue((Time.time - dwellStartTimer) / dwellTime);
+                    if ((Time.time - dwellStartTimer) > dwellTime)
                     {
                         pointerShootOrder++;
                         loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>(){
@@ -162,28 +160,16 @@ public class BasicPointer : Pointer
                 else
                 {
                     CheckHoverEnd();
-                    if (dwellTimer > 0f)
-                    {
-                        dwellTimer = dwellTimer - 0.1f;
-                    }
                 }
             }
             else
             {
                 CheckHoverEnd();
-                if (dwellTimer > 0f)
-                {
-                    dwellTimer = dwellTimer - 0.1f;
-                }
             }
         }
         else
         {
             CheckHoverEnd();
-            if (dwellTimer > 0f)
-            {
-                dwellTimer = dwellTimer - 0.1f;
-            }
         }
     }
 
