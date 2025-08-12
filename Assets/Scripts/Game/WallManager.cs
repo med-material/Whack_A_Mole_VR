@@ -189,7 +189,7 @@ public class WallManager : MonoBehaviour
         if (!wallVisible)
         {
             wallGenerator.SetMeshMaterial(invisibleMaterial);
-            greyBackground.enabled = true;
+            //greyBackground.enabled = true; // No longer needed, keep it commented out just in case
         }
         else
         {
