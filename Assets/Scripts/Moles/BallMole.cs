@@ -61,7 +61,7 @@ public class BallMole : Mole
     {
         SwitchShader(false);
 
-        if (moleType == Mole.MoleType.Target)
+        if (moleCategory == MoleOutcome.Valid)
         {
             ChangeColor(enabledColor);
         }
@@ -86,7 +86,7 @@ public class BallMole : Mole
     protected override void PlayHoverEnter()
     {
         SwitchShader(true);
-        if (moleType == Mole.MoleType.Target)
+        if (moleCategory == MoleOutcome.Valid)
         {
             ChangeColor(hoverColor);
         }
@@ -99,7 +99,7 @@ public class BallMole : Mole
     protected override void PlayHoverLeave()
     {
         SwitchShader(false);
-        if (moleType == Mole.MoleType.Target)
+        if (moleCategory == MoleOutcome.Valid)
         {
             ChangeColor(enabledColor);
         }
@@ -112,7 +112,7 @@ public class BallMole : Mole
     protected override void PlayPop()
     {
         SwitchShader(true);
-        if (moleType == Mole.MoleType.Target)
+        if (moleCategory == MoleOutcome.Valid)
         {
             ChangeColor(enabledColor);
         }

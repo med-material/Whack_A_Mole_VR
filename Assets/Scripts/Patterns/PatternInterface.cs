@@ -110,12 +110,19 @@ public class PatternInterface : MonoBehaviour
                     break;
 
                 case "MOLE":
-                    Debug.Log(action["X"] + action["Y"]);
-                    SetMole(action["X"], action["Y"], action["LIFETIME"]);
+                    Mole.MoleType moleType =
+                        (action.ContainsKey("TYPE") && System.Enum.TryParse(action["TYPE"], out Mole.MoleType parsedType)) ?
+                        parsedType : Mole.MoleType.SimpleTarget;
+
+                    SetMole(action["X"], action["Y"], action["LIFETIME"], moleType);
                     break;
 
                 case "DISTRACTOR":
-                    SetDistractor(action["X"], action["Y"], action["LIFETIME"], action["TYPE"]);
+                    Mole.MoleType distractorType =
+                        (action.ContainsKey("TYPE") && System.Enum.TryParse(action["TYPE"], out Mole.MoleType parsedMoleType)) ?
+                        parsedMoleType : Mole.MoleType.DistractorLeft;
+
+                    SetMole(action["X"], action["Y"], action["LIFETIME"], distractorType);
                     break;
 
                 case "DIFFICULTY":
@@ -222,21 +229,12 @@ public class PatternInterface : MonoBehaviour
     }
 
     // Spawns a Mole
-    private void SetMole(string xIndex, string yIndex, string lifeTime)
+    private void SetMole(string xIndex, string yIndex, string lifeTime, Mole.MoleType moleType)
     {
         int moleId = ((int.Parse(xIndex)) * 100) + (int.Parse(yIndex));
-        Mole mole = wallManager.ActivateMole(moleId, ParseFloat(lifeTime), gameDirector.GetMoleExpiringDuration(), Mole.MoleType.Target);
-        molesList[moleId] = mole;
-        AddToTargetsList(moleId, mole);
-    }
-
-    // Spawns a distractor (fake Mole)
-    private void SetDistractor(string xIndex, string yIndex, string lifeTime, string type)
-    {
-        int moleId = ((int.Parse(xIndex)) * 100) + (int.Parse(yIndex));
-        Mole.MoleType moleType = (Mole.MoleType)System.Enum.Parse(typeof(Mole.MoleType), type);
         Mole mole = wallManager.ActivateMole(moleId, ParseFloat(lifeTime), gameDirector.GetMoleExpiringDuration(), moleType);
         molesList[moleId] = mole;
+        if (mole.moleCategory == Mole.MoleOutcome.Valid) AddToTargetsList(moleId, mole);
     }
 
     // Updates the game difficulty
