@@ -23,8 +23,6 @@ public class EMGPointer : Pointer
 
     private float shootTimeLeft;
     private float totalShootTime;
-    private float dwellTime = 6f;
-    private float dwellTimer = 0f;
     private delegate void Del();
     private string hover = "";
     public Vector3 CalculateDirection()
@@ -129,8 +127,8 @@ public class EMGPointer : Pointer
                             });
                     }
 
-                    dwellTimer = dwellTimer + 0.1f;
-                    if (dwellTimer > dwellTime)
+                    mole.SetLoadingValue((Time.time - dwellStartTimer) / dwellTime);
+                    if ((Time.time - dwellStartTimer) > dwellTime)
                     {
                         pointerShootOrder++;
                         loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>(){
@@ -161,28 +159,16 @@ public class EMGPointer : Pointer
                 else
                 {
                     CheckHoverEnd();
-                    if (dwellTimer > 0f)
-                    {
-                        dwellTimer = dwellTimer - 0.1f;
-                    }
                 }
             }
             else
             {
                 CheckHoverEnd();
-                if (dwellTimer > 0f)
-                {
-                    dwellTimer = dwellTimer - 0.1f;
-                }
             }
         }
         else
         {
             CheckHoverEnd();
-            if (dwellTimer > 0f)
-            {
-                dwellTimer = dwellTimer - 0.1f;
-            }
         }
     }
 
