@@ -197,6 +197,10 @@ public class PatternInterface : MonoBehaviour
         {
             wallManager.UpdateWallSize(newWallSizeZ: ParseFloat(tempValue));
         }
+        if (action.TryGetValue("POSZ", out tempValue))
+        {
+            wallManager.UpdateWallPosition(posZ: ParseFloat(tempValue));
+        }
         if (action.TryGetValue("CURVEX", out tempValue))
         {
             wallManager.UpdateWallCurveRatio(newCurveRatioX: ParseFloat(tempValue));
