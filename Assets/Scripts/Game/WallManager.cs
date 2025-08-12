@@ -339,6 +339,15 @@ public class WallManager : MonoBehaviour
         // UpdateWall();
     }
 
+    public void UpdateWallPosition(float? posX = null, float? posY = null, float? posZ = null)
+    {
+        transform.transform.position = new Vector3(
+            posX.HasValue ? posX.Value : transform.position.x,
+            posY.HasValue ? posY.Value : transform.position.y,
+            posZ.HasValue ? posZ.Value : transform.position.z
+        );
+    }
+
     public void UpdateWallCurveRatio(float newCurveRatioX = -1, float newCurveRatioY = -1)
     {
         if (newCurveRatioX >= 0 && newCurveRatioX <= 1) xCurveRatio = newCurveRatioX;
