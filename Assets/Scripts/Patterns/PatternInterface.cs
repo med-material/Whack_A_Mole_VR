@@ -236,7 +236,7 @@ public class PatternInterface : MonoBehaviour
     private void SetMole(string xIndex, string yIndex, string lifeTime, Mole.MoleType moleType)
     {
         int moleId = ((int.Parse(xIndex)) * 100) + (int.Parse(yIndex));
-        Mole mole = wallManager.ActivateMole(moleId, ParseFloat(lifeTime), gameDirector.GetMoleExpiringDuration(), moleType);
+        Mole mole = wallManager.CreateMole(moleId, ParseFloat(lifeTime), gameDirector.GetMoleExpiringDuration(), moleType);
         molesList[moleId] = mole;
         if (mole.moleCategory == Mole.MoleOutcome.Valid) AddToTargetsList(moleId, mole);
     }
