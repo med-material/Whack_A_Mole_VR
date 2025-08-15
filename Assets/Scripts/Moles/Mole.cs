@@ -298,6 +298,12 @@ public abstract class Mole : MonoBehaviour
 
     protected virtual void PlayMissed()
     {
+        loggerNotifier.NotifyLogger("Mole Missed", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
+                                            {
+                                                {"MoleActivatedDuration", lifeTime},
+                                                {"MoleType", System.Enum.GetName(typeof(MoleType), moleType)}
+                                            });
+
         ChangeState(States.Disabling);
     }
 
@@ -394,11 +400,6 @@ public abstract class Mole : MonoBehaviour
                 StartCoroutine(StartExpiringTimer(expiringTime));
                 break;
             case States.Missed:
-                loggerNotifier.NotifyLogger("Mole Missed", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
-                                            {
-                                                {"MoleActivatedDuration", lifeTime},
-                                                {"MoleType", System.Enum.GetName(typeof(MoleType), moleType)}
-                                            });
                 PlayMissed();
                 break;
         }
