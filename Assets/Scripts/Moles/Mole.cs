@@ -383,22 +383,21 @@ public abstract class Mole : MonoBehaviour
     {
         switch (state)
         {
-            case States.Disabled:
-                PlayDisabled();
-                isOnDisabledCoolDown = true;
-                StartCoroutine(StartDisabledCooldownTimer(disableCooldown));
+            case States.Enabling:
+                PlayEnabling();
                 break;
             case States.Enabled:
                 PlayEnabled();
                 break;
 
-            case States.Enabling:
-                PlayEnabling();
-                break;
             case States.Disabling:
                 PlayDisabling();
                 break;
-
+            case States.Disabled:
+                PlayEnabling();
+                isOnDisabledCoolDown = true;
+                StartCoroutine(StartDisabledCooldownTimer(disableCooldown));
+                break;
 
             case States.Popping:
                 PlayPopping();
