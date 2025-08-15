@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 
 /*
 Mole abstract class. Contains the main behaviour of the mole and calls actions to be played on
@@ -41,12 +40,7 @@ public abstract class Mole : MonoBehaviour
     **/
     public enum States { Enabling, Enabled, Popping, Popped, Missed, Disabling, Expired, Disabled }
 
-    [SerializeField]
-    private float disableCooldown = 3f;
-
-
-    private class StateUpdateEvent : UnityEvent<bool, Mole> { };
-    private StateUpdateEvent stateUpdateEvent = new StateUpdateEvent();
+    private TargetSpawner parentTargetSpawner;
     private Coroutine timer;
     private float lifeTime;
     private float expiringTime;
@@ -57,7 +51,6 @@ public abstract class Mole : MonoBehaviour
     private bool isPaused = false;
     private Vector2 normalizedIndex;
     private LoggerNotifier loggerNotifier;
-    private float disabledTimeLeft = 0f;
     private bool isOnDisabledCoolDown = false;
     private bool performanceFeedback = true;
     private MoleType _moleType = MoleType.SimpleTarget;
@@ -80,16 +73,30 @@ public abstract class Mole : MonoBehaviour
             }
         }
     }
+    protected bool IsInit = false;
+
+    public void Init(TargetSpawner parentSpawner) // Needed when the Mole is instantiated, to avoid calling a method before the Awake and Start methods are called.
+    {
+        if (IsInit) return;
+
+        Awake();
+        Start();
+
+        parentTargetSpawner = parentSpawner;
+        IsInit = true;
+    }
 
     private void Awake()
     {
+        if (IsInit) return;
+
         moleType = MoleType.SimpleTarget;
         SetVisibility(defaultVisibility);
     }
 
     protected virtual void Start()
     {
-        Reset();
+        if (IsInit) return;
 
         // Initialization of the LoggerNotifier. Here we will only raise Event, and we will use a function to pass and update
         // certain parameters values every time we raise an event (UpdateLogNotifierGeneralValues). We don't set any starting values.
@@ -113,6 +120,11 @@ public abstract class Mole : MonoBehaviour
             {"MoleSurfaceHitLocationX", "NULL"},
             {"MoleSurfaceHitLocationY", "NULL"}
         });
+    }
+
+    private void OnDestroy()
+    {
+        StopCoroutine(timer);
     }
 
     public void SetVisibility(bool isVisible)
@@ -212,15 +224,6 @@ public abstract class Mole : MonoBehaviour
         performanceFeedback = perf;
     }
 
-    public void Reset()
-    {
-        StopAllCoroutines();
-        isOnDisabledCoolDown = false;
-        isPaused = false;
-        state = States.Disabled;
-        PlayReset();
-    }
-
     // Pops the Mole. Returns an answer correspondind to its poping state.
     public MolePopAnswer Pop(Vector3 hitPoint)
     {
@@ -285,15 +288,8 @@ public abstract class Mole : MonoBehaviour
         PlayHoverLeave();
     }
 
-
-    public UnityEvent<bool, Mole> GetUpdateEvent()
-    {
-        return stateUpdateEvent;
-    }
-
     protected virtual void PlayEnabled() { }
     protected virtual void PlayDisabled() { }
-    protected virtual void PlayReset() { }
     protected virtual void PlayHoverEnter() { }
     protected virtual void PlayHoverLeave() { }
     public virtual void SetLoadingValue(float percent) { }
@@ -394,15 +390,14 @@ public abstract class Mole : MonoBehaviour
                 PlayDisabling();
                 break;
             case States.Disabled:
-                PlayEnabling();
-                isOnDisabledCoolDown = true;
-                StartCoroutine(StartDisabledCooldownTimer(disableCooldown));
+                parentTargetSpawner.DespawnMole();
                 break;
 
             case States.Popping:
                 PlayPopping();
                 break;
             case States.Popped:
+                parentTargetSpawner.DespawnMole();
                 break;
 
             case States.Expired:
@@ -438,7 +433,7 @@ public abstract class Mole : MonoBehaviour
     private IEnumerator StartExpiringTimer(float duration)
     {
         expiringTimeLeft = duration;
-        while (activatedTimeLeft > 0)
+        while (expiringTimeLeft > 0)
         {
             if (!isPaused)
             {
@@ -450,20 +445,6 @@ public abstract class Mole : MonoBehaviour
         ChangeState(States.Disabled);
     }
 
-    private IEnumerator StartDisabledCooldownTimer(float duration)
-    {
-        disabledTimeLeft = duration;
-        while (disabledTimeLeft > 0)
-        {
-            if (!isPaused)
-            {
-                disabledTimeLeft -= Time.deltaTime;
-            }
-            yield return null;
-        }
-
-        isOnDisabledCoolDown = false;
-    }
 
     // Function that will be called by the LoggerNotifier every time an event is raised, to automatically update
     // and pass certain parameters' values.
