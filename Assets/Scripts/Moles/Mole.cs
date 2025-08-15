@@ -20,14 +20,25 @@ public abstract class Mole : MonoBehaviour
 
     public bool defaultVisibility = false;
 
-    // The states may be reduced to 3 - 4 (by removing Popping, enabling...), however this could reduce the control over the Mole
-    // Enabling: State before 'Enabled'.
-    // Enabled: Passive state, Mole is active.
-    // Popping: Shot was taken, mole pops. Either results in OK or Fake animations.
-    // Missed: Moles which were not shot before they disabled enters this state.
-    // Disabling: Mole is being turned off.
-    // Expired: All moles have a set expiration time after disabling, to track any shots happening after they leave.
-    // Disabled: Passive state, Mole is no longer active.
+
+    /**
+     * The states may be reduced to 3 - 4 (by removing Popping, enabling...), however this could reduce the control over the Mole
+     *
+     * Enabling: Transition state before 'Enabled'. Used for animations.
+     * Enabled: Passive state, Mole is active.
+     *
+     * When Mole is Hit:
+     * Popping: Shot was taken, mole pops. Either results in OK or Fake animations.
+     * Popped:The final state before mole is destroyed by the parent.
+     *
+     * When Mole is Not Hit:
+     * Expired: All moles have a set expiration time after disabling, to track any shots happening after they leave. Set to 'Disabling' right after.
+     * Missed: Moles which were not shot before they disabled enters this state. Set to 'Disabling' right after.
+     * Disabling: Mole is being turned off. Usedfor animations befor set to 'Disabled'.
+     * Disabled: Passive state, Mole is no longer active. The final state before mole is destroyed by the parent.
+     * Note: Disabling/Disabled states are explicitly NOT called after Popped.
+     *
+    **/
     public enum States { Enabling, Enabled, Popping, Popped, Missed, Disabling, Expired, Disabled }
 
     [SerializeField]
@@ -274,12 +285,13 @@ public abstract class Mole : MonoBehaviour
         PlayHoverLeave();
     }
 
+
     public UnityEvent<bool, Mole> GetUpdateEvent()
     {
         return stateUpdateEvent;
     }
 
-    protected virtual void PlayEnable() { }
+    protected virtual void PlayEnabled() { }
     protected virtual void PlayDisabled() { }
     protected virtual void PlayReset() { }
     protected virtual void PlayHoverEnter() { }
@@ -293,6 +305,17 @@ public abstract class Mole : MonoBehaviour
 
     protected virtual void PlayEnabling()
     {
+        if (moleCategory == MoleOutcome.Valid) loggerNotifier.NotifyLogger("Mole Spawned", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
+                            {
+                                {"MoleType", System.Enum.GetName(typeof(MoleType), moleType)}
+                            });
+        else loggerNotifier.NotifyLogger(System.Enum.GetName(typeof(MoleType), moleType) + " Mole Spawned", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
+                            {
+                                {"MoleType", System.Enum.GetName(typeof(MoleType), moleType)}
+                            });
+
+        timer = StartCoroutine(StartActivatedTimer(lifeTime));
+
         ChangeState(States.Enabled);
     }
 
@@ -309,11 +332,21 @@ public abstract class Mole : MonoBehaviour
 
     protected virtual void PlayDisabling()
     {
+        if (moleCategory == MoleOutcome.Valid) loggerNotifier.NotifyLogger("Mole Expired", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
+                            {
+                                {"MoleActivatedDuration", lifeTime},
+                                {"MoleType", System.Enum.GetName(typeof(MoleType), moleType)}
+                            });
+        else loggerNotifier.NotifyLogger(System.Enum.GetName(typeof(MoleType), moleType) + " Mole Expired", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
+                            {
+                                {"MoleActivatedDuration", lifeTime},
+                                {"MoleType", System.Enum.GetName(typeof(MoleType), moleType)}
+                            });
 
         ChangeState(States.Expired);
     }
 
-    protected virtual void PlayPop()
+    protected virtual void PlayPopping()
     {
         ChangeState(States.Popped);
     }
@@ -356,43 +389,23 @@ public abstract class Mole : MonoBehaviour
                 StartCoroutine(StartDisabledCooldownTimer(disableCooldown));
                 break;
             case States.Enabled:
-                PlayEnable();
+                PlayEnabled();
                 break;
-            case States.Popping:
-                PlayPop();
-                break;
+
             case States.Enabling:
-
-                if (moleCategory == MoleOutcome.Valid) loggerNotifier.NotifyLogger("Mole Spawned", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
-                            {
-                                {"MoleType", System.Enum.GetName(typeof(MoleType), moleType)}
-                            });
-                else loggerNotifier.NotifyLogger(System.Enum.GetName(typeof(MoleType), moleType) + " Mole Spawned", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
-                            {
-                                {"MoleType", System.Enum.GetName(typeof(MoleType), moleType)}
-                            });
-
-                if (moleCategory == MoleOutcome.Valid) stateUpdateEvent.Invoke(true, this);
-
-                timer = StartCoroutine(StartActivatedTimer(lifeTime));
                 PlayEnabling();
                 break;
             case States.Disabling:
-                if (moleCategory == MoleOutcome.Valid) loggerNotifier.NotifyLogger("Mole Expired", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
-                            {
-                                {"MoleActivatedDuration", lifeTime},
-                                {"MoleType", System.Enum.GetName(typeof(MoleType), moleType)}
-                            });
-                else loggerNotifier.NotifyLogger(System.Enum.GetName(typeof(MoleType), moleType) + " Mole Expired", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
-                            {
-                                {"MoleActivatedDuration", lifeTime},
-                                {"MoleType", System.Enum.GetName(typeof(MoleType), moleType)}
-                            });
-
-                if (moleCategory == MoleOutcome.Valid) stateUpdateEvent.Invoke(false, this);
-
                 PlayDisabling();
                 break;
+
+
+            case States.Popping:
+                PlayPopping();
+                break;
+            case States.Popped:
+                break;
+
             case States.Expired:
                 StartCoroutine(StartExpiringTimer(expiringTime));
                 break;
