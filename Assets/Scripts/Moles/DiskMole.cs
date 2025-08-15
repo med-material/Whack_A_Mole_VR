@@ -195,7 +195,7 @@ public class DiskMole : Mole
         }
     }
 
-    protected override void PlayPop()
+    protected override void PlayPopping()
     {
         showHoverInfo(false);
         SetLoadingValue(0);
@@ -216,7 +216,7 @@ public class DiskMole : Mole
         meshMaterial.color = disabledColor;
         meshMaterial.mainTexture = textureDisabled;
         PlaySound(popSound);
-        //base.PlayPop(); // we cannot change to popped state, this breaks WAIT:HIT for some reason.
+        //base.PlayPopping(); // we cannot change to popped state, this breaks WAIT:HIT for some reason.
     }
 
     protected override void PlayReset()

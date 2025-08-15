@@ -57,7 +57,7 @@ public class BallMole : Mole
         base.PlayEnabling();
     }
 
-    protected override void PlayEnable()
+    protected override void PlayEnabled()
     {
         SwitchShader(false);
 
@@ -109,7 +109,7 @@ public class BallMole : Mole
         }
     }
 
-    protected override void PlayPop()
+    protected override void PlayPopping()
     {
         SwitchShader(true);
         if (moleCategory == MoleOutcome.Valid)
@@ -121,7 +121,7 @@ public class BallMole : Mole
             ChangeColor(fakeEnabledColor);
         }
         PlaySound(popSound);
-        StartCoroutine(Wait(.2f, new Del(base.PlayPop)));
+        StartCoroutine(Wait(.2f, new Del(base.PlayPopping)));
     }
 
     private void PlaySound(AudioClip audioClip)
