@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class WallGenerator : MonoBehaviour
@@ -9,48 +10,89 @@ public class WallGenerator : MonoBehaviour
     [SerializeField]
     private float wallRecoil;
 
+    [SerializeField]
+    private TargetSpawner targetSpawnerPrefab;
+
     private Vector3[,] pointsList;
     private Quaternion[,] rotationsList;
     private MeshFilter meshFilter;
     private MeshRenderer meshRenderer;
     private MeshCollider meshCollider;
     private Material startMaterial;
-
+    private WallManager wallManager;
+    private WallSettings wallSettings = new WallSettings();
 
     void Start()
     {
+        wallManager = gameObject.GetComponent<WallManager>();
         meshFilter = gameObject.AddComponent<MeshFilter>();
         meshRenderer = gameObject.AddComponent<MeshRenderer>();
         meshCollider = gameObject.AddComponent<MeshCollider>();
         startMaterial = meshMaterial;
     }
 
-    // Initialises the arrays
-    public void InitPointsLists(int columnCount, int rowCount)
+
+    // ---------------- Generation Methods ----------------
+
+    public (IEnumerable<Vector3> positions, MeshRenderer meshRenderer) GenerateWall(WallSettings newWallSettings)
     {
-        pointsList = new Vector3[columnCount + 2, rowCount + 2];
-        rotationsList = new Quaternion[columnCount + 2, rowCount + 2];
+        // Set global wall settings
+        wallSettings = newWallSettings;
+
+        InitPointsLists(wallSettings.columnCount, wallSettings.rowCount);
+        GenerateTargetSpawner();
+        GenerateWallMesh();
+
+        IEnumerable<Vector3> positions = wallManager.targetSpawners.Values.Select(m => m.transform.position);
+
+        return (positions, meshRenderer);
     }
 
-    // Adds a point to the arrays.
-    public void AddPoint(int xIndex, int yIndex, Vector3 position, Quaternion rotation)
+    // Generates the targets on the wall.
+    public void GenerateTargetSpawner()
     {
-        pointsList[xIndex + 1, yIndex + 1] = position;
-        rotationsList[xIndex + 1, yIndex + 1] = rotation;
-    }
+        // For each row and column:
+        for (int x = 0; x < wallSettings.columnCount; x++)
+        {
+            for (int y = 0; y < wallSettings.rowCount; y++)
+            {
+                // Parameters
+                Vector3 tempPos = DefineMolePos(x, y);
+                Quaternion tempRotation = DefineMoleRotation(x, y);
 
-    public void SetMeshMaterial(Material mat)
-    {
-        meshMaterial = mat;
-    }
+                AddPoint(x, y, tempPos, tempRotation);
 
-    public void ResetMeshMaterial()
-    {
-        meshMaterial = startMaterial;
+                // If corner: no TargetSpawner is generated
+                if ((x == 0 || x == wallSettings.columnCount - 1) && (y == wallSettings.rowCount - 1 || y == 0)) { continue; }
+
+                // TargetSpawner
+                MoleParameters parameters = new MoleParameters()
+                {
+                    id = GenerateIdByIndex(x, y),
+                    localScale = wallSettings.moleScale,
+                    performanceFeedback = wallManager.GetPerformanceFeedback(),
+                    normalizedIndex = GetnormalizedIndex(x, y)
+                };
+
+                TargetSpawner newTargetSpawner = TargetSpawner.Instantiate(targetSpawnerPrefab, transform, tempPos, tempRotation, parameters);
+                wallManager.targetSpawners.Add(newTargetSpawner.GetId(), newTargetSpawner);
+
+                wallManager.loggingManager.Log("Event", new Dictionary<string, object>()
+                {
+                    {"Event", "Target Spawner Created"},
+                    {"EventType", "MoleEvent"},
+                    {"TargetPositionWorldX", newTargetSpawner.transform.position.x},
+                    {"TargetPositionWorldY", newTargetSpawner.transform.position.y},
+                    {"TargetPositionWorldZ", newTargetSpawner.transform.position.z},
+                    {"TargetIndexX", (int)Mathf.Floor(newTargetSpawner.GetId()/100)},
+                    {"TargetIndexY", newTargetSpawner.GetId() % 100},
+                });
+            }
+        }
     }
 
     // Generates the wall mesh.
-    public void GenerateWall()
+    public void GenerateWallMesh()
     {
         Mesh mesh = new Mesh();
         List<Vector3> vertices = new List<Vector3>();
@@ -145,5 +187,59 @@ public class WallGenerator : MonoBehaviour
         meshFilter.mesh = mesh;
         meshCollider.sharedMesh = mesh;
         meshRenderer.material = meshMaterial;
+    }
+
+
+    // ------------------ Helper Methods ------------------
+
+    // Initialises the arrays
+    public void InitPointsLists(int columnCount, int rowCount)
+    {
+        pointsList = new Vector3[columnCount + 2, rowCount + 2];
+        rotationsList = new Quaternion[columnCount + 2, rowCount + 2];
+    }
+
+    // Adds a point to the arrays.
+    public void AddPoint(int xIndex, int yIndex, Vector3 position, Quaternion rotation)
+    {
+        pointsList[xIndex + 1, yIndex + 1] = position;
+        rotationsList[xIndex + 1, yIndex + 1] = rotation;
+    }
+
+    public void SetMeshMaterial(Material mat)
+    {
+        meshMaterial = mat;
+    }
+
+    public void ResetMeshMaterial()
+    {
+        meshMaterial = startMaterial;
+    }
+
+    // Gets the Mole rotation so it is always looking away from the wall, depending on its X local position and the wall's curvature (curveCoeff)
+    private Quaternion DefineMoleRotation(int xIndex, int yIndex)
+    {
+        Quaternion lookAngle = new Quaternion();
+        lookAngle.eulerAngles = new Vector3(-((((float)yIndex / (wallSettings.rowCount - 1)) * 2) - 1) * (wallSettings.maxAngle * wallSettings.yCurveRatio), ((((float)xIndex / (wallSettings.columnCount - 1)) * 2) - 1) * (wallSettings.maxAngle * wallSettings.xCurveRatio), 0f);
+        return lookAngle;
+    }
+
+    // Gets the Mole position depending on its index, the wall size (x and y axes of the vector3), and also on the curve coefficient (for the z axis).
+    private Vector3 DefineMolePos(int xIndex, int yIndex)
+    {
+        float angleX = ((((float)xIndex / (wallSettings.columnCount - 1)) * 2) - 1) * ((Mathf.PI * wallSettings.xCurveRatio) / 2);
+        float angleY = ((((float)yIndex / (wallSettings.rowCount - 1)) * 2) - 1) * ((Mathf.PI * wallSettings.yCurveRatio) / 2);
+
+        return new Vector3(Mathf.Sin(angleX) * (wallSettings.wallSize.x / (2 * wallSettings.xCurveRatio)), Mathf.Sin(angleY) * (wallSettings.wallSize.y / (2 * wallSettings.yCurveRatio)), ((Mathf.Cos(angleY) * (wallSettings.wallSize.z)) + (Mathf.Cos(angleX) * (wallSettings.wallSize.z))));
+    }
+
+    private int GenerateIdByIndex(int xIndex, int yIndex)
+    {
+        return ((xIndex + 1) * 100) + (yIndex + 1);
+    }
+
+    private Vector2 GetnormalizedIndex(int xIndex, int yIndex)
+    {
+        return (new Vector2((float)xIndex / (wallSettings.columnCount - 1), (float)yIndex / (wallSettings.rowCount - 1)));
     }
 }

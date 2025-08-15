@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -10,7 +11,7 @@ Spawns, references and activates the moles. Is the only component to directly in
 public class WallInfo
 {
     public bool active = false;
-    public Dictionary<int, Mole> moles;
+    public Dictionary<int, TargetSpawner> targetSpawners;
     public Vector3 wallSize;
     public Vector3 wallCenter; // not the center of the wall (?)
     public float highestX = -1f;
@@ -32,7 +33,6 @@ public class WallInfo
 [System.Serializable]
 public class WallSettings
 {
-    public Mole moleObject;
     public int rowCount;
     public int columnCount;
     public float heightOffset;
@@ -45,66 +45,47 @@ public class WallSettings
 
 public class WallManager : MonoBehaviour
 {
-    [SerializeField]
-    private LoggingManager loggingManager;
+    [SerializeField] public LoggingManager loggingManager;
 
     [Header("Default Wall Settings")]
-    [SerializeField]
-    private WallSettings defaultWall = new WallSettings();
+    [SerializeField] private WallSettings defaultWall = new WallSettings();
 
     [Header("Runtime Wall Settings")]
-    // The Mole object to be loaded
-    [SerializeField]
-    private Mole moleObject;
-
-    // The count of rows to generate
-    [SerializeField]
+    [SerializeField, Tooltip("The count of rows to generate")]
     private int rowCount;
 
-    // The count of columns to generate
-    [SerializeField]
+    [SerializeField, Tooltip("The count of columns to generate")]
     private int columnCount;
 
-    // Offest of the height of the wall
-    [SerializeField]
+    [SerializeField, Tooltip("Offset of the height of the wall")]
     private float heightOffset;
 
-    // The size of the wall
-    [SerializeField]
+    [SerializeField, Tooltip("The size of the wall")]
     private Vector3 wallSize;
 
-    // Coefficient of the X curvature of the wall. 1 = PI/2, 0 = straight line
-    [SerializeField]
-    [Range(0.1f, 1f)]
+    [SerializeField, Range(0.1f, 1f), Tooltip("Coefficient of the X curvature of the wall. 1 = PI/2, 0 = straight line")]
     private float xCurveRatio = 1f;
 
-    // Coefficient of the Y curvature of the wall. 1 = PI/2, 0 = straight line
-    [SerializeField]
-    [Range(0.1f, 1f)]
+    [SerializeField, Range(0.1f, 1f), Tooltip("Coefficient of the Y curvature of the wall. 1 = PI/2, 0 = straight line")]
     private float yCurveRatio = 1f;
 
-    // The angle of the edge moles if a curve ratio of 1 is given
-    [SerializeField]
-    [Range(0f, 90f)]
+    [SerializeField, Range(0f, 90f), Tooltip("The angle of the edge moles if a curve ratio of 1 is given")]
     private float maxAngle = 90f;
 
-    // The scale of the Mole. Idealy shouldn't be scaled on the Z axis (to preserve the animations)
-    [SerializeField]
+    [SerializeField, Tooltip("The scale of the Mole. Ideally shouldn't be scaled on the Z axis (to preserve the animations)")]
     private Vector3 moleScale = Vector3.one;
 
-    [SerializeField]
-    private Material invisibleMaterial;
-    [SerializeField]
-    private MeshRenderer greyBackground;
+    [SerializeField] private Material invisibleMaterial;
+    [SerializeField] private MeshRenderer greyBackground;
 
     [System.Serializable]
     public class StateUpdateEvent : UnityEvent<WallInfo> { }
     public StateUpdateEvent stateUpdateEvent;
+    public Dictionary<int, TargetSpawner> targetSpawners { get; private set; }
 
     private WallGenerator wallGenerator;
     private Vector3 wallCenter;
     private Vector3 wallCenterWorld = Vector3.zero;
-    private Dictionary<int, Mole> moles;
     private bool active = false;
     private bool isInit = false;
     private float updateCooldownDuration = .1f;
@@ -131,11 +112,10 @@ public class WallManager : MonoBehaviour
     float meshBoundsYmin = -1f;
     float meshBoundsZmin = -1f;
 
-    public List<Mole> listMole;
-
     void Start()
     {
         SetDefaultWall();
+
         // Initialization of the LoggerNotifier.
         loggerNotifier = new LoggerNotifier(persistentEventsHeadersDefaults: new Dictionary<string, string>(){
             {"WallRowCount", "NULL"},
@@ -175,7 +155,7 @@ public class WallManager : MonoBehaviour
             {"WallCurveRatioY", yCurveRatio}
         });
 
-        moles = new Dictionary<int, Mole>();
+        targetSpawners = new Dictionary<int, TargetSpawner>();
         wallGenerator = gameObject.GetComponent<WallGenerator>();
         wallCenter = new Vector3(wallSize.x / 2f, wallSize.y / 2f, 0);
         isInit = true;
@@ -200,7 +180,6 @@ public class WallManager : MonoBehaviour
 
     public void SetDefaultWall()
     {
-        moleObject = defaultWall.moleObject;
         rowCount = defaultWall.rowCount;
         columnCount = defaultWall.columnCount;
         heightOffset = defaultWall.heightOffset;
@@ -244,11 +223,25 @@ public class WallManager : MonoBehaviour
     {
         active = true;
 
-        if (moles.Count == 0)
+        if (targetSpawners.Count == 0)
         {
-            GenerateWall();
+            IEnumerable<Vector3> positions;
+            MeshRenderer meshRenderer;
+
+            (positions, meshRenderer) = wallGenerator.GenerateWall(new WallSettings()
+            {
+                rowCount = rowCount,
+                columnCount = columnCount,
+                heightOffset = heightOffset,
+                wallSize = wallSize,
+                xCurveRatio = xCurveRatio,
+                yCurveRatio = yCurveRatio,
+                maxAngle = maxAngle,
+                moleScale = moleScale
+            });
+
+            UpdateWallInfoFromGeneration(positions, meshRenderer);
             UpdateWallLogs();
-            StartCoroutine(FillWall(listMole));
         }
     }
 
@@ -261,7 +254,30 @@ public class WallManager : MonoBehaviour
     public void Clear()
     {
         active = false;
-        DestroyWall();
+        DestroyTargetSpawners();
+        WallInfo wallInfo = CreateWallInfo();
+        stateUpdateEvent.Invoke(wallInfo);
+    }
+
+    public void UpdateWallInfoFromGeneration(IEnumerable<Vector3> positions, MeshRenderer mesh)
+    {
+        wallCenter = new Vector3(wallSize.x / 2f, wallSize.y / 2f, 0);
+
+        highestX = positions.Max(p => p.x);
+        lowestX = positions.Min(p => p.x);
+        highestY = positions.Max(p => p.y);
+        lowestY = positions.Min(p => p.y);
+        highestZ = positions.Max(p => p.z);
+        lowestZ = positions.Min(p => p.z);
+
+        meshCenter = mesh.bounds.center;
+        meshBoundsXmax = mesh.bounds.max.x;
+        meshBoundsYmax = mesh.bounds.max.y;
+        meshBoundsZmax = mesh.bounds.max.z;
+        meshBoundsXmin = mesh.bounds.min.x;
+        meshBoundsYmin = mesh.bounds.min.y;
+        meshBoundsZmin = mesh.bounds.min.z;
+
         WallInfo wallInfo = CreateWallInfo();
         stateUpdateEvent.Invoke(wallInfo);
     }
@@ -270,7 +286,7 @@ public class WallManager : MonoBehaviour
     {
         WallInfo wallInfo = new WallInfo();
         wallInfo.active = active;
-        wallInfo.moles = moles;
+        wallInfo.targetSpawners = targetSpawners;
         wallInfo.wallSize = wallSize;
         wallInfo.wallCenter = wallCenter;
         wallInfo.heightOffset = heightOffset;
@@ -296,26 +312,28 @@ public class WallManager : MonoBehaviour
     {
         if (!active) return;
 
-        GetRandomMole().Enable(lifeTime, moleExpiringDuration, type, moleCount);
+        GetRandomFreeSpawner().SpawnMole(type, lifeTime, moleExpiringDuration, moleCount);
         moleCount++;
     }
 
     // Activates a specific Mole for a given lifeTime and set if is fake or not
-    public Mole ActivateMole(int moleId, float lifeTime, float moleExpiringDuration, Mole.MoleType type)
+    public Mole CreateMole(int moleId, float lifeTime, float moleExpiringDuration, Mole.MoleType type)
     {
         if (!active) return null;
-        if (!moles.ContainsKey(moleId)) return null;
-        moles[moleId].Enable(lifeTime, moleExpiringDuration, type, spawnOrder);
+        if (!targetSpawners.ContainsKey(moleId)) return null;
+
+        targetSpawners[moleId].SpawnMole(type, lifeTime, moleExpiringDuration, spawnOrder);
         moleCount++;
-        return moles[moleId];
+
+        return targetSpawners[moleId].GetCurrentMole();
     }
 
     // Pauses/unpauses the moles
     public void SetPauseMole(bool pause)
     {
-        foreach (Mole mole in moles.Values)
+        foreach (TargetSpawner targetSpawner in targetSpawners.Values)
         {
-            mole.SetPause(pause);
+            targetSpawner.GetCurrentMole().SetPause(pause);
         }
     }
 
@@ -376,140 +394,48 @@ public class WallManager : MonoBehaviour
 
     public void SetPerformanceFeedback(bool perf)
     {
-
         performanceFeedback = perf;
-        if (moles.Count > 0)
+
+        foreach (TargetSpawner targetSpawner in targetSpawners.Values)
         {
-            foreach (Mole mole in moles.Values)
-            {
-                mole.SetPerformanceFeedback(performanceFeedback);
-            }
+            targetSpawner.UpdateParameters(performanceFeedback: performanceFeedback);
         }
     }
-
-    // Returns a random, inactive Mole. Can block the game if no Mole can be found. May need to be put in a coroutine.
-    private Mole GetRandomMole()
+    public bool GetPerformanceFeedback()
     {
-        Mole mole;
-        Mole[] tempMolesList = new Mole[moles.Count];
-        moles.Values.CopyTo(tempMolesList, 0);
-        do
+        return performanceFeedback;
+    }
+
+    // Returns a random, inactive TargetSpawner (isFree == true). Throws if none are free.
+    private TargetSpawner GetRandomFreeSpawner()
+    {
+        List<TargetSpawner> freeSpawners = targetSpawners.Values.Where(ts => ts.isFree()).ToList();
+        if (freeSpawners.Count == 0)
         {
-            mole = tempMolesList[Random.Range(0, moles.Count)];
+            throw new System.InvalidOperationException("No free TargetSpawner available.");
         }
-        while (!mole.CanBeActivated());
-        return mole;
+        int randomIndex = Random.Range(0, freeSpawners.Count);
+        return freeSpawners[randomIndex];
     }
 
-    public Dictionary<int, Mole> GetMoles()
-    {
-        return moles;
-    }
     private void disableMoles()
     {
-        foreach (Mole mole in moles.Values)
+        foreach (TargetSpawner targetSpawner in targetSpawners.Values)
         {
-            mole.Reset();
+            // TODO set targetSpawner visibility to false
+            targetSpawner.DespawnMole();
+            moleCount = 0;
         }
     }
 
-    private void DestroyWall()
+    private void DestroyTargetSpawners()
     {
-        foreach (Mole mole in moles.Values)
+        foreach (TargetSpawner targetSpawner in targetSpawners.Values)
         {
-            Destroy(mole.gameObject);
+            Destroy(targetSpawner.gameObject);
         }
-        moles.Clear();
+        targetSpawners.Clear();
         moleCount = 0;
-    }
-
-    // Generates the wall of Moles
-    private void GenerateWall()
-    {
-        wallGenerator.InitPointsLists(columnCount, rowCount);
-        // Updates the wallCenter value
-        wallCenter = new Vector3(wallSize.x / 2f, wallSize.y / 2f, 0);
-
-        highestX = -1f;
-        highestY = -1f;
-        lowestX = -1f;
-        lowestY = -1f;
-        lowestZ = -1f;
-        highestZ = -1f;
-
-        // For each row and column:
-        for (int x = 0; x < columnCount; x++)
-        {
-            for (int y = 0; y < rowCount; y++)
-            {
-                if ((x == 0 || x == columnCount - 1) && (y == rowCount - 1 || y == 0))
-                {
-                    wallGenerator.AddPoint(x, y, DefineMolePos(x, y), DefineMoleRotation(x, y));
-                    continue;
-                }
-
-                // Instanciates a Mole object
-                Mole mole = Instantiate(moleObject, transform);
-                listMole.Add(mole);
-                // Get the Mole object's local position depending on the current row, column and the curve coefficient
-                Vector3 molePos = DefineMolePos(x, y);
-
-                // Sets the Mole local position, rotates it so it looks away from the wall (affected by the curve)
-                mole.transform.localPosition = molePos;
-                mole.transform.localRotation = DefineMoleRotation(x, y);
-                // Sets the Mole ID, scale and references it
-                int moleId = GetMoleId(x, y);
-                mole.SetId(moleId);
-                mole.SetNormalizedIndex(GetnormalizedIndex(x, y));
-                mole.SetPerformanceFeedback(performanceFeedback);
-                mole.transform.localScale = moleScale;
-                moles.Add(moleId, mole);
-
-                wallGenerator.AddPoint(x, y, molePos, mole.transform.localRotation);
-
-                // Check's the mole's position to find the outer boundaries of the all moles.
-                if (highestX == -1f) highestX = mole.transform.position.x;
-                if (lowestX == -1f) lowestX = mole.transform.position.x;
-                if (highestY == -1f) highestY = mole.transform.position.y;
-                if (lowestY == -1f) lowestY = mole.transform.position.y;
-                if (lowestZ == -1f) lowestZ = mole.transform.position.z;
-                if (highestZ == -1f) highestZ = mole.transform.position.z;
-
-                highestX = mole.transform.position.x > highestX ? mole.transform.position.x : highestX;
-                lowestX = mole.transform.position.x < lowestX ? mole.transform.position.x : lowestX;
-                highestY = mole.transform.position.y > highestY ? mole.transform.position.y : highestY;
-                lowestY = mole.transform.position.y < lowestY ? mole.transform.position.y : lowestY;
-                lowestZ = mole.transform.position.z < lowestZ ? mole.transform.position.z : lowestZ;
-                highestZ = mole.transform.position.z < highestZ ? mole.transform.position.z : highestZ;
-
-                loggingManager.Log("Event", new Dictionary<string, object>()
-                {
-                    {"Event", "Mole Created"},
-                    {"EventType", "MoleEvent"},
-                    {"MolePositionWorldX", mole.transform.position.x},
-                    {"MolePositionWorldY", mole.transform.position.y},
-                    {"MolePositionWorldZ", mole.transform.position.z},
-                    {"MoleIndexX", (int)Mathf.Floor(moleId/100)},
-                    {"MoleIndexY", moleId % 100},
-                });
-            }
-        }
-        //stateUpdateEvent.Invoke(true, moles);
-
-        wallGenerator.GenerateWall();
-        MeshRenderer mesh = GetComponent<MeshRenderer>();
-        if (mesh != null)
-        {
-            meshCenter = mesh.bounds.center;
-            meshBoundsXmax = mesh.bounds.max.x;
-            meshBoundsYmax = mesh.bounds.max.y;
-            meshBoundsZmax = mesh.bounds.max.z;
-            meshBoundsXmin = mesh.bounds.min.x;
-            meshBoundsYmin = mesh.bounds.min.y;
-            meshBoundsZmin = mesh.bounds.min.z;
-        }
-        WallInfo wallInfo = CreateWallInfo();
-        stateUpdateEvent.Invoke(wallInfo);
     }
 
     // Updates the wall
@@ -518,49 +444,6 @@ public class WallManager : MonoBehaviour
         if (!(active && isInit)) return;
         StopAllCoroutines();
         StartCoroutine(WallUpdateCooldown());
-    }
-
-    // Gets the Mole position depending on its index, the wall size (x and y axes of the vector3), and also on the curve coefficient (for the z axis).
-    private Vector3 DefineMolePos(int xIndex, int yIndex)
-    {
-        float angleX = ((((float)xIndex / (columnCount - 1)) * 2) - 1) * ((Mathf.PI * xCurveRatio) / 2);
-        float angleY = ((((float)yIndex / (rowCount - 1)) * 2) - 1) * ((Mathf.PI * yCurveRatio) / 2);
-
-        return new Vector3(Mathf.Sin(angleX) * (wallSize.x / (2 * xCurveRatio)), Mathf.Sin(angleY) * (wallSize.y / (2 * yCurveRatio)), ((Mathf.Cos(angleY) * (wallSize.z)) + (Mathf.Cos(angleX) * (wallSize.z))));
-    }
-
-    private int GetMoleId(int xIndex, int yIndex)
-    {
-        return ((xIndex + 1) * 100) + (yIndex + 1);
-    }
-
-    private Vector2 GetnormalizedIndex(int xIndex, int yIndex)
-    {
-        return (new Vector2((float)xIndex / (columnCount - 1), (float)yIndex / (rowCount - 1)));
-    }
-
-    // Gets the Mole rotation so it is always looking away from the wall, depending on its X local position and the wall's curvature (curveCoeff)
-    private Quaternion DefineMoleRotation(int xIndex, int yIndex)
-    {
-        Quaternion lookAngle = new Quaternion();
-        lookAngle.eulerAngles = new Vector3(-((((float)yIndex / (rowCount - 1)) * 2) - 1) * (maxAngle * yCurveRatio), ((((float)xIndex / (columnCount - 1)) * 2) - 1) * (maxAngle * xCurveRatio), 0f);
-        return lookAngle;
-    }
-
-    private IEnumerator FillWall(List<Mole> list)
-    {
-        while (list.Count > 0)
-        {
-            for (int j = 0; j < 2; j++)
-            {
-                //update the list after each iteration
-                int i = Random.Range(0, list.Count);
-                //activate the mole
-                list[i].SetVisibility(true);
-                list.RemoveAt(i);
-            }
-            yield return new WaitForSeconds((10 / (100 ^ 5)));
-        }
     }
 
     private IEnumerator WallUpdateCooldown()
