@@ -85,6 +85,8 @@ public class DiskMole : Mole
 
     protected override void Start()
     {
+        if (IsInit) return;
+
         animationPlayer = gameObject.GetComponent<Animation>();
         meshMaterial = gameObject.GetComponentInChildren<Renderer>().material;
         opaqueShader = Shader.Find("Standard");
@@ -216,16 +218,7 @@ public class DiskMole : Mole
         meshMaterial.color = disabledColor;
         meshMaterial.mainTexture = textureDisabled;
         PlaySound(popSound);
-        //base.PlayPopping(); // we cannot change to popped state, this breaks WAIT:HIT for some reason.
-    }
-
-    protected override void PlayReset()
-    {
-        showHoverInfo(false);
-        SetLoadingValue(0);
-        PlayAnimation("EnableDisable");
-        meshMaterial.color = disabledColor;
-        meshMaterial.mainTexture = textureDisabled;
+        base.PlayPopping();
     }
 
     public override void SetLoadingValue(float percent)

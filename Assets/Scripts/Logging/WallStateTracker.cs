@@ -36,12 +36,12 @@ public class WallStateTracker : MonoBehaviour
     public void WallStateUpdate(WallInfo wallInfo)
     {
         bool isActivating = wallInfo.active;
-        Dictionary<int, Mole> moleList = wallInfo.moles;
+        Dictionary<int, TargetSpawner> targetSpawners = wallInfo.targetSpawners;
         if (isActivating)
         {
-            foreach (Mole mole in moleList.Values)
+            foreach (TargetSpawner targetSpawner in targetSpawners.Values)
             {
-                mole.GetUpdateEvent().AddListener(MoleStateUpdate);
+                targetSpawner.GetUpdateEvent().AddListener(MoleStateUpdate);
             }
         }
         else
