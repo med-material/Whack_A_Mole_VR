@@ -437,7 +437,7 @@ public abstract class Mole : MonoBehaviour
             yield return null;
         }
 
-        EnterState(States.Disabled);
+        ChangeState(States.Disabled);
     }
 
     private IEnumerator StartDisabledCooldownTimer(float duration)
