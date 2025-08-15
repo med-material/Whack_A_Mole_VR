@@ -320,10 +320,7 @@ public abstract class Mole : MonoBehaviour
 
     private void ChangeState(States newState)
     {
-        if (newState == state)
-        {
-            return;
-        }
+        if (newState == state) return;
         LeaveState(state);
         state = newState;
         EnterState(state);
@@ -404,6 +401,7 @@ public abstract class Mole : MonoBehaviour
                 break;
         }
     }
+
 
     // IEnumerator starting the enabled timer.
     private IEnumerator StartActivatedTimer(float duration)
