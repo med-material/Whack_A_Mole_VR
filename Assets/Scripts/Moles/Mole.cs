@@ -73,30 +73,13 @@ public abstract class Mole : MonoBehaviour
             }
         }
     }
-    protected bool IsInit = false;
 
-    public void Init(TargetSpawner parentSpawner) // Needed when the Mole is instantiated, to avoid calling a method before the Awake and Start methods are called.
+    public virtual void Init(TargetSpawner parentSpawner) // Needed when the Mole is instantiated, to avoid calling a method before the Awake and Start methods are called.
     {
-        if (IsInit) return;
-
-        Awake();
-        Start();
-
         parentTargetSpawner = parentSpawner;
-        IsInit = true;
-    }
-
-    private void Awake()
-    {
-        if (IsInit) return;
 
         moleType = MoleType.SimpleTarget;
         SetVisibility(defaultVisibility);
-    }
-
-    protected virtual void Start()
-    {
-        if (IsInit) return;
 
         // Initialization of the LoggerNotifier. Here we will only raise Event, and we will use a function to pass and update
         // certain parameters values every time we raise an event (UpdateLogNotifierGeneralValues). We don't set any starting values.
