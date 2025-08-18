@@ -12,6 +12,7 @@ public class MoleParameters
 public class TargetSpawner : MonoBehaviour
 {
     [SerializeField] private Mole molePrefab; // TODO: move "Mole Type" system from Mole.cs to TargetSpawner.cs
+    private static int globalMoleIncrement = 1;
 
     public Vector3 _position
     {
@@ -54,7 +55,7 @@ public class TargetSpawner : MonoBehaviour
         currentMole.Init(this);
         currentMole.SetNormalizedIndex(parameters.normalizedIndex);
         currentMole.SetPerformanceFeedback(parameters.performanceFeedback);
-        currentMole.SetId(id); // TODO: add globalSpawnCounter to create unique ID - need to adapt logging index X and Y in mole.cs
+        currentMole.SetId(globalMoleIncrement++ + id.ToString()); // Formated as ZZZXXYY (ZZZ is mole rank, XX is the X index, YY is the Y index)
         currentMole.transform.localScale = parameters.localScale;
         currentMole.Enable(lifeTime, expiringDuration, type, spawnOrder); // TODO future update, check if enable still needed (of change to init)
         stateUpdateEvent.Invoke(true, currentMole);

@@ -124,9 +124,17 @@ public abstract class Mole : MonoBehaviour
         spawnOrder = newSpawnOrder;
     }
 
-    public void SetId(int newId)
+    public void SetId(string newId)
     {
-        id = newId;
+        if (int.TryParse(newId, out int parsedId))
+        {
+            id = parsedId;
+        }
+        else
+        {
+            Debug.LogError($"SetId: Unable to cast '{newId}' to int.");
+            id = -1;
+        }
     }
 
     public void SetNormalizedIndex(Vector2 newNormalizedIndex)
@@ -433,6 +441,12 @@ public abstract class Mole : MonoBehaviour
     // and pass certain parameters' values.
     private LogEventContainer UpdateLogNotifierGeneralValues()
     {
+        string moleId = id.ToString("0000000"); // Formated as ZZZXXYY (ZZZ is mole rank, XX is the X index, YY is the Y index)
+        if (moleId.Length != 7) Debug.LogError("Mole ID is not 7 digits long: " + moleId);
+
+        string MoleIndexX = moleId.Substring(3, 2);
+        string MoleIndexY = moleId.Substring(5, 2);
+
         return new LogEventContainer(new Dictionary<string, object>(){
             {"MolePositionWorldX", transform.position.x},
             {"MolePositionWorldY", transform.position.y},
@@ -443,10 +457,10 @@ public abstract class Mole : MonoBehaviour
             {"MoleSize", (this.GetComponentsInChildren<Renderer>()[0].bounds.max.x - this.GetComponentsInChildren<Renderer>()[0].bounds.min.x)},
             {"MoleLifeTime", lifeTime},
             {"MoleType", moleType},
-            {"MoleId", id.ToString("0000")},
+            {"MoleId", moleId},
             {"MoleSpawnOrder", spawnOrder.ToString("0000")},
-            {"MoleIndexX", (int)Mathf.Floor(id/100)},
-            {"MoleIndexY", (id % 100)},
+            {"MoleIndexX", MoleIndexX},
+            {"MoleIndexY", MoleIndexY},
             {"MoleNormalizedIndexX", normalizedIndex.x},
             {"MoleNormalizedIndexY", normalizedIndex.y},
         });
