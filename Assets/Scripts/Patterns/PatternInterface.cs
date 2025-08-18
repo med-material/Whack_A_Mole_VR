@@ -46,13 +46,13 @@ public class PatternInterface : MonoBehaviour
         targetsList = null;
     }
 
-    public void AddToTargetsList(int moleId, Mole mole)
+    public void AddToTargetsList(Mole mole)
     {
         if (targetsList == null)
         {
             targetsList = new Dictionary<int, Mole>();
         }
-        targetsList[moleId] = mole;
+        targetsList[mole.GetId()] = mole;
         //Debug.Log(targetsList.Count);
     }
 
@@ -238,7 +238,7 @@ public class PatternInterface : MonoBehaviour
         int moleId = ((int.Parse(xIndex)) * 100) + (int.Parse(yIndex));
         Mole mole = wallManager.CreateMole(moleId, ParseFloat(lifeTime), gameDirector.GetMoleExpiringDuration(), moleType);
         molesList[moleId] = mole;
-        if (mole.moleCategory == Mole.MoleOutcome.Valid) AddToTargetsList(moleId, mole);
+        if (mole.moleCategory == Mole.MoleOutcome.Valid) AddToTargetsList(mole);
     }
 
     // Updates the game difficulty
