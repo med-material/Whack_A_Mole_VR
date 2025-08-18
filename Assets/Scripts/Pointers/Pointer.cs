@@ -146,6 +146,7 @@ public abstract class Pointer : MonoBehaviour
 
     public void ResetShootOrder()
     {
+        if (pointerShootOrder == -1) return; // If the pointerShootOrder is already -1, it means it has already been reset or Pointer was never instantiated.
         pointerShootOrder = -1;
         loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>()
         {
