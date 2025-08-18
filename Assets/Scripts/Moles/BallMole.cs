@@ -38,13 +38,14 @@ public class BallMole : Mole
     private Material ballMaterial;
     private AudioSource audioSource;
 
-    protected override void Start()
+    public override void Init(TargetSpawner parentSpawner)
     {
         ballMaterial = gameObject.GetComponent<Renderer>().material;
         opaqueShader = Shader.Find("Standard");
         glowShader = Shader.Find("Particles/Standard Unlit");
         audioSource = gameObject.GetComponent<AudioSource>();
-        base.Start();
+
+        base.Init(parentSpawner);
     }
 
     /*

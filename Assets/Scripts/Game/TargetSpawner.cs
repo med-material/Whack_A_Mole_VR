@@ -51,7 +51,7 @@ public class TargetSpawner : MonoBehaviour
         if (_lock) return GetCurrentMole();
 
         currentMole = Instantiate(molePrefab, transform);
-        currentMole.Init(this); // TODO: no more start and awake, use protected Init instead
+        currentMole.Init(this);
         currentMole.SetNormalizedIndex(parameters.normalizedIndex);
         currentMole.SetPerformanceFeedback(parameters.performanceFeedback);
         currentMole.SetId(id); // TODO: add globalSpawnCounter to create unique ID - need to adapt logging index X and Y in mole.cs

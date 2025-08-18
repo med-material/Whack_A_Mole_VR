@@ -83,10 +83,8 @@ public class DiskMole : Mole
     private string playingClip = "";
     private bool hoverInfoShouldBeShown = false;
 
-    protected override void Start()
+    public override void Init(TargetSpawner parentSpawner)
     {
-        if (IsInit) return;
-
         animationPlayer = gameObject.GetComponent<Animation>();
         meshMaterial = gameObject.GetComponentInChildren<Renderer>().material;
         opaqueShader = Shader.Find("Standard");
@@ -95,7 +93,8 @@ public class DiskMole : Mole
         PlayAnimation("EnableDisable");
         meshMaterial.color = disabledColor;
         showHoverInfo(false);
-        base.Start();
+
+        base.Init(parentSpawner);
     }
 
     private void updateHoverInfo()
