@@ -15,7 +15,7 @@ public abstract class Mole : MonoBehaviour
 {
     public enum MolePopAnswer { Ok, Fake, Expired, Disabled, Paused }
     public enum MoleOutcome { Valid, Distractor }
-    public enum MoleType { SimpleTarget, DistractorLeft, DistractorRight, PalmarGrasp, PinchGrasp, WristFlexion, WristExtension }
+    public enum MoleType { SimpleTarget, BallMole, DistractorLeft, DistractorRight, PalmarGrasp, PinchGrasp, WristFlexion, WristExtension }
 
     public bool defaultVisibility = false;
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -11,7 +12,7 @@ public class MoleParameters
 
 public class TargetSpawner : MonoBehaviour
 {
-    [SerializeField] private Mole molePrefab; // TODO: move "Mole Type" system from Mole.cs to TargetSpawner.cs
+    [SerializeField] public PrefabMatchingTable molePrefabs;
     private static int globalMoleIncrement = 1;
 
     public Vector3 _position
@@ -32,6 +33,8 @@ public class TargetSpawner : MonoBehaviour
 
     public static TargetSpawner Instantiate(TargetSpawner prefab, Transform parentTransform, Vector3 position, Quaternion rotation, MoleParameters parameters)
     {
+        prefab.molePrefabs.CheckMatchingTableIntegrity();
+
         TargetSpawner targetSpawner = Instantiate(prefab, parentTransform);
         targetSpawner.parameters = parameters;
         targetSpawner._position = position;
@@ -51,7 +54,15 @@ public class TargetSpawner : MonoBehaviour
     {
         if (_lock) return GetCurrentMole();
 
-        currentMole = Instantiate(molePrefab, transform);
+        currentMole = Instantiate(molePrefabs.GetPrefab(type), transform).GetComponent<Mole>();
+
+        if (currentMole == null)
+        {
+            string errorMessage = $"Prefab for type {type} does not have a Mole component.";
+            Debug.LogError(errorMessage);
+            throw new System.Exception(errorMessage);
+        }
+
         currentMole.Init(this);
         currentMole.SetNormalizedIndex(parameters.normalizedIndex);
         currentMole.SetPerformanceFeedback(parameters.performanceFeedback);
@@ -82,4 +93,90 @@ public class TargetSpawner : MonoBehaviour
     public int GetId() => id;
     public UnityEvent<bool, Mole> GetUpdateEvent() => stateUpdateEvent;
 
+}
+
+
+// ========== PrefabTypeTuple and PrefabMatchingTable classes ==========
+
+
+[System.Serializable]
+public class PrefabTypeTuple // Note: Can't use Dictionary here due to Unity serialization limitations
+{
+    public Mole.MoleType moleType;
+    public GameObject prefab;
+}
+
+[System.Serializable]
+public class PrefabMatchingTable
+{
+    [SerializeField] private PrefabTypeTuple[] items;
+
+    public GameObject GetPrefab(Mole.MoleType type)
+    {
+        foreach (PrefabTypeTuple item in items)
+        {
+            if (item.moleType == type)
+            {
+                return item.prefab;
+            }
+        }
+
+        string errorMessage = $"Prefab for type {type} not found in PrefabMatchingTable.";
+        Debug.LogError(errorMessage);
+        throw new System.Exception(errorMessage);
+    }
+
+    public bool CheckMatchingTableIntegrity() // Check if all mole types are present and unique and explicitly log errors - to avoid runtime errors
+    {
+        Mole.MoleType[] allMoleTypes = (Mole.MoleType[])System.Enum.GetValues(typeof(Mole.MoleType));
+        List<Mole.MoleType> missingTypes = new List<Mole.MoleType>();
+        List<Mole.MoleType> checkedTypes = new List<Mole.MoleType>();
+
+
+        // Ensure no duplicates in the matching table
+        foreach (PrefabTypeTuple item in items)
+        {
+            if (checkedTypes.Contains(item.moleType))
+            {
+                Debug.LogError($"Duplicate mole type [{item.moleType}] found in PrefabMatchingTable. " +
+                    $"Please ensure each mole type is unique in the matching table of the prefab of TargetSpawner.");
+                return false;
+            }
+            checkedTypes.Add(item.moleType);
+        }
+
+
+        // Ensure every mole type is present and has a prefab
+        int missingCount = 0;
+        foreach (Mole.MoleType type in allMoleTypes)
+        {
+            if (!Contains(type) || GetPrefab(type) == null)
+            {
+                missingCount++;
+                missingTypes.Add(type);
+            }
+        }
+
+        if (missingCount > 0)
+        {
+            Debug.LogError($"PrefabMatchingTable is missing the [{missingCount}] following mole types: " +
+                $"{string.Join(", ", missingTypes)}. " +
+                $"Please update the matching table in the prefab of TargetSpawner.");
+            return false;
+        }
+
+        return true;
+    }
+
+    public bool Contains(Mole.MoleType type)
+    {
+        foreach (PrefabTypeTuple item in items)
+        {
+            if (item.moleType == type)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }
