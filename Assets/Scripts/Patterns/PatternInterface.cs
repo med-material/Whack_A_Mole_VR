@@ -114,7 +114,7 @@ public class PatternInterface : MonoBehaviour
                         (action.ContainsKey("TYPE") && System.Enum.TryParse(action["TYPE"], out Mole.MoleType parsedType)) ?
                         parsedType : Mole.MoleType.SimpleTarget;
 
-                    SetMole(action["X"], action["Y"], action["LIFETIME"], moleType);
+                    SetMole(action["X"], action["Y"], action["LIFETIME"], moleType, Mole.MoleOutcome.Valid);
                     break;
 
                 case "DISTRACTOR":
@@ -122,7 +122,7 @@ public class PatternInterface : MonoBehaviour
                         (action.ContainsKey("TYPE") && System.Enum.TryParse(action["TYPE"], out Mole.MoleType parsedMoleType)) ?
                         parsedMoleType : Mole.MoleType.DistractorLeft;
 
-                    SetMole(action["X"], action["Y"], action["LIFETIME"], distractorType);
+                    SetMole(action["X"], action["Y"], action["LIFETIME"], distractorType, Mole.MoleOutcome.Distractor);
                     break;
 
                 case "DIFFICULTY":
@@ -233,12 +233,12 @@ public class PatternInterface : MonoBehaviour
     }
 
     // Spawns a Mole
-    private void SetMole(string xIndex, string yIndex, string lifeTime, Mole.MoleType moleType)
+    private void SetMole(string xIndex, string yIndex, string lifeTime, Mole.MoleType moleType, Mole.MoleOutcome outcome)
     {
         int targetSpawnId = ((int.Parse(xIndex)) * 100) + (int.Parse(yIndex));
-        Mole mole = wallManager.CreateMole(targetSpawnId, ParseFloat(lifeTime), gameDirector.GetMoleExpiringDuration(), moleType);
+        Mole mole = wallManager.CreateMole(targetSpawnId, ParseFloat(lifeTime), gameDirector.GetMoleExpiringDuration(), moleType, outcome);
         molesList[targetSpawnId] = mole;
-        if (mole.moleCategory == Mole.MoleOutcome.Valid) AddToTargetsList(mole);
+        if (mole.IsValid()) AddToTargetsList(mole);
     }
 
     // Updates the game difficulty
