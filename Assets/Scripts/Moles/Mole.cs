@@ -53,7 +53,6 @@ public abstract class Mole : MonoBehaviour
     private LoggerNotifier loggerNotifier;
     private bool isOnDisabledCoolDown = false;
     private bool performanceFeedback = true;
-    private MoleType _moleType = MoleType.SimpleTarget;
 
     protected States state = States.Disabled;
     public MoleOutcome moleCategory { get; private set; } // Can't be set directly, only through moleType setter.
@@ -195,7 +194,7 @@ public abstract class Mole : MonoBehaviour
     public void Disable()
     {
         Debug.Log(state);
-        if (state == States.Enabled && moleCategory == MoleOutcome.Valid)
+        if (state == States.Enabled && moleOutcome == MoleOutcome.Valid)
         {
             ChangeState(States.Missed);
         }
@@ -234,7 +233,7 @@ public abstract class Mole : MonoBehaviour
             return MolePopAnswer.Expired;
         }
 
-        if (moleCategory == MoleOutcome.Valid)
+        if (moleOutcome == MoleOutcome.Valid)
         {
             loggerNotifier.NotifyLogger("Mole Hit", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
             {
@@ -292,7 +291,7 @@ public abstract class Mole : MonoBehaviour
 
     protected virtual void PlayEnabling()
     {
-        if (moleCategory == MoleOutcome.Valid) loggerNotifier.NotifyLogger("Mole Spawned", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
+        if (moleOutcome == MoleOutcome.Valid) loggerNotifier.NotifyLogger("Mole Spawned", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
                             {
                                 {"MoleType", System.Enum.GetName(typeof(MoleType), moleType)}
                             });
@@ -319,7 +318,7 @@ public abstract class Mole : MonoBehaviour
 
     protected virtual void PlayDisabling()
     {
-        if (moleCategory == MoleOutcome.Valid) loggerNotifier.NotifyLogger("Mole Expired", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
+        if (moleOutcome == MoleOutcome.Valid) loggerNotifier.NotifyLogger("Mole Expired", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
                             {
                                 {"MoleActivatedDuration", lifeTime},
                                 {"MoleType", System.Enum.GetName(typeof(MoleType), moleType)}

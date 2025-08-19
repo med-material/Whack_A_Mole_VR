@@ -124,7 +124,7 @@ public class DiskMole : Mole
         PlaySound(enableSound);
         PlayAnimation("EnableDisable");
 
-        if (moleCategory == MoleOutcome.Valid)
+        if (moleOutcome == MoleOutcome.Valid)
         {
             meshMaterial.color = enabledColor;
             meshMaterial.mainTexture = textureEnabled;
@@ -171,7 +171,7 @@ public class DiskMole : Mole
         showHoverInfo(true);
         SetLoadingValue(0);
 
-        if (moleCategory == MoleOutcome.Valid)
+        if (moleOutcome == MoleOutcome.Valid)
         {
             meshMaterial.color = hoverColor;
         }
@@ -186,7 +186,7 @@ public class DiskMole : Mole
         showHoverInfo(false);
         SetLoadingValue(0);
 
-        if (moleCategory == MoleOutcome.Valid)
+        if (moleOutcome == MoleOutcome.Valid)
         {
             meshMaterial.color = enabledColor;
         }
@@ -203,7 +203,7 @@ public class DiskMole : Mole
 
         if (ShouldPerformanceFeedback())
         {
-            if (moleCategory == MoleOutcome.Valid)
+            if (moleOutcome == MoleOutcome.Valid)
             {
                 PlayAnimation("PopCorrectMole");  // Show positive feedback to users that shoot a correct moles, to make it clear this is a success
                 popVisual.startColor = enabledColor;
