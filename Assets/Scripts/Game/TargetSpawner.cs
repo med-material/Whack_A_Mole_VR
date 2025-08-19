@@ -50,7 +50,7 @@ public class TargetSpawner : MonoBehaviour
         if (performanceFeedback.HasValue) parameters.performanceFeedback = performanceFeedback.Value;
     }
 
-    public Mole SpawnMole(Mole.MoleType type, float lifeTime, float expiringDuration, int spawnOrder)
+    public Mole SpawnMole(Mole.MoleType type, Mole.MoleOutcome outcome, float lifeTime, float expiringDuration, int spawnOrder)
     {
         if (_lock) return GetCurrentMole();
 
@@ -68,7 +68,7 @@ public class TargetSpawner : MonoBehaviour
         currentMole.SetPerformanceFeedback(parameters.performanceFeedback);
         currentMole.SetId(globalMoleIncrement++ + id.ToString()); // Formated as ZZZXXYY (ZZZ is mole rank, XX is the X index, YY is the Y index)
         currentMole.transform.localScale = parameters.localScale;
-        currentMole.Enable(lifeTime, expiringDuration, type, spawnOrder); // TODO future update, check if enable still needed (of change to init)
+        currentMole.Enable(lifeTime, expiringDuration, type, outcome, spawnOrder); // TODO future update, check if enable still needed (of change to init)
         stateUpdateEvent.Invoke(true, currentMole);
 
         _lock = true;

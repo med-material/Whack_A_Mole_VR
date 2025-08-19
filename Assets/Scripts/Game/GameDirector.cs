@@ -357,6 +357,8 @@ public class GameDirector : MonoBehaviour
     private void SpawnMole(float lifeTime, bool fakeCoeff)
     {
         Mole.MoleType type = Mole.MoleType.SimpleTarget;
+        Mole.MoleOutcome outcome = Mole.MoleOutcome.Valid;
+
         if (fakeCoeff)
         {
             if (((int)currentGameTimeLeft) % 2 == 0)
@@ -369,7 +371,7 @@ public class GameDirector : MonoBehaviour
             }
         }
 
-        wallManager.ActivateRandomMole(lifeTime, moleExpiringDuration, type);
+        wallManager.ActivateRandomMole(lifeTime, moleExpiringDuration, type, outcome);
     }
 
     private void StartMoleTimer(float setTime = -1)

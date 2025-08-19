@@ -14,7 +14,7 @@ Facilitates the creation of moles with different behaviours on specific events
 public abstract class Mole : MonoBehaviour
 {
     public enum MolePopAnswer { Ok, Fake, Expired, Disabled, Paused }
-    public enum MoleOutcome { Valid, Distractor }
+    public enum MoleOutcome { Valid, Distractor } // Node: if a third option is added, revise every condition in Mole.cs, childs and classes that use it (e.g. PaternInterface.cs, etc.)
     public enum MoleType { SimpleTarget, BallMole, DistractorLeft, DistractorRight, PalmarGrasp, PinchGrasp, WristFlexion, WristExtension }
 
     public bool defaultVisibility = false;
@@ -55,23 +55,9 @@ public abstract class Mole : MonoBehaviour
     private bool performanceFeedback = true;
 
     protected States state = States.Disabled;
-    public MoleOutcome moleCategory { get; private set; } // Can't be set directly, only through moleType setter.
-    protected MoleType moleType
-    {
-        get => _moleType;
-        set
-        {
-            _moleType = value;
-            if (value == MoleType.DistractorLeft || value == MoleType.DistractorRight)
-            {
-                moleCategory = MoleOutcome.Distractor;
-            }
-            else
-            {
-                moleCategory = MoleOutcome.Valid;
-            }
-        }
-    }
+    protected MoleOutcome moleOutcome = MoleOutcome.Valid;
+    protected MoleType moleType = MoleType.SimpleTarget;
+
 
     public virtual void Init(TargetSpawner parentSpawner) // Needed when the Mole is instantiated, to avoid calling a method before the Awake and Start methods are called.
     {
@@ -161,15 +147,8 @@ public abstract class Mole : MonoBehaviour
         return moleType;
     }
 
-    public bool IsFake()
-    {
-        bool isFake = true;
-        if (moleCategory == MoleOutcome.Valid)
-        {
-            isFake = false;
-        }
-        return isFake;
-    }
+    public bool IsFake() => (moleOutcome == MoleOutcome.Distractor);
+    public bool IsValid() => (moleOutcome == MoleOutcome.Valid);
 
     public bool ShouldPerformanceFeedback()
     {
@@ -182,9 +161,10 @@ public abstract class Mole : MonoBehaviour
         return (!(state == States.Enabled || state == States.Enabling || state == States.Disabling));
     }
 
-    public void Enable(float enabledLifeTime, float expiringDuration, MoleType type = MoleType.SimpleTarget, int moleSpawnOrder = -1)
+    public void Enable(float enabledLifeTime, float expiringDuration, MoleType type, MoleOutcome outcome, int moleSpawnOrder = -1)
     {
         moleType = type;
+        moleOutcome = outcome;
         lifeTime = enabledLifeTime;
         expiringTime = expiringDuration;
         spawnOrder = moleSpawnOrder;
