@@ -626,13 +626,8 @@ public class ModifiersManager : MonoBehaviour
     {
         controllerSetup = controllerType;
 
-        bool enableRight;
-        enableRight = controllerType == ControllerSetup.Right ? true : false;
-        enableRight = controllerType == ControllerSetup.Both ? true : enableRight;
-
-        bool enableLeft;
-        enableLeft = controllerType == ControllerSetup.Left ? true : false;
-        enableLeft = controllerType == ControllerSetup.Both ? true : enableLeft;
+        bool enableRight = (controllerType == ControllerSetup.Right || controllerType == ControllerSetup.Both);
+        bool enableLeft = (controllerType == ControllerSetup.Left || controllerType == ControllerSetup.Both);
         Debug.Log("Enable Right: " + enableRight + " Enable Left: " + enableLeft);
 
         if (enableRight)
