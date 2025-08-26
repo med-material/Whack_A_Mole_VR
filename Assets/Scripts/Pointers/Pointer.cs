@@ -27,10 +27,10 @@ public abstract class Pointer : MonoBehaviour
     // Currently serialized. May be controlled by the UI in the future.
 
     [SerializeField]
-    protected AimAssistStates aimAssistState;
+    protected AimAssistStates aimAssistState; // Not implemented yet.
 
     [SerializeField]
-    protected bool directionSmoothed = false;
+    protected bool directionSmoothed = false; // Not implemented yet.
 
     [SerializeField]
     protected Vector3 laserOffset;
@@ -75,19 +75,6 @@ public abstract class Pointer : MonoBehaviour
     [SerializeField]
     public SoundManager soundManager;
 
-    // Laser smoothing. May be put in a new class for clean code. Left here for test for now.
-
-    [SerializeField]
-    private float smoothTime = 0.05f;
-
-    [SerializeField]
-    private float SnapMagnetizeRadius = 0.2f;
-
-    private Vector3 previousDirection;
-    private Vector3 currentLaserOffset = Vector3.zero;
-    private Vector3 smoothingVelocity = Vector3.zero;
-    private float lastTime = -1;
-
     protected int pointerShootOrder = -1;
 
     [System.Serializable]
@@ -128,7 +115,6 @@ public abstract class Pointer : MonoBehaviour
             {"ControllerAimAssistState", System.Enum.GetName(typeof(Pointer.AimAssistStates), aimAssistState)}
         });
 
-        previousDirection = laserOrigin.transform.forward;
         laser = laserOrigin.GetComponent<LineRenderer>();
     }
 
@@ -327,138 +313,6 @@ public abstract class Pointer : MonoBehaviour
             {"HitPositionWorldZ", hitPosition.z}
         });
     }
-
-    private Vector3 GetRayDirection()
-    {
-        Vector3 direction = Vector3.zero;
-        switch (aimAssistState)
-        {
-            case AimAssistStates.Snap:
-                direction = GetSnappedDirection();
-                break;
-            case AimAssistStates.Magnetize:
-                direction = GetMagnetizedDirection();
-                break;
-            case AimAssistStates.None:
-            default:
-                direction = laserOrigin.transform.forward;
-                break;
-        }
-
-        if (directionSmoothed) direction = GetSmoothedDirection(direction);
-
-        return direction;
-    }
-
-    private Vector3 GetSmoothedDirection(Vector3 aimedDirection)
-    {
-        var tempPreviousDirection = previousDirection;
-        float delta = 0;
-        if (lastTime > 0)
-        {
-            delta = Time.time - lastTime;
-        }
-        lastTime = Time.time;
-
-        previousDirection = aimedDirection;
-        currentLaserOffset += (previousDirection - tempPreviousDirection);
-        currentLaserOffset = Vector3.SmoothDamp(currentLaserOffset, Vector3.zero, ref smoothingVelocity, smoothTime, 1000f, delta);
-
-        return aimedDirection - currentLaserOffset;
-    }
-
-    private Vector3 GetSnappedDirection()
-    {
-        RaycastHit hit;
-        if (Physics.Raycast(laserOrigin.transform.position + laserOffset, laserOrigin.transform.forward, out hit, 100f, Physics.DefaultRaycastLayers))
-        {
-            Collider[] collidersHit = Physics.OverlapSphere(hit.point, SnapMagnetizeRadius);
-
-            List<Transform> molesHit = new List<Transform>();
-            foreach (Collider collider in collidersHit)
-            {
-                if (collider.gameObject.GetComponent<Mole>() != null)
-                {
-                    molesHit.Add(collider.gameObject.transform);
-                }
-            }
-
-            if (molesHit.Count == 0) return laserOrigin.transform.forward;
-
-            float closestDistance = 1000f;
-            Vector3 closestMolePosition = Vector3.zero;
-
-            foreach (Transform moleTransform in molesHit)
-            {
-                float moleDistance = Vector3.Distance(hit.point, moleTransform.position);
-                if (moleDistance < closestDistance)
-                {
-                    closestDistance = moleDistance;
-                    closestMolePosition = moleTransform.position;
-                }
-            }
-            return (closestMolePosition + new Vector3(0f, 0.005f, 0f) - laserOrigin.transform.position).normalized;
-        }
-        return laserOrigin.transform.forward;
-    }
-
-    private Vector3 GetMagnetizedDirection()
-    {
-        RaycastHit hit;
-        if (Physics.Raycast(laserOrigin.transform.position + laserOffset, laserOrigin.transform.forward, out hit, 100f, Physics.DefaultRaycastLayers))
-        {
-            Collider[] collidersHit = Physics.OverlapSphere(hit.point, SnapMagnetizeRadius);
-
-            List<Transform> molesHit = new List<Transform>();
-            foreach (Collider collider in collidersHit)
-            {
-                if (collider.gameObject.GetComponent<Mole>() != null)
-                {
-                    molesHit.Add(collider.gameObject.transform);
-                }
-            }
-
-            if (molesHit.Count == 0) return laserOrigin.transform.forward;
-
-            float closestDistance = 1000f;
-            Vector3 closestMolePosition = Vector3.zero;
-
-            foreach (Transform moleTransform in molesHit)
-            {
-                float moleDistance = Vector3.Distance(hit.point, moleTransform.position);
-                if (moleDistance < closestDistance)
-                {
-                    closestDistance = moleDistance;
-                    closestMolePosition = moleTransform.position;
-                }
-            }
-            return (((closestMolePosition + hit.point) / 2f) + new Vector3(0f, 0.005f, 0f) - laserOrigin.transform.position).normalized;
-        }
-        return laserOrigin.transform.forward;
-    }
-
-    // // Inits the laser.
-    // private void InitLaser()
-    // {
-    //     laser = laserOrigin.AddComponent<LineRenderer>();
-    //     laser.useWorldSpace = false;
-    //     laser.material = laserMaterial;
-    //     laser.SetPositions(new Vector3[2]{laserOffset, laserOffset + Vector3.forward * maxLaserLength});
-    //     laser.startColor = startLaserColor;
-    //     laser.endColor = EndLaserColor;
-    //     laser.startWidth = laserWidth;
-    //     laser.endWidth = laserWidth;
-    //     laser.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-
-    //     if (!cursor) return;
-
-    //     cursor.SetColor(EndLaserColor);
-    //     cursor.Disable();
-
-    //     // Smoothing init
-
-    //     
-    // }
 
     // Waits the CoolDown duration.
     private IEnumerator WaitForCooldown()
