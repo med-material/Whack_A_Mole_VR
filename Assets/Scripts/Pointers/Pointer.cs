@@ -59,22 +59,20 @@ public abstract class Pointer : MonoBehaviour
     [SerializeField]
     protected float dwellTime = 2f;
 
-    protected LineRenderer laser;
-
-    protected bool performancefeedback = true;
-
     [SerializeField]
     protected LaserCursor cursor;
-
-    private States state = States.Idle;
-    private Mole hoveredMole;
-    protected bool active = false;
-    protected LoggerNotifier loggerNotifier;
-    protected float dwellStartTimer = 0f;
 
     [SerializeField]
     public SoundManager soundManager;
 
+    private States state = States.Idle;
+    private Mole hoveredMole;
+
+    protected LineRenderer laser;
+    protected bool performancefeedback = true;
+    protected bool active = false;
+    protected LoggerNotifier loggerNotifier;
+    protected float dwellStartTimer = 0f;
     protected int pointerShootOrder = -1;
 
     [System.Serializable]
@@ -140,10 +138,7 @@ public abstract class Pointer : MonoBehaviour
         });
     }
 
-    public void SetPerformanceFeedback(bool perf)
-    {
-        performancefeedback = perf;
-    }
+    public void SetPerformanceFeedback(bool perf) => performancefeedback = perf;
 
     // Enables the pointer
     public void Enable()
@@ -249,10 +244,10 @@ public abstract class Pointer : MonoBehaviour
         }
         else if (hoveredMole)
         {
-                hoveredMole.OnHoverLeave();
-                hoveredMole = null;
-            }
+            hoveredMole.OnHoverLeave();
+            hoveredMole = null;
         }
+    }
 
     // Shoots a raycast. If Mole is hit, calls its Pop() function. Depending on the hit result, plays the hit/missed shooting animation
     // and raises a "Mole Missed" event.
@@ -274,7 +269,7 @@ public abstract class Pointer : MonoBehaviour
                 {
                     case Mole.MolePopAnswer.Ok:
                         PlayShoot(true);
-                    soundManager.PlaySound(gameObject, SoundManager.Sound.greenMoleHit);
+                        soundManager.PlaySound(gameObject, SoundManager.Sound.greenMoleHit);
                         break;
 
                     case Mole.MolePopAnswer.Fake:
@@ -284,8 +279,8 @@ public abstract class Pointer : MonoBehaviour
                         break;
 
                     case Mole.MolePopAnswer.Disabled:
-                    RaiseMoleMissedEvent(hit.point);
-                    soundManager.PlaySound(gameObject, SoundManager.Sound.neutralMoleHit);
+                        RaiseMoleMissedEvent(hit.point);
+                        soundManager.PlaySound(gameObject, SoundManager.Sound.neutralMoleHit);
                         break;
                 }
                 return;

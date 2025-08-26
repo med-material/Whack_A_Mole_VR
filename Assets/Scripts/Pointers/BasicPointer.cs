@@ -24,7 +24,6 @@ public class BasicPointer : Pointer
 
     private float shootTimeLeft;
     private float totalShootTime;
-    private delegate void Del();
     private string hover = "";
 
     // Function for debugging controls, using mouse or keyboard. Only active if the Left Control key is held down. Also adds mouse controls if Left Alt is held down.
@@ -32,9 +31,6 @@ public class BasicPointer : Pointer
     {
         if (Input.GetKey(KeyCode.LeftControl) && active)
         {
-            float v = Input.GetAxisRaw("Vertical");
-            float h = Input.GetAxisRaw("Horizontal");
-
             if (Input.GetKey(KeyCode.LeftAlt))
             {
                 float h1 = mouseSpeed * Input.GetAxis("Mouse X");
@@ -44,8 +40,11 @@ public class BasicPointer : Pointer
             }
             else
             {
+                float v = Input.GetAxisRaw("Vertical");
+                float h = Input.GetAxisRaw("Horizontal");
+
                 Vector3 direction = new Vector3(h, v, 0f).normalized;
-                this.transform.Translate(direction * 1 * Time.deltaTime);
+                this.transform.Translate(direction * Time.deltaTime);
             }
             PointerControl();
         }
