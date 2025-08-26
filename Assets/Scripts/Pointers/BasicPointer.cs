@@ -26,27 +26,6 @@ public class BasicPointer : Pointer
     private float totalShootTime;
     private delegate void Del();
     private string hover = "";
-    public Vector3 CalculateDirection()
-    {
-        Vector3 direction = Vector3.zero;
-        if (Input.GetKey(KeyCode.UpArrow))
-        {
-            direction.y += 0.25f;
-        }
-        if (Input.GetKey(KeyCode.LeftArrow))
-        {
-            direction.x -= 0.25f;
-        }
-        if (Input.GetKey(KeyCode.DownArrow))
-        {
-            direction.y -= 0.25f;
-        }
-        if (Input.GetKey(KeyCode.RightArrow))
-        {
-            direction.x += 0.25f;
-        }
-        return direction.normalized;
-    }
 
     // Function for debugging controls, using mouse or keyboard. Only active if the Left Control key is held down. Also adds mouse controls if Left Alt is held down.
     public void Update()
