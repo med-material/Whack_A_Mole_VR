@@ -32,7 +32,6 @@ public class BallMole : Mole
     [SerializeField]
     private AudioClip popSound;
 
-    private delegate void Del();
     private Shader opaqueShader;
     private Shader glowShader;
     private Material ballMaterial;
@@ -153,11 +152,5 @@ public class BallMole : Mole
             if (ballMaterial.shader.name == opaqueShader.name) return;
             ballMaterial.shader = opaqueShader;
         }
-    }
-
-    private IEnumerator Wait(float duration, Del method)
-    {
-        yield return new WaitForSeconds(duration);
-        method();
     }
 }
