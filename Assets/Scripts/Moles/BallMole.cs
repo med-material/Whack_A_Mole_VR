@@ -52,10 +52,10 @@ public class BallMole : Mole
     Override of the event functions of the base class.
     */
 
-    protected override void PlayEnabling()
+    protected override IEnumerator PlayEnabling()
     {
         PlaySound(enableSound);
-        base.PlayEnabling();
+        yield return base.PlayEnabling();
     }
 
     protected override void PlayEnabled()
@@ -72,10 +72,10 @@ public class BallMole : Mole
         }
     }
 
-    protected override void PlayDisabling()
+    protected override IEnumerator PlayDisabling()
     {
         PlaySound(enableSound);
-        base.PlayDisabling();
+        yield return base.PlayDisabling();
     }
 
     protected override void PlayDisabled()
@@ -110,7 +110,7 @@ public class BallMole : Mole
         }
     }
 
-    protected override void PlayPopping()
+    protected override IEnumerator PlayPopping()
     {
         SwitchShader(true);
         if (moleOutcome == MoleOutcome.Valid)
@@ -122,7 +122,8 @@ public class BallMole : Mole
             ChangeColor(fakeEnabledColor);
         }
         PlaySound(popSound);
-        StartCoroutine(Wait(.2f, new Del(base.PlayPopping)));
+        yield return new WaitForSeconds(.2f);
+        yield return base.PlayPopping();
     }
 
     private void PlaySound(AudioClip audioClip)

@@ -116,7 +116,7 @@ public class DiskMole : Mole
     Override of the event functions of the base class.
     */
 
-    protected override void PlayEnabling()
+    protected override IEnumerator PlayEnabling()
     {
         showHoverInfo(false);
         updateHoverInfo();
@@ -139,10 +139,10 @@ public class DiskMole : Mole
             meshMaterial.color = fakeEnabledColor;
             meshMaterial.mainTexture = distractorRightTexture;
         }
-        base.PlayEnabling();
+        yield return base.PlayEnabling();
     }
 
-    protected override void PlayDisabling()
+    protected override IEnumerator PlayDisabling()
     {
         showHoverInfo(false);
         SetLoadingValue(0);
@@ -150,7 +150,9 @@ public class DiskMole : Mole
         PlayAnimation("EnableDisable"); // Don't show any feedback to users when an incorrect moles expires
         meshMaterial.color = disabledColor;
         meshMaterial.mainTexture = textureDisabled;
-        base.PlayDisabling();
+
+        yield return new WaitForSeconds(getAnimationDuration());
+        yield return base.PlayDisabling();
     }
 
     protected override void PlayMissed()
@@ -196,7 +198,7 @@ public class DiskMole : Mole
         }
     }
 
-    protected override void PlayPopping()
+    protected override IEnumerator PlayPopping()
     {
         showHoverInfo(false);
         SetLoadingValue(0);
@@ -217,7 +219,9 @@ public class DiskMole : Mole
         meshMaterial.color = disabledColor;
         meshMaterial.mainTexture = textureDisabled;
         PlaySound(popSound);
-        base.PlayPopping();
+
+        yield return new WaitForSeconds(getAnimationDuration());
+        yield return base.PlayPopping();
     }
 
     public override void SetLoadingValue(float percent)

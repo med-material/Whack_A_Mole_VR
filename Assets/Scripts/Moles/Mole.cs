@@ -269,7 +269,7 @@ public abstract class Mole : MonoBehaviour
     finish the transition.
     */
 
-    protected virtual void PlayEnabling()
+    protected virtual IEnumerator PlayEnabling()
     {
         if (moleOutcome == MoleOutcome.Valid) loggerNotifier.NotifyLogger("Mole Spawned", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
                             {
@@ -283,6 +283,7 @@ public abstract class Mole : MonoBehaviour
         timer = StartCoroutine(StartActivatedTimer(lifeTime));
 
         ChangeState(States.Enabled);
+        yield break;
     }
 
     protected virtual void PlayMissed()
@@ -296,7 +297,7 @@ public abstract class Mole : MonoBehaviour
         ChangeState(States.Disabling);
     }
 
-    protected virtual void PlayDisabling()
+    protected virtual IEnumerator PlayDisabling()
     {
         if (moleOutcome == MoleOutcome.Valid) loggerNotifier.NotifyLogger("Mole Expired", EventLogger.EventType.MoleEvent, new Dictionary<string, object>()
                             {
@@ -310,11 +311,13 @@ public abstract class Mole : MonoBehaviour
                             });
 
         ChangeState(States.Expired);
+        yield break;
     }
 
-    protected virtual void PlayPopping()
+    protected virtual IEnumerator PlayPopping()
     {
         ChangeState(States.Popped);
+        yield break;
     }
 
     private void ChangeState(States newState)
@@ -350,21 +353,21 @@ public abstract class Mole : MonoBehaviour
         switch (state)
         {
             case States.Enabling:
-                PlayEnabling();
+                StartCoroutine(PlayEnabling());
                 break;
             case States.Enabled:
                 PlayEnabled();
                 break;
 
             case States.Disabling:
-                PlayDisabling();
+                StartCoroutine(PlayDisabling());
                 break;
             case States.Disabled:
                 parentTargetSpawner.DespawnMole();
                 break;
 
             case States.Popping:
-                PlayPopping();
+                StartCoroutine(PlayPopping());
                 break;
             case States.Popped:
                 parentTargetSpawner.DespawnMole();
