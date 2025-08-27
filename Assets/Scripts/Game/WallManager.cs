@@ -363,10 +363,10 @@ public class WallManager : MonoBehaviour
 
     public void UpdateWallPosition(float? posX = null, float? posY = null, float? posZ = null)
     {
-        transform.transform.position = new Vector3(
-            posX.HasValue ? posX.Value : transform.position.x,
-            posY.HasValue ? posY.Value : transform.position.y,
-            posZ.HasValue ? posZ.Value : transform.position.z
+        transform.transform.localPosition = new Vector3(
+            posX.HasValue ? posX.Value : transform.localPosition.x,
+            posY.HasValue ? posY.Value : transform.localPosition.y,
+            posZ.HasValue ? posZ.Value : transform.localPosition.z
         );
     }
 
