@@ -327,8 +327,10 @@ public class PatternInterface : MonoBehaviour
         }
         if (action.TryGetValue("CURSORVISIBILITY", out tempValue))
         {
-            GameObject cursor = GameObject.Find("Cursor");
-            if (cursor != null) cursor.SetActive(bool.Parse(tempValue));
+            GameObject cursorR = GameObject.Find("SphereR");
+            if (cursorR != null) cursorR.SetActive(bool.Parse(tempValue));
+            GameObject cursorL = GameObject.Find("SphereL");
+            if (cursorL != null) cursorL.SetActive(bool.Parse(tempValue));
         }
     }
 
