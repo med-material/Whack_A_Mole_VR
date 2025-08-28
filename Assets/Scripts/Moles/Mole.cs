@@ -192,15 +192,9 @@ public abstract class Mole : MonoBehaviour
         }
     }
 
-    public void SetPause(bool pause)
-    {
-        isPaused = pause;
-    }
+    public void SetPause(bool pause) => isPaused = pause;
 
-    public void SetPerformanceFeedback(bool perf)
-    {
-        performanceFeedback = perf;
-    }
+    public void SetPerformanceFeedback(bool perf) => performanceFeedback = perf;
 
     // Pops the Mole. Returns an answer correspondind to its poping state.
     public MolePopAnswer Pop(Vector3 hitPoint)
