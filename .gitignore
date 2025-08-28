@@ -9,6 +9,8 @@ Library/
 [Aa]ssets/AssetStoreTools*
 [Aa]ssets/LoggingManager/*.json
 [Aa]ssets/LoggingManager/*.json.meta
+UserSettings/
+
 # credential files
 mysql_auth.txt
 mysql_auth.txt.meta
