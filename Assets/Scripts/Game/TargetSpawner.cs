@@ -52,7 +52,11 @@ public class TargetSpawner : MonoBehaviour
 
     public Mole SpawnMole(Mole.MoleType type, Mole.MoleOutcome outcome, float lifeTime, float expiringDuration, int spawnOrder)
     {
-        if (_lock) return GetCurrentMole();
+        if (_lock)
+        {
+            Debug.LogWarning($"Mistake: TargetSpawn {id} already has a mole. Returning the current one instead of creating a new one.");
+            return GetCurrentMole();
+        }
 
         currentMole = Instantiate(molePrefabs.GetPrefab(type), transform).GetComponent<Mole>();
 
@@ -66,9 +70,9 @@ public class TargetSpawner : MonoBehaviour
         currentMole.Init(this);
         currentMole.SetNormalizedIndex(parameters.normalizedIndex);
         currentMole.SetPerformanceFeedback(parameters.performanceFeedback);
-        currentMole.SetId(globalMoleIncrement++ + id.ToString()); // Formated as ZZZXXYY (ZZZ is mole rank, XX is the X index, YY is the Y index)
+        currentMole.SetId(globalMoleIncrement++ + id.ToString()); // Formatted as ZZZXXYY (ZZZ is mole rank, XX is the X index, YY is the Y index)
         currentMole.transform.localScale = parameters.localScale;
-        currentMole.Enable(lifeTime, expiringDuration, type, outcome, spawnOrder); // TODO future update, check if enable still needed (of change to init)
+        currentMole.Enable(lifeTime, expiringDuration, type, outcome, spawnOrder); // TODO future update, check if enable still needed (or change to init)
         stateUpdateEvent.Invoke(true, currentMole);
 
         _lock = true;

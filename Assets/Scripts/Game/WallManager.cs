@@ -320,7 +320,11 @@ public class WallManager : MonoBehaviour
     public Mole CreateMole(int targetSpawnId, float lifeTime, float moleExpiringDuration, Mole.MoleType type, Mole.MoleOutcome outcome)
     {
         if (!active) return null;
-        if (!targetSpawners.ContainsKey(targetSpawnId)) return null;
+        if (!targetSpawners.ContainsKey(targetSpawnId))
+        {
+            Debug.LogError($"TargetSpawner with ID {targetSpawnId} does not exist.");
+            return null;
+        }
 
         targetSpawners[targetSpawnId].SpawnMole(type, outcome, lifeTime, moleExpiringDuration, spawnOrder);
         moleCount++;
