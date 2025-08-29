@@ -61,6 +61,14 @@ public abstract class Mole : MonoBehaviour
 
     public virtual void Init(TargetSpawner parentSpawner) // Needed when the Mole is instantiated, to avoid calling a method before the Awake and Start methods are called.
     {
+
+        // Security check: ensure the Mole is on the correct layer for detection.
+        string layerName = LayerMask.LayerToName(gameObject.layer);
+        if (layerName != "Target")
+        {
+            Debug.LogError($"Mole: The layer assigned to the Mole prefab '{gameObject.name}' is '{layerName}'. It should be 'Target' for correct detection.");
+        }
+
         parentTargetSpawner = parentSpawner;
 
         moleType = MoleType.SimpleTarget;
@@ -184,15 +192,9 @@ public abstract class Mole : MonoBehaviour
         }
     }
 
-    public void SetPause(bool pause)
-    {
-        isPaused = pause;
-    }
+    public void SetPause(bool pause) => isPaused = pause;
 
-    public void SetPerformanceFeedback(bool perf)
-    {
-        performanceFeedback = perf;
-    }
+    public void SetPerformanceFeedback(bool perf) => performanceFeedback = perf;
 
     // Pops the Mole. Returns an answer correspondind to its poping state.
     public MolePopAnswer Pop(Vector3 hitPoint)

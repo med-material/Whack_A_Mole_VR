@@ -626,18 +626,12 @@ public class ModifiersManager : MonoBehaviour
     {
         controllerSetup = controllerType;
 
-        bool enableRight;
-        enableRight = controllerType == ControllerSetup.Right ? true : false;
-        enableRight = controllerType == ControllerSetup.Both ? true : enableRight;
-
-        bool enableLeft;
-        enableLeft = controllerType == ControllerSetup.Left ? true : false;
-        enableLeft = controllerType == ControllerSetup.Both ? true : enableLeft;
+        bool enableRight = (controllerType == ControllerSetup.Right || controllerType == ControllerSetup.Both);
+        bool enableLeft = (controllerType == ControllerSetup.Left || controllerType == ControllerSetup.Both);
         Debug.Log("Enable Right: " + enableRight + " Enable Left: " + enableLeft);
 
         if (enableRight)
         {
-            rightControllerPointers.ToList().ForEach(pointer => pointer.Enable());
             foreach (GameObject obj in rightControllerVisuals)
             {
                 obj.SetActive(true);
@@ -645,7 +639,6 @@ public class ModifiersManager : MonoBehaviour
         }
         else
         {
-            rightControllerPointers.ToList().ForEach(pointer => pointer.Disable());
             foreach (GameObject obj in rightControllerVisuals)
             {
                 obj.SetActive(false);
@@ -654,7 +647,6 @@ public class ModifiersManager : MonoBehaviour
 
         if (enableLeft)
         {
-            leftControllerPointers.ToList().ForEach(pointer => pointer.Enable());
             foreach (GameObject obj in leftControllerVisuals)
             {
                 obj.SetActive(true);
@@ -662,7 +654,6 @@ public class ModifiersManager : MonoBehaviour
         }
         else
         {
-            leftControllerPointers.ToList().ForEach(pointer => pointer.Disable());
             foreach (GameObject obj in leftControllerVisuals)
             {
                 obj.SetActive(false);

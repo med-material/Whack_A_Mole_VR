@@ -320,7 +320,11 @@ public class WallManager : MonoBehaviour
     public Mole CreateMole(int targetSpawnId, float lifeTime, float moleExpiringDuration, Mole.MoleType type, Mole.MoleOutcome outcome)
     {
         if (!active) return null;
-        if (!targetSpawners.ContainsKey(targetSpawnId)) return null;
+        if (!targetSpawners.ContainsKey(targetSpawnId))
+        {
+            Debug.LogError($"TargetSpawner with ID {targetSpawnId} does not exist.");
+            return null;
+        }
 
         targetSpawners[targetSpawnId].SpawnMole(type, outcome, lifeTime, moleExpiringDuration, spawnOrder);
         moleCount++;
@@ -359,10 +363,10 @@ public class WallManager : MonoBehaviour
 
     public void UpdateWallPosition(float? posX = null, float? posY = null, float? posZ = null)
     {
-        transform.transform.position = new Vector3(
-            posX.HasValue ? posX.Value : transform.position.x,
-            posY.HasValue ? posY.Value : transform.position.y,
-            posZ.HasValue ? posZ.Value : transform.position.z
+        transform.transform.localPosition = new Vector3(
+            posX.HasValue ? posX.Value : transform.localPosition.x,
+            posY.HasValue ? posY.Value : transform.localPosition.y,
+            posZ.HasValue ? posZ.Value : transform.localPosition.z
         );
     }
 

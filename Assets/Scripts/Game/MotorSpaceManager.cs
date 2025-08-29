@@ -46,19 +46,15 @@ public class MotorSpaceManager : MonoBehaviour
     {
         motorspace = (MotorSpaceManager.ActiveMotorSpace)System.Enum.Parse(typeof(MotorSpaceManager.ActiveMotorSpace), newMotorSpace);
 
-        bool R = motorspace == ActiveMotorSpace.Right ? true : false;
-        R = motorspace == ActiveMotorSpace.Both ? true : R;
-        bool L = motorspace == ActiveMotorSpace.Left ? true : false;
-        L = motorspace == ActiveMotorSpace.Both ? true : L;
-        bool mirrorR = isMirror;
-        mirrorR = motorspace == ActiveMotorSpace.Right ? mirrorR : false;
-        mirrorR = motorspace == ActiveMotorSpace.Both ? false : mirrorR;
-        bool mirrorL = isMirror;
-        mirrorL = motorspace == ActiveMotorSpace.Left ? mirrorL : false;
-        mirrorL = motorspace == ActiveMotorSpace.Both ? false : mirrorL;
+        bool enableRight = (motorspace == ActiveMotorSpace.Right || motorspace == ActiveMotorSpace.Both);
+        bool enableLeft = (motorspace == ActiveMotorSpace.Left || motorspace == ActiveMotorSpace.Both);
 
-        MotorSpaceRight.gameObject.SetActive(R);
-        MotorSpaceLeft.gameObject.SetActive(L);
+        bool mirrorR = isMirror && (motorspace == ActiveMotorSpace.Right);
+        bool mirrorL = isMirror && (motorspace == ActiveMotorSpace.Left);
+
+        MotorSpaceRight.gameObject.SetActive(enableRight);
+        MotorSpaceLeft.gameObject.SetActive(enableLeft);
+
         MotorSpaceMirrorRight.gameObject.SetActive(mirrorR);
         MotorSpaceMirrorLeft.gameObject.SetActive(mirrorL);
     }

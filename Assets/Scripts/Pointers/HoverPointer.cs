@@ -21,9 +21,6 @@ public class HoverPointer : Pointer
 
     private float shootTimeLeft;
     private float totalShootTime;
-    private float dwellTime = 3.5f;
-    private float dwellTimer = 0f;
-    private delegate void Del();
 
     // Function called on VR update, since it can be faster/not synchronous to Update() function. Makes the Pointer slightly more reactive.
     public override void PositionUpdated()
@@ -61,8 +58,8 @@ public class HoverPointer : Pointer
                     Mole.States moleAnswer = mole.GetState();
                     if (moleAnswer == Mole.States.Enabled)
                     {
-                        dwellTimer = dwellTimer + 0.1f;
-                        if (dwellTimer > dwellTime)
+
+                        if ((Time.time - dwellStartTimer) > dwellTime)
                         {
                             pointerShootOrder++;
                             loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>(){
@@ -86,27 +83,6 @@ public class HoverPointer : Pointer
                             Shoot(hit);
                         }
                     }
-                    else
-                    {
-                        if (dwellTimer > 0f)
-                        {
-                            dwellTimer = dwellTimer - 0.1f;
-                        }
-                    }
-                }
-                else
-                {
-                    if (dwellTimer > 0f)
-                    {
-                        dwellTimer = dwellTimer - 0.1f;
-                    }
-                }
-            }
-            else
-            {
-                if (dwellTimer > 0f)
-                {
-                    dwellTimer = dwellTimer - 0.1f;
                 }
             }
         }

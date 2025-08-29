@@ -201,6 +201,10 @@ public class PatternInterface : MonoBehaviour
         {
             wallManager.UpdateWallPosition(posZ: ParseFloat(tempValue));
         }
+        if (action.TryGetValue("POSY", out tempValue))
+        {
+            wallManager.UpdateWallPosition(posY: ParseFloat(tempValue));
+        }
         if (action.TryGetValue("CURVEX", out tempValue))
         {
             wallManager.UpdateWallCurveRatio(newCurveRatioX: ParseFloat(tempValue));
@@ -320,6 +324,11 @@ public class PatternInterface : MonoBehaviour
         if (action.TryGetValue("EMBODIMENT", out tempValue))
         {
             modifiersManager.SetEmbodiment((ModifiersManager.Embodiment)System.Enum.Parse(typeof(ModifiersManager.Embodiment), tempValue));
+        }
+        if (action.TryGetValue("CURSORVISIBILITY", out tempValue))
+        {
+            GameObject cursor = GameObject.Find("Cursor");
+            if (cursor != null) cursor.SetActive(bool.Parse(tempValue));
         }
     }
 
