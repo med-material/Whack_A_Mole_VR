@@ -141,7 +141,7 @@ public abstract class Pointer : MonoBehaviour
     public void SetPerformanceFeedback(bool perf) => performancefeedback = perf;
 
     // Enables the pointer
-    public void Enable()
+    public virtual void Enable()
     {
         if (active) return;
         if (cursor) cursor.Enable();
@@ -153,13 +153,41 @@ public abstract class Pointer : MonoBehaviour
     }
 
     // Disables the pointer
-    public void Disable()
+    public virtual void Disable()
     {
         if (!active) return;
         if (cursor) cursor.Disable();
 
         //if (laser) laser.enabled = false;
         active = false;
+    }
+
+    protected virtual void Shoot(Mole mole)
+    {
+        state = States.CoolingDown;
+        StartCoroutine(WaitForCooldown());
+
+        onPointerShoot.Invoke();
+        Mole.MolePopAnswer moleAnswer = mole.Pop(mole.transform.position);
+
+        switch (moleAnswer)
+        {
+            case Mole.MolePopAnswer.Ok:
+                PlayShoot(true);
+                soundManager.PlaySound(gameObject, SoundManager.Sound.greenMoleHit);
+                break;
+
+            case Mole.MolePopAnswer.Fake:
+                PlayShoot(false);
+                SoundManager.Sound sound = performancefeedback ? SoundManager.Sound.redMoleHit : SoundManager.Sound.greenMoleHit;
+                soundManager.PlaySound(gameObject, sound);
+                break;
+
+            case Mole.MolePopAnswer.Disabled:
+                RaiseMoleMissedEvent(mole.transform.position);
+                soundManager.PlaySound(gameObject, SoundManager.Sound.neutralMoleHit);
+                break;
+        }
     }
 
     // Function called on VR update, since it can be faster/not synchronous to Update() function. Makes the Pointer slightly more reactive.
