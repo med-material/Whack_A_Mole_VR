@@ -19,8 +19,10 @@ public class EMGPointer : Pointer
     private GameObject virtualHandPrefab;
     private GameObject virtualHand;
 
-    [SerializeField] private EMGDataExposure emgDataExposure;
-    [SerializeField] private float emgThreshold = 9f; // Threshold above which a shoot is triggered.
+    [SerializeField] private EMGDataProcessor emgDataExposure;
+    [SerializeField] private bool recordMaximumEMG = true; // If true, records the maximum EMG value reached during the session.
+    [SerializeField] private float maxEMG = 0.0f;
+    [SerializeField][Range(0f, 1f)] private float emgThreshold = 0.3f; // Threshold above which the EMG signal is considered as a muscle activation (0-1).
 
     private float shootTimeLeft;
     private float totalShootTime;
@@ -83,10 +85,20 @@ public class EMGPointer : Pointer
     {
         if (mole.GetState() == Mole.States.Enabled)
         {
-            if (emgDataExposure.smoothedAbsAverage < emgThreshold) dwellStartTimer = Time.time; // Reset the dwell timer if the EMG signal is below the threshold.
+
+            if (recordMaximumEMG) // Update the maximum EMG value reached
+            {
+                maxEMG = Mathf.Max(maxEMG, (float)emgDataExposure.GetSmoothedAbsAverage());
+            }
+            else if (emgDataExposure.GetSmoothedAbsAverage() < (emgThreshold * maxEMG)) // If the EMG signal is below the threshold, reset the dwell timer.
+            {
+                dwellStartTimer = Time.time;
+            }
+
             mole.SetLoadingValue((Time.time - dwellStartTimer) / dwellTime);
             if ((Time.time - dwellStartTimer) > dwellTime)
             {
+                recordMaximumEMG = false;
                 pointerShootOrder++;
                 loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>(){
                                 {"ControllerSmoothed", directionSmoothed},
@@ -105,6 +117,13 @@ public class EMGPointer : Pointer
             }
         }
     }
+
+    public void resetMaxEMGCalibration()
+    {
+        recordMaximumEMG = true;
+        maxEMG = 0.0f;
+    }
+
 
     // Implementation of the behavior of the Pointer on shoot. 
     protected override void PlayShoot(bool correctHit) // TODO: probably need to be adapted
