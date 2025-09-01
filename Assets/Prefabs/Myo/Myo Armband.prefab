@@ -54,6 +54,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4179753060935029867}
+  - component: {fileID: 1699063096191847146}
   m_Layer: 0
   m_Name: Myo Armband
   m_TagString: Untagged
@@ -76,8 +77,25 @@ Transform:
   - {fileID: 7937852193863445948}
   - {fileID: 4239910056781458931}
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1699063096191847146
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4179753060935029866}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 505d41d38d0798144af5ab8a35cef708, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  thalmicMyo: {fileID: 7937852193856734334}
+  smoothingWindowSize: 250
+  rawEMGData: 0000000000000000000000000000000000000000000000000000000000000000
+  rawAbsAverage: 0
+  smoothedAbsAverage: 0
 --- !u!1001 &4179753059252458713
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -245,6 +263,18 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ef65462abb5395043b96e7305e321c44, type: 3}
+--- !u!114 &7937852193856734334 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6064551824600737415, guid: ef65462abb5395043b96e7305e321c44,
+    type: 3}
+  m_PrefabInstance: {fileID: 4179753060117308153}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e9d766c82b2b52449346917d4f3db5c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &7937852193863445948 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6064551824611725125, guid: ef65462abb5395043b96e7305e321c44,
