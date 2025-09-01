@@ -173,12 +173,12 @@ public abstract class Pointer : MonoBehaviour
         switch (moleAnswer)
         {
             case Mole.MolePopAnswer.Ok:
-                PlayShoot(true);
+                PlayShoot(correctHit: true);
                 soundManager.PlaySound(gameObject, SoundManager.Sound.greenMoleHit);
                 break;
 
             case Mole.MolePopAnswer.Fake:
-                PlayShoot(false);
+                PlayShoot(correctHit: false);
                 SoundManager.Sound sound = performancefeedback ? SoundManager.Sound.redMoleHit : SoundManager.Sound.greenMoleHit;
                 soundManager.PlaySound(gameObject, sound);
                 break;
