@@ -19,6 +19,9 @@ public class EMGPointer : Pointer
     private GameObject virtualHandPrefab;
     private GameObject virtualHand;
 
+    [SerializeField] private EMGDataExposure emgDataExposure;
+    [SerializeField] private float emgThreshold = 9f; // Threshold above which a shoot is triggered.
+
     private float shootTimeLeft;
     private float totalShootTime;
 
@@ -80,6 +83,7 @@ public class EMGPointer : Pointer
     {
         if (mole.GetState() == Mole.States.Enabled)
         {
+            if (emgDataExposure.smoothedAbsAverage < emgThreshold) dwellStartTimer = Time.time; // Reset the dwell timer if the EMG signal is below the threshold.
             mole.SetLoadingValue((Time.time - dwellStartTimer) / dwellTime);
             if ((Time.time - dwellStartTimer) > dwellTime)
             {
