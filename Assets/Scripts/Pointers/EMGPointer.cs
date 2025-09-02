@@ -27,6 +27,11 @@ public class EMGPointer : Pointer
     private float shootTimeLeft;
     private float totalShootTime;
 
+    void Update()
+    {
+        if (recordMaximumEMG) maxEMG = Mathf.Max(maxEMG, (float)emgDataExposure.GetSmoothedAbsAverage());
+    }
+
     public override void Enable()
     {
         if (active) return;
@@ -50,7 +55,7 @@ public class EMGPointer : Pointer
 
         if (virtualHand != null)
         {
-            Destroy(virtualHand); // TODO: test if this is ok
+            Destroy(virtualHand);
             virtualHand = null;
         }
         base.Disable();
@@ -85,15 +90,8 @@ public class EMGPointer : Pointer
     {
         if (mole.GetState() == Mole.States.Enabled)
         {
-
-            if (recordMaximumEMG) // Update the maximum EMG value reached
-            {
-                maxEMG = Mathf.Max(maxEMG, (float)emgDataExposure.GetSmoothedAbsAverage());
-            }
-            else if (emgDataExposure.GetSmoothedAbsAverage() < (emgThreshold * maxEMG)) // If the EMG signal is below the threshold, reset the dwell timer.
-            {
-                dwellStartTimer = Time.time;
-            }
+            // If the EMG signal is below the threshold, reset the dwell timer.
+            if (emgDataExposure.GetSmoothedAbsAverage() < (emgThreshold * maxEMG)) dwellStartTimer = Time.time;
 
             mole.SetLoadingValue((Time.time - dwellStartTimer) / dwellTime);
             if ((Time.time - dwellStartTimer) > dwellTime)
@@ -117,13 +115,6 @@ public class EMGPointer : Pointer
             }
         }
     }
-
-    public void resetMaxEMGCalibration()
-    {
-        recordMaximumEMG = true;
-        maxEMG = 0.0f;
-    }
-
 
     // Implementation of the behavior of the Pointer on shoot. 
     protected override void PlayShoot(bool correctHit) // TODO: probably need to be adapted
