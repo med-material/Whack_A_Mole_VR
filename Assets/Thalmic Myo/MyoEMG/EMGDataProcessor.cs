@@ -23,14 +23,10 @@ public class EMGDataProcessor : MonoBehaviour
     private void onReceiveData(object sender, Thalmic.Myo.EmgDataEventArgs data)
     {
         // The EMG Pod 08 is unreadable during the first loop iteration. i.e. In the first loop the emg[] size is 7, not 8
-        if (data.Emg == null || data.Emg.Length != 8)
-        {
-            Debug.LogWarning("EMG Data malformed: " + data.Emg);
-            return;
-        }
+        if (data.Emg == null || data.Emg.Length != 8) return;
 
         rawEMGData = data.Emg;
-        rawAbsAverage = (float) rawEMGData.Select(x => Mathf.Abs(x)).Average();
+        rawAbsAverage = (float)rawEMGData.Select(x => Mathf.Abs(x)).Average();
 
         // Update EMG data buffer
         rawEMGDataBuffer.Enqueue(rawEMGData);
