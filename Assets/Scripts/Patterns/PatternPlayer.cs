@@ -11,7 +11,6 @@ public class PatternPlayer : MonoBehaviour
 {
     private Dictionary<float, List<Dictionary<string, string>>> pattern = new Dictionary<float, List<Dictionary<string, string>>>();
     private List<float> sortedKeys = new List<float>();
-    private List<int> moleIdList = new List<int>();
     private float waitTimeLeft = 0f;
     private float waitForDuration = -1f;
     private int playIndex = 0;
@@ -196,6 +195,8 @@ public class PatternPlayer : MonoBehaviour
             return;
         }
 
+        waitForDuration = -1f;
+        waitTimeLeft = 0f;
         Dictionary<int, Mole> molesList = patternInterface.GetMolesList();
 
         // Clear all distractors.
@@ -210,12 +211,17 @@ public class PatternPlayer : MonoBehaviour
             // dissapears.
             // Otherwise, if the next action contains a mole, play the next step.
             // Otherwise, wait.
-            //Debug.Log(action["FUNCTION"]);
-            if (action["FUNCTION"] == "MESSAGE")
+            if (action["FUNCTION"] == "DELAY" || action["FUNCTION"] == "MESSAGE")
             {
-                waitForDuration = GetWaitTime(playIndex);
-                patternInterface.ResetTargetsList();
-                return;
+                if (action.ContainsKey("TIME"))
+                {
+                    if (float.TryParse(action["TIME"], out float delayTime))
+                    {
+                        waitForDuration = delayTime;
+                        patternInterface.ResetTargetsList();
+                        return;
+                    }
+                }
             }
             else if (action["FUNCTION"] == "MOLE")
             {
