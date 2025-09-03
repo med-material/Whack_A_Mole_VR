@@ -30,6 +30,7 @@ public class EMGPointer : Pointer
     void Update()
     {
         if (recordMaximumEMG) maxEMG = Mathf.Max(maxEMG, (float)emgDataExposure.GetSmoothedAbsAverage());
+        MyoEMGLogging.Threshold = (emgDataExposure.GetSmoothedAbsAverage() >= (emgThreshold * maxEMG)) ? "above" : "below";
     }
 
     public override void Enable()
@@ -67,6 +68,7 @@ public class EMGPointer : Pointer
         dwellStartTimer = Time.time;
         if (mole.GetState() == Mole.States.Enabled)
         {
+            MyoEMGLogging.CurrentGestures = mole.GetMoleType().ToString();
             loggerNotifier.NotifyLogger("Pointer Hover Begin", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
             {
                 {"ControllerHover", mole.GetId().ToString()},
@@ -79,6 +81,7 @@ public class EMGPointer : Pointer
     {
         mole.SetLoadingValue(0);
         mole.OnHoverLeave();
+        MyoEMGLogging.CurrentGestures = "NULL";
         loggerNotifier.NotifyLogger("Pointer Hover End", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
         {
             {"ControllerHover", mole.name},
@@ -96,7 +99,6 @@ public class EMGPointer : Pointer
             mole.SetLoadingValue((Time.time - dwellStartTimer) / dwellTime);
             if ((Time.time - dwellStartTimer) > dwellTime)
             {
-                recordMaximumEMG = false;
                 pointerShootOrder++;
                 loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>(){
                                 {"ControllerSmoothed", directionSmoothed},
@@ -111,6 +113,7 @@ public class EMGPointer : Pointer
                                 {"PointerShootOrder", pointerShootOrder},
                                 {"ControllerName", gameObject.name}
                             });
+                MyoEMGLogging.CurrentGestures = "NULL";
                 Shoot(mole);
             }
         }
