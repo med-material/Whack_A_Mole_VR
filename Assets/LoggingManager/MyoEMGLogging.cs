@@ -11,14 +11,21 @@ public class MyoEMGLogging : MonoBehaviour
     List<string> EMGCol;
     private bool isLoggingStarted = false;
 
+    public static string CurrentGestures = "NULL";
+    public static string Threshold = "below";
+
     void Start()
     {
-        // List of column headers for EMG data.
-        EMGCol = new List<string>() { "EMG1", "EMG2", "EMG3", "EMG4", "EMG5", "EMG6", "EMG7", "EMG8" };
+        // Define EMG column headers and additional log columns.
+        EMGCol = new List<string> { "EMG1", "EMG2", "EMG3", "EMG4", "EMG5", "EMG6", "EMG7", "EMG8" };
+        List<string> logCols = new List<string>(EMGCol)
+        {
+            "CurrentGestures",
+            "Threshold"
+        };
 
-        // Start by telling logging manager to create a new collection of logs
-        // and optionally pass the column headers.
-        loggingManager.CreateLog("EMG", EMGCol);
+        // Initialize EMG log collection with specified columns.
+        loggingManager.CreateLog("EMG", logCols);
     }
 
     public void OnGameDirectorStateUpdate(GameDirector.GameState newState)
@@ -53,6 +60,10 @@ public class MyoEMGLogging : MonoBehaviour
         Dictionary<string, object> emgData = EMGCol
             .Select((col, i) => new { col, value = data.Emg[i] })
             .ToDictionary(x => x.col, x => (object)x.value);
+
+        // Add CurrentGestures and Threshold columns with their current values
+        emgData["CurrentGestures"] = CurrentGestures;
+        emgData["Threshold"] = Threshold;
 
         // Time.frameCount (used in LogStore) can only be accessed from the main
         // thread so we use MainThreadDispatcher to enqueue the logging action.
