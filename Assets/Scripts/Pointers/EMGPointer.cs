@@ -19,7 +19,7 @@ public class EMGPointer : Pointer
     private GameObject virtualHandPrefab;
     private GameObject virtualHand;
 
-    [SerializeField] private EMGDataProcessor emgDataExposure;
+    [SerializeField] private EMGDataProcessor emgDataProcessor;
     [SerializeField] private bool recordMaximumEMG = true; // If true, records the maximum EMG value reached during the session.
     [SerializeField] private float maxEMG = 0.0f;
     [SerializeField][Range(0f, 1f)] private float emgThreshold = 0.3f; // Threshold above which the EMG signal is considered as a muscle activation (0-1).
@@ -29,8 +29,8 @@ public class EMGPointer : Pointer
 
     void Update()
     {
-        if (recordMaximumEMG) maxEMG = Mathf.Max(maxEMG, (float)emgDataExposure.GetSmoothedAbsAverage());
-        MyoEMGLogging.Threshold = (emgDataExposure.GetSmoothedAbsAverage() >= (emgThreshold * maxEMG)) ? "above" : "below";
+        if (recordMaximumEMG) maxEMG = Mathf.Max(maxEMG, (float)emgDataProcessor.GetSmoothedAbsAverage());
+        MyoEMGLogging.Threshold = (emgDataProcessor.GetSmoothedAbsAverage() >= (emgThreshold * maxEMG)) ? "above" : "below";
     }
 
     public override void Enable()
@@ -94,7 +94,7 @@ public class EMGPointer : Pointer
         if (mole.GetState() == Mole.States.Enabled)
         {
             // If the EMG signal is below the threshold, reset the dwell timer.
-            if (emgDataExposure.GetSmoothedAbsAverage() < (emgThreshold * maxEMG)) dwellStartTimer = Time.time;
+            if (emgDataProcessor.GetSmoothedAbsAverage() < (emgThreshold * maxEMG)) dwellStartTimer = Time.time;
 
             mole.SetLoadingValue((Time.time - dwellStartTimer) / dwellTime);
             if ((Time.time - dwellStartTimer) > dwellTime)
