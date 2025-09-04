@@ -194,9 +194,9 @@ PatternPlayer:PlayStep() (at Assets/Scripts/Patterns/PatternPlayer.cs:130)
 PatternPlayer:TimeParadigm() (at Assets/Scripts/Patterns/PatternPlayer.cs:159)
 PatternPlayer:Update() (at Assets/Scripts/Patterns/PatternPlayer.cs:40)
 
-Could not find Root transform in VirtualHand prefab hierarchy
+SteamVR_Behaviour_Skeleton component not found on VirtualHand instance.
 UnityEngine.Debug:LogError (object)
-EMGPointer:Enable () (at Assets/Scripts/Pointers/EMGPointer.cs:54)
+EMGPointer:Enable () (at Assets/Scripts/Pointers/EMGPointer.cs:50)
 PointerTypeSelector:ActivatePointer (ModifiersManager/PointerType) (at Assets/Scripts/Pointers/PointerTypeSelector.cs:46)
 ModifiersManager:SetPointerType (ModifiersManager/PointerType) (at Assets/Scripts/Game/ModifiersManager.cs:241)
 PatternInterface:SetModifier (System.Collections.Generic.Dictionary`2<string, string>) (at Assets/Scripts/Patterns/PatternInterface.cs:286)
@@ -271,12 +271,6 @@ UnityEngine.MonoBehaviour:StartCoroutine (System.Collections.IEnumerator)
 EMGClassifiedGestureManager:SetPose (HandGestureState) (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:117)
 EMGClassifiedGestureManager:Update () (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:74)
 
-Enabled
-UnityEngine.Debug:Log (object)
-Mole:Disable () (at Assets/Scripts/Moles/Mole.cs:184)
-Mole/<StartActivatedTimer>d__54:MoveNext () (at Assets/Scripts/Moles/Mole.cs:403)
-UnityEngine.SetupCoroutine:InvokeMoveNext (System.Collections.IEnumerator,intptr)
-
 Poser or blendingBehaviours is null.
 UnityEngine.Debug:LogError (object)
 EMGClassifiedGestureManager/<BlendToNewPose>d__15:MoveNext () (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:155)
@@ -284,8 +278,9 @@ UnityEngine.MonoBehaviour:StartCoroutine (System.Collections.IEnumerator)
 EMGClassifiedGestureManager:SetPose (HandGestureState) (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:117)
 EMGClassifiedGestureManager:Update () (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:71)
 
-Recording is not running, nothing to stop.
+Enabled
 UnityEngine.Debug:Log (object)
-PupilLabs.RecordingController:StopRecording () (at Assets/Plugins/Pupil/Scripts/RecordingController.cs:108)
-GameDirector:OnApplicationQuit () (at Assets/Scripts/Game/GameDirector.cs:503)
+Mole:Disable () (at Assets/Scripts/Moles/Mole.cs:184)
+Mole/<StartActivatedTimer>d__54:MoveNext () (at Assets/Scripts/Moles/Mole.cs:403)
+UnityEngine.SetupCoroutine:InvokeMoveNext (System.Collections.IEnumerator,intptr)
 
