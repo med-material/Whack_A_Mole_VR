@@ -42,8 +42,7 @@ public class EMGPointer : Pointer
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleExited += OnHoverExit;
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleStay += OnHoverStay;
 
-            Transform rootTransform = virtualHand.transform.Find("vr_glove_right_model/_slim_r/Root");
-
+            Transform rootTransform = virtualHand.transform.Find("vr_glove_right_model_slim/slim_r/Root");
             //Assign skeletonRoot for SteamVR_Behaviour Skeleton if present
             SteamVR_Behaviour_Skeleton skeleton = virtualHand.GetComponent<Valve.VR.SteamVR_Behaviour_Skeleton>();
             if (skeleton != null)
