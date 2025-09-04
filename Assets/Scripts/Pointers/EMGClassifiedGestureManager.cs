@@ -45,9 +45,8 @@ public class EMGClassifiedGestureManager : MonoBehaviour
 
     void Start()
     {
-        // Initialize the poser if not assigned in inspector
-        if (!poser)
-            poser = GetComponent<SteamVR_Skeleton_Poser>();
+        // Always get the poser component at runtime
+        poser = GetComponent<SteamVR_Skeleton_Poser>();
 
         // Create blending behaviors for each pose
         SetupBlendingBehaviors();
@@ -55,7 +54,7 @@ public class EMGClassifiedGestureManager : MonoBehaviour
         // Set initial neutral state
         SetPose(HandGestureState.Neutral);
 
-        //Internal list of the poses for use in code later down the line
+        // Internal list of the poses for use in code later down the line
         poses = new SteamVR_Skeleton_Pose[]
         {
             neutralPose,
