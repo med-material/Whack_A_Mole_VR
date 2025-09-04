@@ -94,17 +94,21 @@ public class EMGClassifiedGestureManager : MonoBehaviour
 
     public void SetPose(HandGestureState newState)
     {
-        // Handle invalid states
+        if (poses == null)
+        {
+            Debug.LogError("Poses array is null.");
+            return;
+        }
         if ((int)newState >= poses.Length || newState == currentState)
             return;
+        if (poses[(int)newState] == null)
+        {
+            Debug.LogError($"Pose at index {(int)newState} is null.");
+            return;
+        }
 
-        // Calculate target blend weight based on state transition
         float targetWeight = GetTargetBlendWeight(newState);
-
-        // Update current state
         currentState = newState;
-
-        // Apply the new pose with blending
         StartCoroutine(BlendToNewPose(targetWeight));
     }
 
@@ -133,22 +137,26 @@ public class EMGClassifiedGestureManager : MonoBehaviour
 
     private IEnumerator BlendToNewPose(float targetWeight)
     {
-        const float blendDuration = 0.3f; // Adjust this value for desired blend speed
+        const float blendDuration = 0.3f;
         float elapsedTime = 0f;
+
+        if (poser == null || poser.blendingBehaviours == null)
+        {
+            Debug.LogError("Poser or blendingBehaviours is null.");
+            yield break;
+        }
 
         while (elapsedTime < blendDuration)
         {
             blendWeight = Mathf.Lerp(blendWeight, targetWeight, elapsedTime / blendDuration);
             elapsedTime += Time.deltaTime;
 
-            // Update all blending behaviors
             foreach (SteamVR_Skeleton_Poser.PoseBlendingBehaviour behavior in poser.blendingBehaviours)
                 behavior.influence = blendWeight;
 
             yield return null;
         }
 
-        // Ensure exact target weight is reached
         blendWeight = targetWeight;
         foreach (SteamVR_Skeleton_Poser.PoseBlendingBehaviour behavior in poser.blendingBehaviours)
             behavior.influence = blendWeight;
