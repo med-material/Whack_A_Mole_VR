@@ -137,6 +137,10 @@ public class PatternInterface : MonoBehaviour
                     SetSegment(action["ID"], action["LABEL"]);
                     break;
 
+                case "CALIBRATION":
+                    TriggerCalibration(action["TYPE"]);
+                    break;
+
                 case "MESSAGE":
                     SetMessage(action["LABEL"], action["TIME"]);
                     break;
@@ -258,6 +262,9 @@ public class PatternInterface : MonoBehaviour
         message = message.Replace("|", "\n");
         playerPanel.SetMessage(message, ParseFloat(time));
     }
+
+    // Triggers a calibration
+    private void TriggerCalibration(string type) => gameDirector.InvokeCalibrationEvent(type);
 
     // Updates one or multiple modifiers
     private void SetModifier(Dictionary<string, string> action)
