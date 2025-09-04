@@ -119,6 +119,12 @@ public class EMGPointer : Pointer
         }
     }
 
+    public void ResetMaxEMG()
+    {
+        maxEMG = 0.0f;
+        recordMaximumEMG = true;
+    }
+
     // Implementation of the behavior of the Pointer on shoot. 
     protected override void PlayShoot(bool correctHit) // TODO: probably need to be adapted
     {
