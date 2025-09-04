@@ -21,6 +21,17 @@ public class ParticipantChangeEvent : UnityEvent<int> { }
 [System.Serializable]
 public class TestChangeEvent : UnityEvent<int> { }
 
+[System.Serializable]
+public class CalibrationEvent : UnityEvent { }
+
+[System.Serializable]
+public class CalibrationEventTuple
+{
+    [SerializeField] public string type;
+    [SerializeField] public CalibrationEvent calibrationEvent;
+}
+
+
 /*
 Base class of the game. Launches and stops the game. Contains the different game's parameters.
 */
@@ -68,6 +79,15 @@ public class GameDirector : MonoBehaviour
     [SerializeField]
     public CountDownEvent countUpdate;
 
+    [SerializeField]
+    public CalibrationEventTuple[] calibrationEvent;
+
+    [SerializeField]
+    public ParticipantChangeEvent participantChanged = new ParticipantChangeEvent();
+
+    [SerializeField]
+    public TestChangeEvent testChanged = new TestChangeEvent();
+
     private Dictionary<string, float> difficultySettings;
     private Coroutine spawnTimer;
     private float currentGameTimeLeft;
@@ -78,8 +98,6 @@ public class GameDirector : MonoBehaviour
     private ModifiersManager modifiersManager;
     private Constraint constraint;
     private SpeedUpdateEvent speedUpdateEvent = new SpeedUpdateEvent();
-    public ParticipantChangeEvent participantChanged = new ParticipantChangeEvent();
-    public TestChangeEvent testChanged = new TestChangeEvent();
     private int participantId = 0;
     private int testId = 0;
     private Pointer[] allPointers;
@@ -300,6 +318,24 @@ public class GameDirector : MonoBehaviour
     public int GetTest()
     {
         return testId;
+    }
+
+    public void InvokeCalibrationEvent(string type)
+    {
+        foreach (CalibrationEventTuple cet in calibrationEvent)
+        {
+            if (cet.type == type)
+            {
+                cet.calibrationEvent.Invoke();
+                loggerNotifier.NotifyLogger("Calibration Event Invoked", EventLogger.EventType.DefaultEvent, new Dictionary<string, object>()
+                {
+                    {"GameMessage", type},
+                });
+                return;
+            }
+        }
+
+        Debug.LogError("Calibration Event of type " + type + " not found.");
     }
 
     // Sets the game difficulty.
