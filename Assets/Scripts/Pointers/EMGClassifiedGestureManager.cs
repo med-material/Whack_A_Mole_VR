@@ -92,26 +92,32 @@ public class EMGClassifiedGestureManager : MonoBehaviour
         }
     }
 
+    // Set pose based on the new gesture state
     public void SetPose(HandGestureState newState)
     {
+        // Validate inputs
         if (poses == null)
         {
             Debug.LogError("Poses array is null.");
             return;
         }
+        // Validate newState index
         if ((int)newState >= poses.Length || newState == currentState)
             return;
+        // Validate the specific pose is not null
         if (poses[(int)newState] == null)
         {
             Debug.LogError($"Pose at index {(int)newState} is null.");
             return;
         }
 
+        // Apply the new pose
         float targetWeight = GetTargetBlendWeight(newState);
         currentState = newState;
         StartCoroutine(BlendToNewPose(targetWeight));
     }
 
+    //Blend weight logic to determine if we should blend directly or through neutral
     private float GetTargetBlendWeight(HandGestureState newState)
     {
         // Always blend through neutral state for unrelated poses
@@ -122,8 +128,10 @@ public class EMGClassifiedGestureManager : MonoBehaviour
         return 1f;
     }
 
+    // Determine if two poses are related for direct blending
     private bool IsRelatedPose(HandGestureState state1, HandGestureState state2)
     {
+        // Define related poses
         bool palmRelated =
             (state1 == HandGestureState.PalmUpward || state1 == HandGestureState.PalmDownward) &&
             (state2 == HandGestureState.PalmUpward || state2 == HandGestureState.PalmDownward);
@@ -131,21 +139,23 @@ public class EMGClassifiedGestureManager : MonoBehaviour
         bool fistOpenRelated =
             (state1 == HandGestureState.Fist && state2 == HandGestureState.OpenHand) ||
             (state1 == HandGestureState.OpenHand && state2 == HandGestureState.Fist);
-
+        // Return true if either relation is true
         return palmRelated || fistOpenRelated;
     }
 
+    // Coroutine to smoothly blend to the new pose
     private IEnumerator BlendToNewPose(float targetWeight)
     {
+        // Blend duration
         const float blendDuration = 0.3f;
         float elapsedTime = 0f;
-
+        // Validate poser and behaviors
         if (poser == null || poser.blendingBehaviours == null)
         {
             Debug.LogError("Poser or blendingBehaviours is null.");
             yield break;
         }
-
+        // Smoothly interpolate blend weight
         while (elapsedTime < blendDuration)
         {
             blendWeight = Mathf.Lerp(blendWeight, targetWeight, elapsedTime / blendDuration);
@@ -156,7 +166,7 @@ public class EMGClassifiedGestureManager : MonoBehaviour
 
             yield return null;
         }
-
+        // Ensure final weight is set
         blendWeight = targetWeight;
         foreach (SteamVR_Skeleton_Poser.PoseBlendingBehaviour behavior in poser.blendingBehaviours)
             behavior.influence = blendWeight;

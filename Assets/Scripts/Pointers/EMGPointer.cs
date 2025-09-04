@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.Design.Serialization;
 using UnityEngine;
+using Valve.VR;
 
 /*
 Implementation of the pointer abstract class to handle the EMG Pointer.
@@ -27,8 +29,14 @@ public class EMGPointer : Pointer
     private float shootTimeLeft;
     private float totalShootTime;
 
+    //Grab reference to the Root child of vr_glove_right_model_slim
+    private GameObject Root;
+
     public override void Enable()
     {
+        //Assign reference to Root to grab Root Transform of vr_glove_right_model_slim.
+        Root = GameObject.Find("vr_glove_right_model_slim/Root");
+
         if (active) return;
         if (virtualHand != null) Destroy(virtualHand);
         if (virtualHandPrefab != null)
@@ -38,8 +46,22 @@ public class EMGPointer : Pointer
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleEntered += OnHoverEnter;
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleExited += OnHoverExit;
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleStay += OnHoverStay;
+
+            //Assign skeletonRoot for SteamVR_Behaviour Skeleton if present
+            SteamVR_Behaviour_Skeleton skeleton = virtualHand.GetComponent<Valve.VR.SteamVR_Behaviour_Skeleton>();
+            if (skeleton != null)
+            {
+                skeleton.skeletonRoot = Root.transform;
+            }
+            else
+            {
+                Debug.LogError("Could not find Root transform in VirtualHand prefab hierarchy");
+            }
         }
         else Debug.LogError("No virtual hand prefab assigned to the EMG Pointer.");
+
+
+
 
         base.Enable();
     }
