@@ -42,16 +42,20 @@ public class EMGPointer : Pointer
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleExited += OnHoverExit;
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleStay += OnHoverStay;
 
-            Transform rootTransform = virtualHand.transform.Find("vr_glove_right_model_slim/slim_r/Root");
-            //Assign skeletonRoot for SteamVR_Behaviour Skeleton if present
             SteamVR_Behaviour_Skeleton skeleton = virtualHand.GetComponent<Valve.VR.SteamVR_Behaviour_Skeleton>();
-            if (skeleton != null)
+            Transform rootTransform = virtualHand.transform.Find("vr_glove_right_model_slim/slim_r/Root");
+
+            if (skeleton == null)
             {
-                skeleton.skeletonRoot = rootTransform; ;
+                Debug.LogError("SteamVR_Behaviour_Skeleton component not found on VirtualHand instance.");
+            }
+            else if (rootTransform == null)
+            {
+                Debug.LogError("Could not find Root transform in VirtualHand prefab hierarchy. Check the path and prefab structure.");
             }
             else
             {
-                Debug.LogError("Could not find Root transform in VirtualHand prefab hierarchy");
+                skeleton.skeletonRoot = rootTransform;
             }
         }
         else Debug.LogError("No virtual hand prefab assigned to the EMG Pointer.");
