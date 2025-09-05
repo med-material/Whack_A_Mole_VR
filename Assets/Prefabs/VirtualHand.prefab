@@ -978,7 +978,7 @@ MonoBehaviour:
     needsReinit: 0
   inputSource: 0
   rangeOfMotion: 1
-  skeletonRoot: {fileID: 0}
+  skeletonRoot: {fileID: 3378433795114137011}
   origin: {fileID: 0}
   updatePose: 1
   onlySetRotations: 0
@@ -1893,6 +1893,12 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 4437959904507561193}
   m_SourcePrefab: {fileID: 100100000, guid: 6def53d002137b747aec0b29551e0e25, type: 3}
+--- !u!4 &3378433795114137011 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4000011264745556, guid: 6def53d002137b747aec0b29551e0e25,
+    type: 3}
+  m_PrefabInstance: {fileID: 3381269140013290983}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &3378433796368261981 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4000012125075130, guid: 6def53d002137b747aec0b29551e0e25,
