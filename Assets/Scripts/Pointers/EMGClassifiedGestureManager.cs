@@ -30,7 +30,6 @@ public class EMGClassifiedGestureManager : MonoBehaviour
 
     private void Start()
     {
-        SetPose(HandGestureState.Neutral); // Set initial pose to Neutral
     }
 
 
@@ -61,6 +60,12 @@ public class EMGClassifiedGestureManager : MonoBehaviour
 
     public void SetPose(HandGestureState gestureState)
     {
+
+        if (poser == null)
+        {
+            Debug.LogWarning($"Attempted to set pose {gestureState}, but poser is not initialized yet.");
+            return;
+        }
         string target = gestureState.ToString(); // Get the target behavior name based on the gesture state
 
         float from = 0f; // Current behavior value (assumed to be 0 for simplicity)
@@ -113,7 +118,10 @@ public class EMGClassifiedGestureManager : MonoBehaviour
             yield return null; // Wait for the next frame
         }
 
+
         Debug.Log("SteamVR_Skeleton_Poser component found and reference grabbed.");
+        SetPose(HandGestureState.Neutral); // Set initial pose to Neutral
+
     }
 
 }
