@@ -43,26 +43,37 @@ public class EMGClassifiedGestureManager : MonoBehaviour
     private HandGestureState currentState = HandGestureState.Neutral;
     private float blendWeight = 0f;
 
+    private void Awake()
+    {
+        if (!poser)
+        {
+            poser.GetComponent<SteamVR_Skeleton_Poser>();
+        }
+
+        if (poses == null)
+        {
+            poses = new SteamVR_Skeleton_Pose[5];
+            poses[0] = neutralPose;
+            poses[1] = fistPose;
+            poses[2] = openHandPose;
+            poses[3] = palmUpwardPose;
+            poses[4] = palmDownwardPose;
+        }
+
+    }
+
     void Start()
     {
-        // Always get the poser component at runtime
-        poser = GetComponent<SteamVR_Skeleton_Poser>();
-
-        // Internal list of the poses for use in code later down the line
-        poses = new SteamVR_Skeleton_Pose[]
+        if (!poser)
         {
-            neutralPose,
-            fistPose,
-            openHandPose,
-            palmUpwardPose,
-            palmDownwardPose
-        };
+            Debug.LogError("SteamVR_Skeleton_Poser not found! Please assign it in the inspector.");
 
-        // Create blending behaviors for each pose
+            return;
+        }
+
         SetupBlendingBehaviors();
-
-        // Set initial neutral state
         SetPose(HandGestureState.Neutral);
+
     }
 
     private void Update()
@@ -77,6 +88,12 @@ public class EMGClassifiedGestureManager : MonoBehaviour
 
     private void SetupBlendingBehaviors()
     {
+        if (!poser)
+        {
+            Debug.LogError("SteamVR_Skeleton_Poser not assigned.");
+            return;
+        }
+
         // Remove existing behaviors
         poser.blendingBehaviours.Clear();
 
