@@ -45,6 +45,7 @@ public class EMGClassifiedGestureManager : MonoBehaviour
 
     private void Awake()
     {
+        // Use Unity's lifecycle method to ensure poser is assigned
         if (!poser)
         {
             poser.GetComponent<SteamVR_Skeleton_Poser>();
