@@ -69,8 +69,9 @@ public class EMGClassifiedGestureManager : MonoBehaviour
             float from = 0f; // Current behavior value (assumed to be 0 for simplicity)
             float to = (name == target) ? 1f : 0f; // Set target behavior to 1, others to 0
 
-            if (runningCoroutines.TryGetValue(name, out var running))
+            if (runningCoroutines.TryGetValue(name, out var running) && running != null)
             {
+
                 StopCoroutine(running); // Stop any running coroutine for this behavior
                 
             }
@@ -89,6 +90,8 @@ public class EMGClassifiedGestureManager : MonoBehaviour
         }
         poser.SetBlendingBehaviourValue(name, to); // Ensure the final value is set
         runningCoroutines.Remove(name); // Remove the coroutine from the tracking dictionary
+
+        runningCoroutines[name] = null; // Clear the reference to the completed coroutine
     }
 
 

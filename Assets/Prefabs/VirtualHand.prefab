@@ -968,7 +968,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4438934781457786648}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 00f6c0d7b5a00aa4a8d38a09a0480032, type: 3}
   m_Name: 
@@ -978,7 +978,7 @@ MonoBehaviour:
     needsReinit: 0
   inputSource: 0
   rangeOfMotion: 1
-  skeletonRoot: {fileID: 3378433795114137011}
+  skeletonRoot: {fileID: 0}
   origin: {fileID: 0}
   updatePose: 1
   onlySetRotations: 0
@@ -1893,12 +1893,6 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 4437959904507561193}
   m_SourcePrefab: {fileID: 100100000, guid: 6def53d002137b747aec0b29551e0e25, type: 3}
---- !u!4 &3378433795114137011 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4000011264745556, guid: 6def53d002137b747aec0b29551e0e25,
-    type: 3}
-  m_PrefabInstance: {fileID: 3381269140013290983}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &3378433796368261981 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4000012125075130, guid: 6def53d002137b747aec0b29551e0e25,
