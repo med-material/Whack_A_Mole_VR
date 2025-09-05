@@ -38,7 +38,7 @@ public class EMGClassifiedGestureManager : MonoBehaviour
 
         if (poser == null)
         {
-            poser = GetComponentInChildren<SteamVR_Skeleton_Poser>(false);
+            poser = GetComponentInChildren<SteamVR_Skeleton_Poser>(true);
             if (poser != null)
             {
                 Debug.Log("Late-caught SteamVR_Skeleton_Poser in Update.");
