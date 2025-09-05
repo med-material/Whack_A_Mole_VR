@@ -9,8 +9,8 @@ public enum HandGestureState
     Neutral,
     Fist,
     OpenHand,
-    PalmUpward,
-    PalmDownward
+    PalmUp,
+    PalmDown
 }
 
 public class EMGClassifiedGestureManager : MonoBehaviour
@@ -21,7 +21,6 @@ public class EMGClassifiedGestureManager : MonoBehaviour
 
 
     private SteamVR_Skeleton_Poser poser; // Reference to the SteamVR_Skeleton_Poser component
-    private string[] behaviorNames = { "Neutral", "Fist", "OpenHand", "PalmUp", "PalmDown" }; // Ensure these names match the behaviors in the SteamVR_Skeleton_Poser
     private Dictionary<string, Coroutine> runningCoroutines = new(); // To keep track of running coroutines for each behavior
     private void Awake()
     {
@@ -52,31 +51,28 @@ public class EMGClassifiedGestureManager : MonoBehaviour
         }
         else if (Input.GetKeyDown(KeyCode.Alpha4))
         {
-            SetPose(HandGestureState.PalmUpward);
+            SetPose(HandGestureState.PalmUp);
         }
         else if (Input.GetKeyDown(KeyCode.Alpha5))
         {
-            SetPose(HandGestureState.PalmDownward);
+            SetPose(HandGestureState.PalmDown);
         }
     }
 
     public void SetPose(HandGestureState gestureState)
     {
-        string target = behaviorNames[(int)gestureState]; // Get the target behavior name based on the gesture state
+        string target = gestureState.ToString(); // Get the target behavior name based on the gesture state
 
-        foreach (string name in behaviorNames) // Iterate through all behavior names
+        float from = 0f; // Current behavior value (assumed to be 0 for simplicity)
+        float to = 1f; // Set target behavior to 1
+        if (runningCoroutines.TryGetValue(target, out var running) && running != null)
         {
-            float from = 0f; // Current behavior value (assumed to be 0 for simplicity)
-            float to = (name == target) ? 1f : 0f; // Set target behavior to 1, others to 0
-
-            if (runningCoroutines.TryGetValue(name, out var running) && running != null)
-            {
-
-                StopCoroutine(running); // Stop any running coroutine for this behavior
-                
-            }
-            runningCoroutines[name] = StartCoroutine(BlendedBehaviour(name, from, to, 0.3f)); // Start a new coroutine to blend the behavior
+            StopCoroutine(running); // Stop any running coroutine for this behavior
         }
+
+        runningCoroutines[target] = StartCoroutine(BlendedBehaviour(target, from, to, 0.3f)); // Start a new coroutine to blend the behavior
+
+        
     }
 
     private IEnumerator BlendedBehaviour(string name, float from, float to, float duration)
@@ -88,6 +84,7 @@ public class EMGClassifiedGestureManager : MonoBehaviour
             poser.SetBlendingBehaviourValue(name, Mathf.Lerp(from, to, time / duration)); // Lerp the behavior value over time
             yield return null; // Wait for the next frame
         }
+        Debug.Log("Poser is null: " + (poser == null));
         poser.SetBlendingBehaviourValue(name, to); // Ensure the final value is set
         runningCoroutines.Remove(name); // Remove the coroutine from the tracking dictionary
 
@@ -103,8 +100,12 @@ public class EMGClassifiedGestureManager : MonoBehaviour
         while (poser == null)
         {
             poser = GetComponent<SteamVR_Skeleton_Poser>();
+
+
             yield return null; // Wait for the next frame
         }
+
+        Debug.Log("SteamVR_Skeleton_Poser component found and reference grabbed.");
     }
 
 }
