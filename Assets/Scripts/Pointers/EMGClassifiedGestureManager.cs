@@ -72,7 +72,7 @@ public class EMGClassifiedGestureManager : MonoBehaviour
 
         runningCoroutines[target] = StartCoroutine(BlendedBehaviour(target, from, to, 0.3f)); // Start a new coroutine to blend the behavior
 
-        
+
     }
 
     private IEnumerator BlendedBehaviour(string name, float from, float to, float duration)
@@ -81,7 +81,15 @@ public class EMGClassifiedGestureManager : MonoBehaviour
         while (time < duration)
         {
             time += Time.deltaTime;
-            poser.SetBlendingBehaviourValue(name, Mathf.Lerp(from, to, time / duration)); // Lerp the behavior value over time
+            if (poser != null)
+            {
+                poser.SetBlendingBehaviourValue(name, Mathf.Lerp(from, to, time / duration)); // Lerp the behavior value over time
+            }
+            else
+            {
+                Debug.LogWarning("Poser is null while trying to set blending behavior value.");
+            }
+
             yield return null; // Wait for the next frame
         }
         Debug.Log("Poser is null: " + (poser == null));
