@@ -1230,7 +1230,6 @@ GameObject:
   - component: {fileID: 161181639979014168}
   - component: {fileID: 1038958721187610635}
   - component: {fileID: 551098939140794093}
-  - component: {fileID: 7103126346668733331}
   m_Layer: 0
   m_Name: VirtualHand
   m_TagString: Untagged
@@ -1320,24 +1319,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &7103126346668733331
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7353169756236129074}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d1ecda2fc2399c4a885cbf10b5d2469, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  poser: {fileID: 1825491646678450904}
-  neutralPose: {fileID: 11400000, guid: 9303872ccc6946c4185bc4b432372ba0, type: 2}
-  fistPose: {fileID: 11400000, guid: 5923b268404ed1c46a82b541e44c52af, type: 2}
-  openHandPose: {fileID: 11400000, guid: d93b955753287b048b63d232fa679470, type: 2}
-  palmUpwardPose: {fileID: 11400000, guid: 5cc9a45a781b201409d28a13e276b280, type: 2}
-  palmDownwardPose: {fileID: 11400000, guid: 29c0e97eeba831a43a68954873db3ec3, type: 2}
 --- !u!1 &7432164090169168387
 GameObject:
   m_ObjectHideFlags: 0

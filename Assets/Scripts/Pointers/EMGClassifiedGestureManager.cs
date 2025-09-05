@@ -45,11 +45,8 @@ public class EMGClassifiedGestureManager : MonoBehaviour
 
     private void Awake()
     {
-        // Use Unity's lifecycle method to ensure poser is assigned
-        if (!poser)
-        {
-            poser.GetComponent<SteamVR_Skeleton_Poser>();
-        }
+        //Wait until the hand is instantiated before attempting to get the poser component
+        StartCoroutine(ListenForHandInstantiation());
 
         if (poses == null)
         {
@@ -188,5 +185,18 @@ public class EMGClassifiedGestureManager : MonoBehaviour
         blendWeight = targetWeight;
         foreach (SteamVR_Skeleton_Poser.PoseBlendingBehaviour behavior in poser.blendingBehaviours)
             behavior.influence = blendWeight;
+    }
+
+    private IEnumerator ListenForHandInstantiation()
+    {
+        // Wait until the SteamVR_Skeleton_Poser is assigned
+        while (poser == null)
+        {
+            poser = GetComponent<SteamVR_Skeleton_Poser>();
+            yield return null;
+        }
+        // Once assigned, set up blending behaviors
+        SetupBlendingBehaviors();
+        SetPose(HandGestureState.Neutral);
     }
 }
