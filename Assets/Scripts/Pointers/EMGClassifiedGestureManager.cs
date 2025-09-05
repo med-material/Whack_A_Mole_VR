@@ -22,6 +22,7 @@ public class EMGClassifiedGestureManager : MonoBehaviour
 
     private SteamVR_Skeleton_Poser poser; // Reference to the SteamVR_Skeleton_Poser component
     private Dictionary<string, Coroutine> runningCoroutines = new(); // To keep track of running coroutines for each behavior
+    private Coroutine currentBlendCoroutine;
     private void Awake()
     {
         StartCoroutine(WaitForHandToBeInstantiatedAndGrabPoserReference()); // Start the coroutine to wait for the poser reference
@@ -80,41 +81,75 @@ public class EMGClassifiedGestureManager : MonoBehaviour
         }
         string target = gestureState.ToString(); // Get the target behavior name based on the gesture state
 
-        float from = 0f; // Current behavior value (assumed to be 0 for simplicity)
-        float to = 1f; // Set target behavior to 1
-        if (runningCoroutines.TryGetValue(target, out var running) && running != null)
+        if (currentBlendCoroutine != null)
         {
-            StopCoroutine(running); // Stop any running coroutine for this behavior
+            StopCoroutine(currentBlendCoroutine); // Stop any ongoing blend coroutine
         }
 
-        runningCoroutines[target] = StartCoroutine(BlendedBehaviour(target, from, to, 0.3f)); // Start a new coroutine to blend the behavior
+        currentBlendCoroutine = StartCoroutine(CrossFadePose(target, 0.3f));
+
+        //float from = 0f; // Current behavior value (assumed to be 0 for simplicity)
+        //float to = 1f; // Set target behavior to 1
+        //if (runningCoroutines.TryGetValue(target, out var running) && running != null)
+        //{
+        //    StopCoroutine(running); // Stop any running coroutine for this behavior
+        //}
+
+        //runningCoroutines[target] = StartCoroutine(BlendedBehaviour(target, from, to, 0.3f)); // Start a new coroutine to blend the behavior
 
 
     }
 
-    private IEnumerator BlendedBehaviour(string name, float from, float to, float duration)
+
+    private IEnumerator CrossFadePose(string targetPose, float duration)
     {
+        var behaviors = new[] { "Neutral", "Fist", "OpenHand", "PalmUp", "PalmDown" };
+        var startValues = behaviors.ToDictionary(b => b, b => poser.GetBlendingBehaviourValue(b));
+
         float time = 0f;
-        while (time < duration)
+        while(time < duration)
         {
             time += Time.deltaTime;
-            if (poser != null)
+            float t = time / duration;
+            foreach (var behavior in behaviors)
             {
-                poser.SetBlendingBehaviourValue(name, Mathf.Lerp(from, to, time / duration)); // Lerp the behavior value over time
+                float targetValue = (behavior == targetPose) ? 1f : 0f;
+                float val = Mathf.Lerp(startValues[behavior], targetValue, t);
+                poser.SetBlendingBehaviourValue(behavior, val);
             }
-            else
-            {
-                Debug.LogWarning("Poser is null while trying to set blending behavior value.");
-            }
-
             yield return null; // Wait for the next frame
         }
-        Debug.Log("Poser is null: " + (poser == null));
-        poser.SetBlendingBehaviourValue(name, to); // Ensure the final value is set
-        runningCoroutines.Remove(name); // Remove the coroutine from the tracking dictionary
 
-        runningCoroutines[name] = null; // Clear the reference to the completed coroutine
+        // Ensure every behavior hits its intended end value
+        foreach (var b in behaviors)
+        {
+            poser.SetBlendingBehaviourValue(b, (b == targetPose) ? 1f : 0f);
+        }
     }
+
+    //private IEnumerator BlendedBehaviour(string name, float from, float to, float duration)
+    //{
+    //    float time = 0f;
+    //    while (time < duration)
+    //    {
+    //        time += Time.deltaTime;
+    //        if (poser != null)
+    //        {
+    //            poser.SetBlendingBehaviourValue(name, Mathf.Lerp(from, to, time / duration)); // Lerp the behavior value over time
+    //        }
+    //        else
+    //        {
+    //            Debug.LogWarning("Poser is null while trying to set blending behavior value.");
+    //        }
+
+    //        yield return null; // Wait for the next frame
+    //    }
+    //    Debug.Log("Poser is null: " + (poser == null));
+    //    poser.SetBlendingBehaviourValue(name, to); // Ensure the final value is set
+    //    runningCoroutines.Remove(name); // Remove the coroutine from the tracking dictionary
+
+    //    runningCoroutines[name] = null; // Clear the reference to the completed coroutine
+    //}
 
 
 
