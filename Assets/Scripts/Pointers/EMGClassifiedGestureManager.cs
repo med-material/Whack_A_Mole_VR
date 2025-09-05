@@ -35,6 +35,18 @@ public class EMGClassifiedGestureManager : MonoBehaviour
 
     private void Update()
     {
+
+        if (poser == null)
+        {
+            poser = GetComponentInChildren<SteamVR_Skeleton_Poser>(false);
+            if (poser != null)
+            {
+                Debug.Log("Late-caught SteamVR_Skeleton_Poser in Update.");
+                SetPose(HandGestureState.Neutral);
+            }
+        }
+
+
         // For testing purposes, you can change the gesture state using keyboard input
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
@@ -112,7 +124,7 @@ public class EMGClassifiedGestureManager : MonoBehaviour
         // Wait until the SteamVR_Skeleton_Poser component is available
         while (poser == null)
         {
-            poser = GetComponent<SteamVR_Skeleton_Poser>();
+            poser = GetComponentInChildren<SteamVR_Skeleton_Poser>();
 
 
             yield return null; // Wait for the next frame
