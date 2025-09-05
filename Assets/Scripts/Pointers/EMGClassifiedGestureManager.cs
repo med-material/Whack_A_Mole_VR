@@ -34,6 +34,32 @@ public class EMGClassifiedGestureManager : MonoBehaviour
         SetPose(HandGestureState.Neutral); // Set initial pose to Neutral
     }
 
+
+    private void Update()
+    {
+        // For testing purposes, you can change the gesture state using keyboard input
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            SetPose(HandGestureState.Neutral);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            SetPose(HandGestureState.Fist);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            SetPose(HandGestureState.OpenHand);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha4))
+        {
+            SetPose(HandGestureState.PalmUpward);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha5))
+        {
+            SetPose(HandGestureState.PalmDownward);
+        }
+    }
+
     public void SetPose(HandGestureState gestureState)
     {
         string target = behaviorNames[(int)gestureState]; // Get the target behavior name based on the gesture state
