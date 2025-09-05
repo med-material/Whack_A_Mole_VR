@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Valve.VR;
 
@@ -15,8 +16,8 @@ public enum HandGestureState
 
 public class EMGClassifiedGestureManager : MonoBehaviour
 {
-    //This is Ver. 1 of this script, currently untested.
-    // Todo: Confirm gesture changes are reflected in scene at runtime.
+    //This is Ver. 2 of this script.
+    // Todo: Confirm gesture changes are reflected in scene at runtime. STILL ONGOING
     // Todo: Integrate with EMG input system to trigger SetPose based on classified gestures.
 
 
@@ -88,15 +89,7 @@ public class EMGClassifiedGestureManager : MonoBehaviour
 
         currentBlendCoroutine = StartCoroutine(CrossFadePose(target, 0.3f));
 
-        //float from = 0f; // Current behavior value (assumed to be 0 for simplicity)
-        //float to = 1f; // Set target behavior to 1
-        //if (runningCoroutines.TryGetValue(target, out var running) && running != null)
-        //{
-        //    StopCoroutine(running); // Stop any running coroutine for this behavior
-        //}
-
-        //runningCoroutines[target] = StartCoroutine(BlendedBehaviour(target, from, to, 0.3f)); // Start a new coroutine to blend the behavior
-
+        
 
     }
 
@@ -127,29 +120,7 @@ public class EMGClassifiedGestureManager : MonoBehaviour
         }
     }
 
-    //private IEnumerator BlendedBehaviour(string name, float from, float to, float duration)
-    //{
-    //    float time = 0f;
-    //    while (time < duration)
-    //    {
-    //        time += Time.deltaTime;
-    //        if (poser != null)
-    //        {
-    //            poser.SetBlendingBehaviourValue(name, Mathf.Lerp(from, to, time / duration)); // Lerp the behavior value over time
-    //        }
-    //        else
-    //        {
-    //            Debug.LogWarning("Poser is null while trying to set blending behavior value.");
-    //        }
-
-    //        yield return null; // Wait for the next frame
-    //    }
-    //    Debug.Log("Poser is null: " + (poser == null));
-    //    poser.SetBlendingBehaviourValue(name, to); // Ensure the final value is set
-    //    runningCoroutines.Remove(name); // Remove the coroutine from the tracking dictionary
-
-    //    runningCoroutines[name] = null; // Clear the reference to the completed coroutine
-    //}
+  
 
 
 
