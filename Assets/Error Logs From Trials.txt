@@ -42,10 +42,10 @@ NullReferenceException: Object reference not set to an instance of an object
 EMGDataProcessor.Start () (at Assets/Thalmic Myo/MyoEMG/EMGDataProcessor.cs:20)
 
 NullReferenceException: Object reference not set to an instance of an object
-EMGClassifiedGestureManager+<BlendedBehaviour>d__7.MoveNext () (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:87)
+EMGClassifiedGestureManager+<BlendedBehaviour>d__7.MoveNext () (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:88)
 UnityEngine.SetupCoroutine.InvokeMoveNext (System.Collections.IEnumerator enumerator, System.IntPtr returnValueAddress) (at <bdd20210bb844b2e88e1149ea99da5ef>:0)
 UnityEngine.MonoBehaviour:StartCoroutine(IEnumerator)
-EMGClassifiedGestureManager:SetPose(HandGestureState) (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:77)
+EMGClassifiedGestureManager:SetPose(HandGestureState) (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:78)
 EMGClassifiedGestureManager:Start() (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:34)
 
 Exit
@@ -105,6 +105,22 @@ PatternPlayer:PlayStep () (at Assets/Scripts/Patterns/PatternPlayer.cs:130)
 PatternPlayer:TimeParadigm () (at Assets/Scripts/Patterns/PatternPlayer.cs:159)
 PatternPlayer:Update () (at Assets/Scripts/Patterns/PatternPlayer.cs:40)
 
+UnassignedReferenceException: The variable skeletonRoot of SteamVR_Behaviour_Skeleton has not been assigned.
+You probably need to assign the skeletonRoot variable of the SteamVR_Behaviour_Skeleton script in the inspector.
+UnityEngine.Component.GetComponentsInChildren[T] (System.Boolean includeInactive) (at <bdd20210bb844b2e88e1149ea99da5ef>:0)
+UnityEngine.Component.GetComponentsInChildren[T] () (at <bdd20210bb844b2e88e1149ea99da5ef>:0)
+Valve.VR.SteamVR_Behaviour_Skeleton.AssignBonesArray () (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:343)
+Valve.VR.SteamVR_Behaviour_Skeleton.Awake () (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:324)
+UnityEngine.Object:Instantiate(GameObject, Transform)
+EMGPointer:Enable() (at Assets/Scripts/Pointers/EMGPointer.cs:38)
+PointerTypeSelector:ActivatePointer(PointerType) (at Assets/Scripts/Pointers/PointerTypeSelector.cs:46)
+ModifiersManager:SetPointerType(PointerType) (at Assets/Scripts/Game/ModifiersManager.cs:241)
+PatternInterface:SetModifier(Dictionary`2) (at Assets/Scripts/Patterns/PatternInterface.cs:286)
+PatternInterface:PlayAction(Dictionary`2, Int32) (at Assets/Scripts/Patterns/PatternInterface.cs:133)
+PatternPlayer:PlayStep() (at Assets/Scripts/Patterns/PatternPlayer.cs:130)
+PatternPlayer:TimeParadigm() (at Assets/Scripts/Patterns/PatternPlayer.cs:159)
+PatternPlayer:Update() (at Assets/Scripts/Patterns/PatternPlayer.cs:40)
+
 Medium
 UnityEngine.Debug:Log (object)
 ModifiersManager:SetMotorspace (ModifiersManager/MotorspaceSize) (at Assets/Scripts/Game/ModifiersManager.cs:382)
@@ -146,101 +162,37 @@ PatternPlayer:PlayStep () (at Assets/Scripts/Patterns/PatternPlayer.cs:130)
 PatternPlayer:TimeParadigm () (at Assets/Scripts/Patterns/PatternPlayer.cs:159)
 PatternPlayer:Update () (at Assets/Scripts/Patterns/PatternPlayer.cs:40)
 
-Skeleton Action is not bound, and you have not provided a fallback SkeletonPoser. Please create one to drive hand animation when no skeleton data is available.
-UnityEngine.Debug:LogError (object,UnityEngine.Object)
-Valve.VR.SteamVR_Behaviour_Skeleton:GetBonePositions () (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:831)
-Valve.VR.SteamVR_Behaviour_Skeleton:UpdateSkeletonTransforms () (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:656)
-Valve.VR.SteamVR_Behaviour_Skeleton:UpdateSkeleton () (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:411)
-Valve.VR.SteamVR_Behaviour_Skeleton:SteamVR_Input_OnSkeletonsUpdated (bool) (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:387)
-Valve.VR.SteamVR_Input:UpdateSkeletonActions (bool) (at Assets/SteamVR/Input/SteamVR_Input.cs:359)
-Valve.VR.SteamVR_Input:LateUpdate () (at Assets/SteamVR/Input/SteamVR_Input.cs:269)
-Valve.VR.SteamVR_Behaviour:LateUpdate () (at Assets/SteamVR/Scripts/SteamVR_Behaviour.cs:238)
-
-Skeleton Action is not bound, and you have not provided a fallback SkeletonPoser. Please create one to drive hand animation when no skeleton data is available.
-UnityEngine.Debug:LogError (object,UnityEngine.Object)
-Valve.VR.SteamVR_Behaviour_Skeleton:GetBoneRotations () (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:863)
-Valve.VR.SteamVR_Behaviour_Skeleton:UpdateSkeletonTransforms () (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:657)
-Valve.VR.SteamVR_Behaviour_Skeleton:UpdateSkeleton () (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:411)
-Valve.VR.SteamVR_Behaviour_Skeleton:SteamVR_Input_OnSkeletonsUpdated (bool) (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:387)
-Valve.VR.SteamVR_Input:UpdateSkeletonActions (bool) (at Assets/SteamVR/Input/SteamVR_Input.cs:359)
-Valve.VR.SteamVR_Input:LateUpdate () (at Assets/SteamVR/Input/SteamVR_Input.cs:269)
-Valve.VR.SteamVR_Behaviour:LateUpdate () (at Assets/SteamVR/Scripts/SteamVR_Behaviour.cs:238)
+NullReferenceException: Object reference not set to an instance of an object
+EMGClassifiedGestureManager+<BlendedBehaviour>d__7.MoveNext () (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:88)
+UnityEngine.SetupCoroutine.InvokeMoveNext (System.Collections.IEnumerator enumerator, System.IntPtr returnValueAddress) (at <bdd20210bb844b2e88e1149ea99da5ef>:0)
+UnityEngine.MonoBehaviour:StartCoroutine(IEnumerator)
+EMGClassifiedGestureManager:SetPose(HandGestureState) (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:78)
+EMGClassifiedGestureManager:Update() (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:43)
 
 NullReferenceException: Object reference not set to an instance of an object
-Valve.VR.SteamVR_Behaviour_Skeleton.UpdateSkeletonTransforms () (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:704)
-Valve.VR.SteamVR_Behaviour_Skeleton.UpdateSkeleton () (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:411)
-Valve.VR.SteamVR_Behaviour_Skeleton.SteamVR_Input_OnSkeletonsUpdated (System.Boolean skipSendingEvents) (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:387)
-Valve.VR.SteamVR_Input.UpdateSkeletonActions (System.Boolean skipSendingEvents) (at Assets/SteamVR/Input/SteamVR_Input.cs:359)
-Valve.VR.SteamVR_Input.LateUpdate () (at Assets/SteamVR/Input/SteamVR_Input.cs:269)
-Valve.VR.SteamVR_Behaviour.LateUpdate () (at Assets/SteamVR/Scripts/SteamVR_Behaviour.cs:238)
-
-Skeleton Action is not bound, and you have not provided a fallback SkeletonPoser. Please create one to drive hand animation when no skeleton data is available.
-UnityEngine.Debug:LogError (object,UnityEngine.Object)
-Valve.VR.SteamVR_Behaviour_Skeleton:GetBonePositions () (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:831)
-Valve.VR.SteamVR_Behaviour_Skeleton:UpdateSkeletonTransforms () (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:656)
-Valve.VR.SteamVR_Behaviour_Skeleton:UpdateSkeleton () (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:411)
-Valve.VR.SteamVR_Behaviour_Skeleton:SteamVR_Input_OnSkeletonsUpdated (bool) (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:387)
-Valve.VR.SteamVR_Input:UpdateSkeletonActions (bool) (at Assets/SteamVR/Input/SteamVR_Input.cs:359)
-Valve.VR.SteamVR_Input:UpdateVisualActions (bool) (at Assets/SteamVR/Input/SteamVR_Input.cs:319)
-Valve.VR.SteamVR_Input:OnPreCull () (at Assets/SteamVR/Input/SteamVR_Input.cs:302)
-Valve.VR.SteamVR_Behaviour:PreCull () (at Assets/SteamVR/Scripts/SteamVR_Behaviour.cs:221)
-Valve.VR.SteamVR_Behaviour:OnBeforeRender () (at Assets/SteamVR/Scripts/SteamVR_Behaviour.cs:189)
-UnityEngine.GUIUtility:ProcessEvent (int,intptr,bool&)
-
-Skeleton Action is not bound, and you have not provided a fallback SkeletonPoser. Please create one to drive hand animation when no skeleton data is available.
-UnityEngine.Debug:LogError (object,UnityEngine.Object)
-Valve.VR.SteamVR_Behaviour_Skeleton:GetBoneRotations () (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:863)
-Valve.VR.SteamVR_Behaviour_Skeleton:UpdateSkeletonTransforms () (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:657)
-Valve.VR.SteamVR_Behaviour_Skeleton:UpdateSkeleton () (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:411)
-Valve.VR.SteamVR_Behaviour_Skeleton:SteamVR_Input_OnSkeletonsUpdated (bool) (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:387)
-Valve.VR.SteamVR_Input:UpdateSkeletonActions (bool) (at Assets/SteamVR/Input/SteamVR_Input.cs:359)
-Valve.VR.SteamVR_Input:UpdateVisualActions (bool) (at Assets/SteamVR/Input/SteamVR_Input.cs:319)
-Valve.VR.SteamVR_Input:OnPreCull () (at Assets/SteamVR/Input/SteamVR_Input.cs:302)
-Valve.VR.SteamVR_Behaviour:PreCull () (at Assets/SteamVR/Scripts/SteamVR_Behaviour.cs:221)
-Valve.VR.SteamVR_Behaviour:OnBeforeRender () (at Assets/SteamVR/Scripts/SteamVR_Behaviour.cs:189)
-UnityEngine.GUIUtility:ProcessEvent (int,intptr,bool&)
+EMGClassifiedGestureManager+<BlendedBehaviour>d__7.MoveNext () (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:88)
+UnityEngine.SetupCoroutine.InvokeMoveNext (System.Collections.IEnumerator enumerator, System.IntPtr returnValueAddress) (at <bdd20210bb844b2e88e1149ea99da5ef>:0)
+UnityEngine.MonoBehaviour:StartCoroutine(IEnumerator)
+EMGClassifiedGestureManager:SetPose(HandGestureState) (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:78)
+EMGClassifiedGestureManager:Update() (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:47)
 
 NullReferenceException: Object reference not set to an instance of an object
-Valve.VR.SteamVR_Behaviour_Skeleton.UpdateSkeletonTransforms () (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:704)
-Valve.VR.SteamVR_Behaviour_Skeleton.UpdateSkeleton () (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:411)
-Valve.VR.SteamVR_Behaviour_Skeleton.SteamVR_Input_OnSkeletonsUpdated (System.Boolean skipSendingEvents) (at Assets/SteamVR/Input/SteamVR_Behaviour_Skeleton.cs:387)
-Valve.VR.SteamVR_Input.UpdateSkeletonActions (System.Boolean skipSendingEvents) (at Assets/SteamVR/Input/SteamVR_Input.cs:359)
-Valve.VR.SteamVR_Input.UpdateVisualActions (System.Boolean skipStateAndEventUpdates) (at Assets/SteamVR/Input/SteamVR_Input.cs:319)
-Valve.VR.SteamVR_Input.OnPreCull () (at Assets/SteamVR/Input/SteamVR_Input.cs:302)
-Valve.VR.SteamVR_Behaviour.PreCull () (at Assets/SteamVR/Scripts/SteamVR_Behaviour.cs:221)
-Valve.VR.SteamVR_Behaviour.OnBeforeRender () (at Assets/SteamVR/Scripts/SteamVR_Behaviour.cs:189)
-UnityEngine.BeforeRenderHelper.Invoke () (at <bdd20210bb844b2e88e1149ea99da5ef>:0)
-UnityEngine.Application.InvokeOnBeforeRender () (at <bdd20210bb844b2e88e1149ea99da5ef>:0)
-UnityEngine.GUIUtility:ProcessEvent(Int32, IntPtr, Boolean&)
+EMGClassifiedGestureManager+<BlendedBehaviour>d__7.MoveNext () (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:88)
+UnityEngine.SetupCoroutine.InvokeMoveNext (System.Collections.IEnumerator enumerator, System.IntPtr returnValueAddress) (at <bdd20210bb844b2e88e1149ea99da5ef>:0)
+UnityEngine.MonoBehaviour:StartCoroutine(IEnumerator)
+EMGClassifiedGestureManager:SetPose(HandGestureState) (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:78)
+EMGClassifiedGestureManager:Update() (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:51)
+
+NullReferenceException: Object reference not set to an instance of an object
+EMGClassifiedGestureManager+<BlendedBehaviour>d__7.MoveNext () (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:88)
+UnityEngine.SetupCoroutine.InvokeMoveNext (System.Collections.IEnumerator enumerator, System.IntPtr returnValueAddress) (at <bdd20210bb844b2e88e1149ea99da5ef>:0)
+UnityEngine.MonoBehaviour:StartCoroutine(IEnumerator)
+EMGClassifiedGestureManager:SetPose(HandGestureState) (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:78)
+EMGClassifiedGestureManager:Update() (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:55)
 
 Enabled
 UnityEngine.Debug:Log (object)
 Mole:Disable () (at Assets/Scripts/Moles/Mole.cs:184)
 Mole/<StartActivatedTimer>d__54:MoveNext () (at Assets/Scripts/Moles/Mole.cs:403)
 UnityEngine.SetupCoroutine:InvokeMoveNext (System.Collections.IEnumerator,intptr)
-
-NullReferenceException: routine is null
-UnityEngine.MonoBehaviour.StopCoroutine (UnityEngine.Coroutine routine) (at <bdd20210bb844b2e88e1149ea99da5ef>:0)
-EMGClassifiedGestureManager.SetPose (HandGestureState gestureState) (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:74)
-EMGClassifiedGestureManager.Update () (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:43)
-
-NullReferenceException: routine is null
-UnityEngine.MonoBehaviour.StopCoroutine (UnityEngine.Coroutine routine) (at <bdd20210bb844b2e88e1149ea99da5ef>:0)
-EMGClassifiedGestureManager.SetPose (HandGestureState gestureState) (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:74)
-EMGClassifiedGestureManager.Update () (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:47)
-
-NullReferenceException: routine is null
-UnityEngine.MonoBehaviour.StopCoroutine (UnityEngine.Coroutine routine) (at <bdd20210bb844b2e88e1149ea99da5ef>:0)
-EMGClassifiedGestureManager.SetPose (HandGestureState gestureState) (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:74)
-EMGClassifiedGestureManager.Update () (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:51)
-
-NullReferenceException: routine is null
-UnityEngine.MonoBehaviour.StopCoroutine (UnityEngine.Coroutine routine) (at <bdd20210bb844b2e88e1149ea99da5ef>:0)
-EMGClassifiedGestureManager.SetPose (HandGestureState gestureState) (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:74)
-EMGClassifiedGestureManager.Update () (at Assets/Scripts/Pointers/EMGClassifiedGestureManager.cs:55)
-
-Recording is not running, nothing to stop.
-UnityEngine.Debug:Log (object)
-PupilLabs.RecordingController:StopRecording () (at Assets/Plugins/Pupil/Scripts/RecordingController.cs:108)
-GameDirector:OnApplicationQuit () (at Assets/Scripts/Game/GameDirector.cs:503)
 
