@@ -5,7 +5,7 @@ on:
     branches:
       - "**"
   pull_request:
-    branches:
+      branches:
       - "master"
 
   # Allows you to run this workflow manually from the Actions tab
@@ -19,6 +19,10 @@ on:
         description: 'Check only without making changes'
         required: false
         default: 'false'
+      diff_check:
+        description: 'Whether to check only changed files or all files'
+        required: false
+        default: 'false'
       check_severity:
         description: 'Severity of style checks'
         required: false
@@ -30,7 +34,7 @@ on:
 
 jobs:
   auto-formatting: # This workflow contains a single job called "auto-formatting"
-    
+
     runs-on: ubuntu-latest # The type of runner that the job will run on
 
     steps:
@@ -40,8 +44,9 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Unity Auto Format
-        uses: SilvaUnCompte/CS-Unity-Actions-Autoformat@v1.0.2 # check available version before using
+        uses: SilvaUnCompte/CS-Unity-Actions-Autoformat@v1.1.0 # check available version before using
         with:
           path: ./Assets/Scripts/ # Path to your scripts directory
           check_only: 'true' # Set to 'true' to only verify formatting without making changes (true|false, default: 'false')
+          diff_check: 'true' # Set to 'true' to check only changed files, 'false' to check all files (true|false, default: 'false')
           check_severity: 'warn' # Set to 'warn' or 'error' to specify the severity of style checks (warn|error, default: 'error')
