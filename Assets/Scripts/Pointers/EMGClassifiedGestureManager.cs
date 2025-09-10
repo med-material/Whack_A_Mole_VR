@@ -25,6 +25,7 @@ public class EMGClassifiedGestureManager : MonoBehaviour
 
     private SteamVR_Skeleton_Poser poser; // Reference to the SteamVR_Skeleton_Poser component, drives pose blending at runtime
     private Coroutine currentBlendCoroutine; //Tracks currently running blending coroutine, later used for smooth transitioning
+    private SteamVR_Behaviour_Skeleton skeleton;
     [SerializeField]
     [Tooltip("Duration for blending transitions between poses, in seconds")]
     public float blendDuration = 0.3f; //Duration for blending transitions between poses
@@ -133,6 +134,14 @@ public class EMGClassifiedGestureManager : MonoBehaviour
         Debug.Log("SteamVR_Skeleton_Poser component found and reference grabbed.");
         SetPose(HandGestureState.Neutral); // Set initial pose to Neutral
 
+        skeleton = GetComponentInChildren<SteamVR_Behaviour_Skeleton>();
+
+
+        skeleton.BlendToPoser(poser, 0f); // Force immediate switch to custom poser
+        Debug.Log("Forced blend to custom poser.");
+
+
     }
+
 
 }
