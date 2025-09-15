@@ -14,6 +14,8 @@ public class EMGPointer : Pointer
     private Color badShootColor;
     [SerializeField]
     private float laserExtraWidthShootAnimation = .05f;
+    [SerializeField]
+    private EMGPointerBehavior emgPointerBehavior;
 
     [SerializeField]
     private GameObject virtualHandPrefab;
@@ -24,8 +26,10 @@ public class EMGPointer : Pointer
     [SerializeField] private float maxEMG = 0.0f;
     [SerializeField][Range(0f, 1f)] private float emgThreshold = 0.3f; // Threshold above which the EMG signal is considered as a muscle activation (0-1).
 
+    private AIServerInterface aiServerInterface;
     private float shootTimeLeft;
     private float totalShootTime;
+    private string MoleHoveringGesture = "NULL"; // Current gesture of the mole being hovered over (only in Training mode).
 
     void Update()
     {
@@ -47,6 +51,9 @@ public class EMGPointer : Pointer
         }
         else Debug.LogError("No virtual hand prefab assigned to the EMG Pointer.");
 
+        if (aiServerInterface == null) aiServerInterface = new AIServerInterface(emgDataProcessor.thalmicMyo);
+        ChangeBehavior(emgPointerBehavior);
+
         base.Enable();
     }
 
@@ -59,6 +66,9 @@ public class EMGPointer : Pointer
             Destroy(virtualHand);
             virtualHand = null;
         }
+
+        CancelInvoke(nameof(StartPredictionRequestCoroutine));
+
         base.Disable();
     }
 
@@ -68,7 +78,9 @@ public class EMGPointer : Pointer
         dwellStartTimer = Time.time;
         if (mole.GetState() == Mole.States.Enabled)
         {
-            MyoEMGLogging.CurrentGestures = mole.GetMoleType().ToString();
+            MoleHoveringGesture = mole.GetMoleType().ToString();
+            MyoEMGLogging.CurrentGestures = MoleHoveringGesture;
+
             loggerNotifier.NotifyLogger("Pointer Hover Begin", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
             {
                 {"ControllerHover", mole.GetId().ToString()},
@@ -81,7 +93,10 @@ public class EMGPointer : Pointer
     {
         mole.SetLoadingValue(0);
         mole.OnHoverLeave();
+
+        MoleHoveringGesture = "NULL";
         MyoEMGLogging.CurrentGestures = "NULL";
+
         loggerNotifier.NotifyLogger("Pointer Hover End", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
         {
             {"ControllerHover", mole.name},
@@ -119,7 +134,7 @@ public class EMGPointer : Pointer
         }
     }
 
-    public void ResetMaxEMG()
+    public void ResetMaxEMG() // Call by CALIBRATION keyworkd in Calibration Event (Game Director)
     {
         maxEMG = 0.0f;
         recordMaximumEMG = true;
@@ -180,4 +195,46 @@ public class EMGPointer : Pointer
         cursor.SetColor(EndLaserColor);
         cursor.SetScaleRatio(1f);
     }
+
+    public void ChangeBehavior(EMGPointerBehavior newBehavior)
+    {
+        // Always cancel the previous behavior
+        CancelInvoke(nameof(StartPredictionRequestCoroutine));
+
+        switch (newBehavior)
+        {
+            case EMGPointerBehavior.LivePrediction:
+                InvokeRepeating(nameof(StartPredictionRequestCoroutine), 0f, 0.004f);
+                break;
+            case EMGPointerBehavior.Training:
+                break;
+            default:
+                Debug.LogError("Unknown EMG Pointer behavior: " + newBehavior);
+                break;
+        }
+
+        emgPointerBehavior = newBehavior;
+    }
+
+    private void StartPredictionRequestCoroutine() => aiServerInterface.StartPredictionRequestCoroutine();
+
+    public string GetCurrentGesture()
+    {
+        switch(emgPointerBehavior)
+        {
+            case EMGPointerBehavior.LivePrediction:
+                return aiServerInterface.GetCurrentGesture();
+            case EMGPointerBehavior.Training:
+                return MoleHoveringGesture;
+            default:
+                Debug.LogError("Unknown EMG Pointer behavior: " + emgPointerBehavior);
+                return "Unknown";
+        }
+    }
+}
+
+public enum EMGPointerBehavior
+{
+    LivePrediction,
+    Training
 }
