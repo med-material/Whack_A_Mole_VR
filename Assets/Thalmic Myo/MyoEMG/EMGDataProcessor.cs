@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class EMGDataProcessor : MonoBehaviour
 {
-    [SerializeField] private ThalmicMyo thalmicMyo;
+    [SerializeField] public ThalmicMyo thalmicMyo;
     [SerializeField] private int smoothingWindowSize = 250;
 
     [SerializeField] private int[] rawEMGData = new int[8];
