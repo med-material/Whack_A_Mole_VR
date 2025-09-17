@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
 
 /*
@@ -18,6 +19,11 @@ public class EMGPointer : Pointer
     [SerializeField]
     private GameObject virtualHandPrefab;
     private GameObject virtualHand;
+    [SerializeField]
+    [Tooltip("Distance in front of the camera where the virtual hand will be placed.")]
+    private float handOffsetDistance = 0.35f; // Distance in front of the camera where the virtual hand will be placed.
+    [SerializeField]
+    private GameObject SteamVRVisualHand;
 
     [SerializeField] private EMGDataProcessor emgDataProcessor;
     [SerializeField] private bool recordMaximumEMG = true; // If true, records the maximum EMG value reached during the session.
@@ -33,6 +39,8 @@ public class EMGPointer : Pointer
         MyoEMGLogging.Threshold = (emgDataProcessor.GetSmoothedAbsAverage() >= (emgThreshold * maxEMG)) ? "above" : "below";
     }
 
+  
+
     public override void Enable()
     {
         if (active) return;
@@ -40,7 +48,7 @@ public class EMGPointer : Pointer
         if (virtualHandPrefab != null)
         {
             virtualHand = Instantiate(virtualHandPrefab, transform);
-            virtualHand.transform.localPosition = Vector3.zero;
+            virtualHand.transform.localPosition = new Vector3(0f, handOffsetDistance, 0f); // adjust as needed
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleEntered += OnHoverEnter;
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleExited += OnHoverExit;
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleStay += OnHoverStay;
@@ -48,6 +56,11 @@ public class EMGPointer : Pointer
         else Debug.LogError("No virtual hand prefab assigned to the EMG Pointer.");
 
         base.Enable();
+
+        if (SteamVRVisualHand != null)
+        {
+            SteamVRVisualHand.SetActive(false); // Disable visual hand when EMG pointer enabled
+        }
     }
 
     public override void Disable()
@@ -60,6 +73,11 @@ public class EMGPointer : Pointer
             virtualHand = null;
         }
         base.Disable();
+
+        if (SteamVRVisualHand != null)
+        {
+            SteamVRVisualHand.SetActive(true); // Re-enable visual hand when EMG pointer disabled
+        }
     }
 
     private void OnHoverEnter(Mole mole)
