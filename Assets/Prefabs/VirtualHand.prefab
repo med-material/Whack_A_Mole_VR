@@ -542,10 +542,10 @@ MonoBehaviour:
   blendEditorExpanded: 1
   poseNames:
   - ReferencePose_BindPose (MAIN)
-  - ReferencePose_Fist
-  - ReferencePose_OpenHand
-  - EMGPalmUpward
-  - EMGPalmDownward
+  - PalmarGrasp
+  - OpenHand
+  - WristExtension
+  - WristFlexion
   overridePreviewLeftHandPrefab: {fileID: 1000013348574242, guid: 638779290bce1af49b356f33dcc6fccf,
     type: 3}
   overridePreviewRightHandPrefab: {fileID: 1000010304998954, guid: 6def53d002137b747aec0b29551e0e25,
@@ -560,7 +560,7 @@ MonoBehaviour:
   showRightPreview: 0
   previewLeftInstance: {fileID: 0}
   previewRightInstance: {fileID: 0}
-  previewPoseSelection: 3
+  previewPoseSelection: 0
   blendingBehaviours:
   - name: Neutral
     enabled: 1
@@ -585,7 +585,7 @@ MonoBehaviour:
       pinky: 1
       values: 010101010101
     previewEnabled: 1
-  - name: Fist
+  - name: PalmarGrasp
     enabled: 1
     influence: 1
     pose: 1
@@ -631,7 +631,7 @@ MonoBehaviour:
       pinky: 1
       values: 010101010101
     previewEnabled: 1
-  - name: PalmUp
+  - name: WristExtension
     enabled: 1
     influence: 1
     pose: 3
@@ -654,7 +654,7 @@ MonoBehaviour:
       pinky: 1
       values: 010101010101
     previewEnabled: 1
-  - name: PalmDown
+  - name: WristFlexion
     enabled: 1
     influence: 1
     pose: 4

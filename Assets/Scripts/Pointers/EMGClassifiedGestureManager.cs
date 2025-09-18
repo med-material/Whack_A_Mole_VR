@@ -10,10 +10,10 @@ using Valve.VR;
 public enum HandGestureState
 {
     Neutral,
-    Fist,
+    PalmarGrasp,
     OpenHand,
-    PalmUp,
-    PalmDown
+    WristExtension,
+    WristFlexion
 }
 
 public class EMGClassifiedGestureManager : MonoBehaviour
@@ -49,7 +49,7 @@ public class EMGClassifiedGestureManager : MonoBehaviour
         }
         else if (Input.GetKeyDown(KeyCode.Alpha2))
         {
-            SetPose(HandGestureState.Fist);
+            SetPose(HandGestureState.PalmarGrasp);
         }
         else if (Input.GetKeyDown(KeyCode.Alpha3))
         {
@@ -57,11 +57,11 @@ public class EMGClassifiedGestureManager : MonoBehaviour
         }
         else if (Input.GetKeyDown(KeyCode.Alpha4))
         {
-            SetPose(HandGestureState.PalmUp);
+            SetPose(HandGestureState.WristExtension);
         }
         else if (Input.GetKeyDown(KeyCode.Alpha5))
         {
-            SetPose(HandGestureState.PalmDown);
+            SetPose(HandGestureState.WristFlexion);
         }
     }
 
