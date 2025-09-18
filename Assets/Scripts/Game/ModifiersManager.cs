@@ -634,6 +634,7 @@ public class ModifiersManager : MonoBehaviour
         {
             foreach (GameObject obj in rightControllerVisuals)
             {
+                Debug.Log("!! + " + obj.name);
                 obj.SetActive(true);
             }
         }

@@ -41,9 +41,12 @@ public class EMGPointer : Pointer
     {
         if (recordMaximumEMG) maxEMG = Mathf.Max(maxEMG, (float)emgDataProcessor.GetSmoothedAbsAverage());
         MyoEMGLogging.Threshold = (emgDataProcessor.GetSmoothedAbsAverage() >= (emgThreshold * maxEMG)) ? "above" : "below";
-    }
 
-  
+        if (SteamVRVisualHand != null && SteamVRVisualHand.activeSelf)
+        {
+            SteamVRVisualHand.SetActive(false); // Disable default visual hand when EMG pointer enabled
+        }
+    }
 
     public override void Enable()
     {
@@ -63,11 +66,6 @@ public class EMGPointer : Pointer
         ChangeBehavior(emgPointerBehavior);
 
         base.Enable();
-
-        if (SteamVRVisualHand != null)
-        {
-            SteamVRVisualHand.SetActive(false); // Disable visual hand when EMG pointer enabled
-        }
     }
 
     public override void Disable()
@@ -86,7 +84,7 @@ public class EMGPointer : Pointer
 
         if (SteamVRVisualHand != null)
         {
-            SteamVRVisualHand.SetActive(true); // Re-enable visual hand when EMG pointer disabled
+            SteamVRVisualHand.SetActive(true); // Re-enable default visual hand when EMG pointer disabled
         }
     }
 
