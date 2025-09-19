@@ -62,7 +62,7 @@ When starting the application, first you will need to get through the calibratio
 ### VS Code Extension
 
 **WAM Test Pattern**
-This extension for Visual Studio Code offers improvements to reading and coding treatment programs, with Syntax Highlighting and Auto-Completion, available at this link: https://github.com/tcaruchet/Whack_A_Mole_VR_WAMPAT_VSCodeExtension
+This extension for Visual Studio Code offers improvements to reading and coding treatment programs, with Syntax Highlighting and Auto-Completion, available at this link: https://github.com/med-material/WAMPAT_VSCodeExtension
 
 **EditorConfig for VS Code**
 If you use using VSCode, install *EditorConfig for VS Code* (in VSC extension list) to comply with the style rules defined in the .editorconfig file. No configuration is necessary; the extension automatically complies with the file formatting.

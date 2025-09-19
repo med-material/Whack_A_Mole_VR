@@ -337,7 +337,7 @@ public class WallManager : MonoBehaviour
     {
         foreach (TargetSpawner targetSpawner in targetSpawners.Values)
         {
-            targetSpawner.GetCurrentMole().SetPause(pause);
+            targetSpawner.GetCurrentMole()?.SetPause(pause);
         }
     }
 
