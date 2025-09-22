@@ -8,6 +8,7 @@ TagManager:
   - projectile
   - FxTemporaire
   - mole
+  - keepBetweenScenes
   layers:
   - Default
   - TransparentFX
