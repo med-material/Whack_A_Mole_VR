@@ -15,6 +15,7 @@ public class PatternInterface : MonoBehaviour
     private MotorSpaceManager motorspaceManager;
     private LoggerNotifier loggerNotifier;
     private PlayerPanel playerPanel;
+    private ThemeManager themeManager;
     private float randVar = 0f;
 
     private Dictionary<int, Mole> targetsList = null;
@@ -69,6 +70,7 @@ public class PatternInterface : MonoBehaviour
         gameDirector = FindObjectOfType<GameDirector>();
         motorspaceManager = FindObjectOfType<MotorSpaceManager>();
         playerPanel = FindObjectOfType<PlayerPanel>();
+        themeManager = FindObjectOfType<ThemeManager>();
     }
 
     void Start()
@@ -299,6 +301,10 @@ public class PatternInterface : MonoBehaviour
         if (action.TryGetValue("HIDEWALL", out tempValue))
         {
             modifiersManager.SetHideWall((ModifiersManager.HideWall)System.Enum.Parse(typeof(ModifiersManager.HideWall), tempValue));
+        }
+        if (action.TryGetValue("THEME", out tempValue))
+        {
+            themeManager.LoadTheme((Theme)System.Enum.Parse(typeof(Theme), tempValue));
         }
         if (action.TryGetValue("HIDEWALLAMOUNT", out tempValue))
         {
