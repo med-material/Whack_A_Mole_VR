@@ -144,7 +144,8 @@ public class PatternInterface : MonoBehaviour
                     break;
 
                 case "MESSAGE":
-                    SetMessage(action["LABEL"], action["TIME"]);
+                    if (!action.ContainsKey("IMAGE")) action["IMAGE"] = null;
+                    SetMessage(action["LABEL"], action["TIME"], action["IMAGE"]);
                     break;
 
                 case "RANDGEN":
@@ -258,11 +259,11 @@ public class PatternInterface : MonoBehaviour
     }
 
     // Updates the game difficulty
-    private void SetMessage(string message, string time)
+    private void SetMessage(string message, string time, string ImgPath)
     {
-        message = message.Replace("_", " ");
-        message = message.Replace("|", "\n");
+        message = message.Replace("_", " ").Replace("|", "\n");
         playerPanel.SetMessage(message, ParseFloat(time));
+        playerPanel.SetImage(ImgPath);
     }
 
     // Triggers a calibration
