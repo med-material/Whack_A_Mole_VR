@@ -379,7 +379,6 @@ public class ModifiersManager : MonoBehaviour
 
     public void SetMotorspace(ModifiersManager.MotorspaceSize size)
     {
-        Debug.Log(size);
         if (size == ModifiersManager.MotorspaceSize.Small)
         {
             motorSpaceManager.SetMotorSpaceSmall();
@@ -628,13 +627,12 @@ public class ModifiersManager : MonoBehaviour
 
         bool enableRight = (controllerType == ControllerSetup.Right || controllerType == ControllerSetup.Both);
         bool enableLeft = (controllerType == ControllerSetup.Left || controllerType == ControllerSetup.Both);
-        Debug.Log("Enable Right: " + enableRight + " Enable Left: " + enableLeft);
+        Debug.Log("Right controller: " + enableRight + " | Left controller: " + enableLeft);
 
         if (enableRight)
         {
             foreach (GameObject obj in rightControllerVisuals)
             {
-                Debug.Log("!! + " + obj.name);
                 obj.SetActive(true);
             }
         }

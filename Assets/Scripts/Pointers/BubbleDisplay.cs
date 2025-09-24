@@ -181,7 +181,6 @@ public class BubbleDisplay : MonoBehaviour
         {
             if (action == MotorAction.Inside || action == MotorAction.None)
             {
-                Debug.Log("Exit");
                 action = MotorAction.Exit;
                 //laserMapper.ShowMotorspace(true);
                 bubbleRender.SetActive(true);
