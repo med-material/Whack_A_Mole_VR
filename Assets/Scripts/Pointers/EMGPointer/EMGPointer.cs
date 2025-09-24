@@ -24,20 +24,22 @@ public class EMGPointer : Pointer
     [SerializeField][Range(0f, 1f)] private float emgThreshold = 0.3f; // Threshold above which the EMG signal is considered as a muscle activation (0-1).
 
     private AIServerInterface aiServerInterface;
-    private string moleHoveringGesture = "NULL"; // Current gesture of the mole being hovered over (only in Training mode).
+    private EMGClassifiedGestureManager emgClassifiedGestureManager;
+    private const string DEFAULT_GESTURE = "Neutral"; // Default gesture when no mole is hovered over. 
+    private string moleHoveringGesture = DEFAULT_GESTURE; // Current gesture of the mole being hovered over (only in Training mode).
 
     void Update()
     {
         // Update max EMG if recording is enabled
         if (recordMaximumEMG) maxEMG = Mathf.Max(maxEMG, (float)emgDataProcessor.GetSmoothedAbsAverage());
-        MyoEMGLogging.Threshold = (emgDataProcessor.GetSmoothedAbsAverage() >= (emgThreshold * maxEMG)) ? "above" : "below";
+        MyoEMGLogging.Threshold = IsAboveThreshold(emgDataProcessor.GetSmoothedAbsAverage()) ? "above" : "below";
 
         // Disable default visual hand when EMG pointer enabled
         if (SteamVRVisualHand != null && SteamVRVisualHand.activeSelf) SteamVRVisualHand.SetActive(false);
 
         // Update Gesture Visual based on current behavior
         HandGestureState currentGesture = GetCurrentGesture();
-        virtualHand.GetComponent<EMGClassifiedGestureManager>().SetPose(currentGesture);
+        if (emgClassifiedGestureManager) emgClassifiedGestureManager.SetPose(currentGesture);
     }
 
     public override void Enable()
@@ -48,6 +50,7 @@ public class EMGPointer : Pointer
         {
             virtualHand = Instantiate(virtualHandPrefab, transform);
             virtualHand.transform.localPosition = new Vector3(0f, handOffsetDistance, 0f); // adjust as needed
+            emgClassifiedGestureManager = virtualHand.GetComponent<EMGClassifiedGestureManager>();
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleEntered += OnHoverEnter;
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleExited += OnHoverExit;
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleStay += OnHoverStay;
@@ -102,7 +105,7 @@ public class EMGPointer : Pointer
         mole.SetLoadingValue(0);
         mole.OnHoverLeave();
 
-        moleHoveringGesture = "NULL";
+        moleHoveringGesture = DEFAULT_GESTURE;
         MyoEMGLogging.CurrentGestures = "NULL";
 
         loggerNotifier.NotifyLogger("Pointer Hover End", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
@@ -136,7 +139,7 @@ public class EMGPointer : Pointer
                                 {"PointerShootOrder", pointerShootOrder},
                                 {"ControllerName", gameObject.name}
                             });
-                MyoEMGLogging.CurrentGestures = "NULL";
+                OnHoverExit(mole);
                 Shoot(mole);
             }
         }
@@ -147,6 +150,8 @@ public class EMGPointer : Pointer
         maxEMG = 0.0f;
         recordMaximumEMG = true;
     }
+
+    public bool IsAboveThreshold(float emgIntensity) => (emgIntensity >= (emgThreshold * maxEMG));
 
     public void ChangeBehavior(EMGPointerBehavior newBehavior)
     {
@@ -185,7 +190,7 @@ public class EMGPointer : Pointer
                 break;
 
             case EMGPointerBehavior.Training:
-                currentGestureString = moleHoveringGesture;
+                currentGestureString = IsAboveThreshold(emgDataProcessor.GetSmoothedAbsAverage()) ? moleHoveringGesture : DEFAULT_GESTURE;
                 break;
 
             default:
