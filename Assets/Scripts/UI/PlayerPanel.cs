@@ -39,6 +39,11 @@ public class PlayerPanel : MonoBehaviour
     private Text instructionText;
     private string instructionTextDefault;
 
+    [SerializeField]
+    private SpriteRenderer countDownImg;
+    [SerializeField]
+    private string countDownImgFolder = "Textures";
+
     private Canvas panelCanvas;
 
 
@@ -131,6 +136,12 @@ public class PlayerPanel : MonoBehaviour
     {
         SetInstructionText(text);
         StartCoroutine(WaitShowMessage(time, text));
+    }
+
+    public void SetImage(string ImgPath)
+    {
+        countDownImg.sprite = Resources.Load<Sprite>(countDownImgFolder + "/" + ImgPath); // Load image from Resources/{countDownImgFolder} folder
+        countDownImg.enabled = !string.IsNullOrEmpty(ImgPath); // Hide if no image
     }
 
     private IEnumerator WaitShowMessage(float duration, string text)
