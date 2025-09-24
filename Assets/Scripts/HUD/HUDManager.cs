@@ -68,7 +68,7 @@ public class HUDManager : MonoBehaviour
     {
         lastEnter = m.enter;
         lastSide = m.side;
-        Debug.Log("MotorSpaceEnter " + m.enter + "active " + active);
+
         if (m.enter && active)
         {
             Reset();
