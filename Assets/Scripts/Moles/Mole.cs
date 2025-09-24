@@ -181,7 +181,6 @@ public abstract class Mole : MonoBehaviour
 
     public void Disable()
     {
-        Debug.Log(state);
         if (state == States.Enabled && moleOutcome == MoleOutcome.Valid)
         {
             ChangeState(States.Missed);
