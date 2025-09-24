@@ -1,3 +1,4 @@
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -34,7 +35,10 @@ public class EMGPointer : Pointer
         // Disable default visual hand when EMG pointer enabled
         if (SteamVRVisualHand != null && SteamVRVisualHand.activeSelf) SteamVRVisualHand.SetActive(false);
 
-        }
+        // Update Gesture Visual based on current behavior
+        HandGestureState currentGesture = GetCurrentGesture();
+        virtualHand.GetComponent<EMGClassifiedGestureManager>().SetPose(currentGesture);
+    }
 
     public override void Enable()
     {
@@ -170,18 +174,32 @@ public class EMGPointer : Pointer
 
     private void StartPredictionRequestCoroutine() => aiServerInterface.StartPredictionRequestCoroutine();
 
-    public string GetCurrentGesture()
+    public HandGestureState GetCurrentGesture()
     {
+        string currentGestureString;
+
         switch (emgPointerBehavior)
         {
             case EMGPointerBehavior.LivePrediction:
-                return aiServerInterface.GetCurrentGesture();
+                currentGestureString = aiServerInterface.GetCurrentGesture();
+                break;
+
             case EMGPointerBehavior.Training:
-                return moleHoveringGesture;
+                currentGestureString = moleHoveringGesture;
+                break;
+
             default:
                 Debug.LogError("Unknown EMG Pointer behavior: " + emgPointerBehavior);
-                return "Unknown";
+                return HandGestureState.Unknown;
         }
+
+        // Try to get gesture enum from string, ignore case
+        if (!Enum.TryParse(currentGestureString, true, out HandGestureState handGestureState))
+        {
+            Debug.LogError("/!\\ Unrecognized gesture: " + currentGestureString);
+            return HandGestureState.Unknown; // Return Unknown if parsing fails
+        }
+        else return handGestureState; // Return parsed gesture
     }
 }
 
