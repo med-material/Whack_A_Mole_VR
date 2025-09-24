@@ -13,7 +13,8 @@ public enum HandGestureState
     PalmarGrasp,
     OpenHand,
     WristExtension,
-    WristFlexion
+    WristFlexion,
+    Unknown // Do nothing state, used when gesture is not recognized
 }
 
 public class EMGClassifiedGestureManager : MonoBehaviour
@@ -68,6 +69,7 @@ public class EMGClassifiedGestureManager : MonoBehaviour
     //Triggers a smooth transition to the specified pose
     public void SetPose(HandGestureState gestureState)
     {
+        if (gestureState == HandGestureState.Unknown) return; // Ignore requests to set to Unknown state
 
         if (poser == null)
         {
@@ -91,7 +93,11 @@ public class EMGClassifiedGestureManager : MonoBehaviour
     //Coroutine to smoothly transition between poses over a specified duration
     private IEnumerator CrossFadePose(string targetPose, float duration)
     {
-        string[] behaviors = HandGestureState.GetNames(typeof(HandGestureState)); //Get all behavior names from the HandGestureState enum
+        // Get all behavior names from the HandGestureState enum, excluding "Unknown"
+        string[] behaviors = HandGestureState.GetNames(typeof(HandGestureState))
+            .Where(b => b != HandGestureState.Unknown.ToString())
+            .ToArray();
+
         System.Collections.Generic.Dictionary<string, float> startValues = behaviors.ToDictionary(b => b, b => poser.GetBlendingBehaviourValue(b)); //Capture the starting values of all behaviors
         System.Collections.Generic.Dictionary<string, float> targetValues = behaviors.ToDictionary(b => b, b => (b == targetPose) ? 1f : 0f); //Determine target values: target pose to 1, others to 0
         float time = 0f; //Elapsed time tracker

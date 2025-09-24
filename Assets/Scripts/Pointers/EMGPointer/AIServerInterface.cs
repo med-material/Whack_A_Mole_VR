@@ -9,7 +9,7 @@ public class AIServerInterface
     private ThalmicMyo thalmicMyo;
     private int memorySize = 6;
     private int bufferSize = 50;
-    [SerializeField] private string currentGesture = "None";
+    [SerializeField] private string currentGesture = "Unknown";
     private List<string> gestureResponses = new List<string>();
     private Queue<string> previousGesture = new Queue<string>();
 
