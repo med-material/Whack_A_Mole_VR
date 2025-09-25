@@ -6,10 +6,12 @@ using UnityEngine;
 [CustomEditor(typeof(TactorConnector))]
 public class TactorConnectorEditor : Editor
 {
+    private bool isScanning = false;
+    private string scanStatus = "";
+
     public override void OnInspectorGUI()
     {
         DrawDefaultInspector();
-
         TactorConnector connector = (TactorConnector)target;
 
         if (Application.isPlaying)
@@ -23,14 +25,70 @@ public class TactorConnectorEditor : Editor
                 EditorGUILayout.LabelField($"Tactor {i + 1}", GUILayout.Width(70));
                 if (GUILayout.Button("Pulse", GUILayout.Width(60)))
                 {
-                    // Use the public method to pulse the tactor
                     connector.PulseTactor(i + 1);
                 }
                 EditorGUILayout.EndHorizontal();
             }
+
+            EditorGUILayout.Space();
+
+            using (new EditorGUI.DisabledScope(isScanning))
+            {
+                if (GUILayout.Button("Auto Connect Tactor Control Unit"))
+                {
+                    AutoConnectPort(connector);
+                }
+            }
+
+            if (isScanning)
+                EditorGUILayout.LabelField("Scanning ports... " + scanStatus);
         }
     }
+    private void AutoConnectPort(TactorConnector connector)
+    {
+        isScanning = true;
+        scanStatus = "";
+        System.Threading.Tasks.Task.Run(() =>
+        {
+            for (int i = 1; i <= 20; i++)
+            {
+                string portName = $"COM{i}";
+                int boardId = TdkInterface.Connect(portName, (int)TdkDefines.DeviceTypes.Serial, IntPtr.Zero);
+                if (boardId >= 0)
+                {
+                    EditorApplication.delayCall += () =>
+                    {
+                        connector.GetType().GetField("comPort", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                            .SetValue(connector, portName);
+                        connector.GetType().GetField("connectedBoardId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                            .SetValue(connector, boardId);
+
+                        Debug.Log($"AutoConnect: Connected to {portName} (Board ID: {boardId})");
+
+
+                        EditorUtility.SetDirty(connector);
+
+                        isScanning = false;
+                        scanStatus = $"Connected to {portName}";
+                    };
+                    return;
+                }
+                else
+                {
+                    string error = TdkDefines.GetLastEAIErrorString();
+                    scanStatus = $"{portName} failed: {error}";
+                }
+            }
+
+            EditorApplication.delayCall += () =>
+            {
+                isScanning = false;
+                scanStatus = "No Engineering Acoustics, Incorporated (EAI) tactor control unit found";
+            };
+        });
+    }
 }
+
 
 
 [Serializable]
@@ -72,7 +130,9 @@ public class TactorSettings
 
 public class TactorConnector : MonoBehaviour
 {
+    public bool feedbackEnabled = true; // Enable or disable haptic feedback globally (default: enabled)
     private int connectedBoardId = -1;
+
 
     [Header("General Settings")]
     [Tooltip("Delay before vibration starts after command is received (ms)")]
@@ -81,8 +141,11 @@ public class TactorConnector : MonoBehaviour
     [Tooltip("Duration of vibration when a pulse is sent (ms)")]
     [SerializeField] private int pulseDuration = 250;
 
+    [Tooltip("Tactor number out of the connected tactors")]
+    [SerializeField] private int tactorNumber = 1;
+
     [Tooltip("Serial COM port for the tactor device")]
-    [SerializeField] private string comPort = "COM4";
+    [SerializeField] private string comPort;
 
     [TextArea(10, 20)]
     [SerializeField]
@@ -111,27 +174,14 @@ public class TactorConnector : MonoBehaviour
     {
         Debug.Log("Initializing TDK...");
         CheckError(TdkInterface.InitializeTI());
-
-        Debug.Log($"Connecting to {comPort}...");
-        int boardId = TdkInterface.Connect(comPort, (int)TdkDefines.DeviceTypes.Serial, IntPtr.Zero);
-
-        if (boardId >= 0)
-        {
-            connectedBoardId = boardId;
-            Debug.Log($"Connected! Board ID: {connectedBoardId}");
-        }
-        else
-        {
-            Debug.LogError("Failed to connect: " + TdkDefines.GetLastEAIErrorString());
-        }
     }
 
     void Update() // Here we just listen for key presses to trigger various commands.
     {
         if (connectedBoardId >= 0 && Input.GetKeyDown(KeyCode.Space))
         {
-            Debug.Log("Pulsing tactor 1 for 250 ms...");
-            CheckError(TdkInterface.Pulse(connectedBoardId, 1, pulseDuration, delay));
+            Debug.Log($"Pulsing tactor {tactorNumber} for {pulseDuration}");
+            TriggerTactor(connectedBoardId, tactorNumber, pulseDuration, delay);
 
         }
         if (connectedBoardId < 0) return;
@@ -141,6 +191,12 @@ public class TactorConnector : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Alpha1 + i))
                 ApplySettingsToTactor(i + 1, tactors[i]);
         }
+    }
+
+    public void TriggerTactor(int connectedBoardId, int tactorNumber, int pulseDuration, int delay)
+    {
+        if (feedbackEnabled)
+            TdkInterface.Pulse(connectedBoardId, tactorNumber, pulseDuration, delay);
     }
 
     void ApplySettingsToTactor(int tactorID, TactorSettings settings)
@@ -229,10 +285,16 @@ public class TactorConnector : MonoBehaviour
 
     private void OnValidate()
     {
+        if (connectedBoardId < 0) //To prevent "ERROR_BADPARAMETER" error due to attempting to pass values when no board connected.
+        {
+            return;
+        }
         ApplyAllStaticSettings();
         RampAllGains();
         RampAllFrequencies();
     }
+
+
 
     public void PulseTactor(int tactorID) // Public method to pulse a specific tactor, can be called from other scripts.
     {
@@ -246,6 +308,8 @@ public class TactorConnector : MonoBehaviour
             Debug.LogWarning("No tactor board connected.");
         }
     }
+
+
 
 
 }
