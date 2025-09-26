@@ -236,33 +236,6 @@ public class TactorConnector : MonoBehaviour
             RampFrequency(i + 1, tactors[i]);
     }
 
-    public void TriggerGraspingStateFeedback()
-    {
-        for (int i = 0; i < tactors.Length; i++)
-            ApplySettingsToTactor(i + 1, tactors[i]);
-
-        for (int i = 0; i < tactors.Length; i++)
-            TdkInterface.Pulse(connectedBoardId, i + 1, 250, 0);
-    }
-
-    public void TriggerPinchingStateFeedback()
-    {
-        for (int i = 0; i < tactors.Length; i++)
-            ApplySettingsToTactor(i + 1, tactors[i]);
-
-        for (int i = 0; i < tactors.Length; i++)
-            TdkInterface.Pulse(connectedBoardId, i + 1, 250, 0);
-    }
-
-    public void TriggerDefaultStateFeedback()
-    {
-        for (int i = 0; i < tactors.Length; i++)
-            ApplySettingsToTactor(i + 1, tactors[i]);
-
-        for (int i = 0; i < tactors.Length; i++)
-            TdkInterface.Pulse(connectedBoardId, i + 1, 250, 0);
-    }
-
     private void CheckError(int ret) // Checks the tactor device software for errors
     {
         if (ret < 0)
