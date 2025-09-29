@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GazeLogger : MonoBehaviour
+public class GazeLogger : DataProvider
 {
 
     public Transform gazeOrigin;
@@ -71,7 +71,7 @@ public class GazeLogger : MonoBehaviour
         gazeNormal1 = gazeData.GazeNormal1;
     }
 
-    public Dictionary<string, object> GetGazeData()
+    public override Dictionary<string, object> GetData()
     {
         if (isGazing)
         {
