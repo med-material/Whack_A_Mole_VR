@@ -14,7 +14,7 @@ public class EMGPointer : Pointer
 
     [SerializeField]
     [Tooltip("Distance in front of the camera where the virtual hand will be placed.")]
-    private float handOffsetDistance = 0.35f; // Distance in front of the camera where the virtual hand will be placed.
+    private float handOffsetDistance = -0.35f; // Distance in front of the camera where the virtual hand will be placed.
 
     [SerializeField] private GameObject SteamVRVisualHand;
     [SerializeField] private EMGDataProcessor emgDataProcessor;
@@ -51,6 +51,19 @@ public class EMGPointer : Pointer
             virtualHand = Instantiate(virtualHandPrefab, transform);
             virtualHand.transform.localPosition = new Vector3(0f, handOffsetDistance, 0f); // adjust as needed
             emgClassifiedGestureManager = virtualHand.GetComponent<EMGClassifiedGestureManager>();
+
+            Transform visualStick = virtualHand.transform.Find("VisualStick");
+            if (visualStick != null)
+            {
+                Renderer renderer = visualStick.GetComponent<Renderer>();
+                if (renderer != null && renderer.material != null)
+                {
+                    renderer.material = laserMaterial;
+                    renderer.material.color = startLaserColor;
+                }
+            }
+            if (virtualHandPrefab != null) Debug.LogError("No 'VisualStick' found in the virtual hand prefab.");
+
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleEntered += OnHoverEnter;
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleExited += OnHoverExit;
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleStay += OnHoverStay;
