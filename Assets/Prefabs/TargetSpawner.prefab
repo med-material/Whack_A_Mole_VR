@@ -178,3 +178,6 @@ MonoBehaviour:
     - moleType: 7
       prefab: {fileID: 8304183495515368934, guid: d6649e07bd1040f48ae8eae1202ce693,
         type: 3}
+    - moleType: 8
+      prefab: {fileID: 3623709996323666786, guid: e060eb18d1311ea4e84337a14af5c6e1,
+        type: 3}
