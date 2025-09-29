@@ -1,10 +1,8 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class ViewportLogger : MonoBehaviour
+public class ViewportLogger : DataProvider
 {
-
-
     [SerializeField]
     private GameObject upperMiddle;
     [SerializeField]
@@ -18,19 +16,7 @@ public class ViewportLogger : MonoBehaviour
     [SerializeField]
     private GameObject upperLeft;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
-    public Dictionary<string, object> GetViewportData()
+    public override Dictionary<string, object> GetData()
     {
         Dictionary<string, object> data = new Dictionary<string, object>() {
             {"ViewportUpperMiddleX", upperMiddle.transform.position.x},
@@ -54,5 +40,4 @@ public class ViewportLogger : MonoBehaviour
         };
         return data;
     }
-
 }
