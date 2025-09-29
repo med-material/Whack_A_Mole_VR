@@ -1,15 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 
 public class SampleLogger : MonoBehaviour
 {
     [SerializeField] float samplingFrequency = 0.02f;
-
-
-    [SerializeField] private GazeLogger gazeLogger;
-    [SerializeField] private ViewportLogger viewportLogger;
+    [SerializeField] public DataProvider[] dataProviders; // Array of data providers to gather data from
 
     private TrackerHub trackerHub;
     private LoggingManager loggingManager;
@@ -72,27 +68,21 @@ public class SampleLogger : MonoBehaviour
 
             // Adds the parameters of the objects tracked by the TrackerHub's trackers
             Dictionary<string, object> trackedLogs = trackerHub.GetTracks();
-
             foreach (KeyValuePair<string, object> pair in trackedLogs)
             {
                 sampleLog[pair.Key] = pair.Value;
             }
 
-            // Adds the parameters from GazeLogger
-            if (gazeLogger != null)
+            // Adds the parameters from all DataProvider components
+            foreach (DataProvider provider in dataProviders)
             {
-                Dictionary<string, object> gazeLogs = gazeLogger.GetGazeData();
-                foreach (KeyValuePair<string, object> pair in gazeLogs)
+                if (provider != null)
                 {
-                    sampleLog[pair.Key] = pair.Value;
-                }
-            }
-            if (viewportLogger != null)
-            {
-                Dictionary<string, object> viewportLogs = viewportLogger.GetViewportData();
-                foreach (KeyValuePair<string, object> pair in viewportLogs)
-                {
-                    sampleLog[pair.Key] = pair.Value;
+                    Dictionary<string, object> providerLogs = provider.GetData();
+                    foreach (KeyValuePair<string, object> pair in providerLogs)
+                    {
+                        sampleLog[pair.Key] = pair.Value;
+                    }
                 }
             }
 
