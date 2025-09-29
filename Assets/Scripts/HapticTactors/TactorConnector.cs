@@ -4,8 +4,6 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-
-
 [CustomEditor(typeof(TactorConnector))]
 public class TactorConnectorEditor : Editor
 {
