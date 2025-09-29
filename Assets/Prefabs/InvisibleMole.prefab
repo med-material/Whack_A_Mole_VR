@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3623709996323666786
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2695243907960577014}
+  - component: {fileID: 2512863066393360559}
+  m_Layer: 0
+  m_Name: InvisibleMole
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2695243907960577014
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3623709996323666786}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.03125, y: 0.03125, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: -1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2512863066393360559
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3623709996323666786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a74adce6cde1fa046b4af92d75364313, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultVisibility: 1
+  disabledColor: {r: 0.8235295, g: 0.8235295, b: 0.8235295, a: 0}
+  enabledColor: {r: 0.52156866, g: 0.8, b: 0.3529412, a: 0}
+  fakeEnabledColor: {r: 0.52156866, g: 0.8, b: 0.3529412, a: 0}
+  hoverColor: {r: 0.40392157, g: 0.70980394, b: 0.27450982, a: 0}
+  fakeHoverColor: {r: 0.40392157, g: 0.70980394, b: 0.27450982, a: 0}
+  popColor: {r: 1, g: 1, b: 1, a: 0}
+  textureEnabled: {fileID: 2800000, guid: 36ea2ae3da72dba49a98d2d221ee729e, type: 3}
+  textureDisabled: {fileID: 2800000, guid: 952da8b1e2fcebb4f8b973928fb68edb, type: 3}
+  distractorLeftTexture: {fileID: 2800000, guid: 9d495e5ae54cec048ae2745207379129,
+    type: 3}
+  distractorRightTexture: {fileID: 2800000, guid: 60c5fbcfda299a842b08d09e92659799,
+    type: 3}
+  correctMoleTexture: {fileID: 2800000, guid: a48703d906a9b524faeaae24b680e15f, type: 3}
+  incorrectMoleTexture: {fileID: 2800000, guid: 01ed1b50fe48bdb4b93aa5c6af288eee,
+    type: 3}
+  enableSound: {fileID: 0}
+  disableSound: {fileID: 0}
+  popSound: {fileID: 0}
+  popVisual: {fileID: 6303381341891836782, guid: d6649e07bd1040f48ae8eae1202ce693,
+    type: 3}
+  loadingImg: {fileID: 4110767010223219073, guid: d6649e07bd1040f48ae8eae1202ce693,
+    type: 3}
+  hoverInfoContainer: {fileID: 6515406651748915805, guid: d6649e07bd1040f48ae8eae1202ce693,
+    type: 3}
+  hoverInfos: []

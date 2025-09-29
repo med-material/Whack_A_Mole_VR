@@ -5613,7 +5613,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8873160299005826995}
   m_LocalRotation: {x: -0.00017264773, y: -0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.11000138}
+  m_LocalPosition: {x: 0, y: 0, z: -0.11000147}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -5672,10 +5672,10 @@ ParentConstraint:
   m_Enabled: 1
   serializedVersion: 2
   m_Weight: 1
-  m_TranslationAtRest: {x: 0.000108003675, y: 0.000021001426, z: -0.11000138}
+  m_TranslationAtRest: {x: 0.000108003675, y: 0.000021001426, z: -0.11000147}
   m_RotationAtRest: {x: -0.019783963, y: 0, z: 0}
   m_TranslationOffsets:
-  - {x: 0.0023041177, y: 0.11200139, z: 0.000448059}
+  - {x: 0.0023041177, y: 0.11200148, z: 0.000448059}
   m_RotationOffsets:
   - {x: 90, y: 0, z: 0}
   m_AffectTranslationX: 1
@@ -5722,6 +5722,16 @@ PrefabInstance:
       propertyPath: m_PresetInfoIsWorld
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2313442058398866704, guid: 19f730f632c0ac84791624d0c0132b0c,
+        type: 3}
+      propertyPath: m_DynamicPixelsPerUnit
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 2313442058398866704, guid: 19f730f632c0ac84791624d0c0132b0c,
+        type: 3}
+      propertyPath: m_ReferencePixelsPerUnit
+      value: 400
+      objectReference: {fileID: 0}
     - target: {fileID: 3600230948079022790, guid: 19f730f632c0ac84791624d0c0132b0c,
         type: 3}
       propertyPath: m_Name
@@ -5731,6 +5741,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4970809155386585993, guid: 19f730f632c0ac84791624d0c0132b0c,
+        type: 3}
+      propertyPath: m_DrawMode
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5738311851734390237, guid: 19f730f632c0ac84791624d0c0132b0c,
         type: 3}
@@ -5770,7 +5785,7 @@ PrefabInstance:
     - target: {fileID: 8375238055519838456, guid: 19f730f632c0ac84791624d0c0132b0c,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8653776916984604615, guid: 19f730f632c0ac84791624d0c0132b0c,
         type: 3}
