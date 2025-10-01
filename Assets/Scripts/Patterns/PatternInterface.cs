@@ -16,6 +16,7 @@ public class PatternInterface : MonoBehaviour
     private LoggerNotifier loggerNotifier;
     private PlayerPanel playerPanel;
     private ThemeManager themeManager;
+    private TactorConnector tactorConnector;
     private float randVar = 0f;
 
     private Dictionary<int, Mole> targetsList = null;
@@ -71,6 +72,7 @@ public class PatternInterface : MonoBehaviour
         motorspaceManager = FindObjectOfType<MotorSpaceManager>();
         playerPanel = FindObjectOfType<PlayerPanel>();
         themeManager = FindObjectOfType<ThemeManager>();
+        tactorConnector = FindObjectOfType<TactorConnector>();
     }
 
     void Start()
@@ -335,6 +337,10 @@ public class PatternInterface : MonoBehaviour
         {
             modifiersManager.SetPerformanceFeedback(bool.Parse(tempValue));
         }
+        if (action.TryGetValue("HAPTICFEEDBACK", out tempValue))
+        {
+            tactorConnector.feedbackEnabled = bool.Parse(tempValue);
+        }
         if (action.TryGetValue("EMBODIMENT", out tempValue))
         {
             modifiersManager.SetEmbodiment((ModifiersManager.Embodiment)System.Enum.Parse(typeof(ModifiersManager.Embodiment), tempValue));
@@ -346,6 +352,7 @@ public class PatternInterface : MonoBehaviour
             GameObject cursorL = GameObject.Find("SphereL");
             if (cursorL != null) cursorL.SetActive(bool.Parse(tempValue));
         }
+
     }
 
     private void SetSegment(string Idval, string label)
