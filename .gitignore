@@ -401,3 +401,7 @@ healthchecksdb
 /Assets/Scenes/testFade.unity.meta
 /Assets/Scripts/Game/TestScript.cs
 /Assets/Scripts/Game/TestScript.cs.meta
+
+# TDK plugin files
+/Assets/Plugins/x86_64/TDK
+/Assets/Plugins/x86_64/TDK.meta
