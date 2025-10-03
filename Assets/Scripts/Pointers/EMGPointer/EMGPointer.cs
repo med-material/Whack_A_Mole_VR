@@ -199,7 +199,7 @@ public class EMGPointer : Pointer
         switch (emgPointerBehavior)
         {
             case EMGPointerBehavior.LivePrediction:
-                currentGestureString = aiServerInterface.GetCurrentGesture();
+                currentGestureString = IsAboveThreshold(emgDataProcessor.GetSmoothedAbsAverage()) ? aiServerInterface.GetCurrentGesture() : DEFAULT_GESTURE;
                 break;
 
             case EMGPointerBehavior.Training:
