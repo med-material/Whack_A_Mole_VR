@@ -130,6 +130,11 @@ public abstract class Mole : MonoBehaviour
         }
     }
 
+    // Method call by pointer to check if the mole can be shoot
+    public virtual bool checkShootingValidity(string arg = "")
+    {
+        return Mole.States.Enabled == state;
+    }
     public void SetNormalizedIndex(Vector2 newNormalizedIndex)
     {
         normalizedIndex = newNormalizedIndex;

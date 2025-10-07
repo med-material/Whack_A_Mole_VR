@@ -130,7 +130,7 @@ public class EMGPointer : Pointer
 
     private void OnHoverStay(Mole mole)
     {
-        if (mole.GetState() == Mole.States.Enabled)
+        if (mole.checkShootingValidity(GetCurrentGesture().ToString()))
         {
             // If the EMG signal is below the threshold, reset the dwell timer.
             if (emgDataProcessor.GetSmoothedAbsAverage() < (emgThreshold * maxEMG)) dwellStartTimer = Time.time;
