@@ -87,8 +87,7 @@ public class BasicPointer : Pointer
             Mole mole;
             if (hit.collider.gameObject.TryGetComponent<Mole>(out mole))
             {
-                Mole.States moleAnswer = mole.GetState();
-                if (moleAnswer == Mole.States.Enabled)
+                if (mole.checkShootingValidity())
                 {
                     if (hover == string.Empty)
                     {

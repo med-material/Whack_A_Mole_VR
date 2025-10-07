@@ -59,6 +59,15 @@ public class InteractiveMole : Mole
         // No-op here (safe).
     }
 
+    public override bool checkShootingValidity(string arg = "")
+    {
+        if (arg == moleType.ToString())
+        {
+            return base.checkShootingValidity(arg);
+        }
+        return false;
+    }
+
     protected override void PlayHoverLeave()
     {
         // No-op by default.
