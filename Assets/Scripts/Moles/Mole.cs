@@ -15,7 +15,7 @@ public abstract class Mole : MonoBehaviour
 {
     public enum MolePopAnswer { Ok, Fake, Expired, Disabled, Paused }
     public enum MoleOutcome { Valid, Distractor } // Node: if a third option is added, revise every condition in Mole.cs, childs and classes that use it (e.g. PaternInterface.cs, etc.)
-    public enum MoleType { SimpleTarget, BallMole, DistractorLeft, DistractorRight, PalmarGrasp, PinchGrasp, WristFlexion, WristExtension, Invisible }
+    public enum MoleType { SimpleTarget, BallMole, DistractorLeft, DistractorRight, PalmarGrasp, PinchGrasp, WristFlexion, WristExtension, Invisible, BalloonMole }
 
     public bool defaultVisibility = false;
 
