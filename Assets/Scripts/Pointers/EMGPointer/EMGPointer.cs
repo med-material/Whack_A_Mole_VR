@@ -62,7 +62,7 @@ public class EMGPointer : Pointer
                     renderer.material.color = startLaserColor;
                 }
             }
-            if (virtualHandPrefab != null) Debug.LogError("No 'VisualStick' found in the virtual hand prefab.");
+            else Debug.LogError("No 'VisualStick' found in the virtual hand prefab.");
 
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleEntered += OnHoverEnter;
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleExited += OnHoverExit;
