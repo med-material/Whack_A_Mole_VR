@@ -51,13 +51,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultVisibility: 1
-  animator: {fileID: 0}
-  idleStateName: Idle
-  popTriggerName: Pop
-  useIdleFloating: 1
-  floatAmplitude: 0.01
-  floatFrequency: 0.2
-  popAnimationDuration: 0.35
+  animationPlayer: {fileID: 0}
+  idleClipName: IdleBalloonAnimation
+  useIdleAnimation: 1
   enableSound: {fileID: 0}
 --- !u!82 &7182310836803905482
 AudioSource:
@@ -172,6 +168,7 @@ Animation:
   - {fileID: 7400000, guid: ddeb3e6212d4c3d4e9c501ec44db62ed, type: 2}
   - {fileID: 7400000, guid: a0e43e602f22da94da772a64618ab6c9, type: 2}
   - {fileID: 7400000, guid: b845c6abf69e8bf44aece84c9a94ef36, type: 2}
+  - {fileID: 7400000, guid: 957466c9d7999be4dae8dca0043576e2, type: 2}
   m_WrapMode: 0
   m_PlayAutomatically: 1
   m_AnimatePhysics: 0

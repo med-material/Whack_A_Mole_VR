@@ -1,26 +1,19 @@
 using System.Collections;
 using UnityEngine;
 
+
 public class InteractiveMole : Mole
 {
-    [Header("Animator (optional)")]
-    [Tooltip("If provided, animator will be used to play idle/pop animations. Otherwise fallbacks are used.")]
-    [SerializeField] private Animator animator;
+    [Header("Legacy Animation (preferred)")]
+    [Tooltip("If provided, legacy Animation component will be used to play idle/pop animations.")]
+    [SerializeField] private Animation animationPlayer;
 
-    [Tooltip("Animator state name to play for idle (optional).")]
-    [SerializeField] private string idleStateName = "Idle";
+    [Tooltip("Name of the Idle clip inside the Animation component's clip list.")]
+    [SerializeField] private string idleClipName = "Idle";
 
-    [Tooltip("Animator trigger name used to play popping animation (optional).")]
-    [SerializeField] private string popTriggerName = "Pop";
+    [Header("Check if you want the mole to use an idle animation, \n make sure the idle animation clip name \n matches the string provided.")]
+    [SerializeField] private bool useIdleAnimation = false; // False by default, to avoid errors when idle animation is not assigned.
 
-    [Header("Fallback idle float (used when no animator or as visual enhancement)")]
-    [SerializeField] private bool useIdleFloating = false;
-    [SerializeField] private float floatAmplitude = 0f;
-    [SerializeField] private float floatFrequency = 0f;
-
-    [Header("Pop animation fallback")]
-    [Tooltip("If > 0 will wait this many seconds after triggering animator (or as fallback wait). Set to the known pop animation length for reliable timing.")]
-    [SerializeField] private float popAnimationDuration = 0.35f;
 
     [SerializeField]
     private AudioClip enableSound;
@@ -30,33 +23,47 @@ public class InteractiveMole : Mole
     private AudioSource audioSource;
 
 
-    // Ensure base initialization runs
+    private string playingClip = "";
+
     public override void Init(TargetSpawner parentSpawner)
     {
+        if (animationPlayer == null) animationPlayer = gameObject.GetComponent<Animation>();
+        audioSource = gameObject.GetComponent<AudioSource>();
+
+        if (useIdleAnimation && (animationPlayer == null || !HasAnimationClip(idleClipName)))
+        {
+            Debug.LogWarning($"InteractiveMole on '{gameObject.name}': 'useIdleAnimation' is true but Idle clip '{idleClipName}' or Animation component is missing. Assign the clip/component or disable 'useIdleAnimation'.", this);
+        }
+
+        if (useIdleAnimation && HasAnimationClip(idleClipName))
+        {
+            PlayAnimation(idleClipName);
+        }
+        else if (animationPlayer != null)
+        {
+            PlayAnimation("EnableDisable");
+        }
+
         base.Init(parentSpawner);
         startLocalPosition = transform.localPosition;
     }
 
     protected override void PlayEnabled()
     {
-        if (animator)
+        if (useIdleAnimation && HasAnimationClip(idleClipName))
         {
-            if (!string.IsNullOrEmpty(idleStateName))
-            {
-                animator.Play(idleStateName, 0, 0f);
-            }
+            PlayAnimation(idleClipName);
+        }
+        else if (animationPlayer != null)
+        {
+            PlayAnimation("EnableDisable");
         }
 
-        if (useIdleFloating && idleFloatCoroutine == null)
-        {
-            idleFloatCoroutine = StartCoroutine(IdleFloatCoroutine());
-        }
     }
 
     protected override void PlayHoverEnter()
     {
-        // Derived class can react to hover if needed; keep default behavior by calling base if needed.
-        // No-op here (safe).
+        // No-op by default (derived classes can override).
     }
 
     public override bool checkShootingValidity(string arg = "")
@@ -70,7 +77,7 @@ public class InteractiveMole : Mole
 
     protected override void PlayHoverLeave()
     {
-        // No-op by default.
+        // No-op by default. Can be used to revert hover visual changes if desired.
     }
 
     public override void SetLoadingValue(float percent)
@@ -80,37 +87,23 @@ public class InteractiveMole : Mole
 
     protected override IEnumerator PlayPopping()
     {
-        if (animator)
+        StopIdleVisuals();
+
+        if (animationPlayer != null)
         {
-            if (!string.IsNullOrEmpty(popTriggerName) && animator.HasParameterOfType(popTriggerName, AnimatorControllerParameterType.Trigger))
+            if (ShouldPerformanceFeedback())
             {
-                animator.SetTrigger(popTriggerName);
+                if (moleOutcome == MoleOutcome.Valid) PlayAnimation("PopCorrectMole");
+
+                else PlayAnimation("PopWrongMole");
             }
             else
             {
-                // Try to play a state named "Pop" if trigger not set
-                animator.Play("Pop", 0, 0f);
+                PlayAnimation("Pop");
             }
 
-            if (popAnimationDuration > 0f)
-            {
-                yield return new WaitForSeconds(popAnimationDuration);
-            }
-            else
-            {
-                // allow animator to update and then read current state's length (safe fallback)
-                yield return null;
-                AnimatorStateInfo info = animator.GetCurrentAnimatorStateInfo(0);
-                float wait = Mathf.Max(0.05f, info.length);
-                yield return new WaitForSeconds(wait);
-            }
-        }
-
-        if (idleFloatCoroutine != null)
-        {
-            try { StopCoroutine(idleFloatCoroutine); } catch { }
-            idleFloatCoroutine = null;
-            transform.localPosition = startLocalPosition;
+            float duration = GetAnimationDuration();
+            yield return new WaitForSeconds(Mathf.Max(0.05f, duration));
         }
 
         yield return base.PlayPopping();
@@ -118,21 +111,34 @@ public class InteractiveMole : Mole
 
     protected override IEnumerator PlayDisabling()
     {
-        if (idleFloatCoroutine != null)
+        StopIdleVisuals();
+
+        if (animationPlayer != null)
         {
-            try { StopCoroutine(idleFloatCoroutine); } catch { }
-            idleFloatCoroutine = null;
-            transform.localPosition = startLocalPosition;
+            PlayAnimation("EnableDisable");
+            float duration = GetAnimationDuration();
+            if (duration > 0f) yield return new WaitForSeconds(duration);
         }
 
         PlaySound(enableSound);
-
 
         yield return base.PlayDisabling();
     }
 
     protected override void PlayMissed()
     {
+        StopIdleVisuals();
+
+        if (animationPlayer != null && ShouldPerformanceFeedback())
+        {
+            PlayAnimation("PopWrongMole");
+        }
+
+        base.PlayMissed();
+    }
+
+    private void StopIdleVisuals()
+    {
         if (idleFloatCoroutine != null)
         {
             try { StopCoroutine(idleFloatCoroutine); } catch { }
@@ -140,20 +146,14 @@ public class InteractiveMole : Mole
             transform.localPosition = startLocalPosition;
         }
 
-        base.PlayMissed();
-    }
 
-    private IEnumerator IdleFloatCoroutine()
-    {
-        float t = 0f;
-        while (true)
+        if (useIdleAnimation && HasAnimationClip(idleClipName) && animationPlayer != null)
         {
-            t += Time.deltaTime * floatFrequency * Mathf.PI * 2f;
-            float y = Mathf.Sin(t) * floatAmplitude;
-            transform.localPosition = startLocalPosition + new Vector3(0f, y, 0f);
-            yield return null;
+            animationPlayer.Stop(idleClipName);
         }
     }
+
+
 
     private void OnDestroy()
     {
@@ -173,17 +173,23 @@ public class InteractiveMole : Mole
         audioSource.clip = audioClip;
         audioSource.Play();
     }
-}
 
-public static class AnimatorExtensions
-{
-    public static bool HasParameterOfType(this Animator animator, string name, AnimatorControllerParameterType type)
+    private void PlayAnimation(string animationName)
     {
-        if (animator == null) return false;
-        foreach (AnimatorControllerParameter p in animator.parameters)
-        {
-            if (p.type == type && p.name == name) return true;
-        }
-        return false;
+        if (animationPlayer == null) return;
+        playingClip = animationName;
+        animationPlayer.PlayQueued(animationName);
+    }
+
+    private float GetAnimationDuration()
+    {
+        if (animationPlayer == null || string.IsNullOrEmpty(playingClip)) return 0f;
+        AnimationClip clip = animationPlayer.GetClip(playingClip);
+        return clip != null ? clip.length : 0f;
+    }
+
+    private bool HasAnimationClip(string name)
+    {
+        return animationPlayer != null && !string.IsNullOrEmpty(name) && animationPlayer.GetClip(name) != null;
     }
 }
