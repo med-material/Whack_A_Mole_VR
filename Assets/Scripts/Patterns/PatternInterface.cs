@@ -118,7 +118,13 @@ public class PatternInterface : MonoBehaviour
                         (action.ContainsKey("TYPE") && System.Enum.TryParse(action["TYPE"], out Mole.MoleType parsedType)) ?
                         parsedType : Mole.MoleType.SimpleTarget;
 
-                    SetMole(action["X"], action["Y"], action["LIFETIME"], moleType, Mole.MoleOutcome.Valid);
+                    SetMole(
+                        action["X"], action["Y"],
+                        action["LIFETIME"], moleType,
+                        Mole.MoleOutcome.Valid,
+                        action.ContainsKey("VALIDATION") ? action["VALIDATION"] : ""
+                    );
+
                     break;
 
                 case "DISTRACTOR":
@@ -246,10 +252,10 @@ public class PatternInterface : MonoBehaviour
     }
 
     // Spawns a Mole
-    private void SetMole(string xIndex, string yIndex, string lifeTime, Mole.MoleType moleType, Mole.MoleOutcome outcome)
+    private void SetMole(string xIndex, string yIndex, string lifeTime, Mole.MoleType moleType, Mole.MoleOutcome outcome, string validationArg = "")
     {
         int targetSpawnId = ((int.Parse(xIndex)) * 100) + (int.Parse(yIndex));
-        Mole mole = wallManager.CreateMole(targetSpawnId, ParseFloat(lifeTime), gameDirector.GetMoleExpiringDuration(), moleType, outcome);
+        Mole mole = wallManager.CreateMole(targetSpawnId, ParseFloat(lifeTime), gameDirector.GetMoleExpiringDuration(), moleType, outcome, validationArg);
         molesList[targetSpawnId] = mole;
         if (mole.IsValid()) AddToTargetsList(mole);
     }
