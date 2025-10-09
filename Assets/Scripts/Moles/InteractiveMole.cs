@@ -68,7 +68,7 @@ public class InteractiveMole : Mole
 
     public override bool checkShootingValidity(string arg = "")
     {
-        if (arg == moleType.ToString())
+        if (arg == GetValidationArg())
         {
             return base.checkShootingValidity(arg);
         }

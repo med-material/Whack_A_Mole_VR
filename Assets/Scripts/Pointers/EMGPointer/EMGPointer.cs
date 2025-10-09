@@ -102,7 +102,7 @@ public class EMGPointer : Pointer
         dwellStartTimer = Time.time;
         if (mole.GetState() == Mole.States.Enabled)
         {
-            moleHoveringGesture = mole.GetMoleType().ToString();
+            moleHoveringGesture = mole.GetValidationArg();
             MyoEMGLogging.CurrentGestures = moleHoveringGesture;
 
             loggerNotifier.NotifyLogger("Pointer Hover Begin", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
@@ -214,7 +214,7 @@ public class EMGPointer : Pointer
         // Try to get gesture enum from string, ignore case
         if (!Enum.TryParse(currentGestureString, true, out HandGestureState handGestureState))
         {
-            Debug.LogError("/!\\ Unrecognized gesture: " + currentGestureString);
+            Debug.LogWarning("/!\\ Unrecognized gesture: " + currentGestureString);
             return HandGestureState.Unknown; // Return Unknown if parsing fails
         }
         else return handGestureState; // Return parsed gesture

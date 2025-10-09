@@ -70,7 +70,7 @@ public class DiskMole : Mole
     [System.Serializable]
     public class HoverInfo
     {
-        public MoleType key;
+        public string key;
         public GameObject value;
     }
 
@@ -102,8 +102,8 @@ public class DiskMole : Mole
         hoverInfoShouldBeShown = false;
         foreach (HoverInfo hoverInfo in hoverInfos)
         {
-            hoverInfo.value.SetActive(hoverInfo.key == moleType);
-            if (hoverInfo.key == moleType) hoverInfoShouldBeShown = true;
+            hoverInfo.value.SetActive(hoverInfo.key == validationArg);
+            if (hoverInfo.key == validationArg) hoverInfoShouldBeShown = true;
         }
     }
 

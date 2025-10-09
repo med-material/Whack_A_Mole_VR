@@ -15,7 +15,7 @@ public abstract class Mole : MonoBehaviour
 {
     public enum MolePopAnswer { Ok, Fake, Expired, Disabled, Paused }
     public enum MoleOutcome { Valid, Distractor } // Node: if a third option is added, revise every condition in Mole.cs, childs and classes that use it (e.g. PaternInterface.cs, etc.)
-    public enum MoleType { SimpleTarget, BallMole, DistractorLeft, DistractorRight, PalmarGrasp, PinchGrasp, WristFlexion, WristExtension, Invisible, BalloonMole }
+    public enum MoleType { SimpleTarget, BallMole, DistractorLeft, DistractorRight, GestureMole, Invisible, BalloonMole } // ALWAYS add new types at the end of the enum to keep compatibility with previous versions. Related to witch prefab is used. (Look at TargetSpawner.cs prefab list)
 
     public bool defaultVisibility = false;
 
@@ -57,6 +57,7 @@ public abstract class Mole : MonoBehaviour
     protected States state = States.Disabled;
     protected MoleOutcome moleOutcome = MoleOutcome.Valid;
     protected MoleType moleType = MoleType.SimpleTarget;
+    protected string validationArg = ""; // Not used by default: can be used to store data for specific needs (e.g. gesture type for gesture moles)
 
 
     public virtual void Init(TargetSpawner parentSpawner) // Needed when the Mole is instantiated, to avoid calling a method before the Awake and Start methods are called.
@@ -149,6 +150,8 @@ public abstract class Mole : MonoBehaviour
     {
         return id;
     }
+    public string GetValidationArg() => validationArg;
+    public void SetValidationArg(string data) => validationArg = data;
 
     public States GetState()
     {
