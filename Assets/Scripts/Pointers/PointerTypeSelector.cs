@@ -48,7 +48,7 @@ public class PointerTypeSelector : MonoBehaviour
         }
         else
         {
-            Debug.LogError($"Pointer type {pointerType} not found on {this.name}.");
+            Debug.LogWarning($"Pointer type {pointerType} not found on {this.name}.");
         }
     }
 
