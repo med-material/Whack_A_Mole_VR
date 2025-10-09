@@ -170,17 +170,8 @@ MonoBehaviour:
       prefab: {fileID: 8304183495515368934, guid: d6649e07bd1040f48ae8eae1202ce693,
         type: 3}
     - moleType: 5
-      prefab: {fileID: 8304183495515368934, guid: d6649e07bd1040f48ae8eae1202ce693,
-        type: 3}
-    - moleType: 6
-      prefab: {fileID: 8304183495515368934, guid: d6649e07bd1040f48ae8eae1202ce693,
-        type: 3}
-    - moleType: 7
-      prefab: {fileID: 8304183495515368934, guid: d6649e07bd1040f48ae8eae1202ce693,
-        type: 3}
-    - moleType: 8
       prefab: {fileID: 3623709996323666786, guid: e060eb18d1311ea4e84337a14af5c6e1,
         type: 3}
-    - moleType: 9
+    - moleType: 6
       prefab: {fileID: 2460070144611129423, guid: b3c1f2f71f0b5db44b6c7ca011d7fe1d,
         type: 3}
