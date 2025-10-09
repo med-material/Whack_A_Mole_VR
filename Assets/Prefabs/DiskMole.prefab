@@ -5354,11 +5354,11 @@ MonoBehaviour:
   loadingImg: {fileID: 4110767010223219073}
   hoverInfoContainer: {fileID: 6515406651748915805}
   hoverInfos:
-  - key: 4
+  - key: PalmarGrasp
     value: {fileID: 2280822040195745891}
-  - key: 6
+  - key: WristFlexion
     value: {fileID: 4968660081608782810}
-  - key: 7
+  - key: WristExtension
     value: {fileID: 786971174075548793}
 --- !u!82 &5964598934260530701
 AudioSource:
