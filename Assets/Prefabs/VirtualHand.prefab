@@ -175,9 +175,9 @@ CapsuleCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.15
-  m_Height: 4
+  m_Height: 4.465807
   m_Direction: 2
-  m_Center: {x: 0, y: 0, z: 2.4}
+  m_Center: {x: 0, y: -2.3745925e-15, z: 2.1670966}
 --- !u!54 &551098939140794093
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -356,7 +356,7 @@ MonoBehaviour:
   showRightPreview: 0
   previewLeftInstance: {fileID: 0}
   previewRightInstance: {fileID: 0}
-  previewPoseSelection: 0
+  previewPoseSelection: 3
   blendingBehaviours:
   - name: Neutral
     enabled: 1

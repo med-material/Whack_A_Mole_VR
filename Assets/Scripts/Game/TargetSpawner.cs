@@ -76,6 +76,18 @@ public class TargetSpawner : MonoBehaviour
         currentMole.Enable(lifeTime, expiringDuration, type, outcome, spawnOrder); // TODO future update, check if enable still needed (or change to init)
         stateUpdateEvent.Invoke(true, currentMole);
 
+      
+        if (type == Mole.MoleType.WaspMole)
+        {
+            SpawnCircleVFX vfx = GetComponent<SpawnCircleVFX>();
+            if (vfx == null) vfx = GetComponentInChildren<SpawnCircleVFX>();
+            if (vfx != null)
+            {
+                // Use default parameters; color can be customized on the VFX component or changed here.
+                vfx.Play();
+            }
+        }
+
         _lock = true;
         return currentMole;
     }

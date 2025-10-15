@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -23,6 +24,17 @@ public class WallGenerator : MonoBehaviour
     [SerializeField]
     private float outlineWidth = 0.02f;
 
+    // Outline pulse settings
+    [SerializeField]
+    [Tooltip("Enable pulsing of the outline between base and multiplied intensity")]
+    private bool outlinePulseEnabled = true;
+    [SerializeField]
+    [Tooltip("Multiplier for pulse peak (e.g. 1.2 = 120% of base). Alpha is multiplied by this factor.")]
+    private float outlinePulseAmount = 1.2f;
+    [SerializeField]
+    [Tooltip("Speed of the pulse (cycles per second)")]
+    private float outlinePulseSpeed = 1.0f;
+
     private Vector3[,] pointsList;
     private Quaternion[,] rotationsList;
     private MeshFilter meshFilter;
@@ -35,6 +47,9 @@ public class WallGenerator : MonoBehaviour
     // Outline objects
     private GameObject outlineObject;
     private LineRenderer outlineRenderer;
+
+    // Pulse coroutine handle
+    private Coroutine outlinePulseCoroutine;
 
     void Start()
     {
@@ -282,6 +297,7 @@ public class WallGenerator : MonoBehaviour
     {
         if (outlineRenderer == null) return;
         if (outlineMaterial != null) outlineRenderer.material = outlineMaterial;
+        // set base width immediately
         outlineRenderer.startWidth = outlineWidth;
         outlineRenderer.endWidth = outlineWidth;
 #if UNITY_2018_1_OR_NEWER
@@ -290,6 +306,26 @@ public class WallGenerator : MonoBehaviour
 #else
         outlineRenderer.material.color = outlineColor;
 #endif
+
+        // start/stop pulsing coroutine based on setting
+        if (outlinePulseEnabled && outlineRenderer != null)
+        {
+            if (outlinePulseCoroutine == null)
+            {
+                outlinePulseCoroutine = StartCoroutine(OutlinePulseCoroutine());
+            }
+        }
+        else
+        {
+            if (outlinePulseCoroutine != null)
+            {
+                StopCoroutine(outlinePulseCoroutine);
+                outlinePulseCoroutine = null;
+            }
+            // ensure widths are reset to base
+            outlineRenderer.startWidth = outlineWidth;
+            outlineRenderer.endWidth = outlineWidth;
+        }
     }
 
     // Gets the Mole rotation so it is always looking away from the wall, depending on its X local position and the wall's curvature (curveCoeff)
@@ -338,5 +374,27 @@ public class WallGenerator : MonoBehaviour
         if (!use && outlineObject != null) outlineObject.SetActive(false);
         else if (use && outlineObject != null) outlineObject.SetActive(true);
         else if (use) CreateOrUpdateOutline();
+    }
+
+    private IEnumerator OutlinePulseCoroutine()
+    {
+        // store base width
+        float baseWidth = outlineWidth;
+        // clamp pulse amount minimum 1
+        float peak = Mathf.Max(1f, outlinePulseAmount);
+        float speed = Mathf.Max(0.0001f, outlinePulseSpeed);
+
+        while (true)
+        {
+            // t varies 0..1 with sinusoidal easing
+            float t = (Mathf.Sin(Time.time * speed * Mathf.PI * 2f) * 0.5f) + 0.5f;
+            float factor = Mathf.Lerp(1f, peak, t);
+
+            float w = baseWidth * factor;
+            outlineRenderer.startWidth = w;
+            outlineRenderer.endWidth = w;
+
+            yield return null;
+        }
     }
 }
