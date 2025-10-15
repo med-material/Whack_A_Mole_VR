@@ -117,6 +117,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3007083312016423539}
   - component: {fileID: 7243966047112092341}
+  - component: {fileID: 6017334796904896443}
   m_Layer: 0
   m_Name: TargetSpawner
   m_TagString: Untagged
@@ -178,3 +179,24 @@ MonoBehaviour:
     - moleType: 7
       prefab: {fileID: 6482671071913868534, guid: 8372c2bdeab19ba4988b87725ffe5b01,
         type: 3}
+--- !u!114 &6017334796904896443
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8020828847452156888}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7997713bd40d80b44ab017cc391cd07b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lineMaterial: {fileID: 0}
+  segments: 64
+  defaultWidth: 0.02
+  defaultColor: {r: 0.4745098, g: 0.67058825, b: 0.8117647, a: 1}
+  defaultStartRadius: 0.05
+  defaultEndRadius: 0.6
+  defaultDuration: 0.9
+  defaultEchoes: 3
+  defaultEchoDelay: 0.12
