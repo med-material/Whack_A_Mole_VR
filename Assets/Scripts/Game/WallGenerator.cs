@@ -18,9 +18,11 @@ public class WallGenerator : MonoBehaviour
     [SerializeField]
     private bool useOutline = false;
     [SerializeField]
-    private Material outlineMaterial;
+    [Tooltip("Color of the wall outline")]
+    private Color outlineColor = Color.cyan;
     [SerializeField]
-    private Color outlineColor = Color.white;
+    [Tooltip("Assign a material for the wall outline (optional - will auto-create if empty)")]
+    private Material outlineMaterial;
     [SerializeField]
     private float outlineWidth = 0.02f;
 
@@ -47,6 +49,9 @@ public class WallGenerator : MonoBehaviour
     // Outline objects
     private GameObject outlineObject;
     private LineRenderer outlineRenderer;
+
+    // Instance of the outline material so we can tweak ZWrite / renderQueue etc without modifying asset
+    private Material outlineMaterialInstance;
 
     // Pulse coroutine handle
     private Coroutine outlinePulseCoroutine;
@@ -292,20 +297,47 @@ public class WallGenerator : MonoBehaviour
         UpdateOutlineAppearance();
     }
 
+    // Public setters so inspector or runtime code can update outline properties
+    public void SetOutlineWidth(float width)
+    {
+        outlineWidth = width;
+        UpdateOutlineAppearance();
+    }
+
+    public void SetOutlineColor(Color color)
+    {
+        outlineColor = color;
+        UpdateOutlineAppearance();
+    }
+
+    public void SetUseOutline(bool use)
+    {
+        useOutline = use;
+        if (!use && outlineObject != null) outlineObject.SetActive(false);
+        else if (use && outlineObject != null) outlineObject.SetActive(true);
+        else if (use) CreateOrUpdateOutline();
+    }
+
     // Update material/color/width at runtime
     private void UpdateOutlineAppearance()
     {
         if (outlineRenderer == null) return;
-        if (outlineMaterial != null) outlineRenderer.material = outlineMaterial;
+
+        // Assign the material (if provided), or create a default one
+        if (outlineMaterial != null)
+        {
+            outlineRenderer.material = outlineMaterial;
+        }
+        
+        // Apply the outline color directly to the material
+        if (outlineRenderer.material != null)
+        {
+            outlineRenderer.material.color = outlineColor;
+        }
+
         // set base width immediately
         outlineRenderer.startWidth = outlineWidth;
         outlineRenderer.endWidth = outlineWidth;
-#if UNITY_2018_1_OR_NEWER
-        outlineRenderer.startColor = outlineColor;
-        outlineRenderer.endColor = outlineColor;
-#else
-        outlineRenderer.material.color = outlineColor;
-#endif
 
         // start/stop pulsing coroutine based on setting
         if (outlinePulseEnabled && outlineRenderer != null)
@@ -353,27 +385,6 @@ public class WallGenerator : MonoBehaviour
     private Vector2 GetnormalizedIndex(int xIndex, int yIndex)
     {
         return (new Vector2((float)xIndex / (wallSettings.columnCount - 1), (float)yIndex / (wallSettings.rowCount - 1)));
-    }
-
-    // Public setters so inspector or runtime code can update outline properties
-    public void SetOutlineColor(Color color)
-    {
-        outlineColor = color;
-        UpdateOutlineAppearance();
-    }
-
-    public void SetOutlineWidth(float width)
-    {
-        outlineWidth = width;
-        UpdateOutlineAppearance();
-    }
-
-    public void SetUseOutline(bool use)
-    {
-        useOutline = use;
-        if (!use && outlineObject != null) outlineObject.SetActive(false);
-        else if (use && outlineObject != null) outlineObject.SetActive(true);
-        else if (use) CreateOrUpdateOutline();
     }
 
     private IEnumerator OutlinePulseCoroutine()
