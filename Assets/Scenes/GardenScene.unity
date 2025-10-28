@@ -846,6 +846,7 @@ MonoBehaviour:
   targetSpawnerPrefab: {fileID: 7243966047112092341, guid: fbb039fc3a4ec674bb80a3bf06737e5b,
     type: 3}
   useOutline: 0
+  outlineColor: {r: 0, g: 1, b: 1, a: 1}
   outlineMaterial: {fileID: 0}
   outlineWidth: 0.02
   outlinePulseEnabled: 1
@@ -896,7 +897,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1460042326}
   - component: {fileID: 1460042325}
-  - component: {fileID: 1460042327}
   m_Layer: 0
   m_Name: Wall
   m_TagString: Untagged
@@ -934,19 +934,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1460042327
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1460042324}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c79f6c6e3541a4c40a7ff0aed836b160, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sceneWallMaterial: {fileID: 2100000, guid: 326e3b47dbe2a0640867f192ad5d6264, type: 2}
 --- !u!1 &1559100847
 GameObject:
   m_ObjectHideFlags: 0
@@ -2094,22 +2081,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultVisibility: 1
-  animationPlayer: {fileID: 0}
-  idleClipName: WaspIdleAnimation
-  useIdleAnimation: 1
-  popClipName: Pop
-  popCorrectClipName: WaspWristExtensionPopAnimation
-  popWrongClipName: PopWrongMole
-  validationAnimations:
-  - validationKey: WristExtension
-    popClip: WaspWristExtensionPopAnimation
-    popCorrectClip: 
-    popWrongClip: 
-  - validationKey: WristFlexion
-    popClip: WaspWristFlexionPopAnimation
-    popCorrectClip: 
-    popWrongClip: 
-  spawnClipName: 
+  onMoleSpawnEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  onMoleIdleEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  onMolePopEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  autoHookValidationEvents: 0
+  onMoleSpawnWithValidationEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  onMoleIdleWithValidationEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  onMolePopWithValidationEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  animator: {fileID: 0}
+  animatorLayerIndex: 0
   enableSound: {fileID: 0}
   hoverInfoContainer: {fileID: 2451329132491555386}
   hoverInfos:
