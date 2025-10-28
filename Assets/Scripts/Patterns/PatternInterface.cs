@@ -313,7 +313,7 @@ public class PatternInterface : MonoBehaviour
         }
         if (action.TryGetValue("THEME", out tempValue))
         {
-            themeManager.LoadTheme((Theme)System.Enum.Parse(typeof(Theme), tempValue));
+            themeManager.LoadTheme(tempValue);
         }
         if (action.TryGetValue("HIDEWALLAMOUNT", out tempValue))
         {

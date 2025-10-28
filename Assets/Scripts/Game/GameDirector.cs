@@ -131,6 +131,10 @@ public class GameDirector : MonoBehaviour
         constraint = FindObjectOfType<Constraint>();
     }
 
+    private void Update()
+    {
+        if (!wallManager) wallManager = FindObjectOfType<WallManager>();
+    }
     private void ResetPointerShootOrder()
     {
         allPointers = FindObjectsOfType<Pointer>();

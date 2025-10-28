@@ -15,7 +15,7 @@ public abstract class Mole : MonoBehaviour
 {
     public enum MolePopAnswer { Ok, Fake, Expired, Disabled, Paused }
     public enum MoleOutcome { Valid, Distractor } // Node: if a third option is added, revise every condition in Mole.cs, childs and classes that use it (e.g. PaternInterface.cs, etc.)
-    public enum MoleType { SimpleTarget, BallMole, DistractorLeft, DistractorRight, GestureMole, Invisible, BalloonMole } // ALWAYS add new types at the end of the enum to keep compatibility with previous versions. Related to witch prefab is used. (Look at TargetSpawner.cs prefab list)
+    public enum MoleType { SimpleTarget, BallMole, DistractorLeft, DistractorRight, GestureMole, Invisible, BalloonMole, WaspMole } // ALWAYS add new types at the end of the enum to keep compatibility with previous versions. Related to witch prefab is used. (Look at TargetSpawner.cs prefab list)
 
     public bool defaultVisibility = false;
 
