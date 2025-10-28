@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 
 public class ThemeManager : MonoBehaviour
 {
-    [SerializeField] private Theme themeName;
+    [SerializeField] private string themeName;
     [SerializeField] private bool change;
 
     private void Update()
@@ -15,7 +15,7 @@ public class ThemeManager : MonoBehaviour
         }
     }
 
-    public void LoadTheme(Theme themeToLoad)
+    public void LoadTheme(string themeToLoad)
     {
         try
         {
@@ -28,9 +28,4 @@ public class ThemeManager : MonoBehaviour
             Debug.LogError("ThemeManager: Theme " + themeToLoad.ToString() + " not found. Make sure to add the corresponding scene to Build Settings.");
         }
     }
-}
-public enum Theme // Add new themes here and create corresponding scenes (Make sure to add them to Build Settings)
-{
-    Test1, // Temporary theme for testing
-    MainScene
 }

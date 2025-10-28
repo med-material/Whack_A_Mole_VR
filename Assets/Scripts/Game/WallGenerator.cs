@@ -13,6 +13,16 @@ public class WallGenerator : MonoBehaviour
     [SerializeField]
     private TargetSpawner targetSpawnerPrefab;
 
+    [Header("Outline")]
+    [SerializeField]
+    private bool useOutline = false;
+    [SerializeField]
+    private Material outlineMaterial;
+    [SerializeField]
+    private Color outlineColor = Color.white;
+    [SerializeField]
+    private float outlineWidth = 0.02f;
+
     private Vector3[,] pointsList;
     private Quaternion[,] rotationsList;
     private MeshFilter meshFilter;
@@ -21,6 +31,10 @@ public class WallGenerator : MonoBehaviour
     private Material startMaterial;
     private WallManager wallManager;
     private WallSettings wallSettings = new WallSettings();
+
+    // Outline objects
+    private GameObject outlineObject;
+    private LineRenderer outlineRenderer;
 
     void Start()
     {
@@ -44,6 +58,9 @@ public class WallGenerator : MonoBehaviour
         GenerateWallMesh();
 
         IEnumerable<Vector3> positions = wallManager.targetSpawners.Values.Select(m => m.transform.position);
+
+        // create/update outline
+        if (useOutline) CreateOrUpdateOutline();
 
         return (positions, meshRenderer);
     }
@@ -94,6 +111,7 @@ public class WallGenerator : MonoBehaviour
     // Generates the wall mesh.
     public void GenerateWallMesh()
     {
+        Debug.Log("!! WallGenerator: Generating wall mesh...");
         Mesh mesh = new Mesh();
         List<Vector3> vertices = new List<Vector3>();
         List<Vector2> uvs = new List<Vector2>();
@@ -216,6 +234,64 @@ public class WallGenerator : MonoBehaviour
         meshMaterial = startMaterial;
     }
 
+    // Create or update a LineRenderer outline using the perimeter pointsList.
+    private void CreateOrUpdateOutline()
+    {
+        if (!useOutline) return;
+        if (pointsList == null || rotationsList == null) return;
+        int w = pointsList.GetLength(0);
+        int h = pointsList.GetLength(1);
+        if (w < 2 || h < 2) return;
+
+        List<Vector3> perimeter = new List<Vector3>();
+
+        // Top row: x=0..w-1 at y=h-1
+        for (int x = 0; x < w; x++) perimeter.Add(pointsList[x, h - 1] + ((rotationsList[x, h - 1] * Vector3.forward) * wallRecoil));
+        // Right column: y=h-2..0
+        for (int y = h - 2; y >= 0; y--) perimeter.Add(pointsList[w - 1, y] + ((rotationsList[w - 1, y] * Vector3.forward) * wallRecoil));
+        // Bottom row: x=w-2..0 at y=0
+        for (int x = w - 2; x >= 0; x--) perimeter.Add(pointsList[x, 0] + ((rotationsList[x, 0] * Vector3.forward) * wallRecoil));
+        // Left column: y=1..h-2
+        for (int y = 1; y <= h - 2; y++) perimeter.Add(pointsList[0, y] + ((rotationsList[0, y] * Vector3.forward) * wallRecoil));
+
+        // Ensure outline object exists
+        if (outlineObject == null)
+        {
+            outlineObject = new GameObject("WallOutline");
+            outlineObject.transform.SetParent(transform, false);
+            outlineRenderer = outlineObject.AddComponent<LineRenderer>();
+            outlineRenderer.loop = true;
+            outlineRenderer.useWorldSpace = false; // keep it local so it follows wall transform
+            outlineRenderer.material = outlineMaterial != null ? outlineMaterial : new Material(Shader.Find("Sprites/Default"));
+            outlineRenderer.startWidth = outlineWidth;
+            outlineRenderer.endWidth = outlineWidth;
+            outlineRenderer.numCapVertices = 4;
+            outlineRenderer.positionCount = 0;
+            outlineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            outlineRenderer.receiveShadows = false;
+        }
+
+        outlineRenderer.positionCount = perimeter.Count;
+        outlineRenderer.SetPositions(perimeter.ToArray());
+
+        UpdateOutlineAppearance();
+    }
+
+    // Update material/color/width at runtime
+    private void UpdateOutlineAppearance()
+    {
+        if (outlineRenderer == null) return;
+        if (outlineMaterial != null) outlineRenderer.material = outlineMaterial;
+        outlineRenderer.startWidth = outlineWidth;
+        outlineRenderer.endWidth = outlineWidth;
+#if UNITY_2018_1_OR_NEWER
+        outlineRenderer.startColor = outlineColor;
+        outlineRenderer.endColor = outlineColor;
+#else
+        outlineRenderer.material.color = outlineColor;
+#endif
+    }
+
     // Gets the Mole rotation so it is always looking away from the wall, depending on its X local position and the wall's curvature (curveCoeff)
     private Quaternion DefineMoleRotation(int xIndex, int yIndex)
     {
@@ -241,5 +317,26 @@ public class WallGenerator : MonoBehaviour
     private Vector2 GetnormalizedIndex(int xIndex, int yIndex)
     {
         return (new Vector2((float)xIndex / (wallSettings.columnCount - 1), (float)yIndex / (wallSettings.rowCount - 1)));
+    }
+
+    // Public setters so inspector or runtime code can update outline properties
+    public void SetOutlineColor(Color color)
+    {
+        outlineColor = color;
+        UpdateOutlineAppearance();
+    }
+
+    public void SetOutlineWidth(float width)
+    {
+        outlineWidth = width;
+        UpdateOutlineAppearance();
+    }
+
+    public void SetUseOutline(bool use)
+    {
+        useOutline = use;
+        if (!use && outlineObject != null) outlineObject.SetActive(false);
+        else if (use && outlineObject != null) outlineObject.SetActive(true);
+        else if (use) CreateOrUpdateOutline();
     }
 }

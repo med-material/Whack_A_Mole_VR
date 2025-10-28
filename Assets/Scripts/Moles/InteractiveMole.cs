@@ -14,6 +14,14 @@ public class InteractiveMole : Mole
     [Header("Check if you want the mole to use an idle animation, \n make sure the idle animation clip name \n matches the string provided.")]
     [SerializeField] private bool useIdleAnimation = false; // False by default, to avoid errors when idle animation is not assigned.
 
+    [Header("Pop animation clip names - editable per-prefab")]
+    [Tooltip("Name of the generic pop animation (used when performance feedback disabled)")]
+    [SerializeField] private string popClipName = "Pop";
+    [Tooltip("Name of the pop animation played when correct mole is popped")]
+    [SerializeField] private string popCorrectClipName = "PopCorrectMole";
+    [Tooltip("Name of the pop animation played when wrong/distractor mole is popped")]
+    [SerializeField] private string popWrongClipName = "PopWrongMole";
+
 
     [SerializeField]
     private AudioClip enableSound;
@@ -93,13 +101,13 @@ public class InteractiveMole : Mole
         {
             if (ShouldPerformanceFeedback())
             {
-                if (moleOutcome == MoleOutcome.Valid) PlayAnimation("PopCorrectMole");
+                if (moleOutcome == MoleOutcome.Valid) PlayAnimation(popCorrectClipName);
 
-                else PlayAnimation("PopWrongMole");
+                else PlayAnimation(popWrongClipName);
             }
             else
             {
-                PlayAnimation("Pop");
+                PlayAnimation(popClipName);
             }
 
             float duration = GetAnimationDuration();
@@ -131,7 +139,7 @@ public class InteractiveMole : Mole
 
         if (animationPlayer != null && ShouldPerformanceFeedback())
         {
-            PlayAnimation("PopWrongMole");
+            PlayAnimation(popWrongClipName);
         }
 
         base.PlayMissed();
