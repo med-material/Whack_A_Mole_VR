@@ -191,7 +191,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2448517714184994882}
-  m_LocalRotation: {x: -0.82953274, y: 0.0031214128, z: 0.018445574, w: 0.55814457}
+  m_LocalRotation: {x: -0.8295328, y: 0.0031214128, z: 0.018445576, w: 0.55814457}
   m_LocalPosition: {x: 0.0002747238, y: 0.000059101993, z: -0.0020838613}
   m_LocalScale: {x: 0.036870833, y: 0.026455296, z: 0.03175315}
   m_ConstrainProportionsScale: 0
@@ -1187,6 +1187,59 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &5825496036349763754
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9100576999274873411}
+  - component: {fileID: 377937373616459443}
+  m_Layer: 0
+  m_Name: SpawnCircleVFXHolder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9100576999274873411
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5825496036349763754}
+  m_LocalRotation: {x: -0.4917716, y: 0.03814245, z: -0.0019733915, w: 0.86988616}
+  m_LocalPosition: {x: 0.0059703006, y: 0.00012424409, z: -0.00016281924}
+  m_LocalScale: {x: 0.1, y: 0.1, z: 0.100000024}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5961853667925567052}
+  m_RootOrder: -1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &377937373616459443
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5825496036349763754}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7997713bd40d80b44ab017cc391cd07b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lineMaterial: {fileID: 0}
+  segments: 64
+  defaultWidth: 0.02
+  defaultColor: {r: 0.4745098, g: 0.67058825, b: 0.8117647, a: 1}
+  defaultStartRadius: 0.05
+  defaultEndRadius: 0.6
+  defaultDuration: 0.8
+  defaultEchoes: 3
+  defaultEchoDelay: 0.12
 --- !u!1 &6259758378486187376
 GameObject:
   m_ObjectHideFlags: 0
@@ -1281,10 +1334,9 @@ GameObject:
   - component: {fileID: 5961853667925567052}
   - component: {fileID: 4464875585105758399}
   - component: {fileID: 8167845773182114355}
-  - component: {fileID: -2994566543460894848}
   - component: {fileID: -8447469028886489119}
   - component: {fileID: -1963060957649417292}
-  - component: {fileID: 266656607883301740}
+  - component: {fileID: 4816571875940413929}
   m_Layer: 3
   m_Name: WaspMolePrefab
   m_TagString: Untagged
@@ -1310,6 +1362,7 @@ Transform:
   - {fileID: 3067678549633051349}
   - {fileID: 1765050329226539252}
   - {fileID: 7776076508668544547}
+  - {fileID: 9100576999274873411}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -227.799, y: 177.2, z: -176.745}
@@ -1329,9 +1382,9 @@ MonoBehaviour:
   onMoleSpawnEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 266656607883301740}
-        m_TargetAssemblyTypeName: InteractiveMoleAnimationController, Assembly-CSharp
-        m_MethodName: PlaySpawnAnimation
+      - m_Target: {fileID: 377937373616459443}
+        m_TargetAssemblyTypeName: SpawnCircleVFX, Assembly-CSharp
+        m_MethodName: Play
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1344,21 +1397,22 @@ MonoBehaviour:
   onMoleIdleEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 266656607883301740}
-        m_TargetAssemblyTypeName: InteractiveMoleAnimationController, Assembly-CSharp
-        m_MethodName: PlayIdleAnimation
-        m_Mode: 1
+      - m_Target: {fileID: 4816571875940413929}
+        m_TargetAssemblyTypeName: UnityEngine.Animator, UnityEngine
+        m_MethodName: Play
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Idle
           m_BoolArgument: 0
         m_CallState: 1
   onMolePopEvent:
     m_PersistentCalls:
       m_Calls: []
+  autoHookValidationEvents: 0
   onMoleSpawnWithValidationEvent:
     m_PersistentCalls:
       m_Calls: []
@@ -1368,9 +1422,9 @@ MonoBehaviour:
   onMolePopWithValidationEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 266656607883301740}
-        m_TargetAssemblyTypeName: InteractiveMoleAnimationController, Assembly-CSharp
-        m_MethodName: PlayPopAnimationWithValidation
+      - m_Target: {fileID: 4464875585105758399}
+        m_TargetAssemblyTypeName: InteractiveMole, Assembly-CSharp
+        m_MethodName: PlayAnimatorStateByName
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1380,7 +1434,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-  animationController: {fileID: 0}
+  animator: {fileID: 4816571875940413929}
+  animatorLayerIndex: 0
   enableSound: {fileID: 0}
   hoverInfoContainer: {fileID: 2451329133447959330}
   hoverInfos:
@@ -1486,30 +1541,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!111 &-2994566543460894848
-Animation:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6482671071913868534}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Animation: {fileID: 0}
-  m_Animations:
-  - {fileID: 7400000, guid: 05e22544452387247a51e6a0bfb9b69d, type: 2}
-  - {fileID: 7400000, guid: 205006bef22cc0744941116b287bf579, type: 2}
-  - {fileID: 7400000, guid: c57ef368ad7591544a1cc9250e1b3eef, type: 2}
-  - {fileID: 7400000, guid: ddeb3e6212d4c3d4e9c501ec44db62ed, type: 2}
-  - {fileID: 7400000, guid: d9fc588698a6ccf4194b58220ee0c2c4, type: 2}
-  - {fileID: 7400000, guid: b845c6abf69e8bf44aece84c9a94ef36, type: 2}
-  - {fileID: 7400000, guid: 89b639e5fb05d784caff37c46a4931a3, type: 2}
-  - {fileID: 7400000, guid: 41fa3e6a11bc30b4d9f50df3dadb8196, type: 2}
-  - {fileID: 7400000, guid: 7d4d7149cd0e81c45b26ad6c8407a77d, type: 2}
-  m_WrapMode: 0
-  m_PlayAutomatically: 1
-  m_AnimatePhysics: 0
-  m_CullingType: 0
 --- !u!65 &-8447469028886489119
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1543,33 +1574,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cff8272190c0ee64f972293a9ca105c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &266656607883301740
-MonoBehaviour:
+--- !u!95 &4816571875940413929
+Animator:
+  serializedVersion: 5
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6482671071913868534}
   m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5db3289461580d64fbaf713073f1800e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  animationComponent: {fileID: -2994566543460894848}
-  idleClipName: WaspIdleAnimation
-  spawnClipName: 
-  popClipName: WaspWristExtensionPopAnimation
-  useValidationSpecificAnimations: 1
-  validationMappings:
-  - validationKey: WristFlexion
-    spawnClip: 
-    idleClip: WaspIdleAnimation
-    popClip: WaspWristFlexionPopAnimation
-  - validationKey: WristExtension
-    spawnClip: 
-    idleClip: WaspIdleAnimation
-    popClip: WaspWristExtensionPopAnimation
-  debugMode: 0
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 1af52aeba863a6c468b237efbe7888ec, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
 --- !u!1 &6825795276355105731
 GameObject:
   m_ObjectHideFlags: 0
