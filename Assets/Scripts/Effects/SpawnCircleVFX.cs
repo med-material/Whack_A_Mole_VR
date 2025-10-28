@@ -2,6 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/*
+SpawnCircleVFX
+- Pooled circle expansion effect using LineRenderer with echo waves.
+- Can be triggered via UnityEvent with Play() or Play(color, startRadius, endRadius, duration, echoes, echoDelay, width).
+Usage:
+- Attach to a GameObject (usually a child of the mole).
+- Wire Play() to InteractiveMole's onMoleSpawnEvent or onMoleSpawnWithValidationEvent in the Inspector.
+- Customize default values in the Inspector or pass explicit parameters.
+*/
 [DisallowMultipleComponent]
 public class SpawnCircleVFX : MonoBehaviour
 {
@@ -19,6 +28,9 @@ public class SpawnCircleVFX : MonoBehaviour
     [SerializeField] private float defaultEchoDelay = 0.12f;
 
     private readonly List<LineRenderer> pool = new List<LineRenderer>();
+
+    // Parameterless overload for easy Inspector wiring
+    public void Play() => Play(null, null, null, null, null, null, null);
 
     public void Play(
         Color? color = null,

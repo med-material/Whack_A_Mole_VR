@@ -11,10 +11,9 @@ GameObject:
   - component: {fileID: 2983701203502187253}
   - component: {fileID: 7134791626425618908}
   - component: {fileID: 7182310836803905482}
-  - component: {fileID: 3066649771870488986}
   - component: {fileID: 5979350428005106561}
   - component: {fileID: 8175941553307538098}
-  - component: {fileID: 6362949328975521614}
+  - component: {fileID: 6993894984759774166}
   m_Layer: 3
   m_Name: BalloonMole
   m_TagString: mole
@@ -56,60 +55,73 @@ MonoBehaviour:
   onMoleSpawnEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 6362949328975521614}
-        m_TargetAssemblyTypeName: InteractiveMoleAnimationController, Assembly-CSharp
-        m_MethodName: PlaySpawnAnimation
-        m_Mode: 1
+      - m_Target: {fileID: 6993894984759774166}
+        m_TargetAssemblyTypeName: UnityEngine.Animator, UnityEngine
+        m_MethodName: Play
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Spawn
           m_BoolArgument: 0
         m_CallState: 1
   onMoleIdleEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 6362949328975521614}
-        m_TargetAssemblyTypeName: InteractiveMoleAnimationController, Assembly-CSharp
-        m_MethodName: PlayIdleAnimation
-        m_Mode: 1
+      - m_Target: {fileID: 6993894984759774166}
+        m_TargetAssemblyTypeName: UnityEngine.Animator, UnityEngine
+        m_MethodName: Play
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Idle
           m_BoolArgument: 0
         m_CallState: 1
   onMolePopEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 6362949328975521614}
-        m_TargetAssemblyTypeName: InteractiveMoleAnimationController, Assembly-CSharp
-        m_MethodName: PlayPopAnimation
-        m_Mode: 1
+      - m_Target: {fileID: 7902752816410544128}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 4633420059920451659}
-        m_TargetAssemblyTypeName: PopEffectController, Assembly-CSharp
-        m_MethodName: PlayPopEffect
-        m_Mode: 1
+          m_StringArgument: BalloonSmackVisualEffect
+          m_BoolArgument: 1
+        m_CallState: 1
+      - m_Target: {fileID: 6993894984759774166}
+        m_TargetAssemblyTypeName: UnityEngine.Animator, UnityEngine
+        m_MethodName: Play
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Pop
           m_BoolArgument: 0
-        m_CallState: 2
+        m_CallState: 1
+      - m_Target: {fileID: 5370414755940129304}
+        m_TargetAssemblyTypeName: UnityEngine.Animator, UnityEngine
+        m_MethodName: Play
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: SmackVisualEffect
+          m_BoolArgument: 0
+        m_CallState: 1
+  autoHookValidationEvents: 0
   onMoleSpawnWithValidationEvent:
     m_PersistentCalls:
       m_Calls: []
@@ -119,7 +131,8 @@ MonoBehaviour:
   onMolePopWithValidationEvent:
     m_PersistentCalls:
       m_Calls: []
-  animationController: {fileID: 0}
+  animator: {fileID: 6993894984759774166}
+  animatorLayerIndex: 0
   enableSound: {fileID: 0}
   hoverInfoContainer: {fileID: 2472597733794959735}
   hoverInfos:
@@ -225,30 +238,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!111 &3066649771870488986
-Animation:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2460070144611129423}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Animation: {fileID: 0}
-  m_Animations:
-  - {fileID: 7400000, guid: 05e22544452387247a51e6a0bfb9b69d, type: 2}
-  - {fileID: 7400000, guid: 205006bef22cc0744941116b287bf579, type: 2}
-  - {fileID: 7400000, guid: c57ef368ad7591544a1cc9250e1b3eef, type: 2}
-  - {fileID: 7400000, guid: ddeb3e6212d4c3d4e9c501ec44db62ed, type: 2}
-  - {fileID: 7400000, guid: a0e43e602f22da94da772a64618ab6c9, type: 2}
-  - {fileID: 7400000, guid: b845c6abf69e8bf44aece84c9a94ef36, type: 2}
-  - {fileID: 7400000, guid: 41ffd093c95369b41b3160820c6585fe, type: 2}
-  - {fileID: 7400000, guid: 9afaa3a67f6c3e641b1672923e1ffaf3, type: 2}
-  - {fileID: 7400000, guid: 0d745fef1d5979a43a174c32b63be4d2, type: 2}
-  m_WrapMode: 0
-  m_PlayAutomatically: 1
-  m_AnimatePhysics: 0
-  m_CullingType: 0
 --- !u!65 &5979350428005106561
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -282,25 +271,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cff8272190c0ee64f972293a9ca105c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &6362949328975521614
-MonoBehaviour:
+--- !u!95 &6993894984759774166
+Animator:
+  serializedVersion: 5
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2460070144611129423}
   m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5db3289461580d64fbaf713073f1800e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  animationComponent: {fileID: 3066649771870488986}
-  idleClipName: IdleBalloonAnimation
-  spawnClipName: BalloonSpawn
-  popClipName: BalloonPop
-  useValidationSpecificAnimations: 0
-  validationMappings: []
-  debugMode: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 90037b1c612f3004e94d44a6cc79bba2, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
 --- !u!1 &3432640871812182784
 GameObject:
   m_ObjectHideFlags: 0
@@ -933,6 +923,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7165206241770748643, guid: 6a3513ce4b80a3b4e8bdf07cc2aa36c7,
         type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -666249811, guid: 172494ec4b740014584a3f26a0ddaf37,
+        type: 3}
+    - target: {fileID: 7165206241770748643, guid: 6a3513ce4b80a3b4e8bdf07cc2aa36c7,
+        type: 3}
       propertyPath: m_Color.b
       value: 1
       objectReference: {fileID: 0}
@@ -1004,11 +1000,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 5449882875041011923, guid: 6a3513ce4b80a3b4e8bdf07cc2aa36c7,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 4633420059920451659}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6a3513ce4b80a3b4e8bdf07cc2aa36c7, type: 3}
 --- !u!95 &5370414755940129304 stripped
 Animator:
@@ -1028,20 +1020,3 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 2742103149502501075}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &4633420059920451659
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7902752816410544128}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 709568197086b2a44ad69a928ca1642e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  splashAnimator: {fileID: 5370414755940129304}
-  splashStateName: SmackAnimation
-  splashParticleSystem: {fileID: 0}
-  useValidationSpecificSplash: 0
-  validationSplashes: []
