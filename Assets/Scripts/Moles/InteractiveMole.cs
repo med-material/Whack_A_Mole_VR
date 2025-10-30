@@ -17,6 +17,10 @@ using UnityEngine.Events;
 
 public class InteractiveMole : Mole
 {
+    [Header("Spawn Behavior")]
+    [Tooltip("If true, mole becomes interactive immediately. If false, waits for spawn animation to complete.")]
+    [SerializeField] private bool immediateInteraction = false;
+
     [Header("Animation Events")]
     [Tooltip("UnityEvent invoked when the mole spawns/enables.")]
     [SerializeField] private UnityEvent onMoleSpawnEvent = new UnityEvent();
@@ -48,6 +52,8 @@ public class InteractiveMole : Mole
     [SerializeField] private int animatorLayerIndex = 0;
 
     [SerializeField] private AudioClip enableSound;
+    [SerializeField] private AudioClip popSound;
+
     [SerializeField] private GameObject hoverInfoContainer;
     [SerializeField] private HoverInfo[] hoverInfos;
 
@@ -95,10 +101,18 @@ public class InteractiveMole : Mole
         onMoleSpawnEvent?.Invoke();
         onMoleSpawnWithValidationEvent?.Invoke(GetValidationArg());
 
-        float duration = GetCurrentAnimationDuration();
-        if (duration > 0f) yield return new WaitForSeconds(Mathf.Max(0.05f, duration));
-
-        yield return base.PlayEnabling();
+        // If immediateInteraction is enabled, transition to Enabled state immediately
+        // Otherwise, wait for spawn animation to complete (for moles with Animator-based spawn animations)
+        if (immediateInteraction)
+        {
+            yield return base.PlayEnabling();
+        }
+        else
+        {
+            float duration = GetCurrentAnimationDuration();
+            if (duration > 0f) yield return new WaitForSeconds(Mathf.Max(0.05f, duration));
+            yield return base.PlayEnabling();
+        }
     }
 
     protected override void PlayEnabled()
@@ -124,6 +138,8 @@ public class InteractiveMole : Mole
         showHoverInfo(false);
         StopIdleVisuals();
 
+        PlaySound(popSound);
+
         onMolePopEvent?.Invoke();
         onMolePopWithValidationEvent?.Invoke(GetValidationArg());
 
@@ -137,7 +153,6 @@ public class InteractiveMole : Mole
     {
         showHoverInfo(false);
         StopIdleVisuals();
-        PlaySound(enableSound);
         yield return base.PlayDisabling();
     }
 

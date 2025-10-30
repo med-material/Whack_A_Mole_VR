@@ -47,6 +47,7 @@ public class EMGPointer : Pointer
     public override void Enable()
     {
         if (active) return;
+        if (laserMapper != null) laserMapper.GetComponentInChildren<Canvas>().enabled = false; //Disable visual components of laserMapper only for EMG pointer
         if (virtualHand != null) Destroy(virtualHand);
         if (virtualHandPrefab != null)
         {
