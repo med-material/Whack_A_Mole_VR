@@ -1234,10 +1234,10 @@ MonoBehaviour:
   lineMaterial: {fileID: 0}
   segments: 64
   defaultWidth: 0.02
-  defaultColor: {r: 0.4745098, g: 0.67058825, b: 0.8117647, a: 1}
+  defaultColor: {r: 1, g: 0.64041406, b: 0, a: 1}
   defaultStartRadius: 0.05
-  defaultEndRadius: 0.6
-  defaultDuration: 0.8
+  defaultEndRadius: 1
+  defaultDuration: 1
   defaultEchoes: 3
   defaultEchoDelay: 0.12
 --- !u!1 &6259758378486187376
@@ -1379,6 +1379,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultVisibility: 1
+  immediateInteraction: 1
   onMoleSpawnEvent:
     m_PersistentCalls:
       m_Calls:
@@ -1437,6 +1438,7 @@ MonoBehaviour:
   animator: {fileID: 4816571875940413929}
   animatorLayerIndex: 0
   enableSound: {fileID: 0}
+  popSound: {fileID: 8300000, guid: 3ac627a74a6af2043b4cfe0ecb0e1405, type: 3}
   hoverInfoContainer: {fileID: 2451329133447959330}
   hoverInfos:
   - key: PalmarGrasp

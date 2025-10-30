@@ -52,6 +52,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultVisibility: 1
+  immediateInteraction: 0
   onMoleSpawnEvent:
     m_PersistentCalls:
       m_Calls:
@@ -134,6 +135,7 @@ MonoBehaviour:
   animator: {fileID: 6993894984759774166}
   animatorLayerIndex: 0
   enableSound: {fileID: 0}
+  popSound: {fileID: 8300000, guid: b21b85976e121eb4a9d1b20be3a083ff, type: 3}
   hoverInfoContainer: {fileID: 2472597733794959735}
   hoverInfos:
   - key: PalmarGrasp
@@ -781,17 +783,17 @@ PrefabInstance:
     - target: {fileID: 8653776916984604615, guid: 19f730f632c0ac84791624d0c0132b0c,
         type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.060287725
+      value: 0.04387942
       objectReference: {fileID: 0}
     - target: {fileID: 8653776916984604615, guid: 19f730f632c0ac84791624d0c0132b0c,
         type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.060287714
+      value: 0.04387942
       objectReference: {fileID: 0}
     - target: {fileID: 8653776916984604615, guid: 19f730f632c0ac84791624d0c0132b0c,
         type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.060287725
+      value: 0.04387942
       objectReference: {fileID: 0}
     - target: {fileID: 8653776916984604615, guid: 19f730f632c0ac84791624d0c0132b0c,
         type: 3}
