@@ -351,12 +351,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5923b268404ed1c46a82b541e44c52af, type: 2}
   - {fileID: 11400000, guid: d93b955753287b048b63d232fa679470, type: 2}
   - {fileID: 11400000, guid: 5cc9a45a781b201409d28a13e276b280, type: 2}
-  - {fileID: 11400000, guid: a57e21978b8ac584e997b86bee25ba61, type: 2}
+  - {fileID: 11400000, guid: 3116dae508491b14999863212f121f70, type: 2}
   showLeftPreview: 0
   showRightPreview: 0
   previewLeftInstance: {fileID: 0}
   previewRightInstance: {fileID: 0}
-  previewPoseSelection: 3
+  previewPoseSelection: 4
   blendingBehaviours:
   - name: Neutral
     enabled: 1
