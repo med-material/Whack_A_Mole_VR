@@ -9,9 +9,10 @@ public class AIServerInterface
     private ThalmicMyo thalmicMyo;
     private int memorySize = 6;
     private int bufferSize = 50;
-    [SerializeField] private string currentGesture = "Unknown";
-    private List<string> gestureResponses = new List<string>();
-    private Queue<string> previousGesture = new Queue<string>();
+    private string currentGesture = "Unknown";
+    private string currentGestureProb = "Uncertain";
+    private List<PredictionResponse> gestureResponses = new List<PredictionResponse>();
+    private Queue<PredictionResponse> previousGesture = new Queue<PredictionResponse>();
 
     public AIServerInterface(ThalmicMyo myo)
     {
@@ -28,18 +29,37 @@ public class AIServerInterface
 
     private void GestureProcess()
     {
-        // Get the most common gesture from the responses
-        string newGesture = gestureResponses.GroupBy(i => i)
+        if (gestureResponses == null || gestureResponses.Count == 0) return;
+
+        // Get the most common label from the responses
+        string mostCommonLabel = gestureResponses.GroupBy(i => i)
                 .OrderByDescending(grp => grp.Count())
-                .Select(grp => grp.Key).First();
+                .Select(grp => grp.Key).First().label;
+
+        // Compute mean probability for the most common label
+        float meanProb = gestureResponses.Where(r => r.label == mostCommonLabel).Average(r => r.prob);
+
+        // Clear collected responses for next round
         gestureResponses.Clear();
+
+        PredictionResponse newResponse = new PredictionResponse
+        {
+            label = mostCommonLabel,
+            prob = meanProb,
+            topk = null,
+        };
 
         // Update the current gesture in memory
         if (previousGesture.Count >= memorySize) { previousGesture.Dequeue(); }
-        previousGesture.Enqueue(newGesture);
+        previousGesture.Enqueue(newResponse);
 
         // If a gesture appears more than half the time in the memory, update the current gesture
-        if (previousGesture.Count(i => i == newGesture) >= memorySize / 2) { currentGesture = newGesture; }
+        if (previousGesture.Count(i => i.label == newResponse.label) >= memorySize / 2)
+        {
+            currentGesture = mostCommonLabel;
+            currentGestureProb = meanProb.ToString();
+        }
+        else currentGestureProb = "Uncertain";
     }
 
     private async Task SendPredictionRequest(int[] emgs)
@@ -89,7 +109,7 @@ public class AIServerInterface
                     }
                     if (result != null)
                     {
-                        gestureResponses.Add(result.label);
+                        gestureResponses.Add(result);
                     }
                 }
             }
@@ -101,6 +121,7 @@ public class AIServerInterface
     }
 
     public string GetCurrentGesture() => currentGesture;
+    public string GetCurrentGestureProb() => currentGestureProb;
 
     // Helper classes for JSON parsing
     [System.Serializable]
