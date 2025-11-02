@@ -27,12 +27,14 @@ public class EMGPointer : Pointer
     private EMGClassifiedGestureManager emgClassifiedGestureManager;
     private const string DEFAULT_GESTURE = "Neutral"; // Default gesture when no mole is hovered over. 
     private string moleHoveringGesture = DEFAULT_GESTURE; // Current gesture of the mole being hovered over (only in Training mode).
+    private string gestureConfidence = "Uncertain";
+    private string thresholdState = "below";
 
     void Update()
     {
         // Update max EMG if recording is enabled
         if (recordMaximumEMG) maxEMG = Mathf.Max(maxEMG, (float)emgDataProcessor.GetSmoothedAbsAverage());
-        MyoEMGLogging.Threshold = IsAboveThreshold(emgDataProcessor.GetSmoothedAbsAverage()) ? "above" : "below";
+        thresholdState = IsAboveThreshold(emgDataProcessor.GetSmoothedAbsAverage()) ? "above" : "below";
 
         // Disable default visual hand when EMG pointer enabled
         if (SteamVRVisualHand != null && SteamVRVisualHand.activeSelf) SteamVRVisualHand.SetActive(false);
@@ -103,7 +105,6 @@ public class EMGPointer : Pointer
         if (mole.GetState() == Mole.States.Enabled)
         {
             moleHoveringGesture = mole.GetValidationArg();
-            MyoEMGLogging.CurrentGestures = moleHoveringGesture;
 
             loggerNotifier.NotifyLogger("Pointer Hover Begin", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
             {
@@ -119,7 +120,6 @@ public class EMGPointer : Pointer
         mole.OnHoverLeave();
 
         moleHoveringGesture = DEFAULT_GESTURE;
-        MyoEMGLogging.CurrentGestures = "NULL";
 
         loggerNotifier.NotifyLogger("Pointer Hover End", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
         {
@@ -164,7 +164,8 @@ public class EMGPointer : Pointer
         recordMaximumEMG = true;
     }
 
-    public bool IsAboveThreshold(float emgIntensity) => (emgIntensity >= (emgThreshold * maxEMG));
+    private bool IsAboveThreshold(float emgIntensity) => (emgIntensity >= (emgThreshold * maxEMG));
+    public string getThresholdState() => thresholdState;
 
     public void ChangeBehavior(EMGPointerBehavior newBehavior)
     {
@@ -179,7 +180,7 @@ public class EMGPointer : Pointer
                 break;
 
             case EMGPointerBehavior.Training:
-                // No additional setup needed for Training mode
+                gestureConfidence = "Training"; // No confidence in training mode
                 break;
 
             default:
@@ -200,14 +201,17 @@ public class EMGPointer : Pointer
         {
             case EMGPointerBehavior.LivePrediction:
                 currentGestureString = IsAboveThreshold(emgDataProcessor.GetSmoothedAbsAverage()) ? aiServerInterface.GetCurrentGesture() : DEFAULT_GESTURE;
+                gestureConfidence = aiServerInterface.GetCurrentGestureProb();
                 break;
 
             case EMGPointerBehavior.Training:
                 currentGestureString = IsAboveThreshold(emgDataProcessor.GetSmoothedAbsAverage()) ? moleHoveringGesture : DEFAULT_GESTURE;
+                gestureConfidence = "Training";
                 break;
 
             default:
                 Debug.LogError("Unknown EMG Pointer behavior: " + emgPointerBehavior);
+                gestureConfidence = "Uncertain";
                 return HandGestureState.Unknown;
         }
 
@@ -215,10 +219,13 @@ public class EMGPointer : Pointer
         if (!Enum.TryParse(currentGestureString, true, out HandGestureState handGestureState))
         {
             Debug.LogWarning("/!\\ Unrecognized gesture: " + currentGestureString);
+            gestureConfidence = "Uncertain";
             return HandGestureState.Unknown; // Return Unknown if parsing fails
         }
         else return handGestureState; // Return parsed gesture
     }
+
+    public string GetCurrentGestureConfidence() => gestureConfidence;
 }
 
 public enum EMGPointerBehavior

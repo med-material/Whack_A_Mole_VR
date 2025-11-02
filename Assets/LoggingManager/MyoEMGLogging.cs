@@ -6,22 +6,38 @@ using UnityEngine;
 public class MyoEMGLogging : MonoBehaviour
 {
     [SerializeField] private LoggingManager loggingManager;
+    [SerializeField] private EMGPointer rightHandEMGPointer;
     [SerializeField] public ThalmicMyo thalmicMyo;
 
     List<string> EMGCol;
     private bool isLoggingStarted = false;
 
-    public static string CurrentGestures = "NULL";
-    public static string Threshold = "below";
-
     void Start()
     {
+        // Check for null references and log errors if any are found.
+        if (loggingManager == null)
+        {
+            Debug.LogError("[MyoEMGLogging] LoggingManager reference is not set in MyoEMGLogging.");
+            return;
+        }
+        if (thalmicMyo == null)
+        {
+            Debug.LogError("[MyoEMGLogging] ThalmicMyo reference is not set in MyoEMGLogging.");
+            return;
+        }
+        if (rightHandEMGPointer == null)
+        {
+            Debug.LogError("[MyoEMGLogging] EMGPointer reference is not set in MyoEMGLogging.");
+            return;
+        }
+
         // Define EMG column headers and additional log columns.
         EMGCol = new List<string> { "EMG1", "EMG2", "EMG3", "EMG4", "EMG5", "EMG6", "EMG7", "EMG8" };
         List<string> logCols = new List<string>(EMGCol)
         {
             "CurrentGestures",
-            "Threshold"
+            "Threshold",
+            "PredictionConfidence"
         };
 
         // Initialize EMG log collection with specified columns.
@@ -48,6 +64,12 @@ public class MyoEMGLogging : MonoBehaviour
     {
         if (isLoggingStarted) return;
 
+        if (thalmicMyo == null || thalmicMyo._myo == null)
+        {
+            Debug.LogWarning("[MyoEMGLogging] Cannot start EMG logging: ThalmicMyo is not ready.");
+            return;
+        }
+
         // Add event handlers to the Myo device to receive EMG data.
         thalmicMyo._myo.EmgData += onReceiveData;
 
@@ -56,26 +78,37 @@ public class MyoEMGLogging : MonoBehaviour
 
     private void onReceiveData(object sender, EmgDataEventArgs data)
     {
-        // Format the EMG data into a dictionary {"EMG_i", data.Emg[i]}
-        Dictionary<string, object> emgData = EMGCol
-            .Select((col, i) => new { col, value = data.Emg[i] })
-            .ToDictionary(x => x.col, x => (object)x.value);
+        // Some devices send a first packet with only 7 channels; skip until we have all 8.
+        if (data == null || data.Emg == null || data.Emg.Length != 8) return;
 
-        // Add CurrentGestures and Threshold columns with their current values
-        emgData["CurrentGestures"] = CurrentGestures;
-        emgData["Threshold"] = Threshold;
-
-        // Time.frameCount (used in LogStore) can only be accessed from the main
-        // thread so we use MainThreadDispatcher to enqueue the logging action.
-        MainThreadDispatcher.Enqueue(() =>
+        try
         {
-            loggingManager.Log("EMG", emgData);
-        });
+            // Format the EMG data into a dictionary {"EMG_i", data.Emg[i]}
+            Dictionary<string, object> emgData = EMGCol
+                .Select((col, i) => new { col, value = data.Emg[i] })
+                .ToDictionary(x => x.col, x => (object)x.value);
+
+            emgData["CurrentGestures"] = rightHandEMGPointer.GetCurrentGesture().ToString();
+            emgData["Threshold"] = rightHandEMGPointer.getThresholdState();
+            emgData["PredictionConfidence"] = rightHandEMGPointer.GetCurrentGestureConfidence().ToString();
+
+            // Time.frameCount (used in LogStore) can only be accessed from the main
+            // thread so we use MainThreadDispatcher to enqueue the logging action.
+            MainThreadDispatcher.Enqueue(() =>
+            {
+                loggingManager.Log("EMG", emgData);
+            });
+        }
+        catch (System.Exception ex)
+        {
+            // Never let exceptions bubble up to the Myo event thread.
+            Debug.LogException(ex);
+        }
     }
 
     void FinishLogging()
     {
-        thalmicMyo._myo.EmgData -= onReceiveData;
+        if (thalmicMyo != null && thalmicMyo._myo != null) thalmicMyo._myo.EmgData -= onReceiveData;
         isLoggingStarted = false;
     }
 }
