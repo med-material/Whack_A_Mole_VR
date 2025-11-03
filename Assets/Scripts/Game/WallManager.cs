@@ -178,6 +178,12 @@ public class WallManager : MonoBehaviour
         }
     }
 
+    // Sets the outline visibility using the existing useOutline field
+    public void SetOutlineVisible(bool visible)
+    {
+      wallGenerator.SetUseOutline(visible);
+    }
+
     public void SetDefaultWall()
     {
         rowCount = defaultWall.rowCount;
