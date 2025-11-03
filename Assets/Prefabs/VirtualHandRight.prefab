@@ -119,12 +119,12 @@ GameObject:
   - component: {fileID: 551098939140794093}
   - component: {fileID: 8843044038936257052}
   m_Layer: 0
-  m_Name: VirtualHand
+  m_Name: VirtualHandRight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &692096972266222408
 Transform:
   m_ObjectHideFlags: 0
@@ -230,6 +230,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: vr_glove_right_model_slim
       objectReference: {fileID: 0}
+    - target: {fileID: 1000010304998954, guid: 6def53d002137b747aec0b29551e0e25, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4000012125075130, guid: 6def53d002137b747aec0b29551e0e25, type: 3}
       propertyPath: m_RootOrder
       value: -1
@@ -301,6 +305,23 @@ PrefabInstance:
       propertyPath: fallbackPoser
       value: 
       objectReference: {fileID: 2017676730498857016}
+    - target: {fileID: 114000012051789102, guid: 6def53d002137b747aec0b29551e0e25,
+        type: 3}
+      propertyPath: onlySetRotations
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114000012673113748, guid: 6def53d002137b747aec0b29551e0e25,
+        type: 3}
+      propertyPath: overridePreviewLeftHandPrefab
+      value: 
+      objectReference: {fileID: 1000013348574242, guid: 638779290bce1af49b356f33dcc6fccf,
+        type: 3}
+    - target: {fileID: 114000012673113748, guid: 6def53d002137b747aec0b29551e0e25,
+        type: 3}
+      propertyPath: overridePreviewRightHandPrefab
+      value: 
+      objectReference: {fileID: 1000010304998954, guid: 6def53d002137b747aec0b29551e0e25,
+        type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -356,7 +377,7 @@ MonoBehaviour:
   showRightPreview: 0
   previewLeftInstance: {fileID: 0}
   previewRightInstance: {fileID: 0}
-  previewPoseSelection: 4
+  previewPoseSelection: 1
   blendingBehaviours:
   - name: Neutral
     enabled: 1

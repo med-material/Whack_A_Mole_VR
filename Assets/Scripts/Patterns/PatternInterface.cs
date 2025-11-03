@@ -113,6 +113,10 @@ public class PatternInterface : MonoBehaviour
                     SetWall(action);
                     break;
 
+                case "OUTLINE":
+                    SetOutline(action);
+                    break;
+
                 case "MOLE":
                     Mole.MoleType moleType =
                         (action.ContainsKey("TYPE") && System.Enum.TryParse(action["TYPE"], out Mole.MoleType parsedType)) ?
@@ -380,5 +384,16 @@ public class PatternInterface : MonoBehaviour
     private float ParseFloat(string value)
     {
         return float.Parse(value, CultureInfo.InvariantCulture);
+    }
+
+    // Sets the outline visibility
+    private void SetOutline(Dictionary<string, string> action)
+    {
+        string tempValue;
+
+        if (action.TryGetValue("VISIBLE", out tempValue))
+        {
+            wallManager.SetOutlineVisible(bool.Parse(tempValue));
+        }
     }
 }
