@@ -14,6 +14,7 @@ public enum HandGestureState
     OpenHand,
     WristExtension,
     WristFlexion,
+    LateralGrasp,
     Unknown // Do nothing state, used when gesture is not recognized
 }
 
@@ -63,6 +64,10 @@ public class EMGClassifiedGestureManager : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.Alpha5))
         {
             SetPose(HandGestureState.WristFlexion);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha6))
+        {
+            SetPose(HandGestureState.LateralGrasp);
         }
     }
 
