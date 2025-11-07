@@ -124,7 +124,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &692096972266222408
 Transform:
   m_ObjectHideFlags: 0
@@ -363,6 +363,7 @@ MonoBehaviour:
   - OpenHand
   - WristExtension
   - WristFlexion
+  - LateralGrasp
   overridePreviewLeftHandPrefab: {fileID: 1000013348574242, guid: 638779290bce1af49b356f33dcc6fccf,
     type: 3}
   overridePreviewRightHandPrefab: {fileID: 1000010304998954, guid: 6def53d002137b747aec0b29551e0e25,
@@ -373,11 +374,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d93b955753287b048b63d232fa679470, type: 2}
   - {fileID: 11400000, guid: 5cc9a45a781b201409d28a13e276b280, type: 2}
   - {fileID: 11400000, guid: 3116dae508491b14999863212f121f70, type: 2}
+  - {fileID: 11400000, guid: 47b42d122b821aa45a37680e7dce6188, type: 2}
   showLeftPreview: 0
   showRightPreview: 0
   previewLeftInstance: {fileID: 0}
   previewRightInstance: {fileID: 0}
-  previewPoseSelection: 1
+  previewPoseSelection: 5
   blendingBehaviours:
   - name: Neutral
     enabled: 1
@@ -475,6 +477,29 @@ MonoBehaviour:
     enabled: 1
     influence: 1
     pose: 4
+    value: 0
+    action_single:
+      actionPath: 
+      needsReinit: 0
+    action_bool:
+      actionPath: 
+      needsReinit: 0
+    smoothingSpeed: 0
+    type: 0
+    useMask: 0
+    mask:
+      palm: 1
+      thumb: 1
+      index: 1
+      middle: 1
+      ring: 1
+      pinky: 1
+      values: 010101010101
+    previewEnabled: 1
+  - name: LateralGrasp
+    enabled: 1
+    influence: 1
+    pose: 5
     value: 0
     action_single:
       actionPath: 
