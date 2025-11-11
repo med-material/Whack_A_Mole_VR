@@ -16,7 +16,11 @@ public class EMGDataProcessor : MonoBehaviour
 
     private void Start()
     {
-        Debug.Assert(thalmicMyo != null, "ThalmicMyo reference is missing in EMGDataExposure.");
+        if (thalmicMyo == null)
+        {
+            Debug.LogError("[EMGDataProcessor] ThalmicMyo reference is not set in EMGDataProcessor.");
+            return;
+        }
         thalmicMyo._myo.EmgData += onReceiveData;
     }
 
