@@ -36,6 +36,7 @@ Transform:
   - {fileID: 391378837865544162}
   - {fileID: 7763814540634047606}
   - {fileID: 6848468332495250318}
+  - {fileID: 8837245849817634353}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -83,6 +84,60 @@ MonoBehaviour:
           m_StringArgument: Idle
           m_BoolArgument: 0
         m_CallState: 1
+  onMoleHoverEnterEvent:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 7736700633216974771}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: HoverEnter
+          m_BoolArgument: 1
+        m_CallState: 1
+      - m_Target: {fileID: 5507922937698267226}
+        m_TargetAssemblyTypeName: UnityEngine.Animator, UnityEngine
+        m_MethodName: Play
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: HoverEnterBalloon
+          m_BoolArgument: 0
+        m_CallState: 1
+  onMoleHoverLeaveEvent:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 6993894984759774166}
+        m_TargetAssemblyTypeName: UnityEngine.Animator, UnityEngine
+        m_MethodName: Play
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: Idle
+          m_BoolArgument: 0
+        m_CallState: 1
+      - m_Target: {fileID: 5507922937698267226}
+        m_TargetAssemblyTypeName: UnityEngine.Animator, UnityEngine
+        m_MethodName: Play
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: HoverLeaveBalloon
+          m_BoolArgument: 0
+        m_CallState: 1
   onMolePopEvent:
     m_PersistentCalls:
       m_Calls:
@@ -114,6 +169,18 @@ MonoBehaviour:
         m_TargetAssemblyTypeName: UnityEngine.Animator, UnityEngine
         m_MethodName: Play
         m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: SmackVisualEffect
+          m_BoolArgument: 0
+        m_CallState: 1
+      - m_Target: {fileID: 7736700633216974771}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -899,6 +966,117 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 7022848155869179106, guid: 19f730f632c0ac84791624d0c0132b0c,
     type: 3}
   m_PrefabInstance: {fileID: 1416092297788318641}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &1693135776565943027
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 2983701203502187253}
+    m_Modifications:
+    - target: {fileID: 3110467645349499512, guid: fd0cb30d2042d084c88df0a026ee8063,
+        type: 3}
+      propertyPath: m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3110467645349499512, guid: fd0cb30d2042d084c88df0a026ee8063,
+        type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3110467645349499512, guid: fd0cb30d2042d084c88df0a026ee8063,
+        type: 3}
+      propertyPath: m_Color.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7915936455012846786, guid: fd0cb30d2042d084c88df0a026ee8063,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7915936455012846786, guid: fd0cb30d2042d084c88df0a026ee8063,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7915936455012846786, guid: fd0cb30d2042d084c88df0a026ee8063,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7915936455012846786, guid: fd0cb30d2042d084c88df0a026ee8063,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.00785
+      objectReference: {fileID: 0}
+    - target: {fileID: 7915936455012846786, guid: fd0cb30d2042d084c88df0a026ee8063,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7915936455012846786, guid: fd0cb30d2042d084c88df0a026ee8063,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7915936455012846786, guid: fd0cb30d2042d084c88df0a026ee8063,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7915936455012846786, guid: fd0cb30d2042d084c88df0a026ee8063,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7915936455012846786, guid: fd0cb30d2042d084c88df0a026ee8063,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7915936455012846786, guid: fd0cb30d2042d084c88df0a026ee8063,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7915936455012846786, guid: fd0cb30d2042d084c88df0a026ee8063,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8944555922308998464, guid: fd0cb30d2042d084c88df0a026ee8063,
+        type: 3}
+      propertyPath: m_Name
+      value: HoverCircle
+      objectReference: {fileID: 0}
+    - target: {fileID: 8944555922308998464, guid: fd0cb30d2042d084c88df0a026ee8063,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: fd0cb30d2042d084c88df0a026ee8063, type: 3}
+--- !u!95 &5507922937698267226 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 6561507980239235753, guid: fd0cb30d2042d084c88df0a026ee8063,
+    type: 3}
+  m_PrefabInstance: {fileID: 1693135776565943027}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &7736700633216974771 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8944555922308998464, guid: fd0cb30d2042d084c88df0a026ee8063,
+    type: 3}
+  m_PrefabInstance: {fileID: 1693135776565943027}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &8837245849817634353 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7915936455012846786, guid: fd0cb30d2042d084c88df0a026ee8063,
+    type: 3}
+  m_PrefabInstance: {fileID: 1693135776565943027}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2742103149502501075
 PrefabInstance:
