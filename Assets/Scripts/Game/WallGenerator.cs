@@ -131,7 +131,6 @@ public class WallGenerator : MonoBehaviour
     // Generates the wall mesh.
     public void GenerateWallMesh()
     {
-        Debug.Log("!! WallGenerator: Generating wall mesh...");
         Mesh mesh = new Mesh();
         List<Vector3> vertices = new List<Vector3>();
         List<Vector2> uvs = new List<Vector2>();
