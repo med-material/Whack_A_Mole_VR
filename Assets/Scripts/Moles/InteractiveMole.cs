@@ -28,6 +28,12 @@ public class InteractiveMole : Mole
     [Tooltip("UnityEvent invoked when the mole enters idle state.")]
     [SerializeField] private UnityEvent onMoleIdleEvent = new UnityEvent();
 
+    [Tooltip("Unity event invoked whe nthe mole gets hovered over.")]
+    [SerializeField] private UnityEvent onMoleHoverEnterEvent = new UnityEvent();
+
+    [Tooltip("UnityEvent invoked when the mole leaves hover state.")]
+    [SerializeField] private UnityEvent onMoleHoverLeaveEvent = new UnityEvent();
+
     [Tooltip("UnityEvent invoked when the mole starts popping.")]
     [SerializeField] private UnityEvent onMolePopEvent = new UnityEvent();
 
@@ -121,7 +127,12 @@ public class InteractiveMole : Mole
         onMoleIdleWithValidationEvent?.Invoke(GetValidationArg());
     }
 
-    protected override void PlayHoverEnter() => showHoverInfo(true);
+    protected override void PlayHoverEnter()
+    {
+        showHoverInfo(true);
+        onMoleHoverEnterEvent?.Invoke();
+    }
+        
 
     public override bool checkShootingValidity(string arg = "")
     {
@@ -129,7 +140,12 @@ public class InteractiveMole : Mole
         return false;
     }
 
-    protected override void PlayHoverLeave() => showHoverInfo(false);
+    protected override void PlayHoverLeave()
+    {
+        showHoverInfo(false);
+        onMoleHoverLeaveEvent?.Invoke();
+
+    }
 
     public override void SetLoadingValue(float percent) { }
 
