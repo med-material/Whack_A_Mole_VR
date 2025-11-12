@@ -29,15 +29,23 @@ public class PatternPlayer : MonoBehaviour
 
     void Update()
     {
+        // In Progression, advance steps only when targets are cleared.
+        // Still honor explicit DELAY/MESSAGE waits by letting TimeParadigm tick only when not gating on hits.
         if (patternParser.GetParadigm() == PatternParser.Paradigm.Progression)
         {
             ProgressionParadigm();
+
+            // When targetsList is null, we're waiting for a pure time-based delay/message -> tick it.
+            if (patternInterface.GetTargetsList() == null)
+            {
+                TimeParadigm();
+            }
         }
-
-        // Whether we are in a Progression or Time paradigm we always call the TimeParadigm,
-        // because the pattern still needs to act normally if the moles are not hit and play the next step when a mole expires
-        TimeParadigm();
-
+        else
+        {
+            // Time paradigm: normal time-based progression
+            TimeParadigm();
+        }
     }
 
     // Plays the loaded pattern if one is actually loaded.
@@ -182,7 +190,9 @@ public class PatternPlayer : MonoBehaviour
 
             foreach (KeyValuePair<int, Mole> mole in patternInterface.GetTargetsList())
             {
-                if (mole.Value.GetState() != Mole.States.Enabled)
+                Mole.States state = mole.Value.GetState();
+                // Keep moles that are Enabling or Enabled; remove all others (Popping/Expired/Disabled/etc.).
+                if (state != Mole.States.Enabled && state != Mole.States.Enabling)
                 {
                     molesToRemove.Add(mole.Value.GetId());
                 }
