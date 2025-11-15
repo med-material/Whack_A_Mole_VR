@@ -148,6 +148,9 @@ public class TactorConnector : MonoBehaviour
     private int connectedBoardId = -1;
     private Coroutine[] resetCoroutines;
 
+    // Public property to check if tactor is connected
+    public bool IsConnected() => connectedBoardId >= 0;
+
 
 
     [Header("General Settings")]
