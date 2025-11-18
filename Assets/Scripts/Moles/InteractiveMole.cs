@@ -70,6 +70,11 @@ public class InteractiveMole : Mole
         public GameObject value;
     }
 
+    // Snap integration
+    [Header("Snap Integration")]
+    [Tooltip("If true, will automatically call MoleSnapHelper.SnapNow on pop and wait for completion before despawn.")]
+    [SerializeField] private bool autoSnapOnPop = false;
+
     private Coroutine idleFloatCoroutine;
     private Vector3 startLocalPosition;
     private AudioSource audioSource;
@@ -159,6 +164,18 @@ public class InteractiveMole : Mole
         onMolePopEvent?.Invoke();
         onMolePopWithValidationEvent?.Invoke(GetValidationArg());
 
+        // Snap integration: either auto invoke or just wait if snap triggered via event.
+        MoleSnapHelper snap = GetComponent<MoleSnapHelper>();
+        if (snap != null)
+        {
+            if (autoSnapOnPop && !snap.IsSnapping) // auto trigger if requested
+            {
+                snap.SnapNow();
+            }
+            // Wait until any snap blend completes
+            yield return snap.WaitForSnapCompletion();
+        }
+
         float duration = GetCurrentAnimationDuration();
         if (duration > 0f) yield return new WaitForSeconds(Mathf.Max(0.05f, duration));
 
@@ -167,6 +184,7 @@ public class InteractiveMole : Mole
 
     protected override IEnumerator PlayDisabling()
     {
+
         showHoverInfo(false);
         StopIdleVisuals();
         yield return base.PlayDisabling();

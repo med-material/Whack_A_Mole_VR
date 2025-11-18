@@ -9,6 +9,7 @@ TagManager:
   - FxTemporaire
   - mole
   - keepBetweenScenes
+  - MoleAnchor
   layers:
   - Default
   - TransparentFX
