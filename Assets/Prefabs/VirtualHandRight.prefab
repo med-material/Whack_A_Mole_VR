@@ -218,6 +218,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blendDuration: 0.19
+  tactorConnector: {fileID: 0}
+  hapticTactorNumbers: 0100000002000000030000000400000005000000
+  logGestureHaptics: 1
+  pulseOnGestures: 05000000010000000400000003000000
 --- !u!1001 &8086483300399572474
 PrefabInstance:
   m_ObjectHideFlags: 0
