@@ -30,8 +30,13 @@ public class EMGPointer : Pointer
     private string gestureConfidence = "Uncertain";
     private string thresholdState = "below";
 
+    [SerializeField] private bool enebledMe = false;
+
     void Update()
     {
+        if (enebledMe) { Enable(); enebledMe = false; }
+
+
         // Update max EMG if recording is enabled
         if (recordMaximumEMG) maxEMG = Mathf.Max(maxEMG, (float)emgDataProcessor.GetSmoothedAbsAverage());
         thresholdState = IsAboveThreshold(emgDataProcessor.GetSmoothedAbsAverage()) ? "above" : "below";
@@ -67,6 +72,9 @@ public class EMGPointer : Pointer
             }
             else Debug.LogError("No 'VisualStick' found in the virtual hand prefab.");
 
+            virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnGrabbingMoleEntered += OnGrabEnter;
+            virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnGrabbingMoleStay += OnGrabStay;
+
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleEntered += OnHoverEnter;
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleExited += OnHoverExit;
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleStay += OnHoverStay;
@@ -99,6 +107,8 @@ public class EMGPointer : Pointer
         }
     }
 
+
+    // --------- Hover Events triggered by the Virtual Hand's collider ---------
     private void OnHoverEnter(Mole mole)
     {
         mole.OnHoverEnter();
@@ -156,6 +166,50 @@ public class EMGPointer : Pointer
                 OnHoverExit(mole);
                 Shoot(mole);
             }
+        }
+    }
+
+    // --------- Grab Events triggered by the Virtual Hand's collider ---------
+    private void OnGrabEnter(GrabbingMole grabbingMole)
+    {
+        grabbingMole.SetHandObject(virtualHand);
+        grabbingMole.OnHoverEnter();
+    }
+    private void OnGrabStay(GrabbingMole grabbingMole)
+    {
+        // Check if the current gesture is valid for grabbing
+        if (grabbingMole.checkGrabbingValidity(GetCurrentGesture())) // TODO add: emgDataProcessor.GetSmoothedAbsAverage() < (emgThreshold * maxEMG)
+        {
+            grabbingMole.grabedBy(virtualHand);
+        }
+        else
+        {
+            grabbingMole.grabedBy(null);
+        }
+
+        // Dwell logic
+        grabbingMole.SetLoadingValue((Time.time - dwellStartTimer) / dwellTime);
+        if (!grabbingMole.isWithinValidationRadius()) dwellStartTimer = Time.time;
+
+        // Shoot if dwell time exceeded
+        if ((Time.time - dwellStartTimer) > dwellTime)
+        {
+            pointerShootOrder++;
+            loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>(){
+                                {"ControllerSmoothed", directionSmoothed},
+                                {"ControllerAimAssistState", Enum.GetName(typeof(Pointer.AimAssistStates), aimAssistState)},
+                                {"LastShotControllerRawPointingDirectionX", transform.forward.x},
+                                {"LastShotControllerRawPointingDirectionY", transform.forward.y},
+                                {"LastShotControllerRawPointingDirectionZ", transform.forward.z}
+                            });
+
+            loggerNotifier.NotifyLogger("Pointer Shoot", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
+                            {
+                                {"PointerShootOrder", pointerShootOrder},
+                                {"ControllerName", gameObject.name}
+                            });
+            OnHoverExit(grabbingMole);
+            Shoot(grabbingMole);
         }
     }
 
