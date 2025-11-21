@@ -5,7 +5,7 @@ using UnityEngine.Animations;
 // Minimal helper to snap a mole (or any object) to a hand joint anchor using a ParentConstraint.
 // Provides a coroutine to wait until snap (blend) completes so callers can delay state progression.
 [DisallowMultipleComponent]
-public class MoleSnapHelper : MonoBehaviour
+public class KeyMoleSnapHelper : MonoBehaviour
 {
     [Header("Anchor Lookup")]
     [SerializeField] private Transform explicitAnchor;

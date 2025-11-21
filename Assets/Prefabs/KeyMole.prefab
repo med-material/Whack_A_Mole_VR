@@ -76,25 +76,13 @@ MonoBehaviour:
           m_StringArgument: HoverEnterKey
           m_BoolArgument: 1
         m_CallState: 1
-      - m_Target: {fileID: 5507922937698267226}
-        m_TargetAssemblyTypeName: UnityEngine.Animator, UnityEngine
-        m_MethodName: Play
-        m_Mode: 5
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: HoverEnterKey
-          m_BoolArgument: 0
-        m_CallState: 1
   onMoleHoverLeaveEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 5507922937698267226}
-        m_TargetAssemblyTypeName: UnityEngine.Animator, UnityEngine
-        m_MethodName: Play
-        m_Mode: 5
+      - m_Target: {fileID: 7736700633216974771}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -130,10 +118,10 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-      - m_Target: {fileID: 7736700633216974771}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
+      - m_Target: {fileID: 6152387523860556512}
+        m_TargetAssemblyTypeName: MoleSnapHelper, Assembly-CSharp
+        m_MethodName: SnapNow
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -156,7 +144,7 @@ MonoBehaviour:
   animatorLayerIndex: 0
   enableSound: {fileID: 0}
   popSound: {fileID: 0}
-  hoverInfoContainer: {fileID: 0}
+  hoverInfoContainer: {fileID: 2472597733794959735}
   hoverInfos:
   - key: PalmarGrasp
     value: {fileID: 7465889364011189065}
@@ -164,6 +152,8 @@ MonoBehaviour:
     value: {fileID: 8488337780525873050, guid: 4c626d174803f0d499d99eb3dba038cc, type: 3}
   - key: WristExtension
     value: {fileID: 8273344792692264787}
+  - key: LateralGrasp
+    value: {fileID: 8309421513415746510}
   autoSnapOnPop: 1
 --- !u!82 &7182310836803905482
 AudioSource:
@@ -334,7 +324,7 @@ MonoBehaviour:
   localPositionOffset: {x: -0.00011, y: -0.00064, z: -0.00071}
   localRotationOffsetEuler: {x: 265, y: 90, z: 20}
   keepConstraintActive: 1
-  blendInDuration: 0
+  blendInDuration: 0.15
   blendCurve:
     serializedVersion: 2
     m_Curve:
@@ -691,32 +681,32 @@ PrefabInstance:
     - target: {fileID: 7915936455012846786, guid: fd0cb30d2042d084c88df0a026ee8063,
         type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.0020479073
+      value: 0.0015410708
       objectReference: {fileID: 0}
     - target: {fileID: 7915936455012846786, guid: fd0cb30d2042d084c88df0a026ee8063,
         type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.0020479073
+      value: 0.0015410708
       objectReference: {fileID: 0}
     - target: {fileID: 7915936455012846786, guid: fd0cb30d2042d084c88df0a026ee8063,
         type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.0020479073
+      value: 0.0015410708
       objectReference: {fileID: 0}
     - target: {fileID: 7915936455012846786, guid: fd0cb30d2042d084c88df0a026ee8063,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -0.00007
       objectReference: {fileID: 0}
     - target: {fileID: 7915936455012846786, guid: fd0cb30d2042d084c88df0a026ee8063,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.00403
+      value: -0.00064
       objectReference: {fileID: 0}
     - target: {fileID: 7915936455012846786, guid: fd0cb30d2042d084c88df0a026ee8063,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.00785
+      value: 0.0009
       objectReference: {fileID: 0}
     - target: {fileID: 7915936455012846786, guid: fd0cb30d2042d084c88df0a026ee8063,
         type: 3}
@@ -768,12 +758,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: fd0cb30d2042d084c88df0a026ee8063, type: 3}
---- !u!95 &5507922937698267226 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: 6561507980239235753, guid: fd0cb30d2042d084c88df0a026ee8063,
-    type: 3}
-  m_PrefabInstance: {fileID: 1693135776565943027}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &7736700633216974771 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8944555922308998464, guid: fd0cb30d2042d084c88df0a026ee8063,
@@ -1154,6 +1138,11 @@ PrefabInstance:
       propertyPath: m_SortingOrder
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 3855679227459458632, guid: b6546a65965f72748aa3c8daf096a351,
+        type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 7ef892270510b78499cfacbfec558272, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1162,6 +1151,12 @@ PrefabInstance:
 --- !u!224 &6738583367869946609 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 150506661526325152, guid: b6546a65965f72748aa3c8daf096a351,
+    type: 3}
+  m_PrefabInstance: {fileID: 6886836006933568849}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &8309421513415746510 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3225151327248547487, guid: b6546a65965f72748aa3c8daf096a351,
     type: 3}
   m_PrefabInstance: {fileID: 6886836006933568849}
   m_PrefabAsset: {fileID: 0}
