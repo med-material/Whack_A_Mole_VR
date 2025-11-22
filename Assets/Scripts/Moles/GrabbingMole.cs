@@ -34,14 +34,19 @@ public class GrabbingMole : Mole
 
     public void grabedBy(GameObject gameObject)
     {
-        Debug.Log("!! GrabbingMole grabbed by " + gameObject.name);
+        if (gameObject == null)
+        {
+            Debug.Log("[GrebbingMole] Mole released!");
+            transform.SetParent(parentTargetSpawner.transform, true);
+            return;
+        }
+        Debug.Log("[GrebbingMole] Mole grabbed!" + gameObject.name);
         transform.SetParent(gameObject.transform, true);
     }
 
     protected override void PlayHoverEnter()
     {
-        destionationVisual = Instantiate(destionationVisualPrefab, this.transform);
-        destionationVisual.transform.position = targetDestination;
+        destionationVisual = Instantiate(destionationVisualPrefab, targetDestination, Quaternion.identity);
         destionationVisual.transform.localScale = Vector3.one * validationRadiusDistance * 2f;
 
         base.PlayHoverEnter();
@@ -49,7 +54,11 @@ public class GrabbingMole : Mole
 
     protected override void PlayHoverLeave()
     {
-        Destroy(destionationVisual.gameObject);
+        if (destionationVisual != null)
+        {
+            Destroy(destionationVisual.gameObject);
+            destionationVisual = null;
+        }
 
         // Detach the mole from the handObject
         grabedBy(null);

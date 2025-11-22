@@ -40,7 +40,6 @@ public abstract class Mole : MonoBehaviour
     **/
     public enum States { Enabling, Enabled, Popping, Popped, Missed, Disabling, Expired, Disabled }
 
-    private TargetSpawner parentTargetSpawner;
     private Coroutine timer;
     private float lifeTime;
     private float expiringTime;
@@ -54,6 +53,7 @@ public abstract class Mole : MonoBehaviour
     private bool isOnDisabledCoolDown = false;
     private bool performanceFeedback = true;
 
+    protected TargetSpawner parentTargetSpawner;
     protected States state = States.Disabled;
     protected MoleOutcome moleOutcome = MoleOutcome.Valid;
     protected MoleType moleType = MoleType.SimpleTarget;

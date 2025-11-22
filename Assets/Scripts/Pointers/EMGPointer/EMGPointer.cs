@@ -178,8 +178,9 @@ public class EMGPointer : Pointer
     private void OnGrabStay(GrabbingMole grabbingMole)
     {
         // Check if the current gesture is valid for grabbing
-        if (grabbingMole.checkGrabbingValidity(GetCurrentGesture())) // TODO add: emgDataProcessor.GetSmoothedAbsAverage() < (emgThreshold * maxEMG)
+        if (true) // TODO add: grabbingMole.checkGrabbingValidity(GetCurrentGesture())
         {
+            Debug.Log("!! X");
             grabbingMole.grabedBy(virtualHand);
         }
         else
@@ -190,6 +191,8 @@ public class EMGPointer : Pointer
         // Dwell logic
         grabbingMole.SetLoadingValue((Time.time - dwellStartTimer) / dwellTime);
         if (!grabbingMole.isWithinValidationRadius()) dwellStartTimer = Time.time;
+
+        Debug.Log("!! Dwell Time: " + (Time.time - dwellStartTimer).ToString("F2") + " / " + dwellTime.ToString("F2"));
 
         // Shoot if dwell time exceeded
         if ((Time.time - dwellStartTimer) > dwellTime)
