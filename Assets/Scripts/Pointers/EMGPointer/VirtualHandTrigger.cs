@@ -6,7 +6,6 @@ public class VirtualHandTrigger : MonoBehaviour
     public event System.Action<Mole> TriggerOnMoleExited;
     public event System.Action<Mole> TriggerOnMoleStay;
 
-    public event System.Action<GrabbingMole> TriggerOnGrabbingMoleEntered;
     public event System.Action<GrabbingMole> TriggerOnGrabbingMoleStay;
 
     [SerializeField] private string layerName = "Target";
@@ -14,7 +13,6 @@ public class VirtualHandTrigger : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         TriggerOnMole(TriggerOnMoleEntered, other);
-        TriggerOnGrabbingMole(TriggerOnGrabbingMoleEntered, other);
     }
 
     private void OnTriggerExit(Collider other)

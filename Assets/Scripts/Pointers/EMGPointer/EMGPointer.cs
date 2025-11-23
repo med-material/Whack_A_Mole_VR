@@ -170,49 +170,13 @@ public class EMGPointer : Pointer
     }
 
     // --------- Grab Events triggered by the Virtual Hand's collider ---------
-    private void OnGrabEnter(GrabbingMole grabbingMole)
-    {
-        grabbingMole.SetHandObject(virtualHand);
-        grabbingMole.OnHoverEnter();
-    }
     private void OnGrabStay(GrabbingMole grabbingMole)
     {
         // Check if the current gesture is valid for grabbing
-        if (true) // TODO add: grabbingMole.checkGrabbingValidity(GetCurrentGesture())
+        if (true) // TODO add: grabbingMole.checkGrabbingValidity(GetCurrentGesture()) && getThresholdState() == "above"
         {
             Debug.Log("!! X");
-            grabbingMole.grabedBy(virtualHand);
-        }
-        else
-        {
-            grabbingMole.grabedBy(null);
-        }
-
-        // Dwell logic
-        grabbingMole.SetLoadingValue((Time.time - dwellStartTimer) / dwellTime);
-        if (!grabbingMole.isWithinValidationRadius()) dwellStartTimer = Time.time;
-
-        Debug.Log("!! Dwell Time: " + (Time.time - dwellStartTimer).ToString("F2") + " / " + dwellTime.ToString("F2"));
-
-        // Shoot if dwell time exceeded
-        if ((Time.time - dwellStartTimer) > dwellTime)
-        {
-            pointerShootOrder++;
-            loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>(){
-                                {"ControllerSmoothed", directionSmoothed},
-                                {"ControllerAimAssistState", Enum.GetName(typeof(Pointer.AimAssistStates), aimAssistState)},
-                                {"LastShotControllerRawPointingDirectionX", transform.forward.x},
-                                {"LastShotControllerRawPointingDirectionY", transform.forward.y},
-                                {"LastShotControllerRawPointingDirectionZ", transform.forward.z}
-                            });
-
-            loggerNotifier.NotifyLogger("Pointer Shoot", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
-                            {
-                                {"PointerShootOrder", pointerShootOrder},
-                                {"ControllerName", gameObject.name}
-                            });
-            OnHoverExit(grabbingMole);
-            Shoot(grabbingMole);
+            grabbingMole.grabedBy(virtualHand, this);
         }
     }
 
