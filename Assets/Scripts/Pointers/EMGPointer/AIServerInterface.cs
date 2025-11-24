@@ -14,6 +14,11 @@ public class AIServerInterface
     private List<PredictionResponse> gestureResponses = new List<PredictionResponse>();
     private Queue<PredictionResponse> previousGesture = new Queue<PredictionResponse>();
 
+    // Batch prediction settings
+    private int batchSize = 10;
+    private List<int[]> emgBatch = new List<int[]>();
+    private bool isProcessingRequest = false;
+
     public AIServerInterface(ThalmicMyo myo)
     {
         thalmicMyo = myo;
@@ -23,8 +28,17 @@ public class AIServerInterface
     {
         if (gestureResponses.Count >= bufferSize) { GestureProcess(); }
 
-        // Don't forget to run the python server before using this feature. Can be found in a separate repository.
-        _ = SendPredictionRequest(thalmicMyo._myoEmg);
+        // Collect EMG samples into batch
+        int[] currentEmgData = new int[8];
+        System.Array.Copy(thalmicMyo._myoEmg, currentEmgData, 8);
+        emgBatch.Add(currentEmgData);
+
+        // Send batch when it reaches the batch size
+        if (emgBatch.Count >= batchSize && !isProcessingRequest)
+        {
+            _ = SendBatchPredictionRequest(new List<int[]>(emgBatch));
+            emgBatch.Clear();
+        }
     }
 
     private void GestureProcess()
@@ -59,14 +73,23 @@ public class AIServerInterface
             currentGesture = mostCommonLabel;
             currentGestureProb = meanProb.ToString();
         }
-        else currentGestureProb = "Uncertain";
+        else
+        {
+            currentGestureProb = "Uncertain";
+            currentGesture = "Unknown";
+        }
     }
 
-    private async Task SendPredictionRequest(int[] emgs)
+    private async Task SendBatchPredictionRequest(List<int[]> emgBatch)
     {
-        // Build the JSON using the actual EMG values
-        string json = $@"{{
-            ""features"": {{
+        if (isProcessingRequest) return;
+        isProcessingRequest = true;
+
+        // Build the batch JSON
+        List<string> batchFeatures = new List<string>();
+        foreach (int[] emgs in emgBatch)
+        {
+            string features = $@"{{
                 ""EMG1"": {emgs[0]},
                 ""EMG2"": {emgs[1]},
                 ""EMG3"": {emgs[2]},
@@ -75,17 +98,21 @@ public class AIServerInterface
                 ""EMG6"": {emgs[5]},
                 ""EMG7"": {emgs[6]},
                 ""EMG8"": {emgs[7]}
-            }}
-        }}";
+            }}";
+            batchFeatures.Add(features);
+        }
+        
+        string json = $@"{{""batch"": [{string.Join(",", batchFeatures)}]}}";
 
         try
         {
-            using (UnityWebRequest www = new UnityWebRequest("http://127.0.0.1:8000/predict", "POST"))
+            using (UnityWebRequest www = new UnityWebRequest("http://127.0.0.1:8000/predict_batch", "POST"))
             {
                 byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
                 www.uploadHandler = new UploadHandlerRaw(bodyRaw);
                 www.downloadHandler = new DownloadHandlerBuffer();
                 www.SetRequestHeader("Content-Type", "application/json");
+                www.timeout = 10; // Increased timeout for batch requests
 
                 UnityWebRequestAsyncOperation operation = www.SendWebRequest();
                 while (!operation.isDone)
@@ -93,30 +120,34 @@ public class AIServerInterface
 
                 if (www.result != UnityWebRequest.Result.Success)
                 {
-                    Debug.Log("Error: " + www.error);
+                    Debug.LogWarning("[AIServerInterface] Batch prediction request error: " + www.error);
                 }
                 else
                 {
                     string responseText = www.downloadHandler.text;
-                    PredictionResponse result = null;
+                    BatchPredictionResponse result = null;
                     try
                     {
-                        result = JsonUtility.FromJson<PredictionResponse>(responseText);
+                        result = JsonUtility.FromJson<BatchPredictionResponse>(responseText);
                     }
                     catch
                     {
-                        Debug.Log("Failed to parse prediction response: " + responseText);
+                        Debug.LogWarning("[AIServerInterface] Failed to parse batch prediction response: " + responseText);
                     }
-                    if (result != null)
+                    if (result != null && result.predictions != null)
                     {
-                        gestureResponses.Add(result);
+                        gestureResponses.AddRange(result.predictions);
                     }
                 }
             }
         }
         catch (System.Exception e)
         {
-            Debug.Log("Exception during prediction request: " + e.Message);
+            Debug.LogWarning("[AIServerInterface] Exception during batch prediction request: " + e.Message);
+        }
+        finally
+        {
+            isProcessingRequest = false;
         }
     }
 
@@ -130,6 +161,12 @@ public class AIServerInterface
         public string label;
         public float prob;
         public List<TopKItem> topk;
+    }
+
+    [System.Serializable]
+    private class BatchPredictionResponse
+    {
+        public List<PredictionResponse> predictions;
     }
 
     [System.Serializable]
