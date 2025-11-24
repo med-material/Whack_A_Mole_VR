@@ -39,9 +39,12 @@ public class EMGPointer : Pointer
         // Disable default visual hand when EMG pointer enabled
         if (SteamVRVisualHand != null && SteamVRVisualHand.activeSelf) SteamVRVisualHand.SetActive(false);
 
-        // Update Gesture Visual based on current behavior
-        HandGestureState currentGesture = GetCurrentGesture();
-        if (emgClassifiedGestureManager) emgClassifiedGestureManager.SetPose(currentGesture);
+        // Update Gesture Visual based on current behavior (only if gesture manager is ready)
+        if (emgClassifiedGestureManager != null && emgClassifiedGestureManager.IsInitialized)
+        {
+            HandGestureState currentGesture = GetCurrentGesture();
+            emgClassifiedGestureManager.SetPose(currentGesture);
+        }
     }
 
     public override void Enable()
@@ -166,7 +169,15 @@ public class EMGPointer : Pointer
     }
 
     private bool IsAboveThreshold(float emgIntensity) => (emgIntensity >= (emgThreshold * maxEMG));
-    public string getThresholdState() => thresholdState;
+    
+    public string getThresholdState()
+    {
+        if (!active)
+        {
+            return "inactive";
+        }
+        return thresholdState;
+    }
 
     public void ChangeBehavior(EMGPointerBehavior newBehavior)
     {
@@ -196,6 +207,12 @@ public class EMGPointer : Pointer
 
     public HandGestureState GetCurrentGesture()
     {
+        // Return Unknown if not fully initialized
+        if (!active || aiServerInterface == null)
+        {
+            return HandGestureState.Unknown;
+        }
+
         string currentGestureString;
 
         switch (emgPointerBehavior)
@@ -226,7 +243,14 @@ public class EMGPointer : Pointer
         else return handGestureState; // Return parsed gesture
     }
 
-    public string GetCurrentGestureConfidence() => gestureConfidence;
+    public string GetCurrentGestureConfidence()
+    {
+        if (!active || aiServerInterface == null)
+        {
+            return "Uninitialized";
+        }
+        return gestureConfidence;
+    }
 }
 
 public enum EMGPointerBehavior

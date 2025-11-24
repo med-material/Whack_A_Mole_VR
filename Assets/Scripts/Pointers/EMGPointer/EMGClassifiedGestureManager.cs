@@ -28,6 +28,10 @@ public class EMGClassifiedGestureManager : MonoBehaviour
     private SteamVR_Skeleton_Poser poser; // Reference to the SteamVR_Skeleton_Poser component, drives pose blending at runtime
     private Coroutine currentBlendCoroutine; //Tracks currently running blending coroutine, later used for smooth transitioning
     private SteamVR_Behaviour_Skeleton skeleton;
+    
+    // Public property to check if initialization is complete
+    public bool IsInitialized => poser != null;
+    
     [SerializeField]
     [Tooltip("Duration for blending transitions between poses, in seconds")]
     public float blendDuration = 0.3f; //Duration for blending transitions between poses
