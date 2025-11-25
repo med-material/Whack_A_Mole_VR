@@ -21,7 +21,7 @@ public class EMGPointer : Pointer
     [SerializeField] private EMGPointerBehavior emgPointerBehavior;
     [SerializeField] private bool recordMaximumEMG = true; // If true, records the maximum EMG value reached during the session.
     [SerializeField] private float maxEMG = 0.0f;
-    [SerializeField][Range(0f, 1f)] private float emgThreshold = 0.3f; // Threshold above which the EMG signal is considered as a muscle activation (0-1).
+    [SerializeField][Range(-1f, 1f)] private float emgThreshold = 0.3f; // Threshold above which the EMG signal is considered as a muscle activation (0-1). // TODO change to 0-1
 
     private AIServerInterface aiServerInterface;
     private EMGClassifiedGestureManager emgClassifiedGestureManager;
@@ -30,11 +30,19 @@ public class EMGPointer : Pointer
     private string gestureConfidence = "Uncertain";
     private string thresholdState = "below";
 
+    [SerializeField] private bool enebledMe = false;
+
     void Update()
     {
+        if (enebledMe) { Enable(); enebledMe = false; }
+
+
         // Update max EMG if recording is enabled
         if (recordMaximumEMG) maxEMG = Mathf.Max(maxEMG, (float)emgDataProcessor.GetSmoothedAbsAverage());
         thresholdState = IsAboveThreshold(emgDataProcessor.GetSmoothedAbsAverage()) ? "above" : "below";
+
+        maxEMG = 1; // TEMPORARY FIX: REMOVE LATER
+
 
         // Disable default visual hand when EMG pointer enabled
         if (SteamVRVisualHand != null && SteamVRVisualHand.activeSelf) SteamVRVisualHand.SetActive(false);
@@ -66,6 +74,8 @@ public class EMGPointer : Pointer
                 }
             }
             else Debug.LogError("No 'VisualStick' found in the virtual hand prefab.");
+
+            virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnGrabbingMoleStay += OnGrabStay;
 
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleEntered += OnHoverEnter;
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleExited += OnHoverExit;
@@ -99,6 +109,8 @@ public class EMGPointer : Pointer
         }
     }
 
+
+    // --------- Hover Events triggered by the Virtual Hand's collider ---------
     private void OnHoverEnter(Mole mole)
     {
         mole.OnHoverEnter();
@@ -156,6 +168,17 @@ public class EMGPointer : Pointer
                 OnHoverExit(mole);
                 Shoot(mole);
             }
+        }
+    }
+
+    // --------- Grab Events triggered by the Virtual Hand's collider ---------
+    private void OnGrabStay(GrabbingMole grabbingMole)
+    {
+        // Check if the current gesture is valid for grabbing
+        if (getThresholdState() == "above") // TODO add: grabbingMole.checkGrabbingValidity(GetCurrentGesture()) && 
+        {
+            Debug.Log("!! X");
+            grabbingMole.grabedBy(virtualHand, this);
         }
     }
 
