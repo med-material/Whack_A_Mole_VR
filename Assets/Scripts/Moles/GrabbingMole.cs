@@ -24,6 +24,8 @@ public class GrabbingMole : Mole
             bool thresholdKO = refEMGPointer.getThresholdState() == "below"; // Check if the EMG signal is below the threshold to release the mole
             bool gestureKO = !checkGrabbingValidity(refEMGPointer.GetCurrentGesture()); // Check if the current gesture is not valid for grabbing
 
+            Debug.Log("!! Update: thresholdKO=" + thresholdKO + ", gestureKO=" + gestureKO);
+
             if (thresholdKO || gestureKO)
             {
                 PlayHoverLeave();
@@ -38,16 +40,16 @@ public class GrabbingMole : Mole
         return currentGesture == validationGrabbingGesture;
     }
 
-    public void grabedBy(GameObject gameObject, EMGPointer emgPointer)
+    public void grabedBy(GameObject handGameObject, EMGPointer emgPointer)
     {
-        if (gameObject == null)
+        if (handGameObject == null)
         {
             Debug.Log("[GrebbingMole] Mole released!");
-            transform.SetParent(parentTargetSpawner.transform, true);
+            transform.SetParent(parentTargetSpawner?.transform, true);
             return;
         }
-        Debug.Log("[GrebbingMole] Mole grabbed!" + gameObject.name);
-        transform.SetParent(gameObject.transform, true);
+        Debug.Log("[GrebbingMole] Mole grabbed by " + handGameObject.name);
+        transform.SetParent(handGameObject.transform, true);
         refEMGPointer = emgPointer;
     }
 
@@ -77,6 +79,7 @@ public class GrabbingMole : Mole
         grabedBy(null, null);
         base.PlayHoverLeave();
 
+        if (isWithinValidationRadius()) Debug.Log("!! pop");
         if (isWithinValidationRadius()) PlayPopping();
     }
 
