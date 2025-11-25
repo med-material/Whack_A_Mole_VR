@@ -72,7 +72,6 @@ public class EMGPointer : Pointer
             }
             else Debug.LogError("No 'VisualStick' found in the virtual hand prefab.");
 
-            virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnGrabbingMoleEntered += OnGrabEnter;
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnGrabbingMoleStay += OnGrabStay;
 
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleEntered += OnHoverEnter;

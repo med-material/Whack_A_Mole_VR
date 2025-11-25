@@ -53,7 +53,7 @@ public class VirtualHandTrigger : MonoBehaviour
 
     private void OnDestroy()
     {
-        TriggerOnGrabbingMoleEntered = null;
+        TriggerOnGrabbingMoleStay = null;
         TriggerOnMoleEntered = null;
         TriggerOnMoleExited = null;
         TriggerOnMoleStay = null;
