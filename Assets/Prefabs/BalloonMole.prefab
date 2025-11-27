@@ -99,43 +99,19 @@ MonoBehaviour:
           m_StringArgument: HoverEnter
           m_BoolArgument: 1
         m_CallState: 1
-      - m_Target: {fileID: 5507922937698267226}
-        m_TargetAssemblyTypeName: UnityEngine.Animator, UnityEngine
-        m_MethodName: Play
-        m_Mode: 5
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: HoverEnterBalloon
-          m_BoolArgument: 0
-        m_CallState: 1
   onMoleHoverLeaveEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 6993894984759774166}
-        m_TargetAssemblyTypeName: UnityEngine.Animator, UnityEngine
-        m_MethodName: Play
-        m_Mode: 5
+      - m_Target: {fileID: 7736700633216974771}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: Idle
-          m_BoolArgument: 0
-        m_CallState: 1
-      - m_Target: {fileID: 5507922937698267226}
-        m_TargetAssemblyTypeName: UnityEngine.Animator, UnityEngine
-        m_MethodName: Play
-        m_Mode: 5
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: HoverLeaveBalloon
           m_BoolArgument: 0
         m_CallState: 1
   onMolePopEvent:
@@ -1075,12 +1051,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: fd0cb30d2042d084c88df0a026ee8063, type: 3}
---- !u!95 &5507922937698267226 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: 6561507980239235753, guid: fd0cb30d2042d084c88df0a026ee8063,
-    type: 3}
-  m_PrefabInstance: {fileID: 1693135776565943027}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &7736700633216974771 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8944555922308998464, guid: fd0cb30d2042d084c88df0a026ee8063,

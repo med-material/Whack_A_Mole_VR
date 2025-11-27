@@ -241,6 +241,32 @@ public class ModifiersManager : MonoBehaviour
         rightController.GetComponent<PointerTypeSelector>().ActivatePointer(pointerType);
     }
 
+    // Sets the EMG pointer behavior mode (Training or LivePrediction)
+    public void SetEMGPointerMode(EMGPointerBehavior mode)
+    {
+        // Get EMGPointer components from both controllers
+        EMGPointer leftEMGPointer = leftController.GetComponent<EMGPointer>();
+        EMGPointer rightEMGPointer = rightController.GetComponent<EMGPointer>();
+
+        // Change behavior on both controllers if they have EMGPointer component
+        if (leftEMGPointer != null && leftEMGPointer.enabled)
+        {
+            leftEMGPointer.ChangeBehavior(mode);
+        }
+
+        if (rightEMGPointer != null && rightEMGPointer.enabled)
+        {
+            rightEMGPointer.ChangeBehavior(mode);
+        }
+
+        loggerNotifier.NotifyLogger("EMG Pointer Mode Set " + System.Enum.GetName(typeof(EMGPointerBehavior), mode), EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
+        {
+            {"EMGPointerMode", System.Enum.GetName(typeof(EMGPointerBehavior), mode)}
+        });
+
+        modifierUpdateEvent.Invoke("EMGPointerMode", System.Enum.GetName(typeof(EMGPointerBehavior), mode));
+    }
+
     public void SetHideWall(HideWall value)
     {
         if (hideWall == value) return;

@@ -23,12 +23,22 @@ public class EMGPointer : Pointer
     [SerializeField] private float maxEMG = 0.0f;
     [SerializeField][Range(0f, 1f)] private float emgThreshold = 0.3f; // Threshold above which the EMG signal is considered as a muscle activation (0-1).
 
+    [Header("Wrist Dwell Spinner Settings")]
+    [SerializeField]
+    [Tooltip("Optional: Reference to the WristDwellSpinner component. If null, will be auto-detected in virtual hand.")]
+    private WristDwellSpinner wristSpinner;
+
+    [SerializeField]
+    [Tooltip("Enable/disable the wrist spinner display")]
+    private bool useWristSpinner = true;
+
     private AIServerInterface aiServerInterface;
     private EMGClassifiedGestureManager emgClassifiedGestureManager;
     private const string DEFAULT_GESTURE = "Neutral"; // Default gesture when no mole is hovered over. 
     private string moleHoveringGesture = DEFAULT_GESTURE; // Current gesture of the mole being hovered over (only in Training mode).
     private string gestureConfidence = "Uncertain";
     private string thresholdState = "below";
+    private Mole currentHoveredMole = null; // Track the currently hovered mole
 
     void Update()
     {
@@ -58,6 +68,17 @@ public class EMGPointer : Pointer
             virtualHand.transform.localPosition = new Vector3(0f, handOffsetDistance, 0f); // adjust as needed
             emgClassifiedGestureManager = virtualHand.GetComponent<EMGClassifiedGestureManager>();
 
+            // Auto-detect wrist spinner if not assigned
+            if (wristSpinner == null && useWristSpinner)
+            {
+                wristSpinner = virtualHand.GetComponentInChildren<WristDwellSpinner>();
+                if (wristSpinner == null)
+                {
+                    Debug.LogWarning("EMGPointer: WristDwellSpinner not found in virtual hand. Wrist spinner display will be disabled.");
+                    useWristSpinner = false;
+                }
+            }
+
             Transform visualStick = virtualHand.transform.Find("VisualStick");
             if (visualStick != null)
             {
@@ -73,6 +94,21 @@ public class EMGPointer : Pointer
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleEntered += OnHoverEnter;
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleExited += OnHoverExit;
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleStay += OnHoverStay;
+
+            // Register the virtual hand's LogTracker with the TrackerHub
+            LogTracker virtualHandTracker = virtualHand.GetComponent<LogTracker>();
+            if (virtualHandTracker != null)
+            {
+                TrackerHub trackerHub = FindObjectOfType<TrackerHub>();
+                if (trackerHub != null)
+                {
+                    trackerHub.RegisterTracker(virtualHandTracker);
+                }
+                else
+                {
+                    Debug.LogWarning("EMGPointer: TrackerHub not found. Virtual hand position will not be logged.");
+                }
+            }
         }
         else Debug.LogError("No virtual hand prefab assigned to the EMG Pointer.");
 
@@ -86,11 +122,30 @@ public class EMGPointer : Pointer
     {
         if (!active) return;
 
+        // Unregister the virtual hand's LogTracker before destroying it
         if (virtualHand != null)
         {
+            LogTracker virtualHandTracker = virtualHand.GetComponent<LogTracker>();
+            if (virtualHandTracker != null)
+            {
+                TrackerHub trackerHub = FindObjectOfType<TrackerHub>();
+                if (trackerHub != null)
+                {
+                    trackerHub.UnregisterTracker(virtualHandTracker);
+                }
+            }
+
             Destroy(virtualHand);
             virtualHand = null;
         }
+
+        // Hide wrist spinner when disabling
+        if (wristSpinner != null)
+        {
+            wristSpinner.Hide();
+        }
+
+        currentHoveredMole = null;
 
         CancelInvoke(nameof(StartPredictionRequestCoroutine));
 
@@ -104,8 +159,17 @@ public class EMGPointer : Pointer
 
     private void OnHoverEnter(Mole mole)
     {
+        currentHoveredMole = mole;
         mole.OnHoverEnter();
         dwellStartTimer = Time.time;
+
+        // Show wrist spinner when hovering over a mole
+        if (useWristSpinner && wristSpinner != null)
+        {
+            bool isValidTarget = mole.IsValid();
+            wristSpinner.Show(isValidTarget);
+        }
+
         if (mole.GetState() == Mole.States.Enabled)
         {
             moleHoveringGesture = mole.GetValidationArg();
@@ -123,6 +187,13 @@ public class EMGPointer : Pointer
         mole.SetLoadingValue(0);
         mole.OnHoverLeave();
 
+        // Hide wrist spinner when leaving a mole
+        if (useWristSpinner && wristSpinner != null)
+        {
+            wristSpinner.Hide();
+        }
+
+        currentHoveredMole = null;
         moleHoveringGesture = DEFAULT_GESTURE;
 
         loggerNotifier.NotifyLogger("Pointer Hover End", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
@@ -137,10 +208,28 @@ public class EMGPointer : Pointer
         if (mole.checkShootingValidity(GetCurrentGesture().ToString()))
         {
             // If the EMG signal is below the threshold, reset the dwell timer.
-            if (emgDataProcessor.GetSmoothedAbsAverage() < (emgThreshold * maxEMG)) dwellStartTimer = Time.time;
+            if (emgDataProcessor.GetSmoothedAbsAverage() < (emgThreshold * maxEMG)) 
+            {
+                dwellStartTimer = Time.time;
+                
+                // Reset wrist spinner progress
+                if (useWristSpinner && wristSpinner != null)
+                {
+                    wristSpinner.UpdateProgress(0f);
+                }
+            }
 
-            mole.SetLoadingValue((Time.time - dwellStartTimer) / dwellTime);
-            if ((Time.time - dwellStartTimer) > dwellTime)
+            // Calculate dwell progress
+            float dwellProgress = (Time.time - dwellStartTimer) / dwellTime;
+            
+            // Update both mole and wrist spinner
+            mole.SetLoadingValue(dwellProgress);
+            if (useWristSpinner && wristSpinner != null)
+            {
+                wristSpinner.UpdateProgress(dwellProgress);
+            }
+
+            if (dwellProgress >= 1f)
             {
                 pointerShootOrder++;
                 loggerNotifier.NotifyLogger(overrideEventParameters: new Dictionary<string, object>(){
@@ -158,6 +247,16 @@ public class EMGPointer : Pointer
                             });
                 OnHoverExit(mole);
                 Shoot(mole);
+            }
+        }
+        else
+        {
+            // Invalid gesture - reset dwell timer and show in wrist spinner
+            // Only update if we're still hovering over a mole (not after OnHoverExit has been called)
+            if (useWristSpinner && wristSpinner != null && currentHoveredMole != null)
+            {
+                wristSpinner.UpdateProgress(0f);
+                wristSpinner.Show(false); // Show as invalid
             }
         }
     }
@@ -251,6 +350,26 @@ public class EMGPointer : Pointer
         }
         return gestureConfidence;
     }
+
+    /// <summary>
+    /// Allows external control of wrist spinner visibility
+    /// </summary>
+    public void SetWristSpinnerEnabled(bool enabled)
+    {
+        useWristSpinner = enabled;
+        if (!enabled && wristSpinner != null)
+        {
+            wristSpinner.Hide();
+        }
+    }
+
+    /// <summary>
+    /// Gets reference to the wrist spinner (if available)
+    /// </summary>
+    public WristDwellSpinner GetWristSpinner()
+    {
+        return wristSpinner;
+    }
 }
 
 public enum EMGPointerBehavior
@@ -258,3 +377,12 @@ public enum EMGPointerBehavior
     LivePrediction,
     Training
 }
+
+/*
+AIServerInterface
+Handles communication with external AI server for EMG gesture classification.
+
+Note: For future consideration - LibEMG is an alternative open-source Python toolbox 
+for myoelectric control that could be evaluated:
+https://delsyseurope.com/libemg-an-open-source-python-toolbox-for-myoelectric-control/
+*/

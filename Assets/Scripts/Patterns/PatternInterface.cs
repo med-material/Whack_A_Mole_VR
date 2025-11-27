@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine;
@@ -306,6 +307,10 @@ public class PatternInterface : MonoBehaviour
         if (action.TryGetValue("POINTERTYPE", out tempValue))
         {
             modifiersManager.SetPointerType((ModifiersManager.PointerType)System.Enum.Parse(typeof(ModifiersManager.PointerType), tempValue));
+        }
+        if (action.TryGetValue("EMGPOINTERMODE", out tempValue))
+        {
+            modifiersManager.SetEMGPointerMode((EMGPointerBehavior)System.Enum.Parse(typeof(EMGPointerBehavior), tempValue));
         }
         if (action.TryGetValue("PRISM", out tempValue))
         {
