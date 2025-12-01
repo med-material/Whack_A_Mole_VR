@@ -22,6 +22,15 @@ public class EMGPointer : Pointer
     [SerializeField] private bool recordMaximumEMG = true; // If true, records the maximum EMG value reached during the session.
     [SerializeField] private float maxEMG = 0.0f;
     [SerializeField][Range(0f, 1f)] private float emgThreshold = 0.3f; // Threshold above which the EMG signal is considered as a muscle activation (0-1).
+    
+    [Header("LivePrediction Threshold Settings")]
+    [SerializeField]
+    [Tooltip("In LivePrediction mode, use an absolute EMG threshold instead of percentage of maxEMG. This prevents runtime maxEMG from filtering out weaker gestures.")]
+    private bool useLivePredictionAbsoluteThreshold = true;
+    
+    [SerializeField]
+    [Tooltip("Absolute EMG threshold for LivePrediction mode. EMG below this is classified as Neutral (rest). Set based on your training data's neutral/rest EMG levels.")]
+    private float livePredictionAbsoluteThreshold = 10f;
 
     [Header("Wrist Dwell Spinner Settings")]
     [SerializeField]
@@ -39,6 +48,11 @@ public class EMGPointer : Pointer
     private string gestureConfidence = "Uncertain";
     private string thresholdState = "below";
     private Mole currentHoveredMole = null; // Track the currently hovered mole
+    
+    // Dwell timer state tracking
+    private float accumulatedDwellTime = 0f; // Total time spent doing correct gesture
+    private float lastValidGestureTime = 0f; // When did we last have a valid gesture
+    private bool wasValidLastFrame = false; // Track if previous frame was valid
 
     void Update()
     {
@@ -96,7 +110,8 @@ public class EMGPointer : Pointer
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleStay += OnHoverStay;
 
             // Register the virtual hand's LogTracker with the TrackerHub
-            LogTracker virtualHandTracker = virtualHand.GetComponent<LogTracker>();
+            // Use GetComponentInChildren to search in child objects as well
+            LogTracker virtualHandTracker = virtualHand.GetComponentInChildren<LogTracker>();
             if (virtualHandTracker != null)
             {
                 TrackerHub trackerHub = FindObjectOfType<TrackerHub>();
@@ -108,6 +123,10 @@ public class EMGPointer : Pointer
                 {
                     Debug.LogWarning("EMGPointer: TrackerHub not found. Virtual hand position will not be logged.");
                 }
+            }
+            else
+            {
+                Debug.LogWarning("EMGPointer: LogTracker not found on virtual hand or its children. Virtual hand position will not be logged.");
             }
         }
         else Debug.LogError("No virtual hand prefab assigned to the EMG Pointer.");
@@ -125,7 +144,8 @@ public class EMGPointer : Pointer
         // Unregister the virtual hand's LogTracker before destroying it
         if (virtualHand != null)
         {
-            LogTracker virtualHandTracker = virtualHand.GetComponent<LogTracker>();
+            // Use GetComponentInChildren to search in child objects as well
+            LogTracker virtualHandTracker = virtualHand.GetComponentInChildren<LogTracker>();
             if (virtualHandTracker != null)
             {
                 TrackerHub trackerHub = FindObjectOfType<TrackerHub>();
@@ -161,7 +181,11 @@ public class EMGPointer : Pointer
     {
         currentHoveredMole = mole;
         mole.OnHoverEnter();
-        dwellStartTimer = Time.time;
+        
+        // Reset dwell tracking
+        accumulatedDwellTime = 0f;
+        lastValidGestureTime = 0f;
+        wasValidLastFrame = false;
 
         // Show wrist spinner when hovering over a mole
         if (useWristSpinner && wristSpinner != null)
@@ -205,30 +229,45 @@ public class EMGPointer : Pointer
 
     private void OnHoverStay(Mole mole)
     {
-        if (mole.checkShootingValidity(GetCurrentGesture().ToString()))
+        string currentGesture = GetCurrentGesture().ToString();
+        bool isValid = mole.checkShootingValidity(currentGesture);
+        
+        // Calculate progress based on accumulated time
+        float dwellProgress = accumulatedDwellTime / dwellTime;
+        
+        // Debug.Log($"[EMGPointer] OnHoverStay - Gesture: '{currentGesture}', Valid: {isValid}, Accumulated: {accumulatedDwellTime:F2}s, Progress: {dwellProgress:F2}");
+        
+        if (isValid)
         {
-            // If the EMG signal is below the threshold, reset the dwell timer.
-            if (emgDataProcessor.GetSmoothedAbsAverage() < (emgThreshold * maxEMG)) 
+            // Valid gesture - accumulate dwell time
+            if (wasValidLastFrame)
             {
-                dwellStartTimer = Time.time;
-                
-                // Reset wrist spinner progress
-                if (useWristSpinner && wristSpinner != null)
-                {
-                    wristSpinner.UpdateProgress(0f);
-                }
+                // Continue accumulating from last frame
+                float deltaTime = Time.time - lastValidGestureTime;
+                accumulatedDwellTime += deltaTime;
+                // Debug.Log($"[EMGPointer] ✓ Valid gesture - ACCUMULATING {deltaTime:F3}s (total: {accumulatedDwellTime:F2}s)");
             }
-
-            // Calculate dwell progress
-            float dwellProgress = (Time.time - dwellStartTimer) / dwellTime;
+            else
+            {
+                // Just started valid gesture
+                // Debug.Log($"[EMGPointer] ✓ Valid gesture - STARTING accumulation");
+            }
             
-            // Update both mole and wrist spinner
+            lastValidGestureTime = Time.time;
+            wasValidLastFrame = true;
+            
+            // Recalculate progress
+            dwellProgress = accumulatedDwellTime / dwellTime;
+            
+            // Update displays
             mole.SetLoadingValue(dwellProgress);
             if (useWristSpinner && wristSpinner != null)
             {
                 wristSpinner.UpdateProgress(dwellProgress);
+                wristSpinner.Show(true); // Green - valid
             }
 
+            // Check if dwell complete
             if (dwellProgress >= 1f)
             {
                 pointerShootOrder++;
@@ -249,14 +288,46 @@ public class EMGPointer : Pointer
                 Shoot(mole);
             }
         }
+        else if (currentGesture == "Neutral")
+        {
+            // Neutral - pause, show green (waiting for gesture)
+            // Debug.Log($"[EMGPointer] ⏸ Neutral - PAUSED at {dwellProgress:F2} ({accumulatedDwellTime:F2}s accumulated)");
+            wasValidLastFrame = false;
+            
+            // Update displays with frozen progress
+            mole.SetLoadingValue(dwellProgress);
+            if (useWristSpinner && wristSpinner != null && currentHoveredMole != null)
+            {
+                wristSpinner.UpdateProgress(dwellProgress);
+                wristSpinner.Show(true); // Green - resting/waiting
+            }
+        }
+        else if (currentGesture == "Unknown")
+        {
+            // Unknown - pause, show red (classifier uncertain)
+            // Debug.Log($"[EMGPointer] ? Unknown - PAUSED at {dwellProgress:F2} (classifier uncertain)");
+            wasValidLastFrame = false;
+            
+            // Update displays with frozen progress
+            mole.SetLoadingValue(dwellProgress);
+            if (useWristSpinner && wristSpinner != null && currentHoveredMole != null)
+            {
+                wristSpinner.UpdateProgress(dwellProgress);
+                wristSpinner.Show(false); // Red - uncertain/warning
+            }
+        }
         else
         {
-            // Invalid gesture - reset dwell timer and show in wrist spinner
-            // Only update if we're still hovering over a mole (not after OnHoverExit has been called)
+            // Wrong gesture - reset
+            // Debug.Log($"[EMGPointer] ✗ WRONG gesture '{currentGesture}' - RESETTING from {accumulatedDwellTime:F2}s to 0");
+            accumulatedDwellTime = 0f;
+            wasValidLastFrame = false;
+            
+            mole.SetLoadingValue(0f);
             if (useWristSpinner && wristSpinner != null && currentHoveredMole != null)
             {
                 wristSpinner.UpdateProgress(0f);
-                wristSpinner.Show(false); // Show as invalid
+                wristSpinner.Show(false); // Red - wrong gesture
             }
         }
     }
@@ -317,11 +388,26 @@ public class EMGPointer : Pointer
         switch (emgPointerBehavior)
         {
             case EMGPointerBehavior.LivePrediction:
-                currentGestureString = IsAboveThreshold(emgDataProcessor.GetSmoothedAbsAverage()) ? aiServerInterface.GetCurrentGesture() : DEFAULT_GESTURE;
+                // In LivePrediction mode, use absolute threshold to filter rest/noise
+                // This prevents the "always classifying" issue while avoiding the runtime maxEMG problem
+                bool isAboveRestThreshold;
+                if (useLivePredictionAbsoluteThreshold)
+                {
+                    // Use fixed absolute threshold - EMG below this is considered rest/neutral
+                    isAboveRestThreshold = emgDataProcessor.GetSmoothedAbsAverage() >= livePredictionAbsoluteThreshold;
+                }
+                else
+                {
+                    // Fallback to percentage-based threshold (same as Training mode)
+                    isAboveRestThreshold = IsAboveThreshold(emgDataProcessor.GetSmoothedAbsAverage());
+                }
+                
+                currentGestureString = isAboveRestThreshold ? aiServerInterface.GetCurrentGesture() : DEFAULT_GESTURE;
                 gestureConfidence = aiServerInterface.GetCurrentGestureProb();
                 break;
 
             case EMGPointerBehavior.Training:
+                // In Training mode, use percentage-based threshold to filter noise and ensure quality training data
                 currentGestureString = IsAboveThreshold(emgDataProcessor.GetSmoothedAbsAverage()) ? moleHoveringGesture : DEFAULT_GESTURE;
                 gestureConfidence = "Training";
                 break;
@@ -384,5 +470,5 @@ Handles communication with external AI server for EMG gesture classification.
 
 Note: For future consideration - LibEMG is an alternative open-source Python toolbox 
 for myoelectric control that could be evaluated:
-https://delsyseurope.com/libemg-an-open-source-python-toolbox-for-myoelectric-control/
+https://delsyseurope.com/libemg-an-open-source-python-toolbox-for-myolectric-control/
 */

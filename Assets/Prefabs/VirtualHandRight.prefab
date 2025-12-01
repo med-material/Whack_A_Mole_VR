@@ -271,7 +271,7 @@ MonoBehaviour:
   rotationSpeed: 90
   activeScaleMultiplier: 1.1
   scaleAnimationSpeed: 5
-  wristOffset: {x: 0, y: 0.05, z: 0.02}
+  wristOffset: {x: 0, y: 0.05, z: -400}
   faceCamera: 1
 --- !u!225 &2448368514440381268
 CanvasGroup:
@@ -450,7 +450,6 @@ GameObject:
   - component: {fileID: 1038958721187610635}
   - component: {fileID: 551098939140794093}
   - component: {fileID: 8843044038936257052}
-  - component: {fileID: 448580597571299936}
   m_Layer: 0
   m_Name: VirtualHandRight
   m_TagString: Untagged
@@ -556,23 +555,6 @@ MonoBehaviour:
   hapticTactorNumbers: 0100000002000000030000000400000005000000
   logGestureHaptics: 1
   noPulseOnGestures: 0000000006000000
---- !u!114 &448580597571299936
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7353169756236129074}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 079b37b96b36c4440b82052e76cfcca2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  identifier: VirtualHandRight
-  trackRot: 1
-  trackPos: 1
-  trackTrigger: 0
-  controller: 0
 --- !u!1001 &8086483300399572474
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -689,6 +671,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 2017676730498857016}
+    - targetCorrespondingSourceObject: {fileID: 1000010304998954, guid: 6def53d002137b747aec0b29551e0e25,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6161197956471315163}
   m_SourcePrefab: {fileID: 100100000, guid: 6def53d002137b747aec0b29551e0e25, type: 3}
 --- !u!4 &8085861608804193088 stripped
 Transform:
@@ -879,3 +865,20 @@ MonoBehaviour:
       values: 010101010101
     previewEnabled: 1
   scale: 1
+--- !u!114 &6161197956471315163
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8087189732174441424}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 079b37b96b36c4440b82052e76cfcca2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  identifier: VirtualHandRight
+  trackRot: 1
+  trackPos: 1
+  trackTrigger: 0
+  controller: 0

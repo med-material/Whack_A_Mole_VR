@@ -116,6 +116,13 @@ public class WristDwellSpinner : MonoBehaviour
 
         originalScale = transform.localScale;
 
+        // Apply wrist offset - try both methods for compatibility
+        // For World Space Canvas, use regular transform
+        transform.localPosition = wristOffset;
+        // For Screen/Overlay Canvas, use RectTransform
+        rectTransform.anchoredPosition3D = wristOffset;
+        
+
         // Setup background if it exists
         SetupBackground();
 

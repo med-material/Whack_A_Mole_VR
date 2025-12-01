@@ -450,7 +450,6 @@ GameObject:
   - component: {fileID: 1038958721187610635}
   - component: {fileID: 551098939140794093}
   - component: {fileID: 8843044038936257052}
-  - component: {fileID: 7363880730680840327}
   m_Layer: 0
   m_Name: VirtualHandLeft
   m_TagString: Untagged
@@ -556,23 +555,6 @@ MonoBehaviour:
   hapticTactorNumbers: 01000000
   logGestureHaptics: 1
   noPulseOnGestures: 0000000006000000
---- !u!114 &7363880730680840327
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7353169756236129074}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 079b37b96b36c4440b82052e76cfcca2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  identifier: VirtualHandLeft
-  trackRot: 1
-  trackPos: 1
-  trackTrigger: 0
-  controller: 0
 --- !u!1001 &8322612650813118727
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -684,6 +666,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 7095976330586074171}
+    - targetCorrespondingSourceObject: {fileID: 1000013348574242, guid: 638779290bce1af49b356f33dcc6fccf,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3250493094348215309}
   m_SourcePrefab: {fileID: 100100000, guid: 638779290bce1af49b356f33dcc6fccf, type: 3}
 --- !u!4 &8318687140641725957 stripped
 Transform:
@@ -880,3 +866,20 @@ MonoBehaviour:
       values: 010101010101
     previewEnabled: 1
   scale: 1
+--- !u!114 &3250493094348215309
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8321615948885445925}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 079b37b96b36c4440b82052e76cfcca2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  identifier: VirtualHandLeft
+  trackRot: 1
+  trackPos: 1
+  trackTrigger: 0
+  controller: 0
