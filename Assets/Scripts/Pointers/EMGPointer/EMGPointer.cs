@@ -23,15 +23,15 @@ public class EMGPointer : Pointer
     [SerializeField] private float maxEMG = 0.0f;
     [SerializeField][Range(0f, 1f)] private float emgThreshold = 0.3f; // Threshold above which the EMG signal is considered as a muscle activation (0-1).
     
-    [Header("LivePrediction Threshold Settings")]
+    [Header("Gesture-Specific MaxEMG Tracking")]
     [SerializeField]
-    [Tooltip("In LivePrediction mode, use an absolute EMG threshold instead of percentage of maxEMG. This prevents runtime maxEMG from filtering out weaker gestures.")]
-    private bool useLivePredictionAbsoluteThreshold = true;
+    [Tooltip("Tracks the maximum EMG value reached for each gesture during calibration/training")]
+    private Dictionary<string, float> gestureMaxEMG = new Dictionary<string, float>();
     
     [SerializeField]
-    [Tooltip("Absolute EMG threshold for LivePrediction mode. EMG below this is classified as Neutral (rest). Set based on your training data's neutral/rest EMG levels.")]
-    private float livePredictionAbsoluteThreshold = 10f;
-
+    [Tooltip("Global maxEMG (highest across all gestures) - for reference")]
+    private float globalMaxEMG = 0.0f;
+    
     [Header("Wrist Dwell Spinner Settings")]
     [SerializeField]
     [Tooltip("Optional: Reference to the WristDwellSpinner component. If null, will be auto-detected in virtual hand.")]
@@ -56,9 +56,26 @@ public class EMGPointer : Pointer
 
     void Update()
     {
-        // Update max EMG if recording is enabled
-        if (recordMaximumEMG) maxEMG = Mathf.Max(maxEMG, (float)emgDataProcessor.GetSmoothedAbsAverage());
-        thresholdState = IsAboveThreshold(emgDataProcessor.GetSmoothedAbsAverage()) ? "above" : "below";
+        float currentEMG = (float)emgDataProcessor.GetSmoothedAbsAverage();
+        
+        // Update global maxEMG if recording is enabled
+        if (recordMaximumEMG)
+        {
+            globalMaxEMG = Mathf.Max(globalMaxEMG, currentEMG);
+            maxEMG = globalMaxEMG; // Keep maxEMG in sync for backward compatibility
+            
+            // Update gesture-specific maxEMG when hovering over a gesture mole
+            if (!string.IsNullOrEmpty(moleHoveringGesture) && moleHoveringGesture != DEFAULT_GESTURE)
+            {
+                if (!gestureMaxEMG.ContainsKey(moleHoveringGesture))
+                {
+                    gestureMaxEMG[moleHoveringGesture] = 0.0f;
+                }
+                gestureMaxEMG[moleHoveringGesture] = Mathf.Max(gestureMaxEMG[moleHoveringGesture], currentEMG);
+            }
+        }
+        
+        thresholdState = IsAboveThreshold(currentEMG) ? "above" : "below";
 
         // Disable default visual hand when EMG pointer enabled
         if (SteamVRVisualHand != null && SteamVRVisualHand.activeSelf) SteamVRVisualHand.SetActive(false);
@@ -230,6 +247,27 @@ public class EMGPointer : Pointer
     private void OnHoverStay(Mole mole)
     {
         string currentGesture = GetCurrentGesture().ToString();
+        
+        // In Training mode, if gesture is Neutral (below threshold), always reset regardless of mole validation
+        // This ensures consistent behavior: below threshold = no progress, even for non-gesture moles
+        if (emgPointerBehavior == EMGPointerBehavior.Training && currentGesture == "Neutral")
+        {
+            // TRAINING MODE: Neutral means below threshold - RESET immediately
+            // This ensures instant visual feedback when EMG drops below calibration threshold
+            // Debug.Log($"[EMGPointer] [Training] Neutral (below threshold) - RESETTING from {accumulatedDwellTime:F2}s to 0");
+            accumulatedDwellTime = 0f;
+            wasValidLastFrame = false;
+            
+            mole.SetLoadingValue(0f);
+            if (useWristSpinner && wristSpinner != null && currentHoveredMole != null)
+            {
+                wristSpinner.UpdateProgress(0f);
+                wristSpinner.Show(true); // Green but reset - waiting for gesture
+            }
+            return; // Exit early - don't process validity check
+        }
+        
+        // Now check validity (for LivePrediction mode or Training mode with active gesture)
         bool isValid = mole.checkShootingValidity(currentGesture);
         
         // Calculate progress based on accumulated time
@@ -290,8 +328,10 @@ public class EMGPointer : Pointer
         }
         else if (currentGesture == "Neutral")
         {
-            // Neutral - pause, show green (waiting for gesture)
-            // Debug.Log($"[EMGPointer] ⏸ Neutral - PAUSED at {dwellProgress:F2} ({accumulatedDwellTime:F2}s accumulated)");
+            // LIVEPREDICTION MODE: Neutral means rest state - PAUSE and keep progress
+            // This allows resuming where you left off when you return to active gesture
+            // (Training mode Neutral is handled at the top of this function)
+            // Debug.Log($"[EMGPointer] [LivePrediction] Neutral - PAUSED at {dwellProgress:F2} ({accumulatedDwellTime:F2}s accumulated)");
             wasValidLastFrame = false;
             
             // Update displays with frozen progress
@@ -334,8 +374,11 @@ public class EMGPointer : Pointer
 
     public void ResetMaxEMG() // Call by CALIBRATION keyworkd in Calibration Event (Game Director)
     {
+        globalMaxEMG = 0.0f;
         maxEMG = 0.0f;
+        gestureMaxEMG.Clear(); // Clear gesture-specific maxEMG values
         recordMaximumEMG = true;
+        Debug.Log("[EMGPointer] MaxEMG reset: Global and gesture-specific values cleared");
     }
 
     private bool IsAboveThreshold(float emgIntensity) => (emgIntensity >= (emgThreshold * maxEMG));
@@ -347,6 +390,50 @@ public class EMGPointer : Pointer
             return "inactive";
         }
         return thresholdState;
+    }
+    
+    /// <summary>
+    /// Gets the current target gesture (from hovered mole) for logging purposes
+    /// Returns "None" if not hovering over a gesture mole
+    /// </summary>
+    public string GetTargetGesture()
+    {
+        return moleHoveringGesture ?? DEFAULT_GESTURE;
+    }
+    
+    /// <summary>
+    /// Gets the gesture-specific maxEMG for the current target gesture
+    /// Returns 0 if gesture hasn't been calibrated yet
+    /// </summary>
+    public float GetTargetGestureMaxEMG()
+    {
+        if (string.IsNullOrEmpty(moleHoveringGesture) || moleHoveringGesture == DEFAULT_GESTURE)
+        {
+            return 0.0f;
+        }
+        
+        if (gestureMaxEMG.ContainsKey(moleHoveringGesture))
+        {
+            return gestureMaxEMG[moleHoveringGesture];
+        }
+        
+        return 0.0f;
+    }
+    
+    /// <summary>
+    /// Gets the global maxEMG (highest across all gestures)
+    /// </summary>
+    public float GetGlobalMaxEMG()
+    {
+        return globalMaxEMG;
+    }
+    
+    /// <summary>
+    /// Gets all gesture-specific maxEMG values (for debugging/visualization)
+    /// </summary>
+    public Dictionary<string, float> GetAllGestureMaxEMG()
+    {
+        return new Dictionary<string, float>(gestureMaxEMG); // Return a copy
     }
 
     public void ChangeBehavior(EMGPointerBehavior newBehavior)
@@ -388,21 +475,9 @@ public class EMGPointer : Pointer
         switch (emgPointerBehavior)
         {
             case EMGPointerBehavior.LivePrediction:
-                // In LivePrediction mode, use absolute threshold to filter rest/noise
-                // This prevents the "always classifying" issue while avoiding the runtime maxEMG problem
-                bool isAboveRestThreshold;
-                if (useLivePredictionAbsoluteThreshold)
-                {
-                    // Use fixed absolute threshold - EMG below this is considered rest/neutral
-                    isAboveRestThreshold = emgDataProcessor.GetSmoothedAbsAverage() >= livePredictionAbsoluteThreshold;
-                }
-                else
-                {
-                    // Fallback to percentage-based threshold (same as Training mode)
-                    isAboveRestThreshold = IsAboveThreshold(emgDataProcessor.GetSmoothedAbsAverage());
-                }
-                
-                currentGestureString = isAboveRestThreshold ? aiServerInterface.GetCurrentGesture() : DEFAULT_GESTURE;
+                // In LivePrediction mode, send all EMG data to server without filtering
+                // The classifier will handle rest/noise detection
+                currentGestureString = aiServerInterface.GetCurrentGesture();
                 gestureConfidence = aiServerInterface.GetCurrentGestureProb();
                 break;
 
