@@ -7,7 +7,7 @@ using UnityEngine.Networking;
 public class AIServerInterface
 {
     private ThalmicMyo thalmicMyo;
-    private int memorySize = 12;  // Reduced from 20 to allow faster gesture detection
+    private int memorySize = 16;  // Reduced from 20 to allow faster gesture detection
     private string currentGesture = "Unknown";
     private string currentGestureProb = "Uncertain";
     private Queue<PredictionResponse> previousGesture = new Queue<PredictionResponse>();
@@ -81,7 +81,7 @@ public class AIServerInterface
 
         try
         {
-            using (UnityWebRequest www = new UnityWebRequest("http://127.0.0.1:8000/batch_predict_windowed", "POST"))
+            using (UnityWebRequest www = new UnityWebRequest("http://127.0.0.1:8000/batch_predict", "POST"))
             {
                 byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
                 www.uploadHandler = new UploadHandlerRaw(bodyRaw);
@@ -167,16 +167,35 @@ public class AIServerInterface
         // Only use the most recent prediction from the batch to avoid over-updating
         PredictionItem latestPrediction = predictedSamples[predictedSamples.Count - 1];
         
-        // Filter out low-confidence predictions - treat as Neutral instead of ignoring
-        if (latestPrediction.prob < MIN_CONFIDENCE_THRESHOLD)
+        // Check if gate model detected rest state
+        if (latestPrediction.detection_method == "gate")
         {
-            Debug.Log($"[AIServerInterface] Low confidence ({latestPrediction.prob:F2}) - treating as Neutral");
+            // Gate model confidently says this is rest/neutral
+            Debug.Log($"[AIServerInterface] Gate model detected rest state (rest_prob: {latestPrediction.gate_rest_prob:F2})");
+            
+            // Add Neutral prediction to memory with high confidence
+            PredictionResponse neutralResponse = new PredictionResponse
+            {
+                label = "Neutral",
+                prob = latestPrediction.gate_rest_prob
+            };
+            
+            if (previousGesture.Count >= memorySize)
+            {
+                previousGesture.Dequeue();
+            }
+            previousGesture.Enqueue(neutralResponse);
+        }
+        // Filter out low-confidence gesture predictions - treat as Neutral
+        else if (latestPrediction.prob < MIN_CONFIDENCE_THRESHOLD)
+        {
+            Debug.Log($"[AIServerInterface] Low gesture confidence ({latestPrediction.prob:F2}) for '{latestPrediction.label}' - treating as Neutral (gate_gesture_prob: {latestPrediction.gate_gesture_prob:F2})");
             
             // Add Neutral prediction to memory
             PredictionResponse neutralResponse = new PredictionResponse
             {
                 label = "Neutral",
-                prob = 0.9f  // High confidence for rest state
+                prob = 0.7f  // Medium confidence - gesture detected but classifier uncertain
             };
             
             if (previousGesture.Count >= memorySize)
@@ -194,12 +213,15 @@ public class AIServerInterface
                 prob = latestPrediction.prob
             };
             
-            // Treat "Unknown" same as "Neutral" for now - helps with stability
-            if (predResponse.label == "Unknown")
+            // Log successful gesture detection with gate info
+            if (latestPrediction.gate_gesture_prob > 0)
             {
-                Debug.Log($"[AIServerInterface] Unknown gesture detected - treating as Neutral");
-                predResponse.label = "Neutral";
+                Debug.Log($"[AIServerInterface] Gesture detected: '{latestPrediction.label}' (conf: {latestPrediction.prob:F2}, gate_gesture_prob: {latestPrediction.gate_gesture_prob:F2})");
             }
+            
+            // Keep "Unknown" as-is - don't convert to Neutral
+            // Unknown = classifier uncertain, should pause progress and wait
+            // Neutral = gate detected rest, should reset progress
 
             if (previousGesture.Count >= memorySize)
             {
@@ -303,9 +325,14 @@ public class AIServerInterface
     {
         try
         {
-            string url = $"http://127.0.0.1:8000/clear_session?session_id={sessionId}";
-            using (UnityWebRequest www = UnityWebRequest.Post(url, ""))
+            string json = $@"{{""session_id"": ""{sessionId}""}}";
+            using (UnityWebRequest www = new UnityWebRequest("http://127.0.0.1:8000/session/clear", "POST"))
             {
+                byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
+                www.uploadHandler = new UploadHandlerRaw(bodyRaw);
+                www.downloadHandler = new DownloadHandlerBuffer();
+                www.SetRequestHeader("Content-Type", "application/json");
+                
                 UnityWebRequestAsyncOperation operation = www.SendWebRequest();
                 while (!operation.isDone)
                     await Task.Yield();
@@ -346,6 +373,9 @@ public class AIServerInterface
         public string label;            // (predicted only)
         public float prob;              // (predicted only)
         public List<TopKItem> topk;     // (predicted only)
+        public string detection_method; // "gate" or "gesture" - how was this prediction made
+        public float gate_rest_prob;    // Gate model's rest probability (if available)
+        public float gate_gesture_prob; // Gate model's gesture probability (if available)
     }
 
     [System.Serializable]

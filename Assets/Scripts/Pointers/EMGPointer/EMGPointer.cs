@@ -29,9 +29,9 @@ public class EMGPointer : Pointer
     private Dictionary<string, float> gestureMaxEMG = new Dictionary<string, float>();
     
     [SerializeField]
-    [Tooltip("Global maxEMG (highest across all gestures) - for reference")]
-    private float globalMaxEMG = 0.0f;
-    
+	[Tooltip("Global maxEMG (highest across all gestures) - for reference")]
+	private float globalMaxEMG = 0.0f;
+	
     [Header("Wrist Dwell Spinner Settings")]
     [SerializeField]
     [Tooltip("Optional: Reference to the WristDwellSpinner component. If null, will be auto-detected in virtual hand.")]
@@ -40,6 +40,10 @@ public class EMGPointer : Pointer
     [SerializeField]
     [Tooltip("Enable/disable the wrist spinner display")]
     private bool useWristSpinner = true;
+
+    // Track which arm is currently being used to detect switches
+    private Thalmic.Myo.Arm currentArm = Thalmic.Myo.Arm.Unknown;
+    private bool hasTrackedArm = false;
 
     private AIServerInterface aiServerInterface;
     private EMGClassifiedGestureManager emgClassifiedGestureManager;
@@ -56,6 +60,9 @@ public class EMGPointer : Pointer
 
     void Update()
     {
+        // Check for arm changes and reset maxEMG if hand switched
+        CheckArmChange();
+        
         float currentEMG = (float)emgDataProcessor.GetSmoothedAbsAverage();
         
         // Update global maxEMG if recording is enabled
@@ -379,6 +386,41 @@ public class EMGPointer : Pointer
         gestureMaxEMG.Clear(); // Clear gesture-specific maxEMG values
         recordMaximumEMG = true;
         Debug.Log("[EMGPointer] MaxEMG reset: Global and gesture-specific values cleared");
+    }
+    
+    /// <summary>
+    /// Check if the Myo armband has switched arms (left/right) and automatically reset calibration
+    /// This ensures that maxEMG thresholds are recalibrated when switching hands
+    /// </summary>
+    private void CheckArmChange()
+    {
+        if (emgDataProcessor == null || emgDataProcessor.thalmicMyo == null)
+            return;
+        
+        Thalmic.Myo.Arm detectedArm = emgDataProcessor.thalmicMyo.arm;
+        
+        // Skip if arm is unknown (armband not synced yet)
+        if (detectedArm == Thalmic.Myo.Arm.Unknown)
+            return;
+        
+        // First time detecting an arm - just store it
+        if (!hasTrackedArm)
+        {
+            currentArm = detectedArm;
+            hasTrackedArm = true;
+            Debug.Log($"[EMGPointer] Arm detected: {detectedArm}. Calibration tracking started.");
+            return;
+        }
+        
+        // Check if arm has changed (switched from left to right or vice versa)
+        if (detectedArm != currentArm)
+        {
+            Debug.Log($"[EMGPointer] Arm changed: {currentArm} -> {detectedArm}. Automatically resetting maxEMG calibration.");
+            currentArm = detectedArm;
+            
+            // Automatically reset calibration when switching hands
+            ResetMaxEMG();
+        }
     }
 
     private bool IsAboveThreshold(float emgIntensity) => (emgIntensity >= (emgThreshold * maxEMG));
