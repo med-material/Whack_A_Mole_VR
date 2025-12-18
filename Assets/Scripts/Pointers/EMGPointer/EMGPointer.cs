@@ -67,6 +67,8 @@ public class EMGPointer : Pointer
             }
             else Debug.LogError("No 'VisualStick' found in the virtual hand prefab.");
 
+            virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnGrabbingMoleStay += OnGrabStay;
+
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleEntered += OnHoverEnter;
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleExited += OnHoverExit;
             virtualHand.GetComponent<VirtualHandTrigger>().TriggerOnMoleStay += OnHoverStay;
@@ -99,6 +101,8 @@ public class EMGPointer : Pointer
         }
     }
 
+
+    // --------- Hover Events triggered by the Virtual Hand's collider ---------
     private void OnHoverEnter(Mole mole)
     {
         mole.OnHoverEnter();
@@ -156,6 +160,16 @@ public class EMGPointer : Pointer
                 OnHoverExit(mole);
                 Shoot(mole);
             }
+        }
+    }
+
+    // --------- Grab Events triggered by the Virtual Hand's collider ---------
+    private void OnGrabStay(GrabbingMole grabbingMole)
+    {
+        // Check if the current gesture is valid for grabbing
+        if (getThresholdState() == "above" && grabbingMole.checkGrabbingValidity(GetCurrentGesture()))
+        {
+            grabbingMole.grabedBy(virtualHand, this);
         }
     }
 
