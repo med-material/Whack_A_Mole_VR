@@ -323,7 +323,7 @@ public class WallManager : MonoBehaviour
     }
 
     // Activates a specific Mole for a given lifeTime and set if is fake or not
-    public Mole CreateMole(int targetSpawnId, float lifeTime, float moleExpiringDuration, Mole.MoleType type, Mole.MoleOutcome outcome, string validationArg = "")
+    public Mole CreateMole(int targetSpawnId, float lifeTime, float moleExpiringDuration, Mole.MoleType type, Mole.MoleOutcome outcome, string validationArg = "", float moveX = 0.0f, float moveY = 0.0f)
     {
         if (!active) return null;
         if (!targetSpawners.ContainsKey(targetSpawnId))
@@ -332,7 +332,7 @@ public class WallManager : MonoBehaviour
             return null;
         }
 
-        targetSpawners[targetSpawnId].SpawnMole(type, outcome, lifeTime, moleExpiringDuration, spawnOrder, validationArg); 
+        targetSpawners[targetSpawnId].SpawnMole(type, outcome, lifeTime, moleExpiringDuration, spawnOrder, validationArg, moveX, moveY); 
         moleCount++;
 
         return targetSpawners[targetSpawnId].GetCurrentMole();

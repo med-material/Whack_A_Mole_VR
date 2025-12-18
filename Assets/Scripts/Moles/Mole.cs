@@ -15,7 +15,7 @@ public abstract class Mole : MonoBehaviour
 {
     public enum MolePopAnswer { Ok, Fake, Expired, Disabled, Paused }
     public enum MoleOutcome { Valid, Distractor } // Node: if a third option is added, revise every condition in Mole.cs, childs and classes that use it (e.g. PaternInterface.cs, etc.)
-    public enum MoleType { SimpleTarget, BallMole, DistractorLeft, DistractorRight, GestureMole, Invisible, BalloonMole, WaspMole } // ALWAYS add new types at the end of the enum to keep compatibility with previous versions. Related to witch prefab is used. (Look at TargetSpawner.cs prefab list)
+    public enum MoleType { SimpleTarget, BallMole, DistractorLeft, DistractorRight, GestureMole, Invisible, BalloonMole, WaspMole, WalletMole } // ALWAYS add new types at the end of the enum to keep compatibility with previous versions. Related to witch prefab is used. (Look at TargetSpawner.cs prefab list)
 
     public bool defaultVisibility = false;
 
@@ -40,7 +40,6 @@ public abstract class Mole : MonoBehaviour
     **/
     public enum States { Enabling, Enabled, Popping, Popped, Missed, Disabling, Expired, Disabled }
 
-    private TargetSpawner parentTargetSpawner;
     private Coroutine timer;
     private float lifeTime;
     private float expiringTime;
@@ -54,15 +53,14 @@ public abstract class Mole : MonoBehaviour
     private bool isOnDisabledCoolDown = false;
     private bool performanceFeedback = true;
 
+    protected TargetSpawner parentTargetSpawner;
     protected States state = States.Disabled;
     protected MoleOutcome moleOutcome = MoleOutcome.Valid;
     protected MoleType moleType = MoleType.SimpleTarget;
     protected string validationArg = ""; // Not used by default: can be used to store data for specific needs (e.g. gesture type for gesture moles)
 
-
     public virtual void Init(TargetSpawner parentSpawner) // Needed when the Mole is instantiated, to avoid calling a method before the Awake and Start methods are called.
     {
-
         // Security check: ensure the Mole is on the correct layer for detection.
         string layerName = LayerMask.LayerToName(gameObject.layer);
         if (layerName != "Target")
@@ -112,6 +110,7 @@ public abstract class Mole : MonoBehaviour
                 child.GetComponent<Renderer>().enabled = isVisible;
         }
     }
+    public virtual void SetMovement(float? X, float? Y) { }
 
     public void SetSpawnOrder(int newSpawnOrder)
     {
@@ -151,7 +150,7 @@ public abstract class Mole : MonoBehaviour
         return id;
     }
     public string GetValidationArg() => validationArg;
-    public void SetValidationArg(string data) => validationArg = data;
+    public virtual void SetValidationArg(string data) => validationArg = data;
 
     public States GetState()
     {

@@ -50,7 +50,7 @@ public class TargetSpawner : MonoBehaviour
         if (performanceFeedback.HasValue) parameters.performanceFeedback = performanceFeedback.Value;
     }
 
-    public Mole SpawnMole(Mole.MoleType type, Mole.MoleOutcome outcome, float lifeTime, float expiringDuration, int spawnOrder, string validationArg = "")
+    public Mole SpawnMole(Mole.MoleType type, Mole.MoleOutcome outcome, float lifeTime, float expiringDuration, int spawnOrder, string validationArg = "", float moveX = 0.0f, float moveY = 0.0f)
     {
         if (_lock)
         {
@@ -67,16 +67,15 @@ public class TargetSpawner : MonoBehaviour
             throw new System.Exception(errorMessage);
         }
 
-        currentMole.Init(this);
         currentMole.SetNormalizedIndex(parameters.normalizedIndex);
         currentMole.SetValidationArg(validationArg);
+        currentMole.SetMovement(moveX, moveY);
         currentMole.SetPerformanceFeedback(parameters.performanceFeedback);
+        currentMole.Init(this);
         currentMole.SetId(globalMoleIncrement++ + id.ToString()); // Formatted as ZZZXXYY (ZZZ is mole rank, XX is the X index, YY is the Y index)
         currentMole.transform.localScale = parameters.localScale;
         currentMole.Enable(lifeTime, expiringDuration, type, outcome, spawnOrder); // TODO future update, check if enable still needed (or change to init)
         stateUpdateEvent.Invoke(true, currentMole);
-
-      
 
         _lock = true;
         return currentMole;
