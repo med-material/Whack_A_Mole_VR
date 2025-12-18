@@ -179,6 +179,9 @@ MonoBehaviour:
     - moleType: 7
       prefab: {fileID: 6482671071913868534, guid: 8372c2bdeab19ba4988b87725ffe5b01,
         type: 3}
+    - moleType: 8
+      prefab: {fileID: 4429302976902235174, guid: 3fa3c7a69cc42a449b4c31e2bd8d2f53,
+        type: 3}
 --- !u!114 &6017334796904896443
 MonoBehaviour:
   m_ObjectHideFlags: 0
