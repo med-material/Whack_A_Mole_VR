@@ -37,6 +37,10 @@ public class InteractiveMole : Mole
     [Tooltip("UnityEvent invoked when the mole starts popping.")]
     [SerializeField] private UnityEvent onMolePopEvent = new UnityEvent();
 
+    [Header("Dwell Progress Visual")]
+    [Tooltip("Optional UI Image for radial fill progress indicator")]
+    [SerializeField] private UnityEngine.UI.Image dwellProgressImage;
+
     [Header("Validation-Aware Animation Events (Optional)")]
     [Tooltip("Auto-subscribe validation events to PlayAnimatorStateByName in OnEnable.")]
     [SerializeField] private bool autoHookValidationEvents = false;
@@ -136,7 +140,33 @@ public class InteractiveMole : Mole
 
     public override bool checkShootingValidity(string arg = "")
     {
-        if (arg == GetValidationArg()) return base.checkShootingValidity(arg);
+        string validationArg = GetValidationArg();
+        
+        Debug.Log($"[InteractiveMole] checkShootingValidity called. Arg: '{arg}', ValidationArg: '{validationArg}', State: {GetState()}");
+        
+        // If no validation argument is required (empty string), allow any gesture
+        if (string.IsNullOrEmpty(validationArg))
+        {
+            Debug.Log($"[InteractiveMole] No validation required - accepting any gesture");
+            return base.checkShootingValidity(arg);
+        }
+        
+        // If validation is required, check if the gesture matches
+        // Special case: "Neutral" means EMG is below threshold, treat it as "waiting for gesture"
+        // Don't reject it, but don't accept it either - let the dwell timer wait for correct gesture
+        if (arg == "Neutral" || arg == "Unknown")
+        {
+            Debug.Log($"[InteractiveMole] Neutral/Unknown gesture - waiting for active gesture");
+            return false; // Don't progress dwell, but also don't show as "invalid"
+        }
+        
+        if (arg == validationArg) 
+        {
+            Debug.Log($"[InteractiveMole] Gesture matches! '{arg}' == '{validationArg}'");
+            return base.checkShootingValidity(arg);
+        }
+        
+        Debug.Log($"[InteractiveMole] Gesture mismatch! '{arg}' != '{validationArg}' - returning false");
         return false;
     }
 
@@ -147,7 +177,13 @@ public class InteractiveMole : Mole
 
     }
 
-    public override void SetLoadingValue(float percent) { }
+    public override void SetLoadingValue(float percent) 
+    {
+        if (dwellProgressImage != null)
+        {
+            dwellProgressImage.fillAmount = Mathf.Clamp01(percent);
+        }
+    }
 
     protected override IEnumerator PlayPopping()
     {

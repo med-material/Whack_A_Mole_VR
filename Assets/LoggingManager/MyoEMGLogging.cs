@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Thalmic.Myo;
 using UnityEngine;
@@ -27,18 +28,22 @@ public class MyoEMGLogging : MonoBehaviour
         }
         if (rightHandEMGPointer == null)
         {
-            Debug.LogError("[MyoEMGLogging] EMGPointer reference is not set in MyoEMGLogging.");
+            Debug.LogError("[MyoEMGPointer reference is not set in MyoEMGLogging.");
             return;
         }
 
         // Define EMG column headers and additional log columns.
         EMGCol = new List<string> { "EMG1", "EMG2", "EMG3", "EMG4", "EMG5", "EMG6", "EMG7", "EMG8" };
-        List<string> logCols = new List<string>(EMGCol)
+        List<string> logCols = new List<string>(EMGCol);
+        logCols.AddRange(new List<string>
         {
             "CurrentGestures",
             "Threshold",
-            "PredictionConfidence"
-        };
+            "PredictionConfidence",
+            "TargetGesture",        // Which gesture mole they're aiming for
+            "GestureMaxEMG",        // Max EMG for that specific gesture
+            "GlobalMaxEMG"          // Global max EMG (for reference)
+        });
 
         // Initialize EMG log collection with specified columns.
         loggingManager.CreateLog("EMG", logCols);
@@ -70,6 +75,8 @@ public class MyoEMGLogging : MonoBehaviour
             return;
         }
 
+        Debug.Log($"[MyoEMGLogging] Starting EMG logging with gesture-specific normalization support.");
+
         // Add event handlers to the Myo device to receive EMG data.
         thalmicMyo._myo.EmgData += onReceiveData;
 
@@ -91,6 +98,11 @@ public class MyoEMGLogging : MonoBehaviour
             emgData["CurrentGestures"] = rightHandEMGPointer.GetCurrentGesture().ToString();
             emgData["Threshold"] = rightHandEMGPointer.getThresholdState();
             emgData["PredictionConfidence"] = rightHandEMGPointer.GetCurrentGestureConfidence().ToString();
+            
+            // NEW: Add gesture-specific normalization data
+            emgData["TargetGesture"] = rightHandEMGPointer.GetTargetGesture();
+            emgData["GestureMaxEMG"] = rightHandEMGPointer.GetTargetGestureMaxEMG();
+            emgData["GlobalMaxEMG"] = rightHandEMGPointer.GetGlobalMaxEMG();
 
             // Time.frameCount (used in LogStore) can only be accessed from the main
             // thread so we use MainThreadDispatcher to enqueue the logging action.
@@ -110,5 +122,7 @@ public class MyoEMGLogging : MonoBehaviour
     {
         if (thalmicMyo != null && thalmicMyo._myo != null) thalmicMyo._myo.EmgData -= onReceiveData;
         isLoggingStarted = false;
+        
+        Debug.Log($"[MyoEMGLogging] Finished logging.");
     }
 }

@@ -141,7 +141,7 @@ public class DevMonitoring : MonoBehaviour
         foreach (InputDevice device in devices)
         {
             // Check if device is a SteamVR device by manufacturer or characteristics
-            if (device.manufacturer != null && (device.manufacturer.ToLower().Contains("valve") || device.manufacturer.ToLower().Contains("htc")))
+            if (device.manufacturer != null && (device.manufacturer.ToLower().Contains("valve") || device.manufacturer.ToLower().Contains("htc") || device.manufacturer.ToLower().Contains("htc_rr")))
             {
                 steamVRDevices.Add(device);
             }

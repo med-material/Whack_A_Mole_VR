@@ -95,7 +95,8 @@ public abstract class Mole : MonoBehaviour
             {"MoleNormalizedIndexX", "NULL"},
             {"MoleNormalizedIndexY", "NULL"},
             {"MoleSurfaceHitLocationX", "NULL"},
-            {"MoleSurfaceHitLocationY", "NULL"}
+            {"MoleSurfaceHitLocationY", "NULL"},
+            {"ExpectedGesture", "NULL"}
         });
     }
 
@@ -454,6 +455,7 @@ public abstract class Mole : MonoBehaviour
             {"MoleIndexY", MoleIndexY},
             {"MoleNormalizedIndexX", normalizedIndex.x},
             {"MoleNormalizedIndexY", normalizedIndex.y},
+            {"ExpectedGesture", validationArg}
         });
     }
 }
