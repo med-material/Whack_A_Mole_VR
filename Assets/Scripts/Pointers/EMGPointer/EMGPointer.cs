@@ -103,7 +103,7 @@ public class EMGPointer : Pointer
         if (virtualHandPrefab != null)
         {
             virtualHand = Instantiate(virtualHandPrefab, transform);
-            virtualHand.transform.localPosition = new Vector3(0f, handOffsetDistance, 0f); // adjust as needed
+            virtualHand.transform.localPosition = new Vector3(0f, 0f, handOffsetDistance); // adjust as needed
             emgClassifiedGestureManager = virtualHand.GetComponent<EMGClassifiedGestureManager>();
 
             // Auto-detect wrist spinner if not assigned
