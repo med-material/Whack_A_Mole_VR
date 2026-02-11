@@ -124,7 +124,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &692096972266222408
 Transform:
   m_ObjectHideFlags: 0
@@ -219,9 +219,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   blendDuration: 0.19
   tactorConnector: {fileID: 0}
-  hapticTactorNumber: 1
+  hapticTactorNumbers: 01000000
   logGestureHaptics: 1
-  pulseOnGestures: 05000000010000000400000003000000
+  noPulseOnGestures: 0000000006000000
 --- !u!1001 &8322612650813118727
 PrefabInstance:
   m_ObjectHideFlags: 0
