@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[ExecuteAlways]
 public class SampleLogger : MonoBehaviour
 {
-    [SerializeField] float samplingFrequency = 0.02f;
+    [SerializeField] protected float samplingFrequency = 0.02f;
     [SerializeField] public DataProvider[] dataProviders; // Array of data providers to gather data from
 
     private TrackerHub trackerHub;
@@ -51,7 +52,7 @@ public class SampleLogger : MonoBehaviour
 
     public void FinishLogging()
     {
-        trackerHub.StopTrackers();
+        GetComponent<TrackerHub>().StopTrackers();
         StopCoroutine("SampleLog");
         isLoggingStarted = false;
     }
@@ -85,9 +86,10 @@ public class SampleLogger : MonoBehaviour
                     }
                 }
             }
-
             loggingManager.Log("Sample", sampleLog);
+
             yield return new WaitForSeconds(sampleFreq);
         }
     }
 }
+

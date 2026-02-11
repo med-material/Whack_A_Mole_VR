@@ -36,7 +36,7 @@ public enum TargetType
 public class LoggingManager : MonoBehaviour
 {
     // sampleLog[COLUMN NAME][COLUMN NO.] = [OBJECT] (fx a float, int, string, bool)
-    private Dictionary<string, LogStore> logsList = new Dictionary<string, LogStore>();
+    public Dictionary<string, LogStore> logsList = new Dictionary<string, LogStore>();
 
     [Header("Logging Settings")]
     [Tooltip("The Meta Collection will contain a session ID, a device ID and a timestamp.")]
@@ -151,19 +151,24 @@ public class LoggingManager : MonoBehaviour
         }
         LogStore logStore = new LogStore(collectionLabel, email, sessionID, logStringOverTime, headers:headers);
         logsList.Add(collectionLabel, logStore);
+        Debug.Log("Collection " + collectionLabel + " created.");
+        Debug.Log(logsList);
     }
 
 
     public void Log(string collectionLabel, Dictionary<string, object> logData)
     {
+        Debug.Log("Logging to " + collectionLabel + " with data: " + logData);
         //checks if the log was created and creates it if not
         if (logsList.TryGetValue(collectionLabel, out LogStore logStore))
         {
+            Debug.Log("Collection " + collectionLabel + " already exists. Adding data to it.");
             AddToLogstore(logStore, logData);
         }
         //this will be executed only once if the log has not been created.
         else
         {
+            Debug.Log("Collection " + collectionLabel + " does not exist. Creating it and adding data to it.");
             LogStore newLogStore = new LogStore(collectionLabel, email, sessionID, logStringOverTime);
             AddToLogstore(newLogStore, logData);
             logsList.Add(collectionLabel, newLogStore);
@@ -172,6 +177,7 @@ public class LoggingManager : MonoBehaviour
 
     private void AddToLogstore(LogStore logStore, Dictionary<string, object> logData)
     {
+        Debug.Log("Adding data to log store " + logStore.Label + " with data: " + logData);
         foreach (KeyValuePair<string, object> pair in logData)
         {
             logStore.Add(pair.Key, pair.Value);
@@ -318,7 +324,7 @@ public class LoggingManager : MonoBehaviour
                 logsList.Remove(collectionLabel);
             }
             Save(collectionLabel, tmpLogStore, TargetType.CSV);
-            Save(collectionLabel, tmpLogStore, TargetType.MySql);
+            //Save(collectionLabel, tmpLogStore, TargetType.MySql);
 
             //meta collection is a special collection that contains all informations about the game and the patient.
             //we need to have this collection in the logsList before that the game start.
