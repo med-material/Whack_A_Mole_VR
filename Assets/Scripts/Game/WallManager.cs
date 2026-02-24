@@ -199,8 +199,7 @@ public class WallManager : MonoBehaviour
     private void UpdateWallLogs()
     {
         MeshRenderer mesh = GetComponent<MeshRenderer>();
-
-        loggerNotifier.InitPersistentEventParameters(new Dictionary<string, object>(){
+        Dictionary<string, object> data = new Dictionary<string, object>(){
             {"WallRowCount", rowCount},
             {"WallColumnCount", columnCount},
             {"WallSizeX", wallSize.x},
@@ -217,7 +216,10 @@ public class WallManager : MonoBehaviour
             {"WallCenterZ", meshCenter.z},
             {"WallCurveRatioX", xCurveRatio},
             {"WallCurveRatioY", yCurveRatio}
-        });
+        };
+        loggerNotifier.InitPersistentEventParameters(data);
+
+        loggerNotifier.NotifyLogger("Wall Updated", EventLogger.EventType.WallEvent, data);
     }
 
     void OnValidate()

@@ -117,6 +117,10 @@ public class EventLogger : MonoBehaviour
     {
         switch (datas["Event"])
         {
+            case "Wall Created":
+            case "Wall Updated":
+                SaveEventDatas(datas);
+                break;
             case "Game Started":
                 trackerHub.StartTrackers();
                 gameId = GenerateUid();
