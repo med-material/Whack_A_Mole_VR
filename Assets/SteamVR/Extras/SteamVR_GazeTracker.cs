@@ -53,7 +53,7 @@ namespace Valve.VR.Extras
                 {
                     Vector3 intersect = hmdTrackedObject.position + hmdTrackedObject.forward * enter;
                     float dist = Vector3.Distance(intersect, transform.position);
-                    //Debug.Log("Gaze dist = " + dist);
+                    Debug.Log("Gaze dist = " + dist);
                     if (dist < gazeInCutoff && !isInGaze)
                     {
                         isInGaze = true;

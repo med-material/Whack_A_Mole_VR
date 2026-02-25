@@ -336,6 +336,14 @@ public class LogStore
         {
             return ((Vector3)arg).ToString("0.0000").Replace(",", ".");
         }
+        if (arg is Vector2)
+        {
+            return ((Vector2)arg).ToString("0.0000").Replace(",", ".");
+        }
+        if (arg is null)
+        {
+            return "null";
+        }
         return arg.ToString();
     }
 

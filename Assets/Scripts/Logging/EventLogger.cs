@@ -25,8 +25,8 @@ public class EventLogger : MonoBehaviour
 {
     public enum EventType { MoleEvent, WallEvent, GameEvent, ModifierEvent, PointerEvent, DefaultEvent }
 
-    [SerializeField]
-    private PupilLabs.TimeSync timeSync;
+    //[SerializeField]
+    //private PupilLabs.TimeSync timeSync;
 
     private float previousEventTime = -1;
     private TrackerHub trackerHub;
@@ -255,8 +255,8 @@ public class EventLogger : MonoBehaviour
         }
 
         datas["TimeSinceLastEvent"] = GetPreviousEventTimeDiff().ToString("0.0000").Replace(",", ".");
-        datas["PupilTime"] = timeSync != null ? timeSync.GetPupilTimestamp().ToString().Replace(",", ".") : "NULL";
-        datas["UnityToPupilTimeOffset"] = timeSync != null ? timeSync.UnityToPupilTimeOffset.ToString().Replace(",", ".") : "NULL";
+        //datas["PupilTime"] = timeSync != null ? timeSync.GetPupilTimestamp().ToString().Replace(",", ".") : "NULL";
+        //datas["UnityToPupilTimeOffset"] = timeSync != null ? timeSync.UnityToPupilTimeOffset.ToString().Replace(",", ".") : "NULL";
         datas["GameId"] = gameId;
 
         foreach (KeyValuePair<string, object> pair in persistentLog)
