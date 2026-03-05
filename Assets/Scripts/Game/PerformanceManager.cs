@@ -95,6 +95,7 @@ public class PerformanceManager : MonoBehaviour
     private Dictionary<ControllerName, PerfData> perfData = new Dictionary<ControllerName, PerfData>();
     public PerfData perfR = new PerfData();
     public PerfData perfL = new PerfData();
+    public bool isRecordingPerformance = false;
 
     // Average configuration
     // we stopped using a memory limit based on "n", because counting operations is not equal
@@ -260,7 +261,7 @@ public class PerformanceManager : MonoBehaviour
         {
             // The performance resets when game starts playing (changing to play, from any other state).
             // Otherwise our calculations dont make sense.
-            ResetPerfData();
+            //ResetPerfData(); // Only reset performance data if a new baseline program starts.
         }
     }
 
@@ -402,10 +403,15 @@ public class PerformanceManager : MonoBehaviour
         }
     }
 
+    public void SetRecording(bool isRecording) {
+        Debug.Log("recording is:" + isRecording);
+        isRecordingPerformance = isRecording;
+    }
+
     // Set the judgement type for measuring performance DURING exec.
     public void SetJudgementType(JudgementType judgement) {
         judgementType = judgement;
-        ResetPerfData();
+        //ResetPerfData(); // ResetPerfData() only via manual call.
     }
 
     /// <summary>
@@ -529,6 +535,9 @@ public class PerformanceManager : MonoBehaviour
     // Updates the moving average for action performance.
     private void UpdateActionMovingAverage(float val, PerfData perf, bool thresholdMax = true)
     {
+        // Early exit if we are not recording (Baseline).
+        if (!isRecordingPerformance) return;
+
         // Early exit if value is invalid.
         if (val == -1f) return;
 
@@ -614,6 +623,9 @@ public class PerformanceManager : MonoBehaviour
    // Threshold max determines the direction of what is considered "good".
     private void UpdateInstantMovingAverage(float val, PerfData perf, bool thresholdMax = true)
     {
+        // Early exit if we are not recording (Baseline).
+        if (!isRecordingPerformance) return;
+
         // Early exit if value is invalid.
         if (val == -1f) return;
 
@@ -726,6 +738,8 @@ public class PerformanceManager : MonoBehaviour
     /// <param name="perf">The performance data to be updated.</param>
     /// <param name="thresholdMax">Determines if the method should prioritize max thresholds (true) or not (false).</param>
     private void UpdateActionThresholds(float val, PerfData perf, bool thresholdMax = true) {
+        // Early exit if we are not recording (Baseline).
+        if (!isRecordingPerformance) return;
 
         // Early exit if value is invalid.
         if (val == -1f) return;
@@ -834,6 +848,9 @@ public class PerformanceManager : MonoBehaviour
     /// <param name="thresholdMax">Determines if the method should prioritize max thresholds (true) or not (false).</param>
     private void UpdateInstantThresholds(float val, PerfData perf, bool thresholdMax = true)
     {
+        // Early exit if we are not recording (Baseline).
+        if (!isRecordingPerformance) return;
+
         // Early exit if value is -1 (invalid or sentinel value).
         if (val == -1f) return;
 
@@ -936,13 +953,15 @@ public class PerformanceManager : MonoBehaviour
 
     private void UpdateInstantAvgSpeedThresholds(float val, PerfData perf)
     {
+        // Early exit if we are not recording (Baseline).
+        if (!isRecordingPerformance) return;
+
         perf.upperThresholdInstant = perf.upperThresholdAction;
         perf.lowerThresholdInstant = perf.lowerThresholdAction;
     }
 
     // Max-based Calculator
     private float CalculateInstantMaxUnitSpeed(PerfData perf) {
-
         // if we don't have a previous position, abort calculation.
         if (perf.actionStartPos == Vector3.zero) return -1f;
 

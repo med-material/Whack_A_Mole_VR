@@ -15,6 +15,7 @@ public class PatternInterface : MonoBehaviour
     private MotorSpaceManager motorspaceManager;
     private LoggerNotifier loggerNotifier;
     private PlayerPanel playerPanel;
+    private PerformanceManager performanceManager;
     private float randVar = 0f;
 
     private Dictionary<int, Mole> targetsList = null;
@@ -72,6 +73,7 @@ public class PatternInterface : MonoBehaviour
         gameDirector = FindObjectOfType<GameDirector>();
         motorspaceManager = FindObjectOfType<MotorSpaceManager>();
         playerPanel = FindObjectOfType<PlayerPanel>();
+        performanceManager = FindObjectOfType<PerformanceManager>();
     }
 
     void Start()
@@ -110,6 +112,10 @@ public class PatternInterface : MonoBehaviour
 
                 case "WALL":
                     SetWall(action);
+                    break;
+
+                case "CALIBRATION":
+                    SetCalibrate(action["TYPE"], action["STATE"]);
                     break;
 
                 case "FEEDBACK":
@@ -170,6 +176,19 @@ public class PatternInterface : MonoBehaviour
     {
         gameDirector.StopGame();
     }
+
+    // Updates one or multiple Wall's properties
+    public void SetCalibrate(string type, string state) {
+        if (type == "PERFORMANCE") {
+            if (state == "START") {
+                performanceManager.ResetPerfData();
+                performanceManager.SetRecording(true);
+            } else if (state == "END") {
+                performanceManager.SetRecording(false);
+            }
+        }
+    }
+    
 
     // Updates one or multiple Wall's properties
     private void SetWall(Dictionary<string, string> action)
