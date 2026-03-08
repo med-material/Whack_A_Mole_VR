@@ -7,7 +7,11 @@ public class MyoEMGLogging : MonoBehaviour
 {
     [SerializeField] private LoggingManager loggingManager;
     [SerializeField] private EMGPointer rightHandEMGPointer;
+    [SerializeField] private EMGPointer leftHandEMGPointer;
     [SerializeField] public ThalmicMyo thalmicMyo;
+
+    private EMGPointer activeEMGPointer; // dynamically resolved active EMG pointer based on current controller setup
+    private GameDirector gameDirector;
 
     List<string> EMGCol;
     private bool isLoggingStarted = false;
@@ -25,10 +29,24 @@ public class MyoEMGLogging : MonoBehaviour
             Debug.LogError("[MyoEMGLogging] ThalmicMyo reference is not set in MyoEMGLogging.");
             return;
         }
-        if (rightHandEMGPointer == null)
+
+        // Subscribe to GameDirector state updates so logging starts/stops with gameplay
+        gameDirector = FindObjectOfType<GameDirector>();
+        if (gameDirector != null)
         {
-            Debug.LogError("[MyoEMGLogging] EMGPointer reference is not set in MyoEMGLogging.");
-            return;
+            gameDirector.stateUpdate.AddListener(OnGameDirectorStateUpdate);
+        }
+        else
+        {
+            Debug.LogWarning("[MyoEMGLogging] GameDirector not found. EMG logging will not auto-start with game state.");
+        }
+
+        // Try to auto-resolve active EMG pointer if not explicitly wired
+        RefreshActiveEMGPointer();
+
+        if (activeEMGPointer == null)
+        {
+            Debug.LogWarning("[MyoEMGLogging] No active EMGPointer found. Will try to resolve dynamically when EMG data arrives.");
         }
 
         // Define EMG column headers and additional log columns.
@@ -42,6 +60,38 @@ public class MyoEMGLogging : MonoBehaviour
 
         // Initialize EMG log collection with specified columns.
         loggingManager.CreateLog("EMG", logCols);
+    }
+
+    private void OnDestroy()
+    {
+        if (gameDirector != null)
+        {
+            gameDirector.stateUpdate.RemoveListener(OnGameDirectorStateUpdate);
+        }
+        FinishLogging();
+    }
+
+    private void RefreshActiveEMGPointer()
+    {
+        // Prefer explicitly assigned left/right based on which is enabled, otherwise fall back to any enabled EMGPointer in scene
+        EMGPointer candidate = null;
+
+        if (leftHandEMGPointer != null && leftHandEMGPointer.isActiveAndEnabled)
+        {
+            candidate = leftHandEMGPointer;
+        }
+        else if (rightHandEMGPointer != null && rightHandEMGPointer.isActiveAndEnabled)
+        {
+            candidate = rightHandEMGPointer;
+        }
+        else
+        {
+            // find whichever EMGPointer is currently enabled
+            candidate = FindObjectsOfType<EMGPointer>()
+                .FirstOrDefault(p => p != null && p.isActiveAndEnabled && p.gameObject.activeInHierarchy);
+        }
+
+        activeEMGPointer = candidate;
     }
 
     public void OnGameDirectorStateUpdate(GameDirector.GameState newState)
@@ -83,19 +133,40 @@ public class MyoEMGLogging : MonoBehaviour
 
         try
         {
-            // Format the EMG data into a dictionary {"EMG_i", data.Emg[i]}
-            Dictionary<string, object> emgData = EMGCol
-                .Select((col, i) => new { col, value = data.Emg[i] })
-                .ToDictionary(x => x.col, x => (object)x.value);
+            // Copy raw EMG data to avoid accessing event args off-thread later
+            int[] emgCopy = new int[8];
+            for (int i = 0; i < 8; i++) emgCopy[i] = data.Emg[i];
 
-            emgData["CurrentGestures"] = rightHandEMGPointer.GetCurrentGesture().ToString();
-            emgData["Threshold"] = rightHandEMGPointer.getThresholdState();
-            emgData["PredictionConfidence"] = rightHandEMGPointer.GetCurrentGestureConfidence().ToString();
-
-            // Time.frameCount (used in LogStore) can only be accessed from the main
-            // thread so we use MainThreadDispatcher to enqueue the logging action.
+            // Do ALL Unity API work on the main thread
             MainThreadDispatcher.Enqueue(() =>
             {
+                // Ensure we are logging from the currently active EMG pointer (Left/Right depending on setup)
+                if (activeEMGPointer == null || !activeEMGPointer.isActiveAndEnabled)
+                {
+                    RefreshActiveEMGPointer();
+                }
+
+                // Fallback: if still null, try right then left just for data continuity
+                EMGPointer pointerForLog = activeEMGPointer ?? rightHandEMGPointer ?? leftHandEMGPointer;
+
+                // Format the EMG data into a dictionary {"EMG_i", data.Emg[i]}
+                Dictionary<string, object> emgData = EMGCol
+                    .Select((col, i) => new { col, value = emgCopy[i] })
+                    .ToDictionary(x => x.col, x => (object)x.value);
+
+                if (pointerForLog != null)
+                {
+                    emgData["CurrentGestures"] = pointerForLog.GetCurrentGesture().ToString();
+                    emgData["Threshold"] = pointerForLog.getThresholdState();
+                    emgData["PredictionConfidence"] = pointerForLog.GetCurrentGestureConfidence().ToString();
+                }
+                else
+                {
+                    emgData["CurrentGestures"] = "Unknown";
+                    emgData["Threshold"] = "below";
+                    emgData["PredictionConfidence"] = "Uncertain";
+                }
+
                 loggingManager.Log("EMG", emgData);
             });
         }
