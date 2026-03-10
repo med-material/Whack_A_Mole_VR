@@ -185,6 +185,7 @@ public class PatternInterface : MonoBehaviour
                 performanceManager.SetRecording(true);
             } else if (state == "END") {
                 performanceManager.SetRecording(false);
+                performanceManager.ResetDataKeepThreshold();
             }
         }
     }

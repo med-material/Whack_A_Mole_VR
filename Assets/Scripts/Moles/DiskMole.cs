@@ -80,6 +80,7 @@ public class DiskMole : Mole
     private Animation animationPlayer;
     private Coroutine colorAnimation;
     private string playingClip = "";
+    Vector3 normalSize = new Vector3(1f,1f,1f);
 
     protected override void Start()
     {
@@ -90,7 +91,7 @@ public class DiskMole : Mole
         audioSource = gameObject.GetComponent<AudioSource>();
         PlayAnimation("EnableDisable");
         meshMaterial.color = disabledColor;
-
+        normalSize = transform.localScale;
         base.Start();
     }
 
@@ -217,7 +218,6 @@ public class DiskMole : Mole
         float popScale = feedback + 1.0f;
         // float popScale = (feedback * 0.45f) + 1.05f; // other possibility
         Debug.Log("PopScale: " + popScale);
-        Vector3 normalSize = transform.localScale;
         Vector3 feedbackSize = transform.localScale * popScale;
         checkmark.color = colorFeedback;
         float elapsedTime = 0;

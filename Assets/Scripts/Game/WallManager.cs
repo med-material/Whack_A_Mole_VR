@@ -494,6 +494,9 @@ public class WallManager : MonoBehaviour
                 yield return new WaitForSeconds(animationDelay);
             }
         }
+
+        // At the end of the feedback, cleanup perf data.
+        performanceManager.ResetDataKeepThreshold();
     }
 
     // Returns a random, inactive Mole. Can block the game if no Mole can be found. May need to be put in a coroutine.

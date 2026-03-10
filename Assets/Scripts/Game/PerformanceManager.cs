@@ -246,12 +246,21 @@ public class PerformanceManager : MonoBehaviour
 
     // Reset performance data to its default state.
     public void ResetPerfData() {
-        // Resets History, but maintains moving average.
         perfR = new PerfData();
         perfL = new PerfData();
         perfData[ControllerName.Left] = perfL;
         perfData[ControllerName.Right] = perfR;
     }
+
+    // Resets History, but maintains moving average.
+    public void ResetDataKeepThreshold() {
+        perfData[ControllerName.Left].lastJudgesByMole.Clear();
+        perfData[ControllerName.Right].lastJudgesByMole.Clear();
+        perfData[ControllerName.Left].moleShootOrder.Clear();
+        perfData[ControllerName.Right].moleShootOrder.Clear();
+        
+    }
+
 
     // Callback to handle game state changes.
     // Handle pointer shoot action and update performance metrics accordingly.
