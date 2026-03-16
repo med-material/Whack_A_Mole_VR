@@ -632,8 +632,7 @@ public class PerformanceManager : MonoBehaviour
    // Threshold max determines the direction of what is considered "good".
     private void UpdateInstantMovingAverage(float val, PerfData perf, bool thresholdMax = true)
     {
-        // Early exit if we are not recording (Baseline).
-        if (!isRecordingPerformance) return;
+        
 
         // Early exit if value is invalid.
         if (val == -1f) return;
@@ -692,6 +691,9 @@ public class PerformanceManager : MonoBehaviour
         perf.actionPeakSpeedVals.Add(perf.instantMemoryBestVal);        
         perf.instantMemoryBestVals[index] = perf.instantMemoryBestVal;
         perf.instantMemoryWorstVals[index] = perf.instantMemoryWorstVal;
+
+        // Early exit if we are not recording (Baseline).
+        if (!isRecordingPerformance) return;
 
         // Determine how many of the values we can use for our average
         int averageMaxSize = perf.instantMemoryIndex < 5 ? perf.instantMemoryIndex+1 : 5;
