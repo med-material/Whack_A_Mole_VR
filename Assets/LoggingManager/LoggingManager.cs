@@ -137,6 +137,12 @@ public class LoggingManager : MonoBehaviour
         this.savePath = path;
     }
 
+    public void SetFilePrefix(string prefix)
+    {
+        if (!string.IsNullOrWhiteSpace(prefix))
+            filePrefix = prefix;
+    }
+
     public void SetEmail(string newEmail)
     {
         email = newEmail;

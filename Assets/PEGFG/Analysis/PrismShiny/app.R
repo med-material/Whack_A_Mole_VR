@@ -43,6 +43,12 @@ read_session_state <- function(path) {
   as.character(data$SessionState[[1]])
 }
 
+read_meta_value <- function(path, key) {
+  data <- clean_log_df(safe_read_csv(path))
+  if (!(key %in% names(data)) || nrow(data) == 0) return(NA_character_)
+  as.character(data[[key]][[1]])
+}
+
 as_num <- function(x) suppressWarnings(as.numeric(x))
 as_time <- function(x) suppressWarnings(as.POSIXct(x, tz = "UTC"))
 
@@ -59,13 +65,15 @@ discover_sessions <- function(log_dir) {
       file_type = str_match(file_name, "_(Meta|Event|Sample|Summary)\\.csv$")[, 2],
       session_id = map_chr(path, read_session_id),
       timestamp = map_chr(path, read_session_timestamp),
-      session_state = map_chr(path, ~if (grepl("_Meta\\.csv$", .x)) read_session_state(.x) else NA_character_)
+      session_state = map_chr(path, ~if (grepl("_Meta\\.csv$", .x)) read_session_state(.x) else NA_character_),
+      input_mode_label = map_chr(path, ~if (grepl("_Meta\\.csv$", .x)) read_meta_value(.x, "InputModeLabel") else NA_character_)
     ) |>
     filter(!is.na(session_id), session_id != "") |>
     group_by(session_id) |>
     summarise(
       timestamp = first(na.omit(timestamp)),
       session_state = first(na.omit(session_state)),
+      input_mode_label = first(na.omit(input_mode_label)),
       Meta = first(path[file_type == "Meta"]),
       Event = first(path[file_type == "Event"]),
       Sample = first(path[file_type == "Sample"]),
@@ -212,6 +220,38 @@ compute_interpretation <- function(aftereffect_row) {
     correction_value = correction,
     correction_display = correction_display,
     signed_shift_label = signed_shift_label
+  )
+}
+
+compute_variability <- function(aftereffect_row) {
+  if (nrow(aftereffect_row) == 0) {
+    return(list(
+      baseline_sd = NA_real_,
+      post_sd = NA_real_,
+      delta_sd = NA_real_,
+      variability_label = "No variability estimate"
+    ))
+  }
+
+  baseline_sd <- as_num(aftereffect_row$BaselineSd[[1]])
+  post_sd <- as_num(aftereffect_row$PostSd[[1]])
+  delta_sd <- post_sd - baseline_sd
+
+  variability_label <- ifelse(
+    is.na(delta_sd),
+    "Variability unavailable",
+    ifelse(
+      abs(delta_sd) < 0.1,
+      "Consistency stayed about the same",
+      ifelse(delta_sd > 0, "Participant became less consistent", "Participant became more consistent")
+    )
+  )
+
+  list(
+    baseline_sd = baseline_sd,
+    post_sd = post_sd,
+    delta_sd = delta_sd,
+    variability_label = variability_label
   )
 }
 
@@ -411,7 +451,18 @@ extract_projected_attempts <- function(sample_data, event_data, selected_task, t
           hit_relative_y = hit_y - target_y,
           window_start = window_start
         ) |>
-        filter(!is.na(relative_x), !is.na(relative_y), is.finite(relative_x), is.finite(relative_y))
+        filter(
+          !is.na(ray_t),
+          is.finite(ray_t),
+          ray_t > 0,
+          ray_t < 5,
+          !is.na(relative_x),
+          !is.na(relative_y),
+          is.finite(relative_x),
+          is.finite(relative_y),
+          abs(relative_x) < 1.5,
+          abs(relative_y) < 1.5
+        )
     }
   )
 }
@@ -542,6 +593,179 @@ build_attempt_error_plot <- function(event_data, selected_task = "Exposure") {
     theme(legend.position = "top")
 }
 
+extract_quality_trials <- function(event_data, selected_task, selected_block) {
+  if (nrow(event_data) == 0) return(tibble())
+
+  if (selected_task == "Exposure") {
+    return(
+      event_data |>
+        filter(TaskMode == selected_task, BlockType == selected_block, Event %in% c("Mole Hit", "Mole Missed")) |>
+        mutate(
+          TrialIndex = as_num(AttemptIndex),
+          absolute_error = as_num(HitDistanceMeters),
+          outcome = ifelse(Event == "Mole Hit", "Hit", "Miss")
+        ) |>
+        filter(!is.na(TrialIndex), !is.na(absolute_error))
+    )
+  }
+
+  if (selected_task == "OpenLoop") {
+    return(
+      event_data |>
+        filter(TaskMode == selected_task, BlockType == selected_block, Event == "Trial Accepted") |>
+        mutate(
+          TrialIndex = as_num(TrialIndex),
+          signed_error = as_num(SignedOffsetCm),
+          absolute_error = abs(signed_error),
+          outcome = "Accepted"
+        ) |>
+        filter(!is.na(TrialIndex), !is.na(absolute_error))
+    )
+  }
+
+  if (selected_task == "LineBisection") {
+    return(
+      event_data |>
+        filter(TaskMode == selected_task, BlockType == selected_block, Event == "Trial Accepted") |>
+        mutate(
+          TrialIndex = as_num(TrialIndex),
+          signed_error = as_num(ErrorCm),
+          absolute_error = abs(signed_error),
+          outcome = "Accepted"
+        ) |>
+        filter(!is.na(TrialIndex), !is.na(absolute_error))
+    )
+  }
+
+  if (selected_task == "Landmark") {
+    return(
+      event_data |>
+        filter(TaskMode == selected_task, BlockType == selected_block, Event == "Trial Accepted") |>
+        mutate(
+          TrialIndex = as_num(TrialIndex),
+          absolute_error = ifelse(as_num(IsCorrect) == 1, 0, 1),
+          outcome = ifelse(as_num(IsCorrect) == 1, "Correct", "Incorrect")
+        ) |>
+        filter(!is.na(TrialIndex), !is.na(absolute_error))
+    )
+  }
+
+  tibble()
+}
+
+compute_quality_metrics <- function(quality_trials, selected_task) {
+  if (nrow(quality_trials) == 0) {
+    return(list(
+      mean_abs_error = NA_real_,
+      median_abs_error = NA_real_,
+      outlier_count = NA_integer_,
+      outlier_threshold = NA_real_,
+      slope = NA_real_,
+      trend_label = "No quality data",
+      hit_rate = NA_real_,
+      trial_count = 0
+    ))
+  }
+
+  x <- quality_trials$TrialIndex
+  y <- quality_trials$absolute_error
+
+  q1 <- as.numeric(quantile(y, 0.25, na.rm = TRUE))
+  q3 <- as.numeric(quantile(y, 0.75, na.rm = TRUE))
+  iqr <- q3 - q1
+  outlier_threshold <- q3 + 1.5 * iqr
+  outlier_count <- sum(y > outlier_threshold, na.rm = TRUE)
+
+  slope <- if (length(unique(x)) > 1) {
+    as.numeric(coef(lm(absolute_error ~ TrialIndex, data = quality_trials))[["TrialIndex"]])
+  } else {
+    NA_real_
+  }
+
+  trend_label <- ifelse(
+    is.na(slope),
+    "No drift estimate",
+    ifelse(abs(slope) < 0.001, "Performance stayed stable over trials",
+           ifelse(slope > 0, "Error increased over trials", "Error decreased over trials"))
+  )
+
+  hit_rate <- if (selected_task == "Exposure") {
+    mean(quality_trials$outcome == "Hit", na.rm = TRUE)
+  } else {
+    NA_real_
+  }
+
+  list(
+    mean_abs_error = mean(y, na.rm = TRUE),
+    median_abs_error = median(y, na.rm = TRUE),
+    outlier_count = outlier_count,
+    outlier_threshold = outlier_threshold,
+    slope = slope,
+    trend_label = trend_label,
+    hit_rate = hit_rate,
+    trial_count = nrow(quality_trials)
+  )
+}
+
+quality_units_label <- function(selected_task) {
+  if (selected_task == "Exposure") {
+    return("m")
+  }
+  if (selected_task %in% c("OpenLoop", "LineBisection")) {
+    return("cm")
+  }
+  if (selected_task == "Landmark") {
+    return("task units")
+  }
+  "units"
+}
+
+quality_error_label <- function(selected_task) {
+  if (selected_task == "Exposure") {
+    return("Distance from target center on the board")
+  }
+  if (selected_task == "OpenLoop") {
+    return("Distance from the true target location")
+  }
+  if (selected_task == "LineBisection") {
+    return("Distance from the true midpoint")
+  }
+  if (selected_task == "Landmark") {
+    return("Trial error")
+  }
+  "Absolute error"
+}
+
+build_quality_plot <- function(quality_trials, selected_task, selected_block) {
+  if (nrow(quality_trials) == 0) {
+    return(
+      ggplot() +
+        annotate("text", x = 1, y = 1, label = "No quality data found for this task/block") +
+        theme_void()
+    )
+  }
+
+  metrics <- compute_quality_metrics(quality_trials, selected_task)
+
+  ggplot(quality_trials, aes(x = TrialIndex, y = absolute_error)) +
+    geom_line(color = "#94a3b8", linewidth = 0.8) +
+    geom_point(
+      aes(color = outcome),
+      size = 2.8
+    ) +
+    geom_hline(yintercept = metrics$outlier_threshold, linetype = "dashed", color = "#dc2626") +
+    geom_smooth(method = "lm", se = FALSE, color = "#1d4ed8", linewidth = 0.8) +
+    labs(
+      title = paste(selected_task, selected_block, "Quality Overview"),
+      subtitle = "Per-trial distance from the intended target, with unusually large errors and overall trend",
+      x = "Trial / Attempt",
+      y = paste(quality_error_label(selected_task), "(", quality_units_label(selected_task), ")"),
+      color = NULL
+    ) +
+    theme_minimal(base_size = 13) +
+    theme(legend.position = "top")
+}
+
 summary_compact_table <- function(summary_data) {
   summary_data |>
     filter(SummaryType %in% c("Aftereffect", "BlockMetric")) |>
@@ -580,6 +804,18 @@ ui <- fluidPage(
           ),
           h3("Session Summary Table"),
           DTOutput("summary_table")
+        ),
+        tabPanel(
+          "Quality",
+          fluidRow(
+            column(3, selectInput("quality_task", "Task", choices = c("Exposure", "OpenLoop"))),
+            column(3, selectInput("quality_block", "Block", choices = c("Exposure", "Baseline", "Post")))
+          ),
+          fluidRow(
+            column(4, uiOutput("quality_cards")),
+            column(8, plotlyOutput("quality_plot", height = "420px"))
+          ),
+          DTOutput("quality_table")
         ),
         tabPanel(
           "Spatial",
@@ -629,7 +865,13 @@ server <- function(input, output, session) {
     labels <- ifelse(
       is.na(sessions$timestamp) | sessions$timestamp == "",
       sessions$session_id,
-      paste0(sessions$timestamp, " | ", sessions$session_id)
+      paste0(
+        sessions$timestamp,
+        " | ",
+        ifelse(is.na(sessions$input_mode_label) | sessions$input_mode_label == "", "unknown", sessions$input_mode_label),
+        " | ",
+        substr(sessions$session_id, 1, 8)
+      )
     )
 
     selectInput("session_id", "Session", choices = setNames(sessions$session_id, labels))
@@ -661,7 +903,9 @@ server <- function(input, output, session) {
         Magnitude = as_num(Magnitude),
         SignedDelta = as_num(SignedDelta),
         BaselineValue = as_num(BaselineValue),
-        PostValue = as_num(PostValue)
+        PostValue = as_num(PostValue),
+        BaselineSd = as_num(BaselineSd),
+        PostSd = as_num(PostSd)
       ) |>
       slice(1)
 
@@ -676,6 +920,7 @@ server <- function(input, output, session) {
     }
 
     interpretation <- compute_interpretation(aftereffect)
+    variability <- compute_variability(aftereffect)
     is_exposure_task <- identical(aftereffect$TaskMode[[1]], "Exposure")
 
     cards <- list(
@@ -698,6 +943,16 @@ server <- function(input, output, session) {
           div(class = "metric-sub", interpretation$strength_label)
       ),
       div(class = "metric-card",
+          div(class = "metric-title", "Consistency"),
+          div(class = "metric-value", ifelse(
+            is.na(variability$baseline_sd) || is.na(variability$post_sd),
+            "N/A",
+            sprintf("%.2f -> %.2f", variability$baseline_sd, variability$post_sd)
+          )),
+          div(class = "metric-sub", paste("Baseline SD to post SD", aftereffect$MetricUnits[[1]])),
+          div(class = "metric-sub", variability$variability_label)
+      ),
+      div(class = "metric-card",
           div(class = "metric-title", "Baseline / Post"),
           div(class = "metric-value", sprintf("%.2f -> %.2f", aftereffect$BaselineValue[[1]], aftereffect$PostValue[[1]])),
           div(class = "metric-sub", "Participant-specific reference and post value")
@@ -714,7 +969,17 @@ server <- function(input, output, session) {
             div(class = "metric-sub", "Positive means the post block ended closer to the target than baseline."),
             div(class = "metric-sub", interpretation$correction_label)
         )
-      ), after = 3)
+      ), after = 4)
+    } else {
+      cards <- append(cards, list(
+        div(class = "metric-card",
+            div(class = "metric-title", "Change Toward Target"),
+            div(class = "metric-value", interpretation$correction_display),
+            div(class = "metric-sub", interpretation$direction_label),
+            div(class = "metric-sub", "Compares absolute baseline error with absolute post error."),
+            div(class = "metric-sub", interpretation$correction_label)
+        )
+      ), after = 4)
     }
 
     do.call(tagList, cards)
@@ -739,9 +1004,22 @@ server <- function(input, output, session) {
     event_data <- current_data()$event
     tasks <- sort(unique(na.omit(event_data$TaskMode)))
     if (length(tasks) == 0) tasks <- c("Exposure")
+    updateSelectInput(session, "quality_task", choices = tasks, selected = if ("Exposure" %in% tasks) "Exposure" else tasks[[1]])
     updateSelectInput(session, "spatial_task", choices = tasks, selected = if ("Exposure" %in% tasks) "Exposure" else tasks[[1]])
     updateSelectInput(session, "trajectory_task", choices = tasks, selected = if ("Exposure" %in% tasks) "Exposure" else tasks[[1]])
   })
+
+  observeEvent(input$quality_task, {
+    event_data <- current_data()$event
+    blocks <- event_data |>
+      filter(TaskMode == input$quality_task) |>
+      pull(BlockType) |>
+      na.omit() |>
+      unique() |>
+      sort()
+    if (length(blocks) == 0) blocks <- c("Exposure")
+    updateSelectInput(session, "quality_block", choices = blocks, selected = if ("Exposure" %in% blocks) "Exposure" else blocks[[1]])
+  }, ignoreNULL = FALSE)
 
   observeEvent(input$spatial_task, {
     event_data <- current_data()$event
@@ -771,6 +1049,95 @@ server <- function(input, output, session) {
     }
 
     selectInput("trajectory_attempt", "Highlighted Attempt", choices = attempts, selected = attempts[[1]])
+  })
+
+  output$quality_cards <- renderUI({
+    req(input$quality_task, input$quality_block)
+    quality_trials <- extract_quality_trials(current_data()$event, input$quality_task, input$quality_block)
+    metrics <- compute_quality_metrics(quality_trials, input$quality_task)
+    units_label <- quality_units_label(input$quality_task)
+    error_label <- quality_error_label(input$quality_task)
+
+    trend_value <- ifelse(
+      is.na(metrics$slope),
+      "N/A",
+      sprintf("%.4f %s per trial", metrics$slope, units_label)
+    )
+
+    if (nrow(quality_trials) == 0) {
+      return(tagList(
+        div(class = "metric-card",
+            div(class = "metric-title", "Quality"),
+            div(class = "metric-value", "No Data"),
+            div(class = "metric-sub", "No valid trials found for this task/block.")
+        )
+      ))
+    }
+
+    cards <- list(
+      div(class = "metric-card",
+          div(class = "metric-title", "Trials"),
+          div(class = "metric-value", metrics$trial_count),
+          div(class = "metric-sub", "Trials included in this quality overview")
+      ),
+      div(class = "metric-card",
+          div(class = "metric-title", "Absolute Error"),
+          div(class = "metric-value", sprintf("%.3f", metrics$mean_abs_error)),
+          div(class = "metric-sub", paste("Average", tolower(error_label), "across trials")),
+          div(class = "metric-sub", paste("Units:", units_label))
+      ),
+      div(class = "metric-card",
+          div(class = "metric-title", "Unusually Large Errors"),
+          div(class = "metric-value", metrics$outlier_count),
+          div(class = "metric-sub", "Trials that were much farther from the target than the rest of this block"),
+          div(class = "metric-sub", paste("Flagged above", sprintf("%.3f %s", metrics$outlier_threshold, units_label)))
+      ),
+      div(class = "metric-card",
+          div(class = "metric-title", "Change Over Trials"),
+          div(class = "metric-value", trend_value),
+          div(class = "metric-sub", "Shows whether errors got better or worse as the block went on"),
+          div(class = "metric-sub", metrics$trend_label)
+      )
+    )
+
+    if (input$quality_task == "Exposure" && !is.na(metrics$hit_rate)) {
+      cards <- append(cards, list(
+        div(class = "metric-card",
+            div(class = "metric-title", "Hit Rate"),
+            div(class = "metric-value", sprintf("%.1f%%", metrics$hit_rate * 100)),
+            div(class = "metric-sub", "Confirmed hits divided by all exposure attempts")
+        )
+      ))
+    }
+
+    do.call(tagList, cards)
+  })
+
+  output$quality_plot <- renderPlotly({
+    req(input$quality_task, input$quality_block)
+    quality_trials <- extract_quality_trials(current_data()$event, input$quality_task, input$quality_block)
+    ggplotly(build_quality_plot(quality_trials, input$quality_task, input$quality_block))
+  })
+
+  output$quality_table <- renderDT({
+    req(input$quality_task, input$quality_block)
+    quality_trials <- extract_quality_trials(current_data()$event, input$quality_task, input$quality_block)
+
+    if (nrow(quality_trials) == 0) {
+      return(datatable(tibble(Message = "No quality rows for this task/block")))
+    }
+
+    datatable(
+      quality_trials |>
+        rename(
+          `Trial / Attempt` = TrialIndex,
+          `Distance From Target` = absolute_error,
+          Outcome = outcome
+        ) |>
+        select(`Trial / Attempt`, `Distance From Target`, Outcome),
+      options = list(pageLength = 10, scrollX = TRUE),
+      rownames = FALSE
+    )
   })
 
   output$spatial_plot <- renderPlotly({

@@ -4505,7 +4505,7 @@ MonoBehaviour:
   statReadout: {fileID: 1285313868}
   experimentLogger: {fileID: 2147000003}
   xrBackend: 1
-  openXRTrackingMode: 0
+  openXRTrackingMode: 1
   activeHand: 1
   handDwellSeconds: 2
   handRaySmoothingSeconds: 0.06
@@ -4589,7 +4589,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f20b59e79b64814d93549094ab50c88, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  successfulHitsToComplete: 90
+  successfulHitsToComplete: 60
   showCursor: 0
   showHitMarker: 1
   requireResetBetweenTrials: 0

@@ -150,6 +150,7 @@ public class PrismExperimentLogger : MonoBehaviour
             resolvedSavePath = Path.Combine(Application.dataPath, "PrismLogging");
             Directory.CreateDirectory(resolvedSavePath);
             loggingManager.SetSavePath(resolvedSavePath);
+            UpdateFilePrefixFromRunner();
             loggingManager.CreateLog(EventCollection, EventHeaders);
             loggingManager.CreateLog(SummaryCollection, SummaryHeaders);
         }
@@ -166,6 +167,9 @@ public class PrismExperimentLogger : MonoBehaviour
         {
             loggingManager.Log("Meta", "RightControllerMain", runner.CurrentActiveHand == SandboxRunner.Handedness.Right ? "TRUE" : "FALSE");
             loggingManager.Log("Meta", "MainController", runner.CurrentActiveHand == SandboxRunner.Handedness.Right ? "Right Controller" : "Left Controller");
+            loggingManager.Log("Meta", "TrackingMode", runner.CurrentOpenXRTrackingMode.ToString());
+            loggingManager.Log("Meta", "InputModeLabel", GetInputModeLabel());
+            loggingManager.Log("Meta", "XRBackend", runner.CurrentXRBackend.ToString());
         }
     }
 
@@ -182,8 +186,28 @@ public class PrismExperimentLogger : MonoBehaviour
         if (hasSavedLogs || loggingManager == null)
             return;
 
+        UpdateFilePrefixFromRunner();
         hasSavedLogs = true;
         loggingManager.SaveAllLogs(clear: false);
+    }
+
+    void UpdateFilePrefixFromRunner()
+    {
+        if (loggingManager == null)
+            return;
+
+        string mode = GetInputModeLabel().ToLowerInvariant();
+        loggingManager.SetFilePrefix($"prism_{mode}");
+    }
+
+    string GetInputModeLabel()
+    {
+        if (runner == null)
+            return "unknown";
+
+        return runner.CurrentOpenXRTrackingMode == SandboxRunner.OpenXRTrackingMode.Hands
+            ? "embodied"
+            : "controller";
     }
 
     public void LogBlockStarted(string taskMode, string blockType)
