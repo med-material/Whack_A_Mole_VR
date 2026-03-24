@@ -9,14 +9,28 @@ library(purrr)
 library(tidyr)
 
 app_dir <- normalizePath(getwd(), winslash = "/", mustWork = FALSE)
-project_assets_dir <- normalizePath(file.path(app_dir, "..", "..", ".."), winslash = "/", mustWork = FALSE)
-default_log_dir <- normalizePath(file.path(project_assets_dir, "PrismLogging"), winslash = "/", mustWork = FALSE)
+repo_root_dir <- normalizePath(file.path(app_dir, "..", "..", ".."), winslash = "/", mustWork = FALSE)
+default_log_dir <- normalizePath(file.path(repo_root_dir, "Assets", "PrismLogging"), winslash = "/", mustWork = FALSE)
+synthetic_log_dir <- normalizePath(file.path(default_log_dir, "SyntheticShowcase"), winslash = "/", mustWork = FALSE)
 
-safe_read_csv <- function(path) {
-  tryCatch(
-    suppressMessages(read_delim(path, delim = ";", show_col_types = FALSE, progress = FALSE)),
+.csv_cache <- new.env(parent = emptyenv())
+
+safe_read_csv <- function(path, n_max = Inf) {
+  path <- normalizePath(path, winslash = "/", mustWork = FALSE)
+  info <- file.info(path)
+  if (is.na(info$mtime[[1]])) return(tibble())
+
+  cache_key <- paste(path, info$mtime[[1]], info$size[[1]], n_max, sep = "::")
+  if (exists(cache_key, envir = .csv_cache, inherits = FALSE)) {
+    return(get(cache_key, envir = .csv_cache, inherits = FALSE))
+  }
+
+  data <- tryCatch(
+    suppressMessages(read_delim(path, delim = ";", show_col_types = FALSE, progress = FALSE, n_max = n_max)),
     error = function(e) tibble()
   )
+  assign(cache_key, data, envir = .csv_cache)
+  data
 }
 
 clean_log_df <- function(df) {
@@ -26,25 +40,25 @@ clean_log_df <- function(df) {
 }
 
 read_session_id <- function(path) {
-  data <- clean_log_df(safe_read_csv(path))
+  data <- clean_log_df(safe_read_csv(path, n_max = 1))
   if (!"SessionID" %in% names(data) || nrow(data) == 0) return(NA_character_)
   as.character(data$SessionID[[1]])
 }
 
 read_session_timestamp <- function(path) {
-  data <- clean_log_df(safe_read_csv(path))
+  data <- clean_log_df(safe_read_csv(path, n_max = 1))
   if (!"Timestamp" %in% names(data) || nrow(data) == 0) return(NA_character_)
   as.character(data$Timestamp[[1]])
 }
 
 read_session_state <- function(path) {
-  data <- clean_log_df(safe_read_csv(path))
+  data <- clean_log_df(safe_read_csv(path, n_max = 1))
   if (!"SessionState" %in% names(data) || nrow(data) == 0) return(NA_character_)
   as.character(data$SessionState[[1]])
 }
 
 read_meta_value <- function(path, key) {
-  data <- clean_log_df(safe_read_csv(path))
+  data <- clean_log_df(safe_read_csv(path, n_max = 1))
   if (!(key %in% names(data)) || nrow(data) == 0) return(NA_character_)
   as.character(data[[key]][[1]])
 }
@@ -53,32 +67,28 @@ as_num <- function(x) suppressWarnings(as.numeric(x))
 as_time <- function(x) suppressWarnings(as.POSIXct(x, tz = "UTC"))
 
 discover_sessions <- function(log_dir) {
-  files <- list.files(log_dir, pattern = "\\.(csv)$", full.names = TRUE)
-  files <- files[!grepl("\\.meta$", files, ignore.case = TRUE)]
-  files <- files[grepl("_(Meta|Event|Sample|Summary)\\.csv$", basename(files))]
+  meta_files <- list.files(log_dir, pattern = "_Meta\\.csv$", full.names = TRUE)
+  meta_files <- meta_files[!grepl("\\.meta$", meta_files, ignore.case = TRUE)]
 
-  if (length(files) == 0) return(tibble())
+  if (length(meta_files) == 0) return(tibble())
 
-  tibble(path = files) |>
+  tibble(path = meta_files) |>
     mutate(
       file_name = basename(path),
-      file_type = str_match(file_name, "_(Meta|Event|Sample|Summary)\\.csv$")[, 2],
       session_id = map_chr(path, read_session_id),
       timestamp = map_chr(path, read_session_timestamp),
-      session_state = map_chr(path, ~if (grepl("_Meta\\.csv$", .x)) read_session_state(.x) else NA_character_),
-      input_mode_label = map_chr(path, ~if (grepl("_Meta\\.csv$", .x)) read_meta_value(.x, "InputModeLabel") else NA_character_)
+      session_state = map_chr(path, read_session_state),
+      input_mode_label = map_chr(path, ~read_meta_value(.x, "InputModeLabel")),
+      Meta = path,
+      Event = str_replace(path, "_Meta\\.csv$", "_Event.csv"),
+      Sample = str_replace(path, "_Meta\\.csv$", "_Sample.csv"),
+      Summary = str_replace(path, "_Meta\\.csv$", "_Summary.csv")
     ) |>
     filter(!is.na(session_id), session_id != "") |>
-    group_by(session_id) |>
-    summarise(
-      timestamp = first(na.omit(timestamp)),
-      session_state = first(na.omit(session_state)),
-      input_mode_label = first(na.omit(input_mode_label)),
-      Meta = first(path[file_type == "Meta"]),
-      Event = first(path[file_type == "Event"]),
-      Sample = first(path[file_type == "Sample"]),
-      Summary = first(path[file_type == "Summary"]),
-      .groups = "drop"
+    mutate(
+      Event = ifelse(file.exists(Event), Event, NA_character_),
+      Sample = ifelse(file.exists(Sample), Sample, NA_character_),
+      Summary = ifelse(file.exists(Summary), Summary, NA_character_)
     ) |>
     arrange(desc(timestamp))
 }
@@ -112,7 +122,7 @@ build_summary_plot <- function(summary_data) {
     labs(
       title = "Aftereffect Magnitude",
       x = "Task",
-      y = "Magnitude"
+      y = "Size of change from baseline to post"
     ) +
     theme_minimal(base_size = 13) +
     theme(
@@ -192,7 +202,15 @@ compute_interpretation <- function(aftereffect_row) {
     correction_label <- ifelse(
       is.na(correction),
       "No error-correction estimate",
-      sprintf("Absolute error changed by %.2f", correction)
+      ifelse(
+        correction > 0,
+        sprintf("Average distance from target decreased by %.2f", abs(correction)),
+        ifelse(
+          correction < 0,
+          sprintf("Average distance from target increased by %.2f", abs(correction)),
+          "Average distance from target stayed about the same"
+        )
+      )
     )
     signed_shift_label <- ifelse(
       is.na(signed_delta),
@@ -427,6 +445,19 @@ build_non_exposure_trial_plot <- function(event_data, selected_task, selected_bl
     )
   }
 
+  trial_rows <- trial_rows |>
+    mutate(
+      x_plot = if (overlap_blocks) {
+        TrialIndex + case_when(
+          BlockType == "Baseline" ~ -0.12,
+          BlockType == "Post" ~ 0.12,
+          TRUE ~ 0
+        )
+      } else {
+        TrialIndex
+      }
+    )
+
   highlighted <- trial_rows |>
     filter(BlockType == selected_block, TrialIndex == selected_trial) |>
     slice(1)
@@ -438,21 +469,25 @@ build_non_exposure_trial_plot <- function(event_data, selected_task, selected_bl
   )
 
   subtitle_text <- if (overlap_blocks) {
-    "Each dot is one accepted trial. Baseline and Post are overlaid to compare response bias directly. The blue point is the selected trial."
+    "Each dot is one accepted trial. Baseline dots are shifted slightly left and Post dots slightly right so the same trial index does not stack visually. The blue point is the selected trial."
   } else {
     "Each dot is one accepted trial in this block. Dashed line is the ideal center. The blue point is the selected trial."
   }
 
-  ggplot(trial_rows, aes(x = TrialIndex, y = signed_value, color = BlockType, group = BlockType)) +
+  ggplot(trial_rows, aes(x = x_plot, y = signed_value, color = BlockType, group = BlockType)) +
     geom_hline(yintercept = 0, color = "#111827", linetype = "dashed") +
     geom_line(linewidth = 0.8, alpha = 0.7) +
     geom_point(size = 2.7, alpha = 0.8) +
-    geom_point(data = highlighted, aes(x = TrialIndex, y = signed_value), inherit.aes = FALSE, color = "#2563eb", size = 4) +
+    geom_point(data = highlighted, aes(x = x_plot, y = signed_value), inherit.aes = FALSE, color = "#2563eb", size = 4) +
     scale_color_manual(values = c("Baseline" = "#94a3b8", "Post" = "#0ea5a4", "Exposure" = "#dc2626")) +
+    scale_x_continuous(
+      breaks = sort(unique(trial_rows$TrialIndex)),
+      labels = sort(unique(trial_rows$TrialIndex))
+    ) +
     labs(
-      title = if (overlap_blocks) paste(selected_task, "Baseline vs Post Trial Overview") else paste(selected_task, selected_block, "Selected Trial Overview"),
+      title = if (overlap_blocks) paste(selected_task, "Signed Response by Trial") else paste(selected_task, selected_block, "Signed Response by Trial"),
       subtitle = subtitle_text,
-      x = "Trial",
+      x = "Trial index",
       y = metric_label,
       color = NULL
     ) +
@@ -704,6 +739,19 @@ build_attempt_error_plot <- function(event_data, selected_task = "Exposure", sel
       )
     }
 
+    attempts <- attempts |>
+      mutate(
+        x_plot = if (overlap_blocks) {
+          AttemptIndex + case_when(
+            BlockType == "Baseline" ~ -0.12,
+            BlockType == "Post" ~ 0.12,
+            TRUE ~ 0
+          )
+        } else {
+          AttemptIndex
+        }
+      )
+
     metric_label <- ifelse(
       selected_task == "LineBisection",
       "Absolute deviation from midpoint (cm)",
@@ -711,14 +759,18 @@ build_attempt_error_plot <- function(event_data, selected_task = "Exposure", sel
     )
 
     return(
-      ggplot(attempts, aes(x = AttemptIndex, y = final_error, color = BlockType, group = BlockType)) +
+      ggplot(attempts, aes(x = x_plot, y = final_error, color = BlockType, group = BlockType)) +
         geom_line(linewidth = 0.7, alpha = 0.7) +
         geom_point(size = 3) +
         scale_color_manual(values = c("Baseline" = "#94a3b8", "Post" = "#0ea5a4", "Exposure" = "#dc2626")) +
+        scale_x_continuous(
+          breaks = sort(unique(attempts$AttemptIndex)),
+          labels = sort(unique(attempts$AttemptIndex))
+        ) +
         labs(
-          title = if (overlap_blocks) paste(selected_task, "Baseline vs Post Final Error by Trial") else paste(selected_task, selected_block, "Final Error by Trial"),
-          subtitle = if (overlap_blocks) "Each dot is one accepted trial. Lower is better. Compare blocks directly." else "Each dot is one accepted trial in this block. Lower is better.",
-          x = "Trial",
+          title = if (overlap_blocks) paste(selected_task, "Absolute Error by Trial") else paste(selected_task, selected_block, "Absolute Error by Trial"),
+          subtitle = if (overlap_blocks) "Each dot is one accepted trial. Baseline and Post are shifted slightly apart at each trial index so they can be compared directly. Lower is better." else "Each dot is one accepted trial in this block. Lower is better.",
+          x = "Trial index",
           y = metric_label,
           color = NULL
         ) +
@@ -945,7 +997,7 @@ summary_compact_table <- function(summary_data) {
 build_comparison_dataset <- function(session_rows) {
   if (nrow(session_rows) == 0) return(tibble())
 
-  purrr::map_dfr(seq_len(nrow(session_rows)), function(i) {
+  compare_rows <- purrr::map_dfr(seq_len(nrow(session_rows)), function(i) {
     row <- session_rows[i, ]
     summary_data <- clean_log_df(safe_read_csv(row$Summary))
     if (nrow(summary_data) == 0) return(tibble())
@@ -980,7 +1032,13 @@ build_comparison_dataset <- function(session_rows) {
           substr(SessionID, 1, 8)
         )
       )
-  }) |>
+  })
+
+  if (!("TimestampDt" %in% names(compare_rows)) || nrow(compare_rows) == 0) {
+    return(compare_rows)
+  }
+
+  compare_rows |>
     arrange(TimestampDt)
 }
 
@@ -993,21 +1051,44 @@ build_comparison_plot <- function(compare_data) {
     )
   }
 
-  compare_plot_data <- compare_data |>
-    mutate(RunIndex = row_number())
+  grouped <- compare_data |>
+    mutate(
+      EffectGroup = ifelse(is.na(ConfiguredEffectMode) | ConfiguredEffectMode == "", "Unknown", ConfiguredEffectMode)
+    ) |>
+    group_by(TaskMode, EffectGroup, InputModeLabel) |>
+    mutate(GroupCount = n()) |>
+    ungroup()
 
-  ggplot(compare_plot_data, aes(x = RunIndex, y = Magnitude, color = InputModeLabel)) +
-    geom_line(aes(group = interaction(TaskMode, ConfiguredEffectMode, InputModeLabel)), alpha = 0.4) +
-    geom_point(size = 3) +
+  multi_session <- grouped |>
+    filter(GroupCount >= 2)
+
+  ggplot(grouped, aes(x = EffectGroup, y = Magnitude, color = InputModeLabel)) +
+    geom_boxplot(
+      data = multi_session,
+      outlier.shape = NA,
+      alpha = 0.22,
+      width = 0.55,
+      position = position_dodge(width = 0.65)
+    ) +
+    geom_jitter(
+      aes(group = InputModeLabel),
+      size = 2.6,
+      alpha = 0.85,
+      position = position_jitterdodge(jitter.width = 0.08, dodge.width = 0.65)
+    ) +
     facet_wrap(~TaskMode, scales = "free_y") +
     labs(
-      title = "Aftereffect Magnitude Across Sessions",
-      subtitle = "Each point is one finished session. Compare tasks, effects, and input modes across runs.",
-      x = "Run order",
-      y = "Aftereffect magnitude",
+      title = "Main Comparison: Aftereffect Magnitude by Condition",
+      subtitle = "Primary comparison view. Compare controller vs embodied within each effect, separated by task. Higher values mean larger changes from baseline to post.",
+      x = "Configured effect",
+      y = "Size of change from baseline to post",
       color = "Input mode"
     ) +
-    theme_minimal(base_size = 13)
+    theme_minimal(base_size = 13) +
+    theme(
+      legend.position = "top",
+      strip.text = element_text(size = 16, face = "bold")
+    )
 }
 
 build_grouped_comparison_plot <- function(compare_data) {
@@ -1020,20 +1101,66 @@ build_grouped_comparison_plot <- function(compare_data) {
   }
 
   grouped <- compare_data |>
-    mutate(EffectGroup = ifelse(is.na(ConfiguredEffectMode) | ConfiguredEffectMode == "", "Unknown", ConfiguredEffectMode))
+    mutate(EffectGroup = ifelse(is.na(ConfiguredEffectMode) | ConfiguredEffectMode == "", "Unknown", ConfiguredEffectMode)) |>
+    group_by(TaskMode, EffectGroup, InputModeLabel) |>
+    summarise(
+      MeanMagnitude = mean(Magnitude, na.rm = TRUE),
+      MedianMagnitude = median(Magnitude, na.rm = TRUE),
+      SessionCount = n(),
+      .groups = "drop"
+    )
 
-  ggplot(grouped, aes(x = EffectGroup, y = Magnitude, color = InputModeLabel)) +
-    geom_boxplot(outlier.shape = NA, alpha = 0.25, position = position_dodge(width = 0.6)) +
-    geom_jitter(width = 0.12, height = 0, size = 2.4, alpha = 0.8) +
+  ggplot(grouped, aes(x = EffectGroup, y = MeanMagnitude, fill = InputModeLabel)) +
+    geom_col(position = position_dodge(width = 0.7), width = 0.62, alpha = 0.9) +
+    geom_text(
+      aes(label = sprintf("n=%d", SessionCount)),
+      position = position_dodge(width = 0.7),
+      vjust = -0.5,
+      size = 3.6
+    ) +
     facet_wrap(~TaskMode, scales = "free_y") +
     labs(
-      title = "Aftereffect Magnitude by Condition",
-      subtitle = "Use this to compare effects within each task, and controller vs embodied within the same effect.",
+      title = "Average Aftereffect by Task, Effect, and Input Mode",
+      subtitle = "Simple average view. Higher bars mean larger average changes from baseline to post.",
       x = "Configured effect",
-      y = "Aftereffect magnitude",
-      color = "Input mode"
+      y = "Average size of change from baseline to post",
+      fill = "Input mode"
     ) +
     theme_minimal(base_size = 13)
+}
+
+build_comparison_stats_table <- function(compare_data) {
+  if (nrow(compare_data) == 0) {
+    return(tibble(Message = "No comparison stats available for the current filters"))
+  }
+
+  compare_data |>
+    mutate(EffectGroup = ifelse(is.na(ConfiguredEffectMode) | ConfiguredEffectMode == "", "Unknown", ConfiguredEffectMode)) |>
+    group_by(TaskMode, EffectGroup, InputModeLabel) |>
+    summarise(
+      Sessions = n(),
+      Mean = mean(Magnitude, na.rm = TRUE),
+      Median = median(Magnitude, na.rm = TRUE),
+      Q1 = as.numeric(quantile(Magnitude, 0.25, na.rm = TRUE)),
+      Q3 = as.numeric(quantile(Magnitude, 0.75, na.rm = TRUE)),
+      Min = min(Magnitude, na.rm = TRUE),
+      Max = max(Magnitude, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    rename(
+      Task = TaskMode,
+      Effect = EffectGroup,
+      `Input Mode` = InputModeLabel,
+      n = Sessions
+    ) |>
+    mutate(
+      Mean = round(Mean, 3),
+      Median = round(Median, 3),
+      Q1 = round(Q1, 3),
+      Q3 = round(Q3, 3),
+      Min = round(Min, 3),
+      Max = round(Max, 3)
+    )
 }
 
 ui <- fluidPage(
@@ -1051,6 +1178,13 @@ ui <- fluidPage(
   ),
   sidebarLayout(
     sidebarPanel(
+      radioButtons(
+        "data_source",
+        "Data Source",
+        choices = c("Real" = "real", "Synthetic" = "synthetic"),
+        selected = "real",
+        inline = TRUE
+      ),
       textInput("log_dir", "Log Folder", value = default_log_dir),
       actionButton("refresh", "Refresh Sessions"),
       br(), br(),
@@ -1078,10 +1212,23 @@ ui <- fluidPage(
             column(3, checkboxInput("compare_finished_only", "Finished sessions only", value = TRUE))
           ),
           fluidRow(
-            column(4, uiOutput("compare_cards")),
-            column(8, plotlyOutput("compare_plot", height = "360px"))
+            column(
+              12,
+              radioButtons(
+                "compare_view",
+                "Compare View",
+                choices = c("Distribution" = "distribution", "Average" = "average"),
+                selected = "distribution",
+                inline = TRUE
+              )
+            )
           ),
-          plotlyOutput("compare_group_plot", height = "360px"),
+          fluidRow(
+            uiOutput("compare_cards")
+          ),
+          plotOutput("compare_plot", height = "430px"),
+          h3("Condition Statistics"),
+          DTOutput("compare_stats_table"),
           h3("Comparison Table"),
           DTOutput("compare_table")
         ),
@@ -1126,6 +1273,22 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   session_index <- reactiveVal(tibble())
 
+  observeEvent(input$data_source, {
+    selected_path <- switch(
+      input$data_source,
+      real = default_log_dir,
+      synthetic = synthetic_log_dir,
+      default_log_dir
+    )
+
+    updateTextInput(session, "log_dir", value = selected_path)
+    if (dir.exists(selected_path)) {
+      session_index(discover_sessions(selected_path))
+    } else {
+      session_index(tibble())
+    }
+  }, ignoreInit = TRUE)
+
   refresh_sessions <- function() {
     log_dir <- normalizePath(input$log_dir, winslash = "/", mustWork = FALSE)
     if (!dir.exists(log_dir)) {
@@ -1156,12 +1319,20 @@ server <- function(input, output, session) {
       )
     )
 
-    selectInput("session_id", "Session", choices = setNames(sessions$session_id, labels))
+    selected_session <- isolate(input$session_id)
+    if (is.null(selected_session) || !(selected_session %in% sessions$session_id)) {
+      selected_session <- sessions$session_id[[1]]
+    }
+
+    selectInput("session_id", "Session", choices = setNames(sessions$session_id, labels), selected = selected_session)
   })
 
   current_session <- reactive({
     sessions <- session_index()
-    req(nrow(sessions) > 0, input$session_id)
+    req(nrow(sessions) > 0)
+    if (is.null(input$session_id) || !(input$session_id %in% sessions$session_id)) {
+      return(sessions |> slice(1))
+    }
     sessions |> filter(session_id == input$session_id) |> slice(1)
   })
 
@@ -1213,19 +1384,19 @@ server <- function(input, output, session) {
       div(class = "metric-card",
           div(class = "metric-title", "Task"),
           div(class = "metric-value", aftereffect$TaskMode[[1]]),
-          div(class = "metric-sub", paste("Metric:", aftereffect$MetricName[[1]])),
-          div(class = "metric-sub", paste("Effect:", format_effect_label(aftereffect)))
+          div(class = "metric-sub", paste("Measured value:", aftereffect$MetricName[[1]])),
+          div(class = "metric-sub", paste("Configured effect:", format_effect_label(aftereffect)))
       ),
       div(class = "metric-card",
           div(class = "metric-title", "Baseline to Post"),
           div(class = "metric-value", sprintf("%.2f", aftereffect$SignedDelta[[1]])),
-          div(class = "metric-sub", paste("Signed change in mean error", aftereffect$MetricUnits[[1]])),
+          div(class = "metric-sub", paste("Average left/right shift from baseline to post (", aftereffect$MetricUnits[[1]], ")", sep = "")),
           div(class = "metric-sub", interpretation$signed_shift_label)
       ),
       div(class = "metric-card",
           div(class = "metric-title", "Magnitude"),
           div(class = "metric-value", sprintf("%.2f", aftereffect$Magnitude[[1]])),
-          div(class = "metric-sub", paste("Absolute change in mean error from baseline to post", aftereffect$MetricUnits[[1]])),
+          div(class = "metric-sub", paste("How much the average response changed, ignoring direction (", aftereffect$MetricUnits[[1]], ")", sep = "")),
           div(class = "metric-sub", interpretation$strength_label)
       ),
       div(class = "metric-card",
@@ -1235,13 +1406,20 @@ server <- function(input, output, session) {
             "N/A",
             sprintf("%.2f -> %.2f", variability$baseline_sd, variability$post_sd)
           )),
-          div(class = "metric-sub", paste("Baseline SD to post SD", aftereffect$MetricUnits[[1]])),
+          div(class = "metric-sub", paste("Spread of responses: baseline to post (", aftereffect$MetricUnits[[1]], ")", sep = "")),
           div(class = "metric-sub", variability$variability_label)
       ),
       div(class = "metric-card",
           div(class = "metric-title", "Baseline / Post"),
           div(class = "metric-value", sprintf("%.2f -> %.2f", aftereffect$BaselineValue[[1]], aftereffect$PostValue[[1]])),
-          div(class = "metric-sub", "Participant-specific reference and post value")
+          div(
+            class = "metric-sub",
+            if (aftereffect$MetricName[[1]] %in% c("SignedEndpointError", "BisectionError")) {
+              "Average signed response: baseline to post. Positive = right, negative = left."
+            } else {
+              "Average task response: baseline to post."
+            }
+          )
       )
     )
 
@@ -1251,18 +1429,18 @@ server <- function(input, output, session) {
             div(class = "metric-title", "Error Correction"),
             div(class = "metric-value", interpretation$correction_display),
             div(class = "metric-sub", interpretation$direction_label),
-            div(class = "metric-sub", "Only meaningful for exposure, where the hitmarker provides online feedback."),
-            div(class = "metric-sub", "Positive means the post block ended closer to the target than baseline."),
+            div(class = "metric-sub", "Only shown for exposure, where the hitmarker gives live feedback."),
+            div(class = "metric-sub", "Positive means the participant ended closer to the target than in baseline."),
             div(class = "metric-sub", interpretation$correction_label)
         )
       ), after = 4)
     } else {
       cards <- append(cards, list(
         div(class = "metric-card",
-            div(class = "metric-title", "Change Toward Target"),
+            div(class = "metric-title", "Distance From Target"),
             div(class = "metric-value", interpretation$correction_display),
             div(class = "metric-sub", interpretation$direction_label),
-            div(class = "metric-sub", "Compares absolute baseline error with absolute post error."),
+            div(class = "metric-sub", paste("Average distance from the target center: baseline vs post (", aftereffect$MetricUnits[[1]], ")", sep = "")),
             div(class = "metric-sub", interpretation$correction_label)
         )
       ), after = 4)
@@ -1351,37 +1529,97 @@ server <- function(input, output, session) {
     mean_toward <- mean(compare_data$TowardTargetDelta, na.rm = TRUE)
     mode_summary <- paste(sort(unique(compare_data$InputModeLabel)), collapse = ", ")
 
-    tagList(
-      div(class = "metric-card",
-          div(class = "metric-title", "Sessions"),
-          div(class = "metric-value", nrow(compare_data)),
-          div(class = "metric-sub", "Finished sessions included in the current comparison")
+    top_task <- compare_data |>
+      group_by(TaskMode) |>
+      summarise(MeanMagnitude = mean(Magnitude, na.rm = TRUE), .groups = "drop") |>
+      arrange(desc(MeanMagnitude)) |>
+      slice(1)
+
+    top_condition <- compare_data |>
+      mutate(EffectGroup = ifelse(is.na(ConfiguredEffectMode) | ConfiguredEffectMode == "", "Unknown", ConfiguredEffectMode)) |>
+      group_by(TaskMode, EffectGroup, InputModeLabel) |>
+      summarise(MeanMagnitude = mean(Magnitude, na.rm = TRUE), Sessions = n(), .groups = "drop") |>
+      arrange(desc(MeanMagnitude)) |>
+      slice(1)
+
+    mode_means <- compare_data |>
+      filter(!is.na(InputModeLabel), InputModeLabel %in% c("controller", "embodied")) |>
+      group_by(InputModeLabel) |>
+      summarise(MeanMagnitude = mean(Magnitude, na.rm = TRUE), .groups = "drop")
+
+    mode_delta_text <- "Not enough data to compare controller and embodied directly"
+    if (nrow(mode_means) == 2) {
+      controller_mean <- mode_means$MeanMagnitude[mode_means$InputModeLabel == "controller"]
+      embodied_mean <- mode_means$MeanMagnitude[mode_means$InputModeLabel == "embodied"]
+      if (length(controller_mean) == 1 && length(embodied_mean) == 1) {
+        diff_value <- embodied_mean - controller_mean
+        mode_delta_text <- if (abs(diff_value) < 0.05) {
+          "Embodied and controller looked very similar"
+        } else if (diff_value > 0) {
+          sprintf("Embodied averaged %.2f higher magnitude than controller", abs(diff_value))
+        } else {
+          sprintf("Controller averaged %.2f higher magnitude than embodied", abs(diff_value))
+        }
+      }
+    }
+
+    fluidRow(
+      column(
+        3,
+        div(class = "metric-card",
+            div(class = "metric-title", "Sessions"),
+            div(class = "metric-value", nrow(compare_data)),
+            div(class = "metric-sub", "Finished sessions currently included in this comparison")
+        )
       ),
-      div(class = "metric-card",
-          div(class = "metric-title", "Mean Magnitude"),
-          div(class = "metric-value", sprintf("%.2f", mean_mag)),
-          div(class = "metric-sub", "Average aftereffect magnitude across filtered sessions")
+      column(
+        3,
+        div(class = "metric-card",
+            div(class = "metric-title", "Strongest Task"),
+            div(class = "metric-value", top_task$TaskMode[[1]]),
+            div(class = "metric-sub", sprintf("Largest average shift: %.2f", top_task$MeanMagnitude[[1]])),
+            div(class = "metric-sub", "Quick answer to which task produced the biggest aftereffect")
+        )
       ),
-      div(class = "metric-card",
-          div(class = "metric-title", "Median Magnitude"),
-          div(class = "metric-value", sprintf("%.2f", median_mag)),
-          div(class = "metric-sub", "Median aftereffect magnitude across filtered sessions")
+      column(
+        3,
+        div(class = "metric-card",
+            div(class = "metric-title", "Strongest Condition"),
+            div(class = "metric-value", paste(top_condition$TaskMode[[1]], "/", top_condition$EffectGroup[[1]], "/", top_condition$InputModeLabel[[1]])),
+            div(class = "metric-sub", sprintf("Largest average shift: %.2f across %d session(s)", top_condition$MeanMagnitude[[1]], top_condition$Sessions[[1]])),
+            div(class = "metric-sub", "Quick answer to which exact condition produced the biggest aftereffect")
+        )
       ),
-      div(class = "metric-card",
-          div(class = "metric-title", "Toward Target"),
-          div(class = "metric-value", sprintf("%.2f", mean_toward)),
-          div(class = "metric-sub", "Average change toward target across filtered sessions"),
-          div(class = "metric-sub", paste("Input modes:", mode_summary))
+      column(
+        3,
+        div(class = "metric-card",
+            div(class = "metric-title", "Average Magnitude"),
+            div(class = "metric-value", sprintf("%.2f", mean_mag)),
+            div(class = "metric-sub", sprintf("Typical shift across sessions: median %.2f", median_mag)),
+            div(class = "metric-sub", "Higher means a larger change from baseline to post"),
+            div(class = "metric-sub", mode_delta_text)
+        )
       )
     )
   })
 
-  output$compare_plot <- renderPlotly({
-    ggplotly(build_comparison_plot(comparison_data_filtered()))
+  output$compare_plot <- renderPlot({
+    compare_data <- comparison_data_filtered()
+    if (identical(input$compare_view, "average")) {
+      build_grouped_comparison_plot(compare_data)
+    } else {
+      build_comparison_plot(compare_data)
+    }
   })
 
-  output$compare_group_plot <- renderPlotly({
-    ggplotly(build_grouped_comparison_plot(comparison_data_filtered()))
+  output$compare_stats_table <- renderDT({
+    compare_data <- comparison_data_filtered()
+
+    datatable(
+      build_comparison_stats_table(compare_data),
+      options = list(pageLength = 10, scrollX = TRUE, dom = "tip"),
+      rownames = FALSE
+    )
   })
 
   output$compare_table <- renderDT({
@@ -1413,41 +1651,37 @@ server <- function(input, output, session) {
     )
   })
 
-  observeEvent(input$quality_task, {
-    event_data <- current_data()$event
+  blocks_for_task <- function(event_data, task_name) {
     blocks <- event_data |>
-      filter(TaskMode == input$quality_task) |>
+      filter(TaskMode == task_name) |>
       pull(BlockType) |>
       na.omit() |>
       unique() |>
       sort()
-    if (length(blocks) == 0) blocks <- c("Exposure")
-    updateSelectInput(session, "quality_block", choices = blocks, selected = if ("Exposure" %in% blocks) "Exposure" else blocks[[1]])
-  }, ignoreNULL = FALSE)
 
-  observeEvent(input$spatial_task, {
-    event_data <- current_data()$event
-    blocks <- event_data |>
-      filter(TaskMode == input$spatial_task) |>
-      pull(BlockType) |>
-      na.omit() |>
-      unique() |>
-      sort()
     if (length(blocks) == 0) blocks <- c("Exposure")
-    updateSelectInput(session, "spatial_block", choices = blocks, selected = if ("Exposure" %in% blocks) "Exposure" else blocks[[1]])
-  }, ignoreNULL = FALSE)
+    blocks
+  }
 
-  observeEvent(input$trajectory_task, {
+  observe({
     event_data <- current_data()$event
-    blocks <- event_data |>
-      filter(TaskMode == input$trajectory_task) |>
-      pull(BlockType) |>
-      na.omit() |>
-      unique() |>
-      sort()
-    if (length(blocks) == 0) blocks <- c("Exposure")
-    updateSelectInput(session, "trajectory_block", choices = blocks, selected = if ("Exposure" %in% blocks) "Exposure" else blocks[[1]])
-  }, ignoreNULL = FALSE)
+    req(nrow(event_data) >= 0)
+
+    quality_task_value <- if (!is.null(input$quality_task) && nzchar(input$quality_task)) input$quality_task else "Exposure"
+    quality_blocks <- blocks_for_task(event_data, quality_task_value)
+    quality_selected <- if (!is.null(input$quality_block) && input$quality_block %in% quality_blocks) input$quality_block else if ("Exposure" %in% quality_blocks) "Exposure" else quality_blocks[[1]]
+    updateSelectInput(session, "quality_block", choices = quality_blocks, selected = quality_selected)
+
+    spatial_task_value <- if (!is.null(input$spatial_task) && nzchar(input$spatial_task)) input$spatial_task else "Exposure"
+    spatial_blocks <- blocks_for_task(event_data, spatial_task_value)
+    spatial_selected <- if (!is.null(input$spatial_block) && input$spatial_block %in% spatial_blocks) input$spatial_block else if ("Exposure" %in% spatial_blocks) "Exposure" else spatial_blocks[[1]]
+    updateSelectInput(session, "spatial_block", choices = spatial_blocks, selected = spatial_selected)
+
+    trajectory_task_value <- if (!is.null(input$trajectory_task) && nzchar(input$trajectory_task)) input$trajectory_task else "Exposure"
+    trajectory_blocks <- blocks_for_task(event_data, trajectory_task_value)
+    trajectory_selected <- if (!is.null(input$trajectory_block) && input$trajectory_block %in% trajectory_blocks) input$trajectory_block else if ("Exposure" %in% trajectory_blocks) "Exposure" else trajectory_blocks[[1]]
+    updateSelectInput(session, "trajectory_block", choices = trajectory_blocks, selected = trajectory_selected)
+  })
 
   output$attempt_picker <- renderUI({
     event_data <- current_data()$event
@@ -1494,7 +1728,7 @@ server <- function(input, output, session) {
       return(tags$p("This tab focuses on approach behavior rather than raw controller wandering. It shows how the pointer converged on the target plane before each confirmation."))
     }
 
-    tags$p("For OpenLoop and LineBisection, this tab is a trial-by-trial response overview. Each dot is one accepted trial, and the highlighted point is the selected trial. It is not a movement path through space.")
+    tags$p("For OpenLoop and LineBisection, this tab is not a movement trajectory. It is a trial-by-trial response trend: each dot is one accepted trial, the top plot shows signed left/right deviation, and the bottom plot shows absolute distance from the intended center.")
   })
 
   output$quality_cards <- renderUI({

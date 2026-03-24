@@ -4499,7 +4499,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   effectMode: 0
-  taskMode: 0
+  taskMode: 3
   mainCam: {fileID: 18658420}
   visualWorldRoot: {fileID: 1983110139}
   statReadout: {fileID: 1285313868}

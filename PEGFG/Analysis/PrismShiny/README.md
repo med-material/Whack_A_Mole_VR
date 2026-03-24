@@ -32,12 +32,13 @@ shiny::runApp()
 Or from the R console:
 
 ```r
-setwd("Assets/PEGFG/Analysis/PrismShiny")
+setwd("PEGFG/Analysis/PrismShiny")
 shiny::runApp()
 ```
 
 ## Notes
 
+- The app lives outside `Assets` on purpose so RStudio does not trigger Unity asset refreshes during play mode
 - The app defaults to `Assets/PrismLogging`
 - You can change the log folder in the UI and refresh sessions
 - This is the first scaffold, not the final analysis workflow

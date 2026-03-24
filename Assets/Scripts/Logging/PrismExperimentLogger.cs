@@ -13,6 +13,7 @@ public class PrismExperimentLogger : MonoBehaviour
     private const string SummaryCollection = "Summary";
     private string resolvedSavePath;
     private bool hasSavedLogs;
+    private bool hasSummaryRows;
     private float sessionStartTime = -1f;
     private bool gameStartedLogged;
     private float previousEventTime = -1f;
@@ -152,7 +153,6 @@ public class PrismExperimentLogger : MonoBehaviour
             loggingManager.SetSavePath(resolvedSavePath);
             UpdateFilePrefixFromRunner();
             loggingManager.CreateLog(EventCollection, EventHeaders);
-            loggingManager.CreateLog(SummaryCollection, SummaryHeaders);
         }
     }
 
@@ -273,10 +273,12 @@ public class PrismExperimentLogger : MonoBehaviour
         if (loggingManager == null)
             return;
 
+        EnsureSummaryCollection();
         var data = CreateSummaryRow(taskMode, blockType, "BlockMetric", metricName, metricUnits, trialCount, notes);
         data["PostValue"] = metricValue;
         data["PostSd"] = metricSd.HasValue ? metricSd.Value : "";
         loggingManager.Log(SummaryCollection, data);
+        hasSummaryRows = true;
     }
 
     public void LogTaskAftereffectSummary(
@@ -294,6 +296,7 @@ public class PrismExperimentLogger : MonoBehaviour
         if (loggingManager == null)
             return;
 
+        EnsureSummaryCollection();
         float magnitude = Mathf.Abs(signedDelta);
         float? normalizedMagnitude = null;
         if (baselineSd.HasValue && baselineSd.Value > 0.0001f)
@@ -308,6 +311,15 @@ public class PrismExperimentLogger : MonoBehaviour
         data["Magnitude"] = magnitude;
         data["NormalizedMagnitude"] = normalizedMagnitude.HasValue ? normalizedMagnitude.Value : "";
         loggingManager.Log(SummaryCollection, data);
+        hasSummaryRows = true;
+    }
+
+    void EnsureSummaryCollection()
+    {
+        if (loggingManager == null || hasSummaryRows)
+            return;
+
+        loggingManager.CreateLog(SummaryCollection, SummaryHeaders);
     }
 
     public void LogExposureAttempt(int attemptIndex, int successCount, int targetIndex, bool isHit, float hitDistanceMeters, Vector3 hitWorld, Vector3 targetWorld)
