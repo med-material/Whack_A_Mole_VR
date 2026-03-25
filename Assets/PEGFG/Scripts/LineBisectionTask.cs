@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-public class LineBisectionTask : MonoBehaviour, ISandboxTask
+public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
 {
     public enum BlockType { Baseline, Post }
 
@@ -30,6 +30,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask
     private float lineLength = 1f;
     private float lineZRange = 0.1f;
     private bool clampToLineSegment = true;
+    [SerializeField] private float analysisMidpointRadiusMeters = 0.03f;
 
     [Header("Randomisation")]
     private bool randomiseLineZEachTrial = true;
@@ -45,6 +46,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask
     bool _confirmLatched = false;
     bool _armed = true;
     float _lastAcceptedTime = -999f;
+    bool _currentTrialLogged = false;
 
     float _currentLineZ = 0f;
     float _currentHalfLen = 0.2f;
@@ -143,6 +145,8 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask
             return;
         }
 
+        EnsureCurrentTrialLogged();
+
         var (ray, pose, confirm) = runner.GetTransformedInput();
 
         if (latchConfirm)
@@ -199,6 +203,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask
 
             _errorsCm.Add(errorCm);
             _trialIndex++;
+            _currentTrialLogged = false;
 
             experimentLogger?.LogMeasurementTrial(
                 TaskMode.ToString(),
@@ -288,6 +293,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask
             }
 
             SetupNewLine();
+            EnsureCurrentTrialLogged();
         }
 
         UpdateReadout(final: false);
@@ -299,6 +305,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask
         _trialIndex = 0;
         _confirmLatched = false;
         _errorsCm.Clear();
+        _currentTrialLogged = false;
 
         _armed = true;
         _lastAcceptedTime = -999f;
@@ -306,6 +313,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask
         if (_isActive)
             SetupNewLine();
 
+        EnsureCurrentTrialLogged();
         UpdateReadout(final: false);
     }
 
@@ -340,6 +348,29 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask
         lineRenderer.useWorldSpace = true;
         lineRenderer.SetPosition(0, aWorld);
         lineRenderer.SetPosition(1, bWorld);
+    }
+
+    void EnsureCurrentTrialLogged()
+    {
+        if (_currentTrialLogged || !_isActive || boardPlane == null || experimentLogger == null || _trialIndex >= trialsPerBlock)
+            return;
+
+        Vector3 midpointWorld = boardPlane.TransformPoint(new Vector3(0f, 0f, _currentLineZ));
+
+        experimentLogger.LogMeasurementTrialStarted(
+            TaskMode.ToString(),
+            blockType.ToString(),
+            _trialIndex + 1,
+            trialsPerBlock,
+            midpointWorld,
+            analysisMidpointRadiusMeters,
+            new Dictionary<string, object>
+            {
+                { "LineZMeters", _currentLineZ },
+                { "LineLengthMeters", _currentHalfLen * 2f }
+            });
+
+        _currentTrialLogged = true;
     }
 
     bool IntersectRayWithBoard(Ray r, out Vector3 hit)
@@ -428,5 +459,19 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask
         double sd = System.Math.Sqrt(var);
 
         return ((float)mean, (float)sd);
+    }
+
+    public bool TryGetAimTarget(out Vector3 worldCenter, out Vector3 planeNormal, out float targetRadiusMeters)
+    {
+        worldCenter = Vector3.zero;
+        planeNormal = Vector3.up;
+        targetRadiusMeters = analysisMidpointRadiusMeters;
+
+        if (!_isActive || boardPlane == null || _trialIndex >= trialsPerBlock)
+            return false;
+
+        worldCenter = boardPlane.TransformPoint(new Vector3(0f, 0f, _currentLineZ));
+        planeNormal = boardPlane.up;
+        return true;
     }
 }

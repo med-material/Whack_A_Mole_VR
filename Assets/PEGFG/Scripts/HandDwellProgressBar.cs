@@ -162,8 +162,8 @@ public class HandDwellProgressBar : MonoBehaviour
             }
             else
             {
-                progress = Mathf.Clamp01(runner.HandDwellProgress01);
-                shouldShow |= runner.IsHandPointing || progress > 0f;
+                progress = Mathf.Clamp01(runner.ConfirmDwellProgress01);
+                shouldShow |= runner.IsConfirmDwellActive || progress > 0f;
             }
         }
 

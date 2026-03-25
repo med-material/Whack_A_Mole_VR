@@ -57,6 +57,13 @@ public class PrismSampleLogger : MonoBehaviour
         "RightControllerLaserRotEulerY",
         "RightControllerLaserRotEulerZ",
         "RightControllerTrigger",
+        "RightMovementAnchorPosWorldX",
+        "RightMovementAnchorPosWorldY",
+        "RightMovementAnchorPosWorldZ",
+        "RightMovementAnchorRotEulerX",
+        "RightMovementAnchorRotEulerY",
+        "RightMovementAnchorRotEulerZ",
+        "RightMovementAnchorSource",
         "LeftControllerPosWorldX",
         "LeftControllerPosWorldY",
         "LeftControllerPosWorldZ",
@@ -70,6 +77,13 @@ public class PrismSampleLogger : MonoBehaviour
         "LeftControllerLaserRotEulerY",
         "LeftControllerLaserRotEulerZ",
         "LeftControllerTrigger",
+        "LeftMovementAnchorPosWorldX",
+        "LeftMovementAnchorPosWorldY",
+        "LeftMovementAnchorPosWorldZ",
+        "LeftMovementAnchorRotEulerX",
+        "LeftMovementAnchorRotEulerY",
+        "LeftMovementAnchorRotEulerZ",
+        "LeftMovementAnchorSource",
     };
 
     void Awake()
@@ -123,10 +137,14 @@ public class PrismSampleLogger : MonoBehaviour
         Vector3 hmdEuler = hmd != null ? hmd.eulerAngles : Vector3.zero;
         bool hasRightController = runner.TryGetControllerPose(SandboxRunner.Handedness.Right, out Pose rightControllerPose, out Pose rightLaserPose);
         bool hasLeftController = runner.TryGetControllerPose(SandboxRunner.Handedness.Left, out Pose leftControllerPose, out Pose leftLaserPose);
+        bool hasRightMovementAnchor = runner.TryGetMovementAnchorPose(SandboxRunner.Handedness.Right, out Pose rightMovementAnchorPose, out string rightMovementAnchorSource);
+        bool hasLeftMovementAnchor = runner.TryGetMovementAnchorPose(SandboxRunner.Handedness.Left, out Pose leftMovementAnchorPose, out string leftMovementAnchorSource);
         Vector3 rightControllerEuler = hasRightController ? rightControllerPose.rotation.eulerAngles : Vector3.zero;
         Vector3 rightLaserEuler = hasRightController ? rightLaserPose.rotation.eulerAngles : Vector3.zero;
+        Vector3 rightMovementAnchorEuler = hasRightMovementAnchor ? rightMovementAnchorPose.rotation.eulerAngles : Vector3.zero;
         Vector3 leftControllerEuler = hasLeftController ? leftControllerPose.rotation.eulerAngles : Vector3.zero;
         Vector3 leftLaserEuler = hasLeftController ? leftLaserPose.rotation.eulerAngles : Vector3.zero;
+        Vector3 leftMovementAnchorEuler = hasLeftMovementAnchor ? leftMovementAnchorPose.rotation.eulerAngles : Vector3.zero;
         bool rightTrigger = runner.GetControllerTriggerState(SandboxRunner.Handedness.Right);
         bool leftTrigger = runner.GetControllerTriggerState(SandboxRunner.Handedness.Left);
 
@@ -177,6 +195,13 @@ public class PrismSampleLogger : MonoBehaviour
             { "RightControllerLaserRotEulerY", hasRightController ? rightLaserEuler.y : "" },
             { "RightControllerLaserRotEulerZ", hasRightController ? rightLaserEuler.z : "" },
             { "RightControllerTrigger", rightTrigger ? 1 : 0 },
+            { "RightMovementAnchorPosWorldX", hasRightMovementAnchor ? rightMovementAnchorPose.position.x : "" },
+            { "RightMovementAnchorPosWorldY", hasRightMovementAnchor ? rightMovementAnchorPose.position.y : "" },
+            { "RightMovementAnchorPosWorldZ", hasRightMovementAnchor ? rightMovementAnchorPose.position.z : "" },
+            { "RightMovementAnchorRotEulerX", hasRightMovementAnchor ? rightMovementAnchorEuler.x : "" },
+            { "RightMovementAnchorRotEulerY", hasRightMovementAnchor ? rightMovementAnchorEuler.y : "" },
+            { "RightMovementAnchorRotEulerZ", hasRightMovementAnchor ? rightMovementAnchorEuler.z : "" },
+            { "RightMovementAnchorSource", hasRightMovementAnchor ? rightMovementAnchorSource : "" },
             { "LeftControllerPosWorldX", hasLeftController ? leftControllerPose.position.x : "" },
             { "LeftControllerPosWorldY", hasLeftController ? leftControllerPose.position.y : "" },
             { "LeftControllerPosWorldZ", hasLeftController ? leftControllerPose.position.z : "" },
@@ -190,6 +215,13 @@ public class PrismSampleLogger : MonoBehaviour
             { "LeftControllerLaserRotEulerY", hasLeftController ? leftLaserEuler.y : "" },
             { "LeftControllerLaserRotEulerZ", hasLeftController ? leftLaserEuler.z : "" },
             { "LeftControllerTrigger", leftTrigger ? 1 : 0 },
+            { "LeftMovementAnchorPosWorldX", hasLeftMovementAnchor ? leftMovementAnchorPose.position.x : "" },
+            { "LeftMovementAnchorPosWorldY", hasLeftMovementAnchor ? leftMovementAnchorPose.position.y : "" },
+            { "LeftMovementAnchorPosWorldZ", hasLeftMovementAnchor ? leftMovementAnchorPose.position.z : "" },
+            { "LeftMovementAnchorRotEulerX", hasLeftMovementAnchor ? leftMovementAnchorEuler.x : "" },
+            { "LeftMovementAnchorRotEulerY", hasLeftMovementAnchor ? leftMovementAnchorEuler.y : "" },
+            { "LeftMovementAnchorRotEulerZ", hasLeftMovementAnchor ? leftMovementAnchorEuler.z : "" },
+            { "LeftMovementAnchorSource", hasLeftMovementAnchor ? leftMovementAnchorSource : "" },
         };
     }
 }

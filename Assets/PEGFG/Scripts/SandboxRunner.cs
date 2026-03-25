@@ -21,6 +21,11 @@ SandboxRunner.TaskMode TaskMode { get; }
 void SetTaskActive(bool active);
 }
 
+public interface IAimTargetProvider
+{
+bool TryGetAimTarget(out Vector3 worldCenter, out Vector3 planeNormal, out float targetRadiusMeters);
+}
+
 public class SandboxRunner : MonoBehaviour
 {
 public enum EffectMode { None, Translation, Rotation, Skew }
@@ -50,6 +55,16 @@ public enum OpenXRTrackingMode { Controllers, Hands }
 private float handRaySmoothingSeconds = 0.06f;
 [SerializeField, HideInInspector] private GameObject openXRLeftHandTrackingPrefab;
 [SerializeField, HideInInspector] private GameObject openXRRightHandTrackingPrefab;
+
+[Header("Controller Confirm Mitigation")]
+[Tooltip("Standard controller behavior: the aiming hand trigger confirms.")]
+public bool noHeisenbergMitigation = true;
+[Tooltip("Use the opposite hand trigger to confirm while aiming with the dominant hand.")]
+public bool useOppositeHandTrigger = false;
+[Tooltip("Auto-confirm after dwelling near the current task target with the controller aim.")]
+public bool useControllerHoverConfirm = false;
+[SerializeField, Min(0.05f)] private float controllerHoverSeconds = 1.0f;
+[SerializeField, Min(0.01f)] private float controllerHoverActivationRadiusMeters = 0.50f;
 
 [Header("Task Transition")]
 [SerializeField] private float taskTransitionSeconds = 2f;
@@ -104,16 +119,27 @@ private Transform _rightHandVisualTransform;
 private GameObject _openXRHandVisualizerRoot;
 private SteamVR_Action_Boolean _confirmAction;
 private bool _confirmDown;
-private bool _confirmPressedLastFrame;
+private bool _confirmPressedLastFrameLeft;
+private bool _confirmPressedLastFrameRight;
 private bool _calibrateDownLastFrame;
 private bool _handPointingActive;
 private float _handPointingStartTime = -1f;
 private float _handDwellProgress01;
 private bool _handDwellTriggered;
+private bool _confirmDwellActive;
+private float _confirmDwellProgress01;
+private float _controllerHoverStartTime = -1f;
+private bool _controllerHoverTriggered;
+private bool _controllerHoverHadTargetLastFrame;
+private Vector3 _controllerHoverLastTargetCenter;
 private bool _smoothedHandRayInitialized;
 private Handedness _smoothedHandRayHand;
 private Vector3 _smoothedHandRayOrigin;
 private Vector3 _smoothedHandRayDirection = Vector3.forward;
+private bool _prevNoHeisenbergMitigation = true;
+private bool _prevUseOppositeHandTrigger;
+private bool _prevUseControllerHoverConfirm;
+private TaskMode? _hoverFallbackWarnedTask;
 
 public EffectMode CurrentEffectMode => effectMode;
 public TaskMode CurrentTaskMode => taskMode;
@@ -123,6 +149,8 @@ public Handedness CurrentActiveHand => activeHand;
 public EffectMode CurrentAppliedEffectMode => taskMode == TaskMode.Exposure ? effectMode : EffectMode.None;
 public bool IsHandPointing => _handPointingActive;
 public float HandDwellProgress01 => _handDwellProgress01;
+public bool IsConfirmDwellActive => _confirmDwellActive;
+public float ConfirmDwellProgress01 => _confirmDwellProgress01;
 public bool IsExperimentCompleted => _experimentCompleted;
 public bool IsTaskTransitionActive => _taskTransitionActive;
 public float TaskTransitionProgress01
@@ -160,6 +188,7 @@ void Start()
     _lastActiveHand = activeHand;
     _lastXRBackend = xrBackend;
     _lastOpenXRTrackingMode = openXRTrackingMode;
+    SyncControllerMitigationPreviousState();
 
     AutoAssignReferences();
     AutoAssignXRInput();
@@ -292,6 +321,8 @@ void Reset()
 
 void OnValidate()
 {
+    EnforceSingleControllerMitigationMode();
+
     if (!Application.isPlaying)
     {
         AutoAssignReferences();
@@ -530,29 +561,31 @@ void UpdateXRConfirm()
 
     if (_taskTransitionActive)
     {
-        _confirmPressedLastFrame = false;
+        _confirmPressedLastFrameLeft = false;
+        _confirmPressedLastFrameRight = false;
+        ResetHandDwellConfirmState();
+        ResetControllerHoverConfirmState();
         _confirmDown = false;
         return;
     }
 
     if (xrBackend == XRBackend.OpenXR)
     {
-        if (openXRTrackingMode == OpenXRTrackingMode.Controllers)
+        if (openXRTrackingMode == OpenXRTrackingMode.Hands)
         {
-            down = GetOpenXRButtonEdge(CommonUsages.triggerButton, activeHand, ref _confirmPressedLastFrame);
+            ResetControllerHoverConfirmState();
+            down = UpdateHandDwellConfirm();
         }
         else
         {
-            down = UpdateHandDwellConfirm();
+            ResetHandDwellConfirmState();
+            down = UpdateControllerConfirmForControllers();
         }
     }
-    else if (_confirmAction != null)
+    else
     {
-        var hand = activeHand == Handedness.Left
-            ? SteamVR_Input_Sources.LeftHand
-            : SteamVR_Input_Sources.RightHand;
-
-        down = _confirmAction.GetStateDown(hand);
+        ResetHandDwellConfirmState();
+        down = UpdateControllerConfirmForControllers();
     }
 
     _confirmDown = down;
@@ -896,11 +929,13 @@ bool UpdateHandDwellConfirm()
 {
     bool isPointing = IsActiveHandPointingGesture();
     _handPointingActive = isPointing;
+    _confirmDwellActive = isPointing;
 
     if (!isPointing)
     {
         _handPointingStartTime = -1f;
         _handDwellProgress01 = 0f;
+        _confirmDwellProgress01 = 0f;
         _handDwellTriggered = false;
         return false;
     }
@@ -911,6 +946,7 @@ bool UpdateHandDwellConfirm()
     float dwellDuration = Mathf.Max(0.05f, handDwellSeconds);
     float elapsed = Time.time - _handPointingStartTime;
     _handDwellProgress01 = Mathf.Clamp01(elapsed / dwellDuration);
+    _confirmDwellProgress01 = _handDwellProgress01;
 
     if (!_handDwellTriggered && elapsed >= dwellDuration)
     {
@@ -919,6 +955,218 @@ bool UpdateHandDwellConfirm()
     }
 
     return false;
+}
+
+bool UpdateControllerConfirmForControllers()
+{
+    if (useControllerHoverConfirm)
+        return UpdateControllerHoverConfirm();
+
+    ResetControllerHoverConfirmState();
+
+    Handedness confirmHand = useOppositeHandTrigger ? GetOppositeHand(activeHand) : activeHand;
+    return GetControllerConfirmEdge(confirmHand);
+}
+
+bool UpdateControllerHoverConfirm()
+{
+    if (!TryGetCurrentAimTarget(out Vector3 targetCenter, out Vector3 planeNormal, out float taskTargetRadius))
+    {
+        ResetControllerHoverConfirmState();
+
+        if (_hoverFallbackWarnedTask != taskMode)
+        {
+            Debug.LogWarning($"[SandboxRunner] Controller hover confirm is not supported for task {taskMode}. Falling back to the dominant-hand trigger.");
+            _hoverFallbackWarnedTask = taskMode;
+        }
+
+        return GetControllerConfirmEdge(activeHand);
+    }
+
+    _hoverFallbackWarnedTask = null;
+
+    if (_effect == null)
+        SelectEffect();
+
+    if (!TryGetRawInput(out Ray rawRay, out _))
+    {
+        ResetControllerHoverConfirmState();
+        return false;
+    }
+
+    Ray transformedRay = _effect != null ? _effect.TransformRay(rawRay) : rawRay;
+    if (!IntersectRayWithPlane(transformedRay, targetCenter, planeNormal, out Vector3 hitPoint))
+    {
+        ResetControllerHoverConfirmState();
+        return false;
+    }
+
+    float activationRadius = Mathf.Max(controllerHoverActivationRadiusMeters, taskTargetRadius);
+    bool targetChanged = !_controllerHoverHadTargetLastFrame ||
+                         Vector3.Distance(_controllerHoverLastTargetCenter, targetCenter) > 0.001f;
+    bool insideHoverZone = Vector3.Distance(hitPoint, targetCenter) <= activationRadius;
+
+    _controllerHoverLastTargetCenter = targetCenter;
+    _controllerHoverHadTargetLastFrame = true;
+
+    if (targetChanged)
+    {
+        _controllerHoverStartTime = -1f;
+        _controllerHoverTriggered = false;
+    }
+
+    if (!insideHoverZone)
+    {
+        _controllerHoverStartTime = -1f;
+        _controllerHoverTriggered = false;
+        _confirmDwellActive = false;
+        _confirmDwellProgress01 = 0f;
+        return false;
+    }
+
+    if (_controllerHoverStartTime < 0f)
+        _controllerHoverStartTime = Time.time;
+
+    float dwellDuration = Mathf.Max(0.05f, controllerHoverSeconds);
+    float elapsed = Time.time - _controllerHoverStartTime;
+    _confirmDwellActive = true;
+    _confirmDwellProgress01 = Mathf.Clamp01(elapsed / dwellDuration);
+
+    if (!_controllerHoverTriggered && elapsed >= dwellDuration)
+    {
+        _controllerHoverTriggered = true;
+        return true;
+    }
+
+    return false;
+}
+
+void ResetHandDwellConfirmState()
+{
+    _handPointingActive = false;
+    _handPointingStartTime = -1f;
+    _handDwellProgress01 = 0f;
+    _handDwellTriggered = false;
+}
+
+void ResetControllerHoverConfirmState()
+{
+    _confirmDwellActive = false;
+    _confirmDwellProgress01 = 0f;
+    _controllerHoverStartTime = -1f;
+    _controllerHoverTriggered = false;
+    _controllerHoverHadTargetLastFrame = false;
+}
+
+Handedness GetOppositeHand(Handedness hand)
+{
+    return hand == Handedness.Left ? Handedness.Right : Handedness.Left;
+}
+
+bool GetControllerConfirmEdge(Handedness hand)
+{
+    if (xrBackend == XRBackend.OpenXR)
+    {
+        if (hand == Handedness.Left)
+            return GetOpenXRButtonEdge(CommonUsages.triggerButton, hand, ref _confirmPressedLastFrameLeft);
+
+        return GetOpenXRButtonEdge(CommonUsages.triggerButton, hand, ref _confirmPressedLastFrameRight);
+    }
+
+    if (_confirmAction == null)
+        return false;
+
+    var source = hand == Handedness.Left
+        ? SteamVR_Input_Sources.LeftHand
+        : SteamVR_Input_Sources.RightHand;
+
+    return _confirmAction.GetStateDown(source);
+}
+
+bool TryGetCurrentAimTarget(out Vector3 worldCenter, out Vector3 planeNormal, out float targetRadiusMeters)
+{
+    worldCenter = Vector3.zero;
+    planeNormal = Vector3.up;
+    targetRadiusMeters = 0f;
+
+    var taskComponent = GetTaskComponent(taskMode);
+    IAimTargetProvider targetProvider = taskComponent as IAimTargetProvider;
+    if (targetProvider == null)
+        return false;
+
+    return targetProvider.TryGetAimTarget(out worldCenter, out planeNormal, out targetRadiusMeters);
+}
+
+bool IntersectRayWithPlane(Ray ray, Vector3 planePoint, Vector3 planeNormal, out Vector3 hitPoint)
+{
+    hitPoint = Vector3.zero;
+
+    Plane plane = new Plane(planeNormal, planePoint);
+    if (!plane.Raycast(ray, out float enter) || enter <= 0f || enter >= 10f)
+        return false;
+
+    hitPoint = ray.GetPoint(enter);
+    return true;
+}
+
+void EnforceSingleControllerMitigationMode()
+{
+    bool noChanged = noHeisenbergMitigation != _prevNoHeisenbergMitigation;
+    bool oppositeChanged = useOppositeHandTrigger != _prevUseOppositeHandTrigger;
+    bool hoverChanged = useControllerHoverConfirm != _prevUseControllerHoverConfirm;
+
+    if (hoverChanged && useControllerHoverConfirm)
+    {
+        noHeisenbergMitigation = false;
+        useOppositeHandTrigger = false;
+    }
+    else if (oppositeChanged && useOppositeHandTrigger)
+    {
+        noHeisenbergMitigation = false;
+        useControllerHoverConfirm = false;
+    }
+    else if (noChanged && noHeisenbergMitigation)
+    {
+        useOppositeHandTrigger = false;
+        useControllerHoverConfirm = false;
+    }
+    else if (!noHeisenbergMitigation && !useOppositeHandTrigger && !useControllerHoverConfirm)
+    {
+        noHeisenbergMitigation = true;
+    }
+
+    int trueCount = (noHeisenbergMitigation ? 1 : 0) +
+                    (useOppositeHandTrigger ? 1 : 0) +
+                    (useControllerHoverConfirm ? 1 : 0);
+
+    if (trueCount > 1)
+    {
+        if (useControllerHoverConfirm)
+        {
+            noHeisenbergMitigation = false;
+            useOppositeHandTrigger = false;
+        }
+        else if (useOppositeHandTrigger)
+        {
+            noHeisenbergMitigation = false;
+            useControllerHoverConfirm = false;
+        }
+        else
+        {
+            noHeisenbergMitigation = true;
+            useOppositeHandTrigger = false;
+            useControllerHoverConfirm = false;
+        }
+    }
+
+    SyncControllerMitigationPreviousState();
+}
+
+void SyncControllerMitigationPreviousState()
+{
+    _prevNoHeisenbergMitigation = noHeisenbergMitigation;
+    _prevUseOppositeHandTrigger = useOppositeHandTrigger;
+    _prevUseControllerHoverConfirm = useControllerHoverConfirm;
 }
 
 XRHands.XRHandSubsystem GetXRHandSubsystem()
@@ -1363,6 +1611,44 @@ public bool TryGetControllerPose(Handedness hand, out Pose controllerPose, out P
         : controllerPose;
 
     return controller != null || rayOrigin != null;
+}
+
+public bool TryGetMovementAnchorPose(Handedness hand, out Pose anchorPose, out string anchorSource)
+{
+    anchorPose = new Pose(Vector3.zero, Quaternion.identity);
+    anchorSource = "Unavailable";
+
+    if (xrBackend == XRBackend.OpenXR && openXRTrackingMode == OpenXRTrackingMode.Hands)
+    {
+        var handSubsystem = GetXRHandSubsystem();
+        if (handSubsystem != null)
+        {
+            var xrHand = hand == Handedness.Left ? handSubsystem.leftHand : handSubsystem.rightHand;
+            if (xrHand.isTracked)
+            {
+                if (TryGetTrackedJointPose(xrHand, XRHands.XRHandJointID.Palm, out Pose palmPose))
+                {
+                    anchorPose = new Pose(
+                        TransformTrackingPointToWorld(palmPose.position),
+                        TransformTrackingRotationToWorld(palmPose.rotation));
+                    anchorSource = "Palm";
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    bool hasControllerPose = TryGetControllerPose(hand, out Pose controllerPose, out Pose rayPose);
+    if (hasControllerPose)
+    {
+        anchorPose = controllerPose;
+        anchorSource = "ControllerBody";
+        return true;
+    }
+
+    return false;
 }
 
 public bool GetControllerTriggerState(Handedness hand)
