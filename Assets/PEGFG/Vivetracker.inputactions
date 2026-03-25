@@ -1,4 +1,5 @@
 {
+    "version": 1,
     "name": "Vivetracker",
     "maps": [
         {
@@ -6,10 +7,19 @@
             "id": "775cfabe-269d-4820-a1f7-3c1e5e49b2d5",
             "actions": [
                 {
-                    "name": "Vivetracker",
+                    "name": "pos",
                     "type": "Value",
                     "id": "57f0c5f1-f5eb-46f1-adf8-f51066d09c9b",
-                    "expectedControlType": "Pose",
+                    "expectedControlType": "Vector3",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "rot",
+                    "type": "Value",
+                    "id": "4483fcfc-431c-4193-b8ef-72a89ec61352",
+                    "expectedControlType": "Quaternion",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
@@ -19,11 +29,22 @@
                 {
                     "name": "",
                     "id": "f2360f29-708b-43ee-b78d-55c85876bf5d",
-                    "path": "<ViveController>{RightHand}/devicePose",
+                    "path": "<HandInteractionPoses>{RightHand}/devicePose/position",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Vivetracker",
+                    "action": "pos",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "669f55f6-1a7c-4b93-bebc-9f457667fa64",
+                    "path": "<HandInteractionPoses>{RightHand}/devicePose/rotation",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "rot",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
