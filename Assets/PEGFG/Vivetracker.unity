@@ -556,6 +556,7 @@ GameObject:
   - component: {fileID: 943124199}
   - component: {fileID: 943124198}
   - component: {fileID: 943124201}
+  - component: {fileID: 943124202}
   m_Layer: 0
   m_Name: XR Origin (VR)
   m_TagString: Untagged
@@ -681,6 +682,47 @@ MonoBehaviour:
     m_Interactions: 
     m_SingletonActionBindings: []
     m_Flags: 0
+--- !u!114 &943124202
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 943124197}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d02675b0b8a7e3f41aa411f1fd44d106, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  positionAction:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Position
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: a1cf4ba6-d18f-436c-859b-8d1fc448b187
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 4942723705506647497, guid: 5e7cb2106bdb59849ae0188a266d7ba5,
+      type: 3}
+  rotationAction:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Rotation
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: e6a28290-2035-47cf-a3d8-8dfdd37b1ce2
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: -7829880319169447782, guid: 5e7cb2106bdb59849ae0188a266d7ba5,
+      type: 3}
+  logToConsole: 1
+  logToFile: 1
+  logInterval: 0.1
 --- !u!1 &1070385956
 GameObject:
   m_ObjectHideFlags: 0
