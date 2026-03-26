@@ -59,7 +59,7 @@ public class PlayerPanel : MonoBehaviour
         loggerNotifier = new LoggerNotifier(persistentEventsHeadersDefaults: new Dictionary<string, string>(){
             {"GameMessage", "NULL"}
         });
-        soundManager = FindObjectOfType<SoundManager>();
+        soundManager = FindFirstObjectByType<SoundManager>();
     }
 
     // Hides/shows the panel

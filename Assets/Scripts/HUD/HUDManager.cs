@@ -16,10 +16,6 @@ public class HUDManager : MonoBehaviour
     [SerializeField]
     private CanvasGroup gradientB;
 
-    private float clock = -1f;
-
-    Side side = Side.None;
-
     private bool active = false;
 
     private float timer = 0.35f;

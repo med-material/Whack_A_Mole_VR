@@ -107,7 +107,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     void AutoAssignReferences()
     {
         if (runner == null)
-            runner = FindObjectOfType<SandboxRunner>();
+            runner = FindFirstObjectByType<SandboxRunner>();
 
         if (boardPlane == null)
             boardPlane = GameObject.Find("Board")?.transform;

@@ -350,7 +350,7 @@ namespace Valve.VR
         void OnEnable()
         {
             // Move game view cameras to lower-right quadrant.
-            cameras = FindObjectsOfType<Camera>();
+            cameras = FindObjectsByType<Camera>(FindObjectsSortMode.None);
             if (cameras != null)
             {
                 var numCameras = cameras.Length;

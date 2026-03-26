@@ -112,11 +112,9 @@ public static class FadingUtils
         {
             case FadeAction.In:
                 return instance.StartCoroutine(FadeInColor(Obj, fadeTime, fadeDelay, setEnable));
-                break;
 
             case FadeAction.Out:
                 return instance.StartCoroutine(FadeOutColor(Obj, fadeTime, fadeDelay, setEnable));
-                break;
         }
 
         return null;

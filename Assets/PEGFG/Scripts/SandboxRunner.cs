@@ -11,9 +11,6 @@ using UnityEditor;
 using XRHands = UnityEngine.XR.Hands;
 using XRManagement = UnityEngine.XR.Management;
 using Valve.VR;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 public interface ISandboxTask
 {
@@ -97,7 +94,6 @@ private MonoBehaviour exposureTask;
  [SerializeField] private bool stopPlayModeWhenExperimentCompletes = true;
 
 private bool autoReturnFromExposure = true;
-private float exposureReturnDelaySeconds = 1f;
 
 [Header("Debug")]
 [SerializeField] private bool drawDebugRays = true;
@@ -347,7 +343,7 @@ void AutoAssignReferences()
             mainCam = Camera.main;
 
         if (mainCam == null)
-            mainCam = FindObjectOfType<Camera>();
+            mainCam = FindFirstObjectByType<Camera>();
     }
 
     if (visualWorldRoot == null)

@@ -22,8 +22,8 @@ public class PatternPlayer : MonoBehaviour
 
     void Awake()
     {
-        patternInterface = FindObjectOfType<PatternInterface>();
-        wallManager = FindObjectOfType<WallManager>();
+        patternInterface = FindFirstObjectByType<PatternInterface>();
+        wallManager = FindFirstObjectByType<WallManager>();
         patternParser = new PatternParser();
     }
 

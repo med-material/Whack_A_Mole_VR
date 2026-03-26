@@ -93,7 +93,6 @@ public class ConnectToMySQL : MonoBehaviour
 	private StreamWriter writer;
 	private string directory;
 	private string fileName;
-	private string sep = ",";
 
 	[Header("(Optional) Deployment Settings")]
 	[Tooltip("Input a mysql_auth.txt here to remove the mySQL UI dialog on startup.")]
@@ -102,7 +101,6 @@ public class ConnectToMySQL : MonoBehaviour
 	//private Dictionary<string, string> credentials;
 	//private Dictionary<string, string> tables;
 
-	private float timeout = 2;
 	private float lastUploadTime = -1f;
 	private bool dumplock = false;
 
@@ -201,7 +199,7 @@ public class ConnectToMySQL : MonoBehaviour
 
 			yield return www.SendWebRequest();
 
-			if (www.isNetworkError || www.isHttpError)
+			if (www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
 			{
 				Debug.LogError(www.error);
 				Debug.LogError(www.downloadHandler.text);
@@ -416,7 +414,7 @@ public class ConnectToMySQL : MonoBehaviour
 		yield return www.SendWebRequest();
 
 		LogUploadResult logUploadResult = new LogUploadResult();
-		if (www.isNetworkError || www.isHttpError)
+		if (www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
 		{
 			logUploadResult.status = LogUploadStatus.Error;
 			logUploadResult.error = www.error;

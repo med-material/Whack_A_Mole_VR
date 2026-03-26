@@ -22,7 +22,7 @@ namespace Valve.VR.InteractionSystem
 			{
 				if ( _instance == null )
 				{
-					_instance = GameObject.FindObjectOfType<DebugUI>();
+					_instance = GameObject.FindFirstObjectByType<DebugUI>();
 				}
 				return _instance;
 			}

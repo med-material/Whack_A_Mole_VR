@@ -38,7 +38,7 @@ public class PatternManager : MonoBehaviour
     {
         patternReadWriter = new PatternReadWriter();
         patternParser = new PatternParser();
-        patternPlayer = FindObjectOfType<PatternPlayer>();
+        patternPlayer = FindFirstObjectByType<PatternPlayer>();
     }
 
     void Start()

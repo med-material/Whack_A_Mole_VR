@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.XR;
 using NetMQ.Sockets;
 using NetMQ;
 using MessagePack;
@@ -130,10 +131,10 @@ namespace PupilLabs
 
         private void UpdateEyesTranslation()
         {
-            Vector3 leftEye = UnityEngine.XR.InputTracking.GetLocalPosition(UnityEngine.XR.XRNode.LeftEye);
-            Vector3 rightEye = UnityEngine.XR.InputTracking.GetLocalPosition(UnityEngine.XR.XRNode.RightEye);
-            Vector3 centerEye = UnityEngine.XR.InputTracking.GetLocalPosition(UnityEngine.XR.XRNode.CenterEye);
-            Quaternion centerRotation = UnityEngine.XR.InputTracking.GetLocalRotation(UnityEngine.XR.XRNode.CenterEye);
+            Vector3 leftEye = GetNodeLocalPosition(XRNode.LeftEye);
+            Vector3 rightEye = GetNodeLocalPosition(XRNode.RightEye);
+            Vector3 centerEye = GetNodeLocalPosition(XRNode.CenterEye);
+            Quaternion centerRotation = GetNodeLocalRotation(XRNode.CenterEye);
 
             //convert local coords into center eye coordinates
             Vector3 globalCenterPos = Quaternion.Inverse(centerRotation) * centerEye;
@@ -149,6 +150,28 @@ namespace PupilLabs
             var relativeLeftEyePosition = globalLeftEyePos - globalCenterPos;
             relativeLeftEyePosition *= Helpers.PupilUnitScalingFactor;
             leftEyeTranslation = new float[] { relativeLeftEyePosition.x, relativeLeftEyePosition.y, relativeLeftEyePosition.z };
+        }
+
+        private static Vector3 GetNodeLocalPosition(XRNode node)
+        {
+            InputDevice device = InputDevices.GetDeviceAtXRNode(node);
+            if (device.isValid && device.TryGetFeatureValue(CommonUsages.devicePosition, out Vector3 position))
+            {
+                return position;
+            }
+
+            return Vector3.zero;
+        }
+
+        private static Quaternion GetNodeLocalRotation(XRNode node)
+        {
+            InputDevice device = InputDevices.GetDeviceAtXRNode(node);
+            if (device.isValid && device.TryGetFeatureValue(CommonUsages.deviceRotation, out Quaternion rotation))
+            {
+                return rotation;
+            }
+
+            return Quaternion.identity;
         }
 
         private void ReceiveSuccess(string topic, Dictionary<string, object> dictionary, byte[] thirdFrame)

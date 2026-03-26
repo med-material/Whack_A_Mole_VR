@@ -7,7 +7,7 @@ namespace PupilLabs.Demos
         public GazeController gazeCtrl;
 
         void Start(){
-            SubscriptionsController subsController = FindObjectOfType<SubscriptionsController>();
+            SubscriptionsController subsController = FindFirstObjectByType<SubscriptionsController>();
             if (subsController == null)
             {
                 Debug.LogWarning("No SubscriptionController and/or TimeSync found. Missing 'DontDestory' on Pupil Connection object?");

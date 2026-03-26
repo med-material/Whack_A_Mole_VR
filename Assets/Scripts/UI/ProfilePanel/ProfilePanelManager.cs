@@ -55,10 +55,10 @@ public class ProfilePanelManager : MonoBehaviour
 
     void Awake()
     {
-        profileManager = FindObjectOfType<ProfileManager>();
-        profileScrollViewManager = FindObjectOfType<ProfileScrollViewManager>();
-        profileCreationManager = FindObjectOfType<ProfileCreationManager>();
-        therapistUi = FindObjectOfType<TherapistUi>();
+        profileManager = FindFirstObjectByType<ProfileManager>();
+        profileScrollViewManager = FindFirstObjectByType<ProfileScrollViewManager>();
+        profileCreationManager = FindFirstObjectByType<ProfileCreationManager>();
+        therapistUi = FindFirstObjectByType<TherapistUi>();
     }
 
     void Start()

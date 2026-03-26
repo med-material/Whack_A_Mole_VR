@@ -208,7 +208,8 @@ public class DiskMole : Mole
             if (moleOutcome == MoleOutcome.Valid)
             {
                 PlayAnimation("PopCorrectMole");  // Show positive feedback to users that shoot a correct moles, to make it clear this is a success
-                popVisual.startColor = enabledColor;
+                var popVisualMain = popVisual.main;
+                popVisualMain.startColor = enabledColor;
                 popVisual.Play();
             }
             else

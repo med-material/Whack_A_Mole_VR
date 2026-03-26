@@ -82,7 +82,6 @@ public class ModifiersManager : MonoBehaviour
 
     [SerializeField]
     private GameObject prismOffsetObject;
-    private float prismOffsetAmount = -1f;
 
     [SerializeField]
     private Camera viveCamera;

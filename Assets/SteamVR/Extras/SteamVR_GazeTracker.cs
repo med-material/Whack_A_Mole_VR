@@ -32,7 +32,7 @@ namespace Valve.VR.Extras
             // If we haven't set up hmdTrackedObject find what the user is looking at
             if (hmdTrackedObject == null)
             {
-                SteamVR_TrackedObject[] trackedObjects = FindObjectsOfType<SteamVR_TrackedObject>();
+                SteamVR_TrackedObject[] trackedObjects = FindObjectsByType<SteamVR_TrackedObject>(FindObjectsSortMode.None);
                 foreach (SteamVR_TrackedObject tracked in trackedObjects)
                 {
                     if (tracked.index == SteamVR_TrackedObject.EIndex.Hmd)

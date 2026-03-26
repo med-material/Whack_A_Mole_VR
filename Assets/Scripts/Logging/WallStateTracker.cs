@@ -12,7 +12,11 @@ public class WallStateTracker : MonoBehaviour
 
     void Start()
     {
-        FindObjectOfType<WallManager>().GetUpdateEvent().AddListener(WallStateUpdate);
+        var wallManager = FindFirstObjectByType<WallManager>();
+        if (wallManager != null)
+        {
+            wallManager.GetUpdateEvent().AddListener(WallStateUpdate);
+        }
     }
 
     // Returns the distance between the hit point and the closest active Mole.

@@ -34,7 +34,7 @@ public class ForceWall : MonoBehaviour
         }
 
         // Find the (possibly persistent) WallManager in the scene or elsewhere
-        WallManager wallManager = FindObjectOfType<WallManager>();
+        WallManager wallManager = FindFirstObjectByType<WallManager>();
         if (wallManager == null)
         {
             Debug.LogWarning("ForceWall: WallManager not found in scene.");
