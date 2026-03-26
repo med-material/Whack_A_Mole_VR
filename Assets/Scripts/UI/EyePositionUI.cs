@@ -19,7 +19,6 @@ public class EyePositionUI : MonoBehaviour
     [SerializeField]
     private Transform gazeOrigin;
 
-    private bool isGazing = false;
     private Vector3 worldGazeOrigin;
     private Vector3 localGazeDirection = Vector3.zero;
     private Vector3 worldGazeDirection;

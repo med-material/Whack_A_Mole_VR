@@ -7,7 +7,7 @@ public class HeadSetManager : MonoBehaviour
 
     void Awake()
     {
-        therapistUi = FindObjectOfType<TherapistUi>();
+        therapistUi = FindFirstObjectByType<TherapistUi>();
         SteamVR_Events.DeviceConnected.Listen(OnDeviceConnected);
     }
 

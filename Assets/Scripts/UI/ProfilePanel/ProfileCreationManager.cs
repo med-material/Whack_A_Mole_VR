@@ -46,7 +46,7 @@ public class ProfileCreationManager : MonoBehaviour
 
     void Awake()
     {
-        panelManager = FindObjectOfType<ProfilePanelManager>();
+        panelManager = FindFirstObjectByType<ProfilePanelManager>();
     }
 
     // Specific profile properties to be passed on profile creation. For now we pass an empty Dictionary.

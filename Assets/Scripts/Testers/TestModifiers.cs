@@ -6,7 +6,6 @@ public class TestModifiers : MonoBehaviour
 
     private ModifiersManager.EyePatch eyePatch = ModifiersManager.EyePatch.Left;
     private ModifiersManager.ControllerSetup rightMain = ModifiersManager.ControllerSetup.Right;
-    private bool dualTask = false;
     private float controllerOffset = -15f;
     private bool mirrorEffect = false;
 

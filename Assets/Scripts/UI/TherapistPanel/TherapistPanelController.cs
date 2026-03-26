@@ -39,7 +39,7 @@ public class TherapistPanelController : MonoBehaviour
     {
         animationPlayer = gameObject.GetComponent<Animation>();
         layoutElement = gameObject.GetComponent<LayoutElement>();
-        therapistUi = FindObjectOfType<TherapistUi>();
+        therapistUi = FindFirstObjectByType<TherapistUi>();
 
         foreach (ButtonTextController controller in buttonTextContainer.GetComponentsInChildren<ButtonTextController>())
         {

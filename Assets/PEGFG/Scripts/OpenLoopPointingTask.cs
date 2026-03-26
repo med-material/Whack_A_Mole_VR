@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask
+public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
 {
     public enum BlockType { Baseline, Post }
 
@@ -22,6 +22,7 @@ public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask
     private float boardHalfWidth = 1f;
     private float boardHalfHeight = 1f;
     private bool clampToBoard = true;
+    [SerializeField] private float analysisTargetRadiusMeters = 0.03f;
 
     [Header("Trial gating (return to start posture)")]
     public bool requireResetBetweenTrials = false;
@@ -41,6 +42,7 @@ public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask
     bool _confirmLatched = false;
     bool _armed = true;
     float _lastAcceptedTime = -999f;
+    bool _currentTrialLogged = false;
 
     readonly List<float> _offsetsCm = new List<float>(128);
     float? _baselineMeanCm = null;
@@ -77,7 +79,7 @@ public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask
     void AutoAssignReferences()
     {
         if (runner == null)
-            runner = FindObjectOfType<SandboxRunner>();
+            runner = FindFirstObjectByType<SandboxRunner>();
 
         if (boardPlane == null)
             boardPlane = GameObject.Find("Board")?.transform;
@@ -126,6 +128,8 @@ public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask
             UpdateReadout(final: true);
             return;
         }
+
+        EnsureCurrentTrialLogged();
 
         var (ray, pose, confirm) = runner.GetTransformedInput();
 
@@ -185,6 +189,7 @@ public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask
 
             _offsetsCm.Add(signedCm);
             _trialIndex++;
+            _currentTrialLogged = false;
 
             experimentLogger?.LogMeasurementTrial(
                 TaskMode.ToString(),
@@ -268,6 +273,7 @@ public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask
                 }
             }
 
+            EnsureCurrentTrialLogged();
             UpdateReadout(final: _trialIndex >= trialsPerBlock);
             if (_trialIndex >= trialsPerBlock)
                 runner?.NotifyMeasurementBlockCompleted(TaskMode, blockType.ToString());
@@ -284,10 +290,12 @@ public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask
         _trialIndex = 0;
         _confirmLatched = false;
         _offsetsCm.Clear();
+        _currentTrialLogged = false;
 
         _armed = true;
         _lastAcceptedTime = -999f;
 
+        EnsureCurrentTrialLogged();
         UpdateReadout(final: false);
     }
 
@@ -361,6 +369,23 @@ public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask
         return false;
     }
 
+    void EnsureCurrentTrialLogged()
+    {
+        if (_currentTrialLogged || !_isActive || boardPlane == null || experimentLogger == null || _trialIndex >= trialsPerBlock)
+            return;
+
+        experimentLogger.LogMeasurementTrialStarted(
+            TaskMode.ToString(),
+            blockType.ToString(),
+            _trialIndex + 1,
+            trialsPerBlock,
+            boardPlane.position,
+            analysisTargetRadiusMeters,
+            null);
+
+        _currentTrialLogged = true;
+    }
+
     Vector3 ClampToBoard(Vector3 hitWorld)
     {
         Vector3 local = boardPlane.InverseTransformPoint(hitWorld);
@@ -409,5 +434,19 @@ public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask
         double sd = System.Math.Sqrt(var);
 
         return ((float)mean, (float)sd);
+    }
+
+    public bool TryGetAimTarget(out Vector3 worldCenter, out Vector3 planeNormal, out float targetRadiusMeters)
+    {
+        worldCenter = Vector3.zero;
+        planeNormal = Vector3.up;
+        targetRadiusMeters = analysisTargetRadiusMeters;
+
+        if (!_isActive || boardPlane == null || _trialIndex >= trialsPerBlock)
+            return false;
+
+        worldCenter = boardPlane.position;
+        planeNormal = boardPlane.up;
+        return true;
     }
 }

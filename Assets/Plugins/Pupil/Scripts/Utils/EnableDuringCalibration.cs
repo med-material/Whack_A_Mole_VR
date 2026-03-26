@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace PupilLabs
 {
@@ -8,7 +9,8 @@ namespace PupilLabs
     {
 
         public CalibrationController controller;
-        public MeshRenderer renderer;
+        [FormerlySerializedAs("renderer")]
+        public MeshRenderer targetRenderer;
 
         void Awake()
         {
@@ -24,12 +26,18 @@ namespace PupilLabs
 
         void EnableMePls()
         {
-            renderer.enabled = true;
+            if (targetRenderer != null)
+            {
+                targetRenderer.enabled = true;
+            }
         }
 
         void DisableMePls()
         {
-            renderer.enabled = false;
+            if (targetRenderer != null)
+            {
+                targetRenderer.enabled = false;
+            }
         }
     }
 }

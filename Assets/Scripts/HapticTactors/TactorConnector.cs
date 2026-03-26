@@ -166,6 +166,7 @@ public class TactorConnector : MonoBehaviour
     [Tooltip("Serial COM port for the tactor device")]
     [SerializeField] private string comPort;
 
+#pragma warning disable CS0414
     [TextArea(10, 20)]
     [SerializeField]
     private string controls =
@@ -182,6 +183,7 @@ public class TactorConnector : MonoBehaviour
         "Valid Gain Range: 1-255\n" +
         "Valid Frequency Range: 300-3550\n" +
         "Duration is in ms. Minimum 1.";
+#pragma warning restore CS0414
 
     [Header("Tactor Settings")]
     [Tooltip("Settings for each tactor (1-5)")]

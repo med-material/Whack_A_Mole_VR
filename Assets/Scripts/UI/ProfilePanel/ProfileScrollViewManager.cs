@@ -20,7 +20,7 @@ public class ProfileScrollViewManager : MonoBehaviour
 
     void Awake()
     {
-        panelManager = FindObjectOfType<ProfilePanelManager>();
+        panelManager = FindFirstObjectByType<ProfilePanelManager>();
 
     }
     // Adds a profile button with the given name and ID.

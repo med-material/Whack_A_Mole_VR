@@ -140,7 +140,7 @@ public class EMGClassifiedGestureManager : MonoBehaviour
         }
 
         // Lazy resolve if not assigned
-        if (tactorConnector == null) tactorConnector = FindObjectOfType<TactorConnector>();
+        if (tactorConnector == null) tactorConnector = FindFirstObjectByType<TactorConnector>();
 
         if (tactorConnector == null)
         {

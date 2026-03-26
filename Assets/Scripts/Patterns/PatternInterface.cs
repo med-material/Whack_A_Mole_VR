@@ -66,13 +66,13 @@ public class PatternInterface : MonoBehaviour
 
     void Awake()
     {
-        wallManager = FindObjectOfType<WallManager>();
-        modifiersManager = FindObjectOfType<ModifiersManager>();
-        gameDirector = FindObjectOfType<GameDirector>();
-        motorspaceManager = FindObjectOfType<MotorSpaceManager>();
-        playerPanel = FindObjectOfType<PlayerPanel>();
-        themeManager = FindObjectOfType<ThemeManager>();
-        tactorConnector = FindObjectOfType<TactorConnector>();
+        wallManager = FindFirstObjectByType<WallManager>();
+        modifiersManager = FindFirstObjectByType<ModifiersManager>();
+        gameDirector = FindFirstObjectByType<GameDirector>();
+        motorspaceManager = FindFirstObjectByType<MotorSpaceManager>();
+        playerPanel = FindFirstObjectByType<PlayerPanel>();
+        themeManager = FindFirstObjectByType<ThemeManager>();
+        tactorConnector = FindFirstObjectByType<TactorConnector>();
     }
 
     void Start()

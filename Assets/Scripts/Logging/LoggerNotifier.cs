@@ -34,7 +34,7 @@ public class LoggerNotifier : UnityEngine.Object
 
         this.updateGeneralValues = updateGeneralValues;
 
-        EventLogger eventLogger = FindObjectOfType<EventLogger>();
+        EventLogger eventLogger = FindFirstObjectByType<EventLogger>();
         updateEvent.AddListener(eventLogger.EventNotification);
     }
 

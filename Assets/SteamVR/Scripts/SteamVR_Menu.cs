@@ -239,7 +239,7 @@ namespace Valve.VR
 
             // If an existing camera is rendering into the overlay texture, we need
             // to temporarily disable it to keep it from clearing the texture on us.
-            var cameras = Object.FindObjectsOfType(typeof(Camera)) as Camera[];
+            var cameras = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None);
             foreach (var cam in cameras)
             {
                 if (cam.enabled && cam.targetTexture == texture)

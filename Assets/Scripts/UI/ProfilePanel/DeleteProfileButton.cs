@@ -17,7 +17,7 @@ public class DeleteProfileButton : MonoBehaviour
 
     void Awake()
     {
-        profilePanelManager = FindObjectOfType<ProfilePanelManager>();
+        profilePanelManager = FindFirstObjectByType<ProfilePanelManager>();
     }
 
     public void SwitchToDeleteMode()

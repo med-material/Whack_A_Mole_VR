@@ -34,7 +34,6 @@ public class EventLogger : MonoBehaviour
     private Dictionary<string, object> currentMoleLog = new Dictionary<string, object>();
     private Dictionary<string, Dictionary<int, string>> logs = new Dictionary<string, Dictionary<int, string>>();
     private Dictionary<string, string> defaultValues = new Dictionary<string, string>();
-    private int logCount = 0;
     private string email = "";
     private LoggingManager loggingManager;
     private WallStateTracker wallStateTracker;

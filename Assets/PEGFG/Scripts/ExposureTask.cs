@@ -1,7 +1,7 @@
 using UnityEngine;
 using TMPro;
 
-public class ExposureTask : MonoBehaviour, ISandboxTask
+public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
 {
     private const string HitMarkerObjectName = "Hitmarker";
 
@@ -107,7 +107,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask
     void AutoAssignReferences()
     {
         if (runner == null)
-            runner = FindObjectOfType<SandboxRunner>();
+            runner = FindFirstObjectByType<SandboxRunner>();
 
         if (boardPlane == null)
             boardPlane = GameObject.Find("Board")?.transform;
@@ -422,5 +422,23 @@ public class ExposureTask : MonoBehaviour, ISandboxTask
             2 => "Right",
             _ => $"T{i}"
         };
+    }
+
+    public bool TryGetAimTarget(out Vector3 worldCenter, out Vector3 planeNormal, out float targetRadiusMeters)
+    {
+        worldCenter = Vector3.zero;
+        planeNormal = Vector3.up;
+        targetRadiusMeters = hitRadiusMeters;
+
+        if (!_isActive || boardPlane == null || targets == null || _currentTargetIndex < 0 || _currentTargetIndex >= targets.Length)
+            return false;
+
+        Transform target = targets[_currentTargetIndex];
+        if (target == null)
+            return false;
+
+        worldCenter = target.position;
+        planeNormal = boardPlane.up;
+        return true;
     }
 }

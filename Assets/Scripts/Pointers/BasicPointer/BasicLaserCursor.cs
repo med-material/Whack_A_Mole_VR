@@ -9,9 +9,6 @@ public class BasicLaserCursor : LaserCursor
     [SerializeField]
     private float lightRadius = 0.5f;
 
-    [SerializeField]
-    private float lightIntensity = 0.75f;
-
     private GameObject lightObject;
     private Light pointLight;
 

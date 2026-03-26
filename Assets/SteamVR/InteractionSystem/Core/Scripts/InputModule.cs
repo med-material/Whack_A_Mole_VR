@@ -22,7 +22,7 @@ namespace Valve.VR.InteractionSystem
 			get
 			{
 				if ( _instance == null )
-					_instance = GameObject.FindObjectOfType<InputModule>();
+					_instance = GameObject.FindFirstObjectByType<InputModule>();
 
 				return _instance;
 			}

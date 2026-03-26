@@ -125,19 +125,19 @@ public class GameDirector : MonoBehaviour
 
     void Awake()
     {
-        patternManager = FindObjectOfType<PatternManager>();
-        modifiersManager = FindObjectOfType<ModifiersManager>();
+        patternManager = FindFirstObjectByType<PatternManager>();
+        modifiersManager = FindFirstObjectByType<ModifiersManager>();
         gameDefaultDuration = gameDuration;
-        constraint = FindObjectOfType<Constraint>();
+        constraint = FindFirstObjectByType<Constraint>();
     }
 
     private void Update()
     {
-        if (!wallManager) wallManager = FindObjectOfType<WallManager>();
+        if (!wallManager) wallManager = FindFirstObjectByType<WallManager>();
     }
     private void ResetPointerShootOrder()
     {
-        allPointers = FindObjectsOfType<Pointer>();
+        allPointers = FindObjectsByType<Pointer>(FindObjectsSortMode.None);
 
         foreach (Pointer pointer in allPointers)
         {

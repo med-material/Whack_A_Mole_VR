@@ -54,6 +54,7 @@ public class PrismExperimentLogger : MonoBehaviour
         "TargetWorldX",
         "TargetWorldY",
         "TargetWorldZ",
+        "TargetRadiusMeters",
         "HitWorldX",
         "HitWorldY",
         "HitWorldZ",
@@ -100,6 +101,13 @@ public class PrismExperimentLogger : MonoBehaviour
         "RightControllerLaserRotEulerY",
         "RightControllerLaserRotEulerZ",
         "RightControllerTrigger",
+        "RightMovementAnchorPosWorldX",
+        "RightMovementAnchorPosWorldY",
+        "RightMovementAnchorPosWorldZ",
+        "RightMovementAnchorRotEulerX",
+        "RightMovementAnchorRotEulerY",
+        "RightMovementAnchorRotEulerZ",
+        "RightMovementAnchorSource",
         "LeftControllerPosWorldX",
         "LeftControllerPosWorldY",
         "LeftControllerPosWorldZ",
@@ -113,6 +121,13 @@ public class PrismExperimentLogger : MonoBehaviour
         "LeftControllerLaserRotEulerY",
         "LeftControllerLaserRotEulerZ",
         "LeftControllerTrigger",
+        "LeftMovementAnchorPosWorldX",
+        "LeftMovementAnchorPosWorldY",
+        "LeftMovementAnchorPosWorldZ",
+        "LeftMovementAnchorRotEulerX",
+        "LeftMovementAnchorRotEulerY",
+        "LeftMovementAnchorRotEulerZ",
+        "LeftMovementAnchorSource",
     };
 
     static readonly List<string> SummaryHeaders = new List<string>
@@ -253,6 +268,29 @@ public class PrismExperimentLogger : MonoBehaviour
 
         Merge(data, extraData);
         LogEvent("Trial Accepted", "TaskEvent", taskMode, blockType, data);
+    }
+
+    public void LogMeasurementTrialStarted(
+        string taskMode,
+        string blockType,
+        int trialIndex,
+        int trialsPerBlock,
+        Vector3 targetWorld,
+        float targetRadiusMeters,
+        Dictionary<string, object> extraData = null)
+    {
+        var data = new Dictionary<string, object>
+        {
+            { "TrialIndex", trialIndex },
+            { "TrialsPerBlock", trialsPerBlock },
+            { "TargetWorldX", targetWorld.x },
+            { "TargetWorldY", targetWorld.y },
+            { "TargetWorldZ", targetWorld.z },
+            { "TargetRadiusMeters", targetRadiusMeters },
+        };
+
+        Merge(data, extraData);
+        LogEvent("Trial Started", "TaskEvent", taskMode, blockType, data);
     }
 
     public void LogBlockCompleted(string taskMode, string blockType, Dictionary<string, object> summaryData)
@@ -545,6 +583,7 @@ public class PrismExperimentLogger : MonoBehaviour
             return;
 
         bool hasPose = runner.TryGetControllerPose(hand, out Pose controllerPose, out Pose rayPose);
+        bool hasMovementAnchor = runner.TryGetMovementAnchorPose(hand, out Pose movementAnchorPose, out string movementAnchorSource);
         bool trigger = runner.GetControllerTriggerState(hand);
 
         data[$"{prefix}PosWorldX"] = hasPose ? controllerPose.position.x : "";
@@ -560,6 +599,13 @@ public class PrismExperimentLogger : MonoBehaviour
         data[$"{prefix}LaserRotEulerY"] = hasPose ? rayPose.rotation.eulerAngles.y : "";
         data[$"{prefix}LaserRotEulerZ"] = hasPose ? rayPose.rotation.eulerAngles.z : "";
         data[$"{prefix}Trigger"] = trigger ? 1 : 0;
+        data[$"{prefix.Replace("Controller", "MovementAnchor")}PosWorldX"] = hasMovementAnchor ? movementAnchorPose.position.x : "";
+        data[$"{prefix.Replace("Controller", "MovementAnchor")}PosWorldY"] = hasMovementAnchor ? movementAnchorPose.position.y : "";
+        data[$"{prefix.Replace("Controller", "MovementAnchor")}PosWorldZ"] = hasMovementAnchor ? movementAnchorPose.position.z : "";
+        data[$"{prefix.Replace("Controller", "MovementAnchor")}RotEulerX"] = hasMovementAnchor ? movementAnchorPose.rotation.eulerAngles.x : "";
+        data[$"{prefix.Replace("Controller", "MovementAnchor")}RotEulerY"] = hasMovementAnchor ? movementAnchorPose.rotation.eulerAngles.y : "";
+        data[$"{prefix.Replace("Controller", "MovementAnchor")}RotEulerZ"] = hasMovementAnchor ? movementAnchorPose.rotation.eulerAngles.z : "";
+        data[$"{prefix.Replace("Controller", "MovementAnchor")}Source"] = hasMovementAnchor ? movementAnchorSource : "";
     }
 
     Dictionary<string, object> CreateSummaryRow(

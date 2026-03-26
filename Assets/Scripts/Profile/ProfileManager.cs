@@ -16,7 +16,7 @@ public class ProfileManager : MonoBehaviour
 
     void Awake()
     {
-        eventLogger = FindObjectOfType<EventLogger>();
+        eventLogger = FindFirstObjectByType<EventLogger>();
         readWriter = new ProfilesReadWriter();
         selectedProfileProperties = new Dictionary<string, string>();
     }
