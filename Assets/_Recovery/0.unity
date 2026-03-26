@@ -7596,13 +7596,12 @@ MonoBehaviour:
   noHeisenbergMitigation: 1
   useOppositeHandTrigger: 0
   useControllerHoverConfirm: 0
-  controllerHoverSeconds: 2
-  controllerHoverActivationRadiusMeters: 0.2
+  controllerHoverSeconds: 1
+  controllerHoverActivationRadiusMeters: 0.5
   taskTransitionSeconds: 2
   rigRoot: {fileID: 797467731}
   hmd: {fileID: 18658417}
   boardMid: {fileID: 1892068454}
-  bodyCenterAnchor: {fileID: 1191148186}
   calibrateOnStart: 1
   recenterXRTrackingOnCalibrate: 1
   translation:
@@ -7619,7 +7618,7 @@ MonoBehaviour:
   restartBaselineKey: 114
   autoProgressExperiment: 1
   stopPlayModeWhenExperimentCompletes: 1
-  drawDebugRays: 0
+  drawDebugRays: 1
 --- !u!114 &1362508243
 MonoBehaviour:
   m_ObjectHideFlags: 0

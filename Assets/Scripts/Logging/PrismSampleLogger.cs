@@ -14,10 +14,15 @@ public class PrismSampleLogger : MonoBehaviour
     {
         "Event",
         "TaskMode",
+        "BlockType",
         "EffectMode",
         "XRBackend",
         "TrackingMode",
         "ActiveHand",
+        "ConfirmMitigationMode",
+        "TrialIndex",
+        "AttemptIndex",
+        "TargetIndex",
         "IsHandPointing",
         "HandDwellProgress01",
         "ConfirmDown",
@@ -130,6 +135,7 @@ public class PrismSampleLogger : MonoBehaviour
     Dictionary<string, object> BuildSampleRow()
     {
         var (ray, pose, confirm) = runner.GetTransformedInput();
+        runner.GetLoggingContext(out string blockType, out int? trialIndex, out int? attemptIndex, out int? targetIndex);
 
         Transform hmd = Camera.main != null ? Camera.main.transform : null;
         Quaternion hmdRotation = hmd != null ? hmd.rotation : Quaternion.identity;
@@ -152,10 +158,15 @@ public class PrismSampleLogger : MonoBehaviour
         {
             { "Event", "Sample" },
             { "TaskMode", runner.CurrentTaskMode.ToString() },
+            { "BlockType", blockType },
             { "EffectMode", runner.CurrentAppliedEffectMode.ToString() },
             { "XRBackend", runner.CurrentXRBackend.ToString() },
             { "TrackingMode", runner.CurrentOpenXRTrackingMode.ToString() },
             { "ActiveHand", runner.CurrentActiveHand.ToString() },
+            { "ConfirmMitigationMode", runner.CurrentConfirmMitigationMode },
+            { "TrialIndex", trialIndex.HasValue ? trialIndex.Value : "" },
+            { "AttemptIndex", attemptIndex.HasValue ? attemptIndex.Value : "" },
+            { "TargetIndex", targetIndex.HasValue ? targetIndex.Value : "" },
             { "IsHandPointing", runner.IsHandPointing ? 1 : 0 },
             { "HandDwellProgress01", runner.HandDwellProgress01 },
             { "ConfirmDown", confirm ? 1 : 0 },

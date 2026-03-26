@@ -77,6 +77,8 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
     Quaternion _boardBaselineRot;
 
     public SandboxRunner.TaskMode TaskMode => SandboxRunner.TaskMode.Landmark;
+    public string GetCurrentBlockName() => blockType.ToString();
+    public int GetCurrentTrialNumber() => Mathf.Clamp(_trialIndex + 1, 1, trialsPerBlock);
 
     void Awake()
     {
@@ -239,7 +241,7 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
             return;
         }
 
-        Vector3 local = boardPlane.InverseTransformPoint(hit);
+        Vector3 local = WorldToBoardMeters(hit);
         local.z = _currentLineZ;
 
         ChoiceSide chosenSide = (local.x >= 0f) ? ChoiceSide.Right : ChoiceSide.Left;
@@ -248,7 +250,7 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
             ? SnapToSegment(local, chosenSide)
             : ClampToSegment(local, chosenSide);
 
-        Vector3 snappedWorld = boardPlane.TransformPoint(snappedLocal);
+        Vector3 snappedWorld = BoardMetersToWorld(snappedLocal);
 
         if (cursorMarker && showCursor)
             cursorMarker.position = snappedWorld;
@@ -459,10 +461,10 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
         Vector3 r0 = new Vector3(+halfGap, 0f, _currentLineZ);
         Vector3 r1 = new Vector3(+halfGap + _rightLen, 0f, _currentLineZ);
 
-        Vector3 l0w = boardPlane.TransformPoint(l0);
-        Vector3 l1w = boardPlane.TransformPoint(l1);
-        Vector3 r0w = boardPlane.TransformPoint(r0);
-        Vector3 r1w = boardPlane.TransformPoint(r1);
+        Vector3 l0w = BoardMetersToWorld(l0);
+        Vector3 l1w = BoardMetersToWorld(l1);
+        Vector3 r0w = BoardMetersToWorld(r0);
+        Vector3 r1w = BoardMetersToWorld(r1);
 
         leftRenderer.positionCount = 2;
         leftRenderer.useWorldSpace = true;
@@ -593,5 +595,23 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
         int sum = 0;
         for (int i = 0; i < xs.Count; i++) sum += xs[i];
         return (float)sum / xs.Count;
+    }
+
+    Vector3 BoardMetersToWorld(Vector3 localMeters)
+    {
+        Vector3 right = Vector3.ProjectOnPlane(boardPlane.right, boardPlane.up).normalized;
+        Vector3 forward = Vector3.ProjectOnPlane(boardPlane.forward, boardPlane.up).normalized;
+        return boardPlane.position + (right * localMeters.x) + (forward * localMeters.z);
+    }
+
+    Vector3 WorldToBoardMeters(Vector3 worldPoint)
+    {
+        Vector3 relative = worldPoint - boardPlane.position;
+        Vector3 right = Vector3.ProjectOnPlane(boardPlane.right, boardPlane.up).normalized;
+        Vector3 forward = Vector3.ProjectOnPlane(boardPlane.forward, boardPlane.up).normalized;
+        return new Vector3(
+            Vector3.Dot(relative, right),
+            0f,
+            Vector3.Dot(relative, forward));
     }
 }

@@ -95,6 +95,36 @@ meta_num <- function(meta_data, key, default = NA_real_) {
   if (is.na(value)) default else value
 }
 
+resolve_exposure_radius_m <- function(meta_data, event_data) {
+  meta_radius <- meta_num(meta_data, "ExposureHitRadiusMeters", NA_real_)
+  if (is.finite(meta_radius)) {
+    return(meta_radius)
+  }
+
+  event_radius <- event_data |>
+    mutate(target_radius_m = safe_num_col(event_data, "TargetRadiusMeters")) |>
+    filter(!is.na(target_radius_m), is.finite(target_radius_m), target_radius_m > 0) |>
+    summarise(value = dplyr::first(target_radius_m)) |>
+    pull(value)
+
+  if (length(event_radius) == 0 || !is.finite(event_radius)) {
+    return(NA_real_)
+  }
+
+  event_radius
+}
+
+format_confirm_mitigation_label <- function(x) {
+  if (is.na(x) || x == "") return("unknown")
+
+  dplyr::case_when(
+    x %in% c("NoMitigation", "none", "None") ~ "none",
+    x %in% c("ControllerHoverConfirm", "Hover", "hover") ~ "Hover",
+    x %in% c("OppositeHandTrigger", "OppositeConfirm", "opposite", "Opposite") ~ "OppositeConfirm",
+    TRUE ~ as.character(x)
+  )
+}
+
 discover_sessions <- function(log_dir) {
   csv_files <- list.files(log_dir, pattern = "_(Meta|Event|Sample|Summary)\\.csv$", full.names = TRUE)
   csv_files <- csv_files[!grepl("\\.meta$", csv_files, ignore.case = TRUE)]
@@ -147,7 +177,12 @@ discover_sessions <- function(log_dir) {
       },
       .groups = "drop"
     ) |>
-    filter(!is.na(Meta), Meta != "") |>
+    filter(
+      !is.na(Meta), Meta != "",
+      !is.na(Event), Event != "",
+      !is.na(Summary), Summary != "",
+      tolower(session_state) == "finished"
+    ) |>
     arrange(desc(timestamp))
 }
 
@@ -351,7 +386,7 @@ format_effect_label <- function(aftereffect_row) {
   paste0(configured, " (applied: ", applied, ")")
 }
 
-build_spatial_plot <- function(event_data, selected_task = "Exposure", selected_block = "Exposure") {
+build_spatial_plot <- function(meta_data, event_data, selected_task = "Exposure", selected_block = "Exposure") {
   if (nrow(event_data) == 0) {
     return(ggplot() + annotate("text", x = 1, y = 1, label = "No event data loaded") + theme_void())
   }
@@ -432,12 +467,14 @@ build_spatial_plot <- function(event_data, selected_task = "Exposure", selected_
   spawn_events <- event_subset |>
     filter(Event == "Mole Spawned")
 
+  exposure_radius_m <- resolve_exposure_radius_m(meta_data, event_subset)
+
   targets <- spawn_events |>
     transmute(
       kind = "Target",
       x = as_num(MolePositionWorldX),
       y = as_num(MolePositionWorldY),
-      radius_m = safe_num_col(spawn_events, "TargetRadiusMeters"),
+      radius_m = exposure_radius_m,
       label = case_when(
         as_num(MolePositionWorldX) < -0.1 ~ "Left",
         as_num(MolePositionWorldX) > 0.1 ~ "Right",
@@ -449,7 +486,8 @@ build_spatial_plot <- function(event_data, selected_task = "Exposure", selected_
           as_num(MolePositionWorldX) > 0.1 ~ "Right",
           TRUE ~ "Center"
         ),
-        "<br>Target radius: ", sprintf("%.1f", dplyr::coalesce(safe_num_col(spawn_events, "TargetRadiusMeters"), 0.112) * 100), " cm"
+        "<br>Target radius: ",
+        ifelse(is.finite(exposure_radius_m), sprintf("%.1f cm", exposure_radius_m * 100), "Not logged")
       )
     ) |>
     filter(!is.na(x), !is.na(y)) |>
@@ -474,8 +512,7 @@ build_spatial_plot <- function(event_data, selected_task = "Exposure", selected_
 
   miss_events <- event_subset |>
     filter(Event == "Mole Missed")
-
-  miss_threshold_m <- dplyr::coalesce(safe_num_col(miss_events, "TargetRadiusMeters"), 0.112)
+  miss_threshold_m <- exposure_radius_m
 
   misses <- miss_events |>
     transmute(
@@ -487,7 +524,8 @@ build_spatial_plot <- function(event_data, selected_task = "Exposure", selected_
       hover_text = paste0(
         "Outcome: Miss",
         "<br>Distance from target center: ", sprintf("%.1f", as_num(HitDistanceMeters) * 100), " cm",
-        "<br>Outside hit radius of ", sprintf("%.1f", miss_threshold_m * 100), " cm"
+        "<br>Outside hit radius of ",
+        ifelse(is.finite(miss_threshold_m), sprintf("%.1f cm", miss_threshold_m * 100), "unknown size")
       )
     ) |>
     filter(!is.na(x), !is.na(y))
@@ -503,8 +541,11 @@ build_spatial_plot <- function(event_data, selected_task = "Exposure", selected_
   }
 
   target_circles <- purrr::pmap_dfr(
-    list(targets$x, targets$y, dplyr::coalesce(targets$radius_m, 0.112), targets$label),
+    list(targets$x, targets$y, targets$radius_m, targets$label),
     function(cx, cy, radius, label) {
+      if (!is.finite(radius) || radius <= 0) {
+        return(tibble())
+      }
       theta <- seq(0, 2 * pi, length.out = 80)
       tibble(
         x = cx + radius * cos(theta),
@@ -1036,7 +1077,7 @@ extract_phase_profile <- function(meta_data, sample_data, event_data, selected_t
 
     spawn_ts <- if (nrow(spawn_match) == 0) confirm_ts - time_window else spawn_match$ts[[1]]
     window_start <- max(confirm_ts - time_window, spawn_ts)
-    target_radius <- meta_num(meta_data, "ExposureHitRadiusMeters", 0.112)
+    target_radius <- resolve_exposure_radius_m(meta_data, event_data)
 
     path <- sample_subset |>
       filter(ts >= window_start, ts <= confirm_ts) |>
@@ -1982,6 +2023,18 @@ server <- function(input, output, session) {
       input_mode_label <- "unknown"
     }
 
+    confirm_mitigation <- NA_character_
+    if (has_cols(summary, "ConfirmMitigationMode") && nrow(summary) > 0) {
+      vals <- unique(na.omit(as.character(summary$ConfirmMitigationMode)))
+      if (length(vals) > 0) {
+        confirm_mitigation <- vals[[1]]
+      }
+    }
+    if ((is.na(confirm_mitigation) || confirm_mitigation == "") && has_cols(meta, "ConfirmMitigationMode") && nrow(meta) > 0) {
+      confirm_mitigation <- as.character(meta$ConfirmMitigationMode[[1]])
+    }
+    confirm_mitigation <- format_confirm_mitigation_label(confirm_mitigation)
+
     if (!has_cols(summary, c("SummaryType", "Magnitude", "SignedDelta", "BaselineValue", "PostValue", "BaselineSd", "PostSd", "TaskMode", "MetricName", "MetricUnits"))) {
       return(tagList(
         div(class = "metric-card",
@@ -2023,6 +2076,7 @@ server <- function(input, output, session) {
           div(class = "metric-title", "Task"),
           div(class = "metric-value", aftereffect$TaskMode[[1]]),
           div(class = "metric-sub", paste("Input mode:", input_mode_label)),
+          div(class = "metric-sub", paste("Heisenberg mitigation:", confirm_mitigation)),
           div(class = "metric-sub", paste("Measured value:", aftereffect$MetricName[[1]])),
           div(class = "metric-sub", paste("Configured effect:", format_effect_label(aftereffect)))
       ),
@@ -2494,7 +2548,7 @@ server <- function(input, output, session) {
 
   output$spatial_plot <- renderPlotly({
     suppressWarnings(suppressMessages({
-      plot_obj <- build_spatial_plot(current_event(), input$spatial_task, input$spatial_block)
+      plot_obj <- build_spatial_plot(current_meta(), current_event(), input$spatial_task, input$spatial_block)
       ggplotly(plot_obj, tooltip = "text")
     }))
   })

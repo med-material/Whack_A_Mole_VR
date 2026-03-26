@@ -47,6 +47,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     bool _armed = true;
     float _lastAcceptedTime = -999f;
     bool _currentTrialLogged = false;
+    float? _liveErrorCm = null;
 
     float _currentLineZ = 0f;
     float _currentHalfLen = 0.2f;
@@ -60,6 +61,8 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     bool _isActive;
 
     public SandboxRunner.TaskMode TaskMode => SandboxRunner.TaskMode.LineBisection;
+    public string GetCurrentBlockName() => blockType.ToString();
+    public int GetCurrentTrialNumber() => Mathf.Clamp(_trialIndex + 1, 1, trialsPerBlock);
 
     void Awake()
     {
@@ -168,17 +171,19 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
 
         if (!IntersectRayWithBoard(ray, out Vector3 hit))
         {
+            _liveErrorCm = null;
             UpdateReadout(final: false);
             return;
         }
 
-        Vector3 local = boardPlane.InverseTransformPoint(hit);
+        Vector3 local = WorldToBoardMeters(hit);
         local.z = _currentLineZ;
+        _liveErrorCm = local.x * 100f;
 
         if (clampToLineSegment)
             local.x = Mathf.Clamp(local.x, -_currentHalfLen, _currentHalfLen);
 
-        Vector3 constrainedWorld = boardPlane.TransformPoint(local);
+        Vector3 constrainedWorld = BoardMetersToWorld(local);
 
         if (cursorMarker && showCursor)
             cursorMarker.position = constrainedWorld;
@@ -341,8 +346,8 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         Vector3 aLocal = new Vector3(-_currentHalfLen, 0f, _currentLineZ);
         Vector3 bLocal = new Vector3(+_currentHalfLen, 0f, _currentLineZ);
 
-        Vector3 aWorld = boardPlane.TransformPoint(aLocal);
-        Vector3 bWorld = boardPlane.TransformPoint(bLocal);
+        Vector3 aWorld = BoardMetersToWorld(aLocal);
+        Vector3 bWorld = BoardMetersToWorld(bLocal);
 
         lineRenderer.positionCount = 2;
         lineRenderer.useWorldSpace = true;
@@ -355,7 +360,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         if (_currentTrialLogged || !_isActive || boardPlane == null || experimentLogger == null || _trialIndex >= trialsPerBlock)
             return;
 
-        Vector3 midpointWorld = boardPlane.TransformPoint(new Vector3(0f, 0f, _currentLineZ));
+        Vector3 midpointWorld = BoardMetersToWorld(new Vector3(0f, 0f, _currentLineZ));
 
         experimentLogger.LogMeasurementTrialStarted(
             TaskMode.ToString(),
@@ -405,7 +410,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
             readout.text =
                 $"Line Bisection ({blockType})\n" +
                 $"Trial {_trialIndex}/{trialsPerBlock}\n" +
-                $"Error: —\n" +
+                $"Aim: {(_liveErrorCm.HasValue ? $"{_liveErrorCm.Value:0.0} cm" : "—")}\n" +
                 $"Gate: {gateTxt}";
             return;
         }
@@ -418,6 +423,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
             readout.text =
                 $"Line Bisection ({blockType})\n" +
                 $"Trial {_trialIndex}/{trialsPerBlock}\n" +
+                $"Aim: {(_liveErrorCm.HasValue ? $"{_liveErrorCm.Value:0.0} cm" : "—")}\n" +
                 $"Last: {last:0.0} cm\n" +
                 $"Mean: {mean:0.0} cm (SD {sd:0.0})\n" +
                 $"Gate: {gateTxt}";
@@ -470,8 +476,26 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         if (!_isActive || boardPlane == null || _trialIndex >= trialsPerBlock)
             return false;
 
-        worldCenter = boardPlane.TransformPoint(new Vector3(0f, 0f, _currentLineZ));
+        worldCenter = BoardMetersToWorld(new Vector3(0f, 0f, _currentLineZ));
         planeNormal = boardPlane.up;
         return true;
+    }
+
+    Vector3 BoardMetersToWorld(Vector3 localMeters)
+    {
+        Vector3 right = Vector3.ProjectOnPlane(boardPlane.right, boardPlane.up).normalized;
+        Vector3 forward = Vector3.ProjectOnPlane(boardPlane.forward, boardPlane.up).normalized;
+        return boardPlane.position + (right * localMeters.x) + (forward * localMeters.z);
+    }
+
+    Vector3 WorldToBoardMeters(Vector3 worldPoint)
+    {
+        Vector3 relative = worldPoint - boardPlane.position;
+        Vector3 right = Vector3.ProjectOnPlane(boardPlane.right, boardPlane.up).normalized;
+        Vector3 forward = Vector3.ProjectOnPlane(boardPlane.forward, boardPlane.up).normalized;
+        return new Vector3(
+            Vector3.Dot(relative, right),
+            0f,
+            Vector3.Dot(relative, forward));
     }
 }

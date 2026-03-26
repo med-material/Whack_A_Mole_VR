@@ -60,6 +60,10 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     bool _confirmLatched = false;
     bool _armed = true;
     float _lastAcceptedTime = -999f;
+    float? _liveDistanceCm = null;
+    float? _lastAttemptDistanceCm = null;
+    bool? _lastAttemptWasHit = null;
+    float _configuredHitRadiusMeters = -1f;
 
     int _successCount = 0;
     int _attemptCount = 0;
@@ -67,6 +71,8 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     int _lastTargetIndex = -1;
 
     public SandboxRunner.TaskMode TaskMode => SandboxRunner.TaskMode.Exposure;
+    public int GetCurrentAttemptNumber() => _attemptCount + 1;
+    public int GetCurrentTargetIndex() => _currentTargetIndex;
 
     void Reset()
     {
@@ -146,10 +152,14 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         _confirmLatched = false;
         _armed = true;
         _lastAcceptedTime = -999f;
+        _liveDistanceCm = null;
+        _lastAttemptDistanceCm = null;
+        _lastAttemptWasHit = null;
+        _configuredHitRadiusMeters = ResolveConfiguredHitRadiusMeters();
 
         AutoFillRenderers();
         SetVisualsVisible(true);
-        experimentLogger?.LogExposureConfig(hitRadiusMeters);
+        experimentLogger?.LogExposureConfig(_configuredHitRadiusMeters);
         if (hitMarker != null)
             hitMarker.gameObject.SetActive(showHitMarker);
         PickNextTarget(forceCenterFirst: true);
@@ -185,12 +195,19 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
 
         if (!IntersectRayWithBoard(ray, out Vector3 hitPoint))
         {
+            _liveDistanceCm = null;
             UpdateReadout();
             return;
         }
 
         if (cursorMarker && showCursor)
             cursorMarker.position = hitPoint;
+
+        Transform currentTarget = targets[_currentTargetIndex];
+        if (currentTarget != null)
+            _liveDistanceCm = Vector3.Distance(hitPoint, currentTarget.position) * 100f;
+        else
+            _liveDistanceCm = null;
 
         if (confirm)
         {
@@ -212,8 +229,11 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
             _attemptCount++;
 
             var target = targets[_currentTargetIndex];
+            float currentHitRadius = _configuredHitRadiusMeters;
             float dist = Vector3.Distance(hitPoint, target.position);
-            bool isHit = dist <= hitRadiusMeters;
+            bool isHit = dist <= currentHitRadius;
+            _lastAttemptDistanceCm = dist * 100f;
+            _lastAttemptWasHit = isHit;
 
             experimentLogger?.LogPointerShoot(
                 _attemptCount,
@@ -403,6 +423,14 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
 
         string gateTxt = (requireResetBetweenTrials && hmd != null) ? (_armed ? "ARMED" : "RESET") : "—";
         string targetName = TargetLabel(_currentTargetIndex);
+        string liveTxt = _liveDistanceCm.HasValue ? $"{_liveDistanceCm.Value:0.0} cm" : "—";
+        string lastTxt = "—";
+
+        if (_lastAttemptDistanceCm.HasValue && _lastAttemptWasHit.HasValue)
+        {
+            string outcome = _lastAttemptWasHit.Value ? "Hit" : "Miss";
+            lastTxt = $"{outcome}: {_lastAttemptDistanceCm.Value:0.0} cm";
+        }
 
         readout.text =
             $"Exposure\n" +
@@ -410,6 +438,8 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
             $"Target: {targetName}\n" +
             $"Hits: {_successCount}/{successfulHitsToComplete}\n" +
             $"Attempts: {_attemptCount}\n" +
+            $"Aim: {liveTxt}\n" +
+            $"Last: {lastTxt}\n" +
             $"Gate: {gateTxt}";
     }
 
@@ -428,7 +458,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     {
         worldCenter = Vector3.zero;
         planeNormal = Vector3.up;
-        targetRadiusMeters = hitRadiusMeters;
+        targetRadiusMeters = _configuredHitRadiusMeters > 0f ? _configuredHitRadiusMeters : ResolveConfiguredHitRadiusMeters();
 
         if (!_isActive || boardPlane == null || targets == null || _currentTargetIndex < 0 || _currentTargetIndex >= targets.Length)
             return false;
@@ -440,5 +470,29 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         worldCenter = target.position;
         planeNormal = boardPlane.up;
         return true;
+    }
+
+    float ResolveConfiguredHitRadiusMeters()
+    {
+        if (targets != null && targets.Length > 1 && targets[1] != null)
+            return EstimateTargetRadiusMeters(targets[1]);
+
+        for (int i = 0; i < targets.Length; i++)
+        {
+            if (targets[i] != null)
+                return EstimateTargetRadiusMeters(targets[i]);
+        }
+
+        return hitRadiusMeters;
+    }
+
+    float EstimateTargetRadiusMeters(Transform target)
+    {
+        if (target == null)
+            return hitRadiusMeters;
+
+        Vector3 lossy = target.lossyScale;
+        float estimated = 0.5f * Mathf.Max(Mathf.Abs(lossy.x), Mathf.Abs(lossy.y), Mathf.Abs(lossy.z));
+        return estimated > 0.0001f ? estimated : hitRadiusMeters;
     }
 }

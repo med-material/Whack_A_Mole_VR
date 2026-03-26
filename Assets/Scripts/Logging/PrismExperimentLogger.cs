@@ -18,6 +18,10 @@ public class PrismExperimentLogger : MonoBehaviour
     private bool gameStartedLogged;
     private float previousEventTime = -1f;
     private string gameId;
+    private bool sessionStateLogged;
+    private bool sawBaselineBlock;
+    private bool sawExposureBlock;
+    private bool sawPostBlock;
 
     static readonly List<string> EventHeaders = new List<string>
     {
@@ -29,6 +33,7 @@ public class PrismExperimentLogger : MonoBehaviour
         "XRBackend",
         "TrackingMode",
         "ActiveHand",
+        "ConfirmMitigationMode",
         "TrialIndex",
         "TrialsPerBlock",
         "AttemptIndex",
@@ -142,6 +147,7 @@ public class PrismExperimentLogger : MonoBehaviour
         "XRBackend",
         "TrackingMode",
         "ActiveHand",
+        "ConfirmMitigationMode",
         "TrialCount",
         "BaselineValue",
         "BaselineSd",
@@ -185,6 +191,7 @@ public class PrismExperimentLogger : MonoBehaviour
             loggingManager.Log("Meta", "TrackingMode", runner.CurrentOpenXRTrackingMode.ToString());
             loggingManager.Log("Meta", "InputModeLabel", GetInputModeLabel());
             loggingManager.Log("Meta", "XRBackend", runner.CurrentXRBackend.ToString());
+            loggingManager.Log("Meta", "ConfirmMitigationMode", runner.CurrentConfirmMitigationMode);
         }
     }
 
@@ -234,11 +241,18 @@ public class PrismExperimentLogger : MonoBehaviour
             LogEvent("Game Started", "GameEvent", taskMode, blockType, null);
         }
 
+        if (blockType == "Baseline")
+            sawBaselineBlock = true;
+        else if (blockType == "Post")
+            sawPostBlock = true;
+
         LogEvent("Block Started", "BlockEvent", taskMode, blockType, null);
     }
 
     public void LogExposureStarted(string sourceTaskMode)
     {
+        sawExposureBlock = true;
+
         var data = new Dictionary<string, object>
         {
             { "SourceTaskMode", sourceTaskMode }
@@ -456,15 +470,32 @@ public class PrismExperimentLogger : MonoBehaviour
 
     public void LogExperimentCompleted(string taskMode, string blockType)
     {
+        if (sessionStateLogged)
+            return;
+
+        if (!(sawBaselineBlock && sawExposureBlock && sawPostBlock))
+        {
+            loggingManager?.Log("Meta", "SessionState", "Aborted");
+            loggingManager?.Log("Meta", "SessionDuration", sessionStartTime >= 0f ? Time.time - sessionStartTime : 0f);
+            LogEvent("Game Finished", "GameEvent", taskMode, "Aborted", null);
+            LogEvent("Experiment Aborted", "GameEvent", taskMode, "Aborted", null);
+            sessionStateLogged = true;
+            return;
+        }
+
         loggingManager?.Log("Meta", "SessionState", "Finished");
         loggingManager?.Log("Meta", "SessionDuration", sessionStartTime >= 0f ? Time.time - sessionStartTime : 0f);
         LogEvent("Game Finished", "GameEvent", taskMode, blockType, null);
         LogEvent("Experiment Completed", "GameEvent", taskMode, blockType, null);
+        sessionStateLogged = true;
     }
 
     void LogAbortedSessionIfNeeded()
     {
         if (loggingManager == null)
+            return;
+
+        if (sessionStateLogged)
             return;
 
         if (runner != null && runner.IsExperimentCompleted)
@@ -474,6 +505,7 @@ public class PrismExperimentLogger : MonoBehaviour
         loggingManager.Log("Meta", "SessionDuration", sessionStartTime >= 0f ? Time.time - sessionStartTime : 0f);
         LogEvent("Game Finished", "GameEvent", runner != null ? runner.CurrentTaskMode.ToString() : "Unknown", "Aborted", null);
         LogEvent("Experiment Aborted", "GameEvent", runner != null ? runner.CurrentTaskMode.ToString() : "Unknown", "Aborted", null);
+        sessionStateLogged = true;
     }
 
     void LogEvent(string eventName, string eventType, string taskMode, string blockType, Dictionary<string, object> extraData)
@@ -497,6 +529,7 @@ public class PrismExperimentLogger : MonoBehaviour
             data["XRBackend"] = runner.CurrentXRBackend.ToString();
             data["TrackingMode"] = runner.CurrentOpenXRTrackingMode.ToString();
             data["ActiveHand"] = runner.CurrentActiveHand.ToString();
+            data["ConfirmMitigationMode"] = runner.CurrentConfirmMitigationMode;
             AddTrackerSnapshot(data);
         }
 
@@ -635,6 +668,7 @@ public class PrismExperimentLogger : MonoBehaviour
             data["XRBackend"] = runner.CurrentXRBackend.ToString();
             data["TrackingMode"] = runner.CurrentOpenXRTrackingMode.ToString();
             data["ActiveHand"] = runner.CurrentActiveHand.ToString();
+            data["ConfirmMitigationMode"] = runner.CurrentConfirmMitigationMode;
         }
 
         return data;

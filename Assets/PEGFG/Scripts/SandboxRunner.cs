@@ -69,7 +69,10 @@ public bool useControllerHoverConfirm = false;
 [Header("Calibration")]
 [SerializeField] private Transform rigRoot;
 [SerializeField] private Transform hmd;
-[SerializeField] private Transform boardMid;
+[SerializeField, Tooltip("Preferred head-height anchor. The HMD height is aligned to this object.")]
+private Transform boardMid;
+[SerializeField, Tooltip("Preferred body-center anchor. The rig root horizontal position is aligned to this object.")]
+private Transform bodyCenterAnchor;
 [SerializeField] private bool calibrateOnStart = true;
 [SerializeField] private bool recenterXRTrackingOnCalibrate = true;
 private float calibrateOnStartDelaySeconds = 0.25f;
@@ -148,6 +151,17 @@ public float HandDwellProgress01 => _handDwellProgress01;
 public bool IsConfirmDwellActive => _confirmDwellActive;
 public float ConfirmDwellProgress01 => _confirmDwellProgress01;
 public bool IsExperimentCompleted => _experimentCompleted;
+public string CurrentConfirmMitigationMode
+{
+    get
+    {
+        if (useControllerHoverConfirm)
+            return "ControllerHoverConfirm";
+        if (useOppositeHandTrigger)
+            return "OppositeHandTrigger";
+        return "NoMitigation";
+    }
+}
 public bool IsTaskTransitionActive => _taskTransitionActive;
 public float TaskTransitionProgress01
 {
@@ -378,6 +392,8 @@ void AutoAssignReferences()
     if (boardMid == null)
     {
         var boardObj =
+            GameObject.Find("ExposureTarget2") ??
+            GameObject.Find("ExposureTargetCenter") ??
             GameObject.Find("BoardMid") ??
             GameObject.Find("Board Mid") ??
             GameObject.Find("MidPointMarker") ??
@@ -385,6 +401,17 @@ void AutoAssignReferences()
             GameObject.Find("Midpoint");
         if (boardObj != null)
             boardMid = boardObj.transform;
+    }
+
+    if (bodyCenterAnchor == null)
+    {
+        GameObject depthQueObj = GameObject.Find("DepthQue");
+        if (depthQueObj != null)
+        {
+            Transform depthQue = depthQueObj.transform;
+            if (depthQue.childCount > 0)
+                bodyCenterAnchor = depthQue.GetChild(0);
+        }
     }
 
     if (openLoopTask == null)
@@ -602,20 +629,27 @@ void UpdateCalibrationInput()
 
     if (down)
     {
-        CalibrateHeight();
+        CalibrateNow();
     }
 }
 
 [ContextMenu("Calibrate Now")]
 public void CalibrateNow()
 {
+    AutoAssignReferences();
+
+    if (!rigRoot || !hmd)
+    {
+        Debug.LogError("[SandboxRunner] Missing calibration references (rigRoot/hmd).");
+        return;
+    }
+
     if (recenterXRTrackingOnCalibrate)
     {
         TryRecenterXRTracking();
-        RecenterRigToCurrentHmd();
     }
 
-    CalibrateHeight();
+    ApplyCalibrationAnchors();
 }
 
 [ContextMenu("Calibrate Height Now")]
@@ -636,6 +670,26 @@ public void CalibrateHeight()
     rigRoot.position = p;
 
     Debug.Log($"[SandboxRunner] Applied calibration deltaY={deltaY:0.000}m. HMD is now at board mid height.");
+}
+
+[ContextMenu("Calibrate Body Center Now")]
+public void CalibrateBodyCenter()
+{
+    AutoAssignReferences();
+
+    if (!rigRoot || !bodyCenterAnchor)
+    {
+        Debug.LogError("[SandboxRunner] Missing calibration references (rigRoot/bodyCenterAnchor).");
+        return;
+    }
+
+    Vector3 p = rigRoot.position;
+    Vector3 anchorPos = bodyCenterAnchor.position;
+    p.x = anchorPos.x;
+    p.z = anchorPos.z;
+    rigRoot.position = p;
+
+    Debug.Log($"[SandboxRunner] Applied body-center calibration to anchor '{bodyCenterAnchor.name}' at xz=({anchorPos.x:0.000}, {anchorPos.z:0.000}).");
 }
 
 bool TryRecenterXRTracking()
@@ -689,6 +743,60 @@ void RecenterRigToCurrentHmd()
     rigRoot.position -= hmdOffset;
 
     Debug.Log("[SandboxRunner] Applied rig-root recenter from current HMD pose.");
+}
+
+void ApplyCalibrationAnchors()
+{
+    bool appliedHeight = false;
+    bool appliedBodyCenter = false;
+    string heightAnchorName = boardMid ? boardMid.name : "none";
+    string bodyAnchorName = bodyCenterAnchor ? bodyCenterAnchor.name : "none";
+
+    if (boardMid != null && bodyCenterAnchor != null && rigRoot != null && hmd != null)
+    {
+        Vector3 desiredForward = Vector3.ProjectOnPlane(boardMid.position - bodyCenterAnchor.position, Vector3.up);
+        Vector3 currentForward = Vector3.ProjectOnPlane(hmd.forward, Vector3.up);
+
+        if (desiredForward.sqrMagnitude > 0.0001f && currentForward.sqrMagnitude > 0.0001f)
+        {
+            float yawDelta = Vector3.SignedAngle(currentForward.normalized, desiredForward.normalized, Vector3.up);
+            rigRoot.RotateAround(hmd.position, Vector3.up, yawDelta);
+        }
+    }
+
+    if (boardMid != null)
+    {
+        float deltaY = boardMid.position.y - hmd.position.y;
+        Vector3 p = rigRoot.position;
+        p.y += deltaY;
+        rigRoot.position = p;
+        appliedHeight = true;
+    }
+
+    if (bodyCenterAnchor != null)
+    {
+        Vector3 anchorPos = bodyCenterAnchor.position;
+        Vector3 hmdOffset = hmd.position - rigRoot.position;
+        hmdOffset.y = 0f;
+
+        Vector3 p = rigRoot.position;
+        p.x = anchorPos.x - hmdOffset.x;
+        p.z = anchorPos.z - hmdOffset.z;
+        rigRoot.position = p;
+        appliedBodyCenter = true;
+    }
+
+    if (!appliedHeight && !appliedBodyCenter)
+    {
+        Debug.LogError("[SandboxRunner] Missing calibration anchors (boardMid/bodyCenterAnchor).");
+        return;
+    }
+
+    Debug.Log(
+        $"[SandboxRunner] Calibration applied. " +
+        $"Head anchor: {(appliedHeight ? heightAnchorName : "none")} | " +
+        $"Body anchor: {(appliedBodyCenter ? bodyAnchorName : "none")} | " +
+        $"Rig position: {rigRoot.position}");
 }
 
 void SelectEffect()
@@ -1660,6 +1768,50 @@ public bool GetControllerTriggerState(Handedness hand)
         : SteamVR_Input_Sources.RightHand;
 
     return _confirmAction.GetState(source);
+}
+
+public void GetLoggingContext(out string blockType, out int? trialIndex, out int? attemptIndex, out int? targetIndex)
+{
+    blockType = "";
+    trialIndex = null;
+    attemptIndex = null;
+    targetIndex = null;
+
+    switch (taskMode)
+    {
+        case TaskMode.OpenLoop:
+            if (openLoopTask is OpenLoopPointingTask openLoop)
+            {
+                blockType = openLoop.GetCurrentBlockName();
+                trialIndex = openLoop.GetCurrentTrialNumber();
+            }
+            break;
+
+        case TaskMode.LineBisection:
+            if (lineBisectionTask is LineBisectionTask lineBisection)
+            {
+                blockType = lineBisection.GetCurrentBlockName();
+                trialIndex = lineBisection.GetCurrentTrialNumber();
+            }
+            break;
+
+        case TaskMode.Landmark:
+            if (landmarkTask is LandmarkTask landmark)
+            {
+                blockType = landmark.GetCurrentBlockName();
+                trialIndex = landmark.GetCurrentTrialNumber();
+            }
+            break;
+
+        case TaskMode.Exposure:
+            blockType = "Exposure";
+            if (exposureTask is ExposureTask exposure)
+            {
+                attemptIndex = exposure.GetCurrentAttemptNumber();
+                targetIndex = exposure.GetCurrentTargetIndex();
+            }
+            break;
+    }
 }
 
 MonoBehaviour GetTaskComponent(TaskMode mode)

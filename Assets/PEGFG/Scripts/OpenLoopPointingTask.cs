@@ -43,6 +43,7 @@ public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask, IAimTargetProvi
     bool _armed = true;
     float _lastAcceptedTime = -999f;
     bool _currentTrialLogged = false;
+    float? _liveSignedCm = null;
 
     readonly List<float> _offsetsCm = new List<float>(128);
     float? _baselineMeanCm = null;
@@ -53,6 +54,8 @@ public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask, IAimTargetProvi
     bool _isActive;
 
     public SandboxRunner.TaskMode TaskMode => SandboxRunner.TaskMode.OpenLoop;
+    public string GetCurrentBlockName() => blockType.ToString();
+    public int GetCurrentTrialNumber() => Mathf.Clamp(_trialIndex + 1, 1, trialsPerBlock);
 
     void Awake()
     {
@@ -152,6 +155,7 @@ public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask, IAimTargetProvi
 
         if (!IntersectRayWithBoard(ray, out Vector3 hit))
         {
+            _liveSignedCm = null;
             UpdateReadout(final: false);
             return;
         }
@@ -161,6 +165,8 @@ public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask, IAimTargetProvi
 
         if (lockToHorizontalMidline)
             hit = LockToMidline(hit);
+
+        _liveSignedCm = SignedOffsetOnBoard(hit) * 100f;
 
         if (showLiveAimMarker && hitMarker)
             hitMarker.position = hit;
@@ -314,7 +320,8 @@ public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask, IAimTargetProvi
         if (_offsetsCm.Count == 0)
         {
             string armedTxt = (requireResetBetweenTrials && hmd != null) ? (_armed ? "ARMED" : "RESET") : "—";
-            readout.text = $"OLP ({blockType})\nTrial {_trialIndex}/{trialsPerBlock}\nOffset: —\nGate: {armedTxt}";
+            string liveTxt = _liveSignedCm.HasValue ? $"{_liveSignedCm.Value:0.0} cm" : "—";
+            readout.text = $"OLP ({blockType})\nTrial {_trialIndex}/{trialsPerBlock}\nAim: {liveTxt}\nGate: {armedTxt}";
             return;
         }
 
@@ -324,10 +331,12 @@ public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask, IAimTargetProvi
         {
             float last = _offsetsCm[_offsetsCm.Count - 1];
             string armedTxt = (requireResetBetweenTrials && hmd != null) ? (_armed ? "ARMED" : "RESET") : "—";
+            string liveTxt = _liveSignedCm.HasValue ? $"{_liveSignedCm.Value:0.0} cm" : "—";
 
             readout.text =
                 $"OLP ({blockType})\n" +
                 $"Trial {_trialIndex}/{trialsPerBlock}\n" +
+                $"Aim: {liveTxt}\n" +
                 $"Last: {last:0.0} cm\n" +
                 $"Mean: {mean:0.0} cm (SD {sd:0.0})\n" +
                 $"Gate: {armedTxt}";
@@ -388,29 +397,40 @@ public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask, IAimTargetProvi
 
     Vector3 ClampToBoard(Vector3 hitWorld)
     {
-        Vector3 local = boardPlane.InverseTransformPoint(hitWorld);
-
-        Vector3 s = boardPlane.lossyScale;
-        float halfXLocal = boardHalfWidth / (Mathf.Abs(s.x) < 1e-6f ? 1f : Mathf.Abs(s.x));
-        float halfZLocal = boardHalfHeight / (Mathf.Abs(s.z) < 1e-6f ? 1f : Mathf.Abs(s.z));
-
-        local.x = Mathf.Clamp(local.x, -halfXLocal, halfXLocal);
-        local.z = Mathf.Clamp(local.z, -halfZLocal, halfZLocal);
-
-        return boardPlane.TransformPoint(local);
+        Vector3 localMeters = WorldToBoardMeters(hitWorld);
+        localMeters.x = Mathf.Clamp(localMeters.x, -boardHalfWidth, boardHalfWidth);
+        localMeters.z = Mathf.Clamp(localMeters.z, -boardHalfHeight, boardHalfHeight);
+        return BoardMetersToWorld(localMeters);
     }
 
     Vector3 LockToMidline(Vector3 hitWorld)
     {
-        Vector3 local = boardPlane.InverseTransformPoint(hitWorld);
-        local.z = 0f;
-        return boardPlane.TransformPoint(local);
+        Vector3 localMeters = WorldToBoardMeters(hitWorld);
+        localMeters.z = 0f;
+        return BoardMetersToWorld(localMeters);
     }
 
     float SignedOffsetOnBoard(Vector3 hitWorld)
     {
-        Vector3 local = boardPlane.InverseTransformPoint(hitWorld);
-        return local.x;
+        return WorldToBoardMeters(hitWorld).x;
+    }
+
+    Vector3 BoardMetersToWorld(Vector3 localMeters)
+    {
+        Vector3 right = Vector3.ProjectOnPlane(boardPlane.right, boardPlane.up).normalized;
+        Vector3 forward = Vector3.ProjectOnPlane(boardPlane.forward, boardPlane.up).normalized;
+        return boardPlane.position + (right * localMeters.x) + (forward * localMeters.z);
+    }
+
+    Vector3 WorldToBoardMeters(Vector3 worldPoint)
+    {
+        Vector3 relative = worldPoint - boardPlane.position;
+        Vector3 right = Vector3.ProjectOnPlane(boardPlane.right, boardPlane.up).normalized;
+        Vector3 forward = Vector3.ProjectOnPlane(boardPlane.forward, boardPlane.up).normalized;
+        return new Vector3(
+            Vector3.Dot(relative, right),
+            0f,
+            Vector3.Dot(relative, forward));
     }
 
     static (float mean, float sd) MeanAndSd(List<float> xs)
