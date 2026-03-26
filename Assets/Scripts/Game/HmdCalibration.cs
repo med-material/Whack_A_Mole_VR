@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
 using Valve.VR;
 
 public class HmdCalibration : MonoBehaviour
@@ -37,7 +38,7 @@ public class HmdCalibration : MonoBehaviour
     {
         if (!calibrated)
         {
-            if (Input.GetKeyDown(KeyCode.V))
+            if (Keyboard.current.vKey.wasPressedThisFrame)
             {
                 CloseInstructionPanel();
             }
@@ -51,7 +52,7 @@ public class HmdCalibration : MonoBehaviour
         // need to investigate why this is..
         if (time < timeout)
         {
-            if (SteamVR.active)
+            if (true /*SteamVR.active*/)
             {
                 if (SteamVR_Actions._default.GrabPinch.GetStateDown(controller))
                 {

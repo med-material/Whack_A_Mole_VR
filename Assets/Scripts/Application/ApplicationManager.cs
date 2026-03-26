@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class ApplicationManager : MonoBehaviour
 {
@@ -11,7 +12,7 @@ public class ApplicationManager : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKey("escape")) StartCoroutine(QuitApplication());
+        if (Keyboard.current.escapeKey.IsPressed()) StartCoroutine(QuitApplication());
     }
 
     //listen the variable of our Event that will impact the behaviour of our Warning Message Panel

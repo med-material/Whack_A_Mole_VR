@@ -3,6 +3,8 @@ using System.Collections;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 [CustomEditor(typeof(TactorConnector))]
 public class TactorConnectorEditor : Editor
@@ -205,9 +207,10 @@ public class TactorConnector : MonoBehaviour
             : Array.Empty<Coroutine>();
     }
 
+
     void Update()
     {
-        if (connectedBoardId >= 0 && Input.GetKeyDown(KeyCode.Space))
+        if (connectedBoardId >= 0 && Keyboard.current.spaceKey.wasPressedThisFrame)
         {
             Debug.Log($"[TactorConnector] Pulsing tactor {tactorNumber} for {pulseDuration}");
             ActivateTactor(tactorNumber, durationSetting: pulseDuration);
@@ -216,8 +219,46 @@ public class TactorConnector : MonoBehaviour
 
         for (int i = 0; i < tactors.Length; i++)
         {
-            if (Input.GetKeyDown(KeyCode.Alpha1 + i))
+            if (numpadKeyFromChannelNumber(i).wasPressedThisFrame)
                 ActivateTactor(tactorID: i + 1);
+        }
+
+        // Unfortunately since the input API does not use keycodes we
+        if (tactors.Length <= 0)
+        {
+            return;
+        }
+        if (Keyboard.current.numpad1Key.wasPressedThisFrame)
+        {
+            ActivateTactor(tactorID: 1);
+        }
+    }
+
+    // Unfortunately there seems be be no quick way to turn an int into a keycode so this is the second best thing
+    private KeyControl numpadKeyFromChannelNumber(int channelNumber)
+    {
+        switch (channelNumber)
+        {
+            case 0:
+                return Keyboard.current.numpad1Key;
+            case 1:
+                return Keyboard.current.numpad2Key;
+            case 2:
+                return Keyboard.current.numpad3Key;
+            case 3:
+                return Keyboard.current.numpad4Key;
+            case 4:
+                return Keyboard.current.numpad5Key;
+            case 5:
+                return Keyboard.current.numpad6Key;
+            case 6:
+                return Keyboard.current.numpad7Key;
+            case 7:
+                return Keyboard.current.numpad8Key;
+            case 8:
+                return Keyboard.current.numpad9Key;
+            default:
+                return Keyboard.current.numpad0Key;
         }
     }
 

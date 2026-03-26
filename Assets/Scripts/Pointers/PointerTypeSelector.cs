@@ -10,11 +10,11 @@ PointerTypeSelector manages which Pointer scripts should be enabled/disabled on 
 public class PointerTypeSelector : MonoBehaviour
 {
     private Dictionary<ModifiersManager.PointerType, Pointer> pointerList = new Dictionary<ModifiersManager.PointerType, Pointer>();
-    private SteamVR_Behaviour_Pose behaviour_Pose;
+    //private SteamVR_Behaviour_Pose behaviour_Pose;
 
     void Start()
     {
-        behaviour_Pose = GetComponent<SteamVR_Behaviour_Pose>();
+        //behaviour_Pose = GetComponent<SteamVR_Behaviour_Pose>();
         Pointer[] pointers = GetComponents<Pointer>();
 
         // Populate the pointerList dictionary with pointers found in the GameObject
@@ -44,7 +44,7 @@ public class PointerTypeSelector : MonoBehaviour
         {
             pointer.enabled = true;
             pointer.Enable();
-            behaviour_Pose.inputSource = pointer.Controller; // Change the tracking device for the pointer
+            //behaviour_Pose.inputSource = pointer.Controller; // Change the tracking device for the pointer
         }
         else
         {

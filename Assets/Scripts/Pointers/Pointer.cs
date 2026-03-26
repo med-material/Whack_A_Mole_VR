@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
-using Valve.VR;
+using UnityEngine.InputSystem;
+using UnityEngine.XR.Interaction.Toolkit;
 
 /*
 Abstract class of the VR pointer used to pop moles. Like the Mole class, calls specific empty
@@ -14,9 +15,9 @@ public abstract class Pointer : MonoBehaviour
     protected enum States { Idle, CoolingDown }
     protected enum AimAssistStates { None, Snap, Magnetize }
 
-    [SerializeField]
-    private SteamVR_Input_Sources controller;
-    public SteamVR_Input_Sources Controller { get { return controller; } }
+    //[SerializeField]
+    //private Valve.VR.SteamVR_Input_Sources controller;
+    //public Valve.VR.SteamVR_Input_Sources Controller { get { return controller; } }
 
     [SerializeField]
     protected GameObject laserOrigin;
@@ -79,10 +80,16 @@ public abstract class Pointer : MonoBehaviour
     public class OnPointerShoot : UnityEvent { }
     public OnPointerShoot onPointerShoot;
 
+    protected ActionBasedController controller;
+    private InputAction clickAction;
+    [SerializeField]
+    private float UpdateInterval = 1.0f;
     // On start, inits the logger notifier.
     void Start()
     {
-        gameObject.GetComponent<SteamVR_Behaviour_Pose>().onTransformUpdated.AddListener(delegate { PositionUpdated(); });
+        controller = gameObject.GetComponent<ActionBasedController>();
+        clickAction = gameObject.GetComponent<ActionBasedController>().activateAction.action;
+        //StartCoroutine(CheckUpdate());
 
         loggerNotifier = new LoggerNotifier(eventsHeadersDefaults: new Dictionary<string, string>(){
             {"HitPositionWorldX", "NULL"},
@@ -114,6 +121,19 @@ public abstract class Pointer : MonoBehaviour
         });
 
         laser = laserOrigin.GetComponent<LineRenderer>();
+    }
+
+    private Vector3 lastValue = Vector3.zero;
+
+    private IEnumerator CheckUpdate()
+    {
+        Vector3 v = controller.transform.position;
+        if (v != lastValue)
+        {
+            lastValue = v;
+            PositionUpdated();
+        }
+        yield return new WaitForSeconds(UpdateInterval);
     }
 
     public void SetPointerEnable(bool active)
@@ -217,9 +237,9 @@ public abstract class Pointer : MonoBehaviour
             //UpdateLaser(false, rayDirection: laserOrigin.transform.InverseTransformDirection(rayDirection) * maxLaserLength);
         }
 
-        if (SteamVR.active)
+        if (/*Valve.VR.SteamVR.active*/ true) //TODO find equivalent to SteamVR.active or remove
         {
-            if (SteamVR_Actions._default.GrabPinch.GetStateDown(controller))
+            if (clickAction.WasPerformedThisFrame())
             {
                 if (state == States.Idle)
                 {
