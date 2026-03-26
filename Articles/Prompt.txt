@@ -1,0 +1,172 @@
+Our project is about prism adaptation therapy (prism therapy) for unilateral spatial neglect (USN) in VR. Generally speaking, prism therapy involves exposure to wedge prism glasses that induce a lateral optical shift to the ipsilesional side of the brain lesion and a pointing or reaching task to induce prism adaptation. Prism therapy is generally comprised of a pre-exposure phase for assessing baseline performance using some kind of rehabilitation task, then an exposure phase using the pointing or reaching task with the wedge prism glasses which causes a visual mismatch and initial pointing errors that gradually corrects itself through "error reduction", and then a post-exposure phase without the glasses to assess if and how prism adaptation has been induced, usually analysing the "after-effects" and its transfer to higher-order spatial processes. This is just based on some of the earlier papers on prism therapy, specifically Rosetti1998, Frassinetti 2002, and Serino 2005/2006. 
+
+We need a detailed literature review to support and answer the following:
+- Researchers in this field fail to use consistent terminology for addressing and defining or interpreting prism adaptation and the prism effect and how.
+- There is no shared framework of standardized facilitation of prism therapy in VR, every paper essentially reinvents their own implementation despite some papers having similar goals or could have used the same platform for their research.
+- Papers typically only address extreme symptoms of USN, despite more sensitive subtypes existing, which might limit clinical relevance.
+
+For that purpose, we want to go through every single paper and answer the following. We're looking at detailed nuances in interpretation and use of terminology, very specific details on procedure, implementation and application of tasks: like do they use controllers, do they have participants press a button to confirm or implement some other way that does not risk the Heisenberg effect ( The Heisenberg Effect in the context of controllers refers to the phenomenon where a discrete input, such as a button press, disturbs the position of the tracker, leading to different selection points during interaction.), do they reset their position and when, etc., I hope you get the idea.
+
+You can use the following notes from our supervisor meetings, in which our supervisor has tried highlighting what sort of details we need from each paper: "​​​​​​11-02-2026 AGENDA: Generelle emner: Forventnings afstemning af tilgang til vejledning, herunder frekvens af vejledermøder og projektstatus, kommunikationsmidler (Teams, email, etc.), fysiske og online møder, og fremtidigt fravær (hvis vejlederen har kendte datoer hvor de ikke ville kunne kontaktes). Projektopsætning, herunder hvilke deliverables der forventes eller vil passe projektet (paper, worksheet, portfolio, rapport, etc.), Claus' holy trinity af fokusområder i et projekt (vægtning af implementering, evaluering, analyse.) Nogle specifikke spørgsmål vi vil snakke om: Hvad er fokusset i projektet? Hvad præcis forventes vi får opnået og projektet ender ud i? Skal det være en brugervenlig prototype for normalt seende og patienter (i.e. To versioner af prototypen)? Kommer vi til at skulle teste på patienter? Er der yderligere kilder som vi kunne få noget ud af? Forventninger til dokumentering af arbejdsfordeling og tidsforbrug på projektet (blev nævnt som feedback fra P7/MED7 projekteksaminerne)? Frekvens af vejledermøder og projektstatus? NOTER: Bastian skal til belgien næste uge, (Uge 8) Frekvens af vejledermøder: Gennemsnit hver anden uge, mindre i starten og mere i slutningen. Vi kan aftale næste møde og indhold i slutningen af et vejledermøde. Kommunikation: mail, ikke Teams, og fysiske møder. Fravær: Uge 8(Belgien), 15 Maj(Terminsdato) til 30 Maj primært online og på mail. Projektfokus: Først og fremmest for det videnskabelige, afklar forskelle eller knobs der kan juteres og forskellige implementationer af prism effects. Literature: Bastian har et literature review på rehab VR. Research gap er forskelle og definitioner på prism effect implementeringer og hvad er behavior i VR vs fysiske briller. Find ud af hvordan variere forskellige implementationer på prism effect (literature review agtigt) og kategoriseringer, og så derefter kan vi se på hvordan man kan implementere det (design baseret på de mange forskellige eksisterende implementeringer). Vi skal reelt se på implementering og hvad er behavior. Behavior: Hvordan prism effekten blev implementering i VR systemet, forstil måske det kan beskrives via. Storyboard. Herunder også hvilke opgaver blev der testet på. Hvis vi laver et Excel doc over de forskellige papers og behaviors og implementeringer, så får det med i rapporten. Gør det gerne visuelt. Metode, beskrivelse, brugssituation, etc. Testpersoner komme til at være almene folk pga. Convenience sampling. Bastian giver noget systematisk review af eksisterende implementeringer. Start med hvem citerer Bougais og Gammeri (Connected Papers). Vi laver et fugleperspektiv, så undersøg forskellige implementeringer og ikke gå i dybden på en masse papers der bruger samme implementering og metode. Undersøg parametre hvorved PA er forskelligt og så implementere det, i.e Sandbox prism effect. Dokumentering af tid på arbejdsfordeling. Det kan være et Could Be for worksheet. Overvej at kigge på pensum og hvordan det aligner med projektet. Nice med en god AV for at sælge projektet og portfolio. Bastian giver gerne feedback på skriftligt arbejde, send det gerne minimum 2 dage før et vejledermøde. Giv Bastian top tre vigtigste pointer fra vejledermødet og mål for næste vejledermøde. Aftaling af møder kan bare ske via. Calendar invites og så kan Bastian ændre det hvis ikke det passer (vi kan skrive i beskrivelsen om han kan den dag). Bastian forslår et møde omkring Whack-a-Mole platformen og om vi kan bruge det til dataindsamling eller andet. Han har derudover også andre midler. Bastian kan kontaktes ift. Når AVA lab flyttes til UTZON center for evaluering. Results from meeting: Find literature (literature review). Explore implementations and methods for inducing prism effect, as well as interpretations of what prism adaptation is. Setup of Whack-a-Mole project. Næste møde dato og milestone goal: Time and place: Kl. 11:00, 2. Marts, fysisk i grupperummet. Milestone goal: Literature review results. 02-03-2026 AGENDA: Result on literature review Discuss project direction and project idea Hvad er grunden til at lave et Visually shifted environment vs bare at have Visuomotor rotation og Virtual hand displacement? NOTER: Hvis det kun er verden der bliver shiftet er det kun half prism effect, da visual også skal shiftes. Start med at skrive i background, nævn hvad situationen er i forhold til prism effect, 1. der er ikke nogen standartioner af det, ingen gang et billede. Vores rapport er vores best guess på hvad andre papers har defineret diverse metoder og termer, opsumeret og samlet på en overskuelig måde. I vores methodology kan vi beskrive hvad vi ikke inkludere (fx. Lyd-baseret prism effect) Illustrationer af prism effekter og tasks. Overvej i form af ikoner som potentielt kan bruges i vores user interface. Setups hardware (Headsets? Tablets? Etc.) Testing: Physical glasses as reference point, but how do we measure the magnitude of the prism adaptation (error-reduction and after-effect), how do we identify whether or not prism adaptation has been induced? Hvordan opsamler vi konkret information omkring prism adaptation (error reduction og after-effects) via hvilke trackers? Bastian har specielle VR trackers som vi kan spørge om, teste, og muligvis bruge til user testing. Ingen bekymring om hvordan vi får tracker information lige nu. Whackamole burde have en ligetil måde som vi kan spørge om. Set os ikke fast i kun en task eller en prism effekt men sammenlign kombinationer af dem (vælg et bestemt antal og test imellem). Acknowledge learning effects and design around it (how can we prevent participants from learning the tasks.) E.g., by randomizing order of tasks or other ways of breaking learning patterns. Results from meeting: Decide what tasks we want to include in our prototype. Visualize the different types of prism effects and tasks – Set up in a diagram and create icons out of it Consider how to evaluate and measure the different datapoint both virtually and physically Næste møde dato og milestone goal: 18/3 - kl. 11 Progress in visualizations Some implementations Background chapter 18-03-2026 AGENDA: Visualized prism effect and task implementations from literature review Selected tasks for prototype implementation Current implementations of project Background chapter content Hvad skal vi have inkluderet i design chapter? Hvorfor have flere tasks? Hvorfor er det relevant? Vores egen exposure implementation Mere implementeringsopgaver NOTER: Landmark task, skal man ikke kunne skyde udenfor linjen (lige nu er den låst til) Feedback for ikonset får vi på et papir ark : D Er de studier vi kigger på primært fokusere på target i.e. Udfaldet af prism effect i stedet for controlleren? Er det target eller controlleren der bliver shiftet? Vi kan tegne raycast med på embodiment Vi har måske brug for et visuelt sprog der siger noget om hvad folk egentligt gør med deres hånd. Embodiment og element af hvorvidt controlleren er synligt. Overvej ift. Ikonerne, arm translation er det relevant hvordan det er faciliteret, altså er det arm tracking via en tracker på armen eller bare controlleren. Hvad er state of hardware i den virkelige verden og så den virtuelle verden. Farvekodning var en god idé. Har den forventede størrelse af ikonerne i mendte, hvorvidt de fungere i mindre størrelse og hvordan det passer i rapporten. Overvej embodiment (hand tracking/representation of hand/arm) Hvordan vurdere man om verden er shifted uden embodiment. Potentielt mere begrænset uden. Forskellige niveauer af embodiment (kombinationer af controller og tracking) Hvis der er et studie der siger embodiment gøre resultaterne er værre, så find det og være kritisk med overvej af bruge det til at diskutere noget. Tabel og rapport Husk at argumentere imod audio prism effect i design i rapporten. Pilot test til sidst i design(?) for at finde ud af hvordan vores evaluering burde udarbejdes (før den egentlige evaluering), f.x. For/imod repeated pointing task gorilla arms, og for at finde ud af hvilke variabler vi vil få ud og deres betydning. Vi kan overveje at snakke med en expert omkring hvorledes embodiment er relevant for USN rehabilitation. Ift. Problemformulering og vores løsning er det lidt opdelt i et videnskabeligt (dokumentere forskellene i implementationer) problem og et der er et praktisk problem (der er ingen unified framework). For at vi kan løse vores videnskabelige problem, skal vi først løse det praktiske problem (rød tråd). Citering, vi putter vores citationer i slutningen af paragrafer. Vi burde citere i den første sætning den citation bliver brugt (og så antages det efterfølgende hører til den citation indtil den nøste). Multiple citeringer, det er ambigiøst hvor hvilken citering passer til hvad i teksten. Hvis vi introducerer et term skal vi gøre det tydligt hvis det er vigtigt. Første gang et vigtigt term opstår skal vi forklare det. Methodology, det lyder meget tæt på findings fra background. En mulighed er at lægge indholdet af vores nuværende methodology i vores background og så faktisk bruge vores methodology til hvordan vi skal udarbejde vores løsning og evaluering. I methodology burde læseren vise hvad vi har introduceret af termer i vores background. I vores background kan have en glossary For at forstå prism therapy i VR har vi fortaget prism therapy VR, hvordan udarbejdede vi vores literatur review, result af findings fra literature review og papers, glossary af de forskellige dimensioner af terminology. I design, hvad skal der være deri? Vi kan overveje at kombinere design og implementering. Fokusér på de tanker vi har gjort bag i at implementere vores sandbox, herunder hvilke typer af prism effekter osv. Hvad vi plukker derfra (i background præsentere vi alt men vi implementerer ikke alt), UI er også vigtigt og beskriv. Illustrér hvordan environment ser ud, UI, funktionalitet og overview af hele Unity inspectoren. En anden måde er at tage vores inspektor og så vise dropdown og link det sammen med vores ikoner (og så vise de ikoner vi ikke har implementeret). Brug gerne Whack-a-Mole logging manager, den der skriver til CSV-filen. Results from meeting: Vores røde tråd ligger i at skulle løse vores praktiske problem (shared framework grounded in unified language) for at kunne svare på det videnskabelige problem (how different kombinations og prism effects and tasks affect prism adaptation) Tabel over termer i background som resultat af vores literature review med ikoner. Design og implementering kan sættes sammen for at forklare hvilke tanker, der har været og argumentere for, hvordan vi tænker at implementere vores sandbox og hvilke tasks, vi tænker at bruge. Embodiment er et interessant element, der skal tænkes igennem, i hvilket omfang det er relevant for prism therapy, og hvordan det eventuelt kan påvirke vores evalueringsplan, hvis vi fx. Sammenligner fysiske briller med VR da fysiske briller inherently har embodiment. Næste møde dato og milestone goal: Overvej embodiment, især hvis vi skal sammenligne fysiske briller med VR, fordi inherently har fysiske briller allerede embodied. Tanker på evaluering Arbejd på design og implementering “Rettet” background. 25-03-2026 AGENDA: Kort møde (løgn) for fremvisning af prototype status ift. Data collection implementation (RShiny). Landmark Bisection relevans for healthy participants (implementeret for clinical relevance men for healthy participants undre vi os om hvordan det virker for healthy participants.) Vive tracker virker, skal stadig finde ud af hvordan vi for data fra den NOTER: Det vigtigste med vores RShiny er at align vores data med de variabel navne som andre studies bliver brugt (hvordan man typisk kvantificere induced PA) som også skal præsenteres i background. Landmark bisection, brugte andre papers healthy participants eller patients. Bisection tasks er muligvis en assessment test... Man... Background bliver rough... Bastians RShiny er modular, så vi kan bare tage de moduler, vi skal bruge og køre det lokalt, så vi ikke skal vente på en server der ikke eksisterer. Moduler: Acceleration fase, deacceleration fase, hover fase. Er det ud fra litteraturen, at man skal klikke ved controlleren og hovering ved hand? Kan man overhovedet compare, når de controllere forskelligt? Er der forskel på hvad papers mener med at point and click, sådan hvordan de sigter også? Skal man kunne se et ray, et point eller ingenting, hvordan ved man sigter og hvor man sigter Overvejelser ift. Testing: Hvilken type stol (med/uden armlæn) Heisenberg effect: Det giver dårligere data at trykke. Det giver et ryst til, der hvor man sigter. Hvis vores litteratur bruger en controller med click, så skal vi beholde det i vores sandbox, så den kan slås til og fra, men ellers skal det nok cuttes. Design overvejelser omkring brug af knappe-tryk, hvilken hånd man trykker på knappen, og alle disse ting kan diskuteres imod hvad literaturen gøre og hvad man derudover også kan gøre. At skulle klikke, det er mere et teknisk behov end i terapien. Vi kan give vores anbefalinger om hvor vidt man bruge at klikke eller ikke klikke og andre overvejelser. Det ville være spændende at kigge på Acceleration fase, deacceleration fase, hover fase. Der er mere uncertainty, så vil der være længere deacceleration fase. Hvis de er mere upræcise, så vil der være en kort deacceleration fase. Hvis der er nogen af de her modes, at vi selv har lavet noget, så er det virkelig vigtigt vi gør det meget tydeligt (Ikke fordi der er det lige nu) Task analysis sammen med et storyboard ville være rigtig godt i vores design kapitel til at forklare hvordan participants gør forskellige tasks/actions. XR device mapping, så man kan tracke det virtuelle. I hvilke stages af en task kan man se sin krop, og i hvilke kan man ikke? Hvordan introducerer vi feedback? Er vi i tvivl om hvad næste step er så lav en pilot test. Det giver et overblik over hvilke problemer og mangler vi kan have. Results from meeting: Revisit literaturen og få en bedre forståelse på ALLE de nuancer der differentiere deres implementationer. Heisenberg effekten, acceleration, deacceleration og hover data for vores prototype. Task analysis for at beskrive vores procedure. Pilot test for at assess hvad vi har overset og for at få stilt spørgsmål vi endnu ikke har overvejet (og hvordan literaturen relatere). Næste møde dato og milestone goal: Implement Acceleration fase, deacceleration fase and hover fase in RShiny Kig på at lave Task analysis sammen med et storyboard "
+
+
+
+1. Study Context & Purpose
+
+What is the main goal of the study?
+
+What research question(s) are being addressed?
+
+What is the application context (e.g., rehabilitation, healthy participants, VR, or something else)?
+
+Who are the participants (type, number, demographics, or otherwise described)?
+
+2. Terminology & Conceptual Framing
+
+How do the authors define or interpret prism effect and prism adaptation (explicitly or implicitly)?
+
+Do they distinguish between different concepts (e.g., visual shift, visuomotor rotation, hand displacement, or something else)?
+
+What terminology do they use for adaptation phases, error reduction, after-effects, or related concepts (or something else)?
+
+Are there ambiguities, inconsistencies, or implicit assumptions in how terms are used?
+
+3. Prism Effect Implementation
+
+What exactly is being shifted (e.g., visual field, world, targets, hand, controller, or something else)?
+
+How is the shift applied (e.g., gradual, discrete, continuous, stepwise, or something else)?
+
+When is the shift applied (e.g., during trials, between trials, continuously, or otherwise)?
+
+What is the magnitude of the shift (units, degrees, or otherwise described)?
+
+Are there multiple conditions or variations (or something else)?
+
+4. Interaction & Input Mechanics
+
+What input method is used (e.g., controller, hand tracking, physical reaching, mouse, or something else)?
+
+How do participants confirm or complete actions (e.g., button press, dwell/hover, implicit crossing, or something else)?
+
+If a button or discrete input is used:
+
+How and when is it triggered?
+
+Which hand or input device is used (if specified)?
+
+Do the authors mention any issues related to input affecting measurement (e.g., jitter, disturbance, or something else such as the Heisenberg effect)?
+
+How do participants aim or indicate targets (e.g., raycast, cursor, hand, invisible pointer, or something else)?
+
+5. Embodiment & Representation
+
+Is the participant’s body represented (e.g., hand, arm, full body, none, or something else)?
+
+What tracking method is used (e.g., controllers, external trackers, full-body tracking, or something else)?
+
+Is the representation visible during interaction, partially visible, or not visible (or otherwise described)?
+
+Do the authors discuss embodiment as a factor affecting results (or something else related)?
+
+6. Tasks
+A. Exposure / Adaptation Tasks
+
+What task(s) are used to induce prism adaptation (or something else)?
+
+How are these tasks performed step-by-step?
+
+What are the properties of the task (e.g., static targets, dynamic targets, repeated pointing, or something else)?
+
+B. Assessment Tasks
+
+What tasks are used to measure adaptation (e.g., pointing, line bisection, landmark task, or something else)?
+
+How are these tasks implemented in detail?
+
+C. Rehabilitation Tasks (if applicable)
+
+What rehabilitation tasks are used (if any, or something else)?
+
+How are they implemented and how do they differ from other tasks?
+
+7. Procedure & Experimental Flow
+
+What is the full procedure (step-by-step, or as described)?
+
+What phases are included (e.g., baseline, exposure, post-test, or something else)?
+
+Are participants reset between trials (position, orientation, or something else)?
+
+Are targets reset, randomized, or otherwise manipulated?
+
+Is task order controlled (e.g., randomized, counterbalanced, or something else)?
+
+Are there calibration, training, or familiarization phases (or something else)?
+
+What instructions are given to participants?
+
+8. Feedback & Learning Control
+
+What type of feedback is provided (e.g., visual, auditory, haptic, none, or something else)?
+
+When is feedback provided (continuous, after action, delayed, or something else)?
+
+Do the authors attempt to control learning effects (e.g., randomization, task variation, or something else)?
+
+Are there any strategies to influence adaptation behavior (or something else)?
+
+9. Measurement & Data Collection
+
+What variables are measured (e.g., error, trajectories, timing, or something else)?
+
+What units or representations are used?
+
+How is prism adaptation quantified (e.g., error reduction, after-effects, or something else)?
+
+Are movement phases analyzed (e.g., acceleration, deceleration, hover, or something else)?
+
+What hardware and tracking systems are used (or something else)?
+
+How is data recorded or logged?
+
+10. Results & Findings
+
+What are the key findings?
+
+Was prism adaptation successfully induced (or something else observed)?
+
+What factors influenced the results (task, input method, embodiment, or something else)?
+
+Are there any unexpected or noteworthy outcomes?
+
+11. Implementation Variations & Parameters
+
+What parameters can be adjusted in the system (e.g., shift magnitude, task type, input method, feedback, or something else)?
+
+What combinations of parameters are explored (or something else)?
+
+Are there unexplored or implied variations?
+
+12. Limitations & Critique
+
+What limitations do the authors mention?
+
+What details are missing, unclear, or underspecified (or something else)?
+
+Are there potential confounds (e.g., input method, embodiment, task design, or something else)?
+
+13. Relevance for Your Project
+
+How can this study inform your implementation or sandbox design?
+
+What design decisions can be extracted (or something else)?
+
+Does it align with or contradict other studies?
+
+Should elements of this study be adopted, modified, or avoided (or something else)?
+
+
+
+
+
