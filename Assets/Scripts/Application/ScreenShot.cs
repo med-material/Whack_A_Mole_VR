@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class ScreenShot : MonoBehaviour
 {
@@ -16,7 +17,7 @@ public class ScreenShot : MonoBehaviour
     void Update()
     {
         //Press W to take a Screen Capture
-        if (Input.GetKeyDown(KeyCode.W))
+        if (Keyboard.current.wKey.wasPressedThisFrame)
         {
             ScreenCapture.CaptureScreenshot(Path.Combine(Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments), screenName + ".png"), 8);
             Debug.Log("Screenshot Captured");

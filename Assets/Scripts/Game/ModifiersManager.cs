@@ -492,7 +492,6 @@ public class ModifiersManager : MonoBehaviour
         Vector3 xOffset = new Vector3(controllerOffset * 0.1f, 0f, 0f);
         Transform controllerParent = rightControllerContainer.parent;
         Vector3 rotatedVector = RotateTowardsUp(xOffset, controllerParent.eulerAngles.y);
-        rightControllerContainer.localPosition = rotatedVector;
 
         rightControllerContainer.localPosition = rotatedVector;
         leftControllerContainer.localPosition = rotatedVector;

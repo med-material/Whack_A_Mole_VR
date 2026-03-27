@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic; // Added for List<HandGestureState>
 using System.Linq;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using Valve.VR;
 
 /*
@@ -98,12 +99,12 @@ public class EMGClassifiedGestureManager : MonoBehaviour
     private void Update()
     {
         //For testing purposes, you can change the gesture state using keyboard input at runtime
-        if (Input.GetKeyDown(KeyCode.Alpha1)) SetPose(HandGestureState.Neutral);
-        else if (Input.GetKeyDown(KeyCode.Alpha2)) SetPose(HandGestureState.PalmarGrasp);
-        else if (Input.GetKeyDown(KeyCode.Alpha3)) SetPose(HandGestureState.OpenHand);
-        else if (Input.GetKeyDown(KeyCode.Alpha4)) SetPose(HandGestureState.WristExtension);
-        else if (Input.GetKeyDown(KeyCode.Alpha5)) SetPose(HandGestureState.WristFlexion);
-        else if (Input.GetKeyDown(KeyCode.Alpha6)) SetPose(HandGestureState.LateralGrasp);
+        if (Keyboard.current.digit1Key.wasPressedThisFrame) SetPose(HandGestureState.Neutral);
+        else if (Keyboard.current.digit2Key.wasPressedThisFrame) SetPose(HandGestureState.PalmarGrasp);
+        else if (Keyboard.current.digit3Key.wasPressedThisFrame) SetPose(HandGestureState.OpenHand);
+        else if (Keyboard.current.digit4Key.wasPressedThisFrame) SetPose(HandGestureState.WristExtension);
+        else if (Keyboard.current.digit5Key.wasPressedThisFrame) SetPose(HandGestureState.WristFlexion);
+        else if (Keyboard.current.digit6Key.wasPressedThisFrame) SetPose(HandGestureState.LateralGrasp);
     }
 
     //Triggers a smooth transition to the specified pose

@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Valve.VR;
+using UnityEngine.InputSystem;
 
 /*
 Basic implementation of the pointer abstract class. Simply changes the color of the laser and 
@@ -20,7 +20,7 @@ public class BasicPointer : Pointer
     private float laserExtraWidthShootAnimation = .05f;
 
     [SerializeField]
-    private float mouseSpeed = 0.5f;
+    private float mouseSpeed = 0.005f;
 
     private float shootTimeLeft;
     private float totalShootTime;
@@ -29,36 +29,50 @@ public class BasicPointer : Pointer
     // Function for debugging controls, using mouse or keyboard. Only active if the Left Control key is held down. Also adds mouse controls if Left Alt is held down.
     public void Update()
     {
-        if (Input.GetKey(KeyCode.LeftControl) && active)
+        if (Keyboard.current.leftCtrlKey.isPressed && active)
         {
-            if (Input.GetKey(KeyCode.LeftAlt))
+            if (Keyboard.current.leftAltKey.isPressed)
             {
-                float h1 = mouseSpeed * Input.GetAxis("Mouse X");
-                float v1 = mouseSpeed * Input.GetAxis("Mouse Y");
+                float h1 = mouseSpeed * Mouse.current.delta.x.ReadValue();
+                float v1 = mouseSpeed * Mouse.current.delta.y.ReadValue();
 
                 this.transform.Translate(h1, v1, 0);
             }
             else
             {
-                float v = Input.GetAxisRaw("Vertical");
-                float h = Input.GetAxisRaw("Horizontal");
+                float v = 0;
+                float h = 0;
+                if (Keyboard.current.leftArrowKey.isPressed)
+                    h -= 1;
+                if (Keyboard.current.rightArrowKey.isPressed)
+                    h += 1;
+                if (Keyboard.current.upArrowKey.isPressed)
+                    v += 1;
+                if (Keyboard.current.downArrowKey.isPressed)
+                    v -= 1;
 
                 Vector3 direction = new Vector3(h, v, 0f).normalized;
                 this.transform.Translate(direction * Time.deltaTime);
             }
-            PointerControl();
         }
+        PositionUpdated();
     }
 
     // Function called on VR update, since it can be faster/not synchronous to Update() function. Makes the Pointer slightly more reactive.
     public override void PositionUpdated()
     {
-        if (SteamVR.active && active)
+        if (/* SteamVR.active && */ active) // TODO: Find equivalent for SteamVR.Active
         {
             PointerControl();
         }
     }
 
+    private Vector3 hitPoint = Vector3.zero;
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawSphere(hitPoint, 1f);
+    }
     private void PointerControl()
     {
         Vector2 pos = new Vector2(laserOrigin.transform.position.x, laserOrigin.transform.position.y);
@@ -66,8 +80,10 @@ public class BasicPointer : Pointer
         Vector3 origin = laserOrigin.transform.position;
         Vector3 rayDirection = (mappedPosition - origin).normalized;
 
+        Debug.DrawRay(origin + laserOffset, rayDirection, Color.red, 2f, true);
+
         RaycastHit hit;
-        if (Physics.Raycast(laserOrigin.transform.position + laserOffset, rayDirection, out hit, 100f, Physics.DefaultRaycastLayers))
+        if (Physics.Raycast(origin + laserOffset, rayDirection, out hit, 100f, Physics.DefaultRaycastLayers))
         {
             //UpdateLaser(true, hitPosition: laserOrigin.transform.InverseTransformPoint(hit.point), rayDirection: laserOrigin.transform.InverseTransformDirection(rayDirection));
             Vector3 hitPosition = laserOrigin.transform.InverseTransformPoint(hit.point);
