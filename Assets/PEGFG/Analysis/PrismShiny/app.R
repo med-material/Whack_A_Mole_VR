@@ -8,10 +8,35 @@ library(stringr)
 library(purrr)
 library(tidyr)
 
+# Prism Shiny app for inspecting completed prism-adaptation sessions.
+#
+# This file contains both the user interface (what the analyst can click on)
+# and the server logic (how CSV files are discovered, loaded, transformed,
+# summarized, and finally visualized).
+#
+# Conceptually the app has four layers:
+# 1. Startup / file helpers:
+#    find the default logging folder and safely read CSV files.
+# 2. Data preparation helpers:
+#    convert raw rows into summary values, quality metrics, spatial layouts,
+#    and trajectory-ready data frames.
+# 3. Plot builders:
+#    each tab gets one or more functions that return a ggplot object.
+# 4. Shiny reactivity:
+#    when the user changes a dropdown, the relevant reactive expressions
+#    automatically recompute and the visible plots/tables update.
+
+# Resolve the app folder and then walk up to the project Assets folder.
+# This makes the app portable inside the repository without hardcoding a full path.
 app_dir <- normalizePath(getwd(), winslash = "/", mustWork = FALSE)
 project_assets_dir <- normalizePath(file.path(app_dir, "..", "..", ".."), winslash = "/", mustWork = FALSE)
 default_log_dir <- normalizePath(file.path(project_assets_dir, "PrismLogging"), winslash = "/", mustWork = FALSE)
 
+# ---------- Basic CSV / parsing helpers ----------
+
+# Read one semicolon-separated CSV file and fail safely.
+# If a file is malformed or temporarily unavailable, return an empty tibble
+# instead of crashing the whole app.
 safe_read_csv <- function(path) {
   tryCatch(
     suppressMessages(read_delim(path, delim = ";", show_col_types = FALSE, progress = FALSE)),
@@ -19,12 +44,18 @@ safe_read_csv <- function(path) {
   )
 }
 
+# Convert the literal string "NULL" into real NA values.
+# Many of the Unity-generated CSVs store missing values as the text "NULL",
+# which is inconvenient for filtering and plotting in R.
 clean_log_df <- function(df) {
   if (nrow(df) == 0) return(df)
   df |>
     mutate(across(where(is.character), ~na_if(.x, "NULL")))
 }
 
+# Helper readers for the few metadata values needed while discovering sessions.
+# These are intentionally tiny wrappers around safe_read_csv() so session discovery
+# can inspect files without loading everything at once.
 read_session_id <- function(path) {
   data <- clean_log_df(safe_read_csv(path))
   if (!"SessionID" %in% names(data) || nrow(data) == 0) return(NA_character_)
@@ -52,6 +83,11 @@ read_meta_value <- function(path, key) {
 as_num <- function(x) suppressWarnings(as.numeric(x))
 as_time <- function(x) suppressWarnings(as.POSIXct(x, tz = "UTC"))
 
+# Scan one logging directory and reconstruct complete sessions from the separate
+# Meta / Event / Sample / Summary CSV files.
+#
+# The Unity pipeline writes one file per collection, so this function groups those
+# files back into one "session index" row that the rest of the app can work with.
 discover_sessions <- function(log_dir) {
   files <- list.files(log_dir, pattern = "\\.(csv)$", full.names = TRUE)
   files <- files[!grepl("\\.meta$", files, ignore.case = TRUE)]
@@ -83,6 +119,9 @@ discover_sessions <- function(log_dir) {
     arrange(desc(timestamp))
 }
 
+# Given one row from the session index, read all four collections for that session.
+# The return value is a named list so downstream code can use current_data()$event,
+# current_data()$sample, and so on.
 load_session_data <- function(session_row) {
   list(
     meta = clean_log_df(safe_read_csv(session_row$Meta)),
@@ -92,6 +131,11 @@ load_session_data <- function(session_row) {
   )
 }
 
+# ---------- Summary-tab helpers ----------
+
+# Build the simple bar chart shown on the Summary tab.
+# This plot only uses rows of type "Aftereffect", because those rows already condense
+# baseline/post comparisons into the final analysis values.
 build_summary_plot <- function(summary_data) {
   aftereffect <- summary_data |>
     filter(SummaryType == "Aftereffect") |>
@@ -123,6 +167,11 @@ build_summary_plot <- function(summary_data) {
     )
 }
 
+# Translate one aftereffect summary row into plain-language interpretation strings
+# for the metric cards on the Summary tab.
+#
+# The app deliberately writes these short interpretations so the dashboard is easier
+# to read for non-programmers and non-statisticians.
 compute_interpretation <- function(aftereffect_row) {
   if (nrow(aftereffect_row) == 0) {
     return(list(
@@ -223,6 +272,8 @@ compute_interpretation <- function(aftereffect_row) {
   )
 }
 
+# Compare baseline and post variability, typically via standard deviation.
+# This powers the "Consistency" card on the Summary tab.
 compute_variability <- function(aftereffect_row) {
   if (nrow(aftereffect_row) == 0) {
     return(list(
@@ -255,6 +306,9 @@ compute_variability <- function(aftereffect_row) {
   )
 }
 
+# Display configured and applied effect modes together.
+# This matters because some sessions may request one effect but effectively apply another,
+# and the card should not hide that difference.
 format_effect_label <- function(aftereffect_row) {
   if (nrow(aftereffect_row) == 0) return("Unknown")
 
@@ -271,6 +325,14 @@ format_effect_label <- function(aftereffect_row) {
   paste0(configured, " (applied: ", applied, ")")
 }
 
+# ---------- Spatial / trajectory data preparation ----------
+
+# Build the Spatial-tab plot.
+#
+# This function branches by task because "spatial overview" means different things:
+# - OpenLoop: accepted endpoints relative to a single target
+# - LineBisection: accepted endpoints relative to a displayed line and its midpoint
+# - Exposure: target centers plus hit and miss locations in world space
 build_spatial_plot <- function(event_data, selected_task = "Exposure", selected_block = "Exposure") {
   if (nrow(event_data) == 0) {
     return(ggplot() + annotate("text", x = 1, y = 1, label = "No event data loaded") + theme_void())
@@ -407,6 +469,9 @@ build_spatial_plot <- function(event_data, selected_task = "Exposure", selected_
     theme_minimal(base_size = 13)
 }
 
+# Non-exposure tasks do not show a continuous movement path in this app.
+# Instead, they show a trial-by-trial response overview, optionally overlaying
+# Baseline and Post so directional bias can be compared directly.
 build_non_exposure_trial_plot <- function(event_data, selected_task, selected_block, selected_trial, overlap_blocks = FALSE) {
   signed_col <- if (selected_task == "LineBisection") "ErrorCm" else "SignedOffsetCm"
   blocks_to_show <- if (overlap_blocks) c("Baseline", "Post") else selected_block
@@ -460,6 +525,8 @@ build_non_exposure_trial_plot <- function(event_data, selected_task, selected_bl
     theme(legend.position = if (overlap_blocks) "top" else "none")
 }
 
+# Extract raw controller/hand trajectory samples near one accepted attempt.
+# This is a low-level helper kept for experimentation and targeted attempt views.
 extract_attempt_trajectory <- function(sample_data, event_data, selected_task, attempt_index, time_window) {
   sample_subset <- sample_data |>
     filter(TaskMode == selected_task) |>
@@ -500,6 +567,10 @@ extract_attempt_trajectory <- function(sample_data, event_data, selected_task, a
   list(path = path, event = chosen_event)
 }
 
+# Convert the live pointer ray into projected coordinates on the target plane,
+# attempt by attempt. This is the key step behind the Exposure trajectory view:
+# it lets the app show where the participant's projected aim moved relative to
+# the target center before the final confirmation.
 extract_projected_attempts <- function(sample_data, event_data, selected_task, time_window) {
   sample_subset <- sample_data |>
     filter(TaskMode == selected_task) |>
@@ -590,6 +661,11 @@ extract_projected_attempts <- function(sample_data, event_data, selected_task, t
   )
 }
 
+# Build the main plot on the Trajectories tab.
+#
+# Exposure gets an actual projected aim path.
+# The measurement tasks instead delegate to build_non_exposure_trial_plot(),
+# because their most meaningful "trajectory" is the sequence of accepted trials.
 build_trajectory_overview_plot <- function(sample_data, event_data, selected_task = "Exposure", selected_block = "Exposure", selected_attempt = NA_real_, time_window = 1.0, overlap_blocks = FALSE) {
   if (selected_task != "Exposure") {
     return(build_non_exposure_trial_plot(event_data, selected_task, selected_block, selected_attempt, overlap_blocks))
@@ -683,6 +759,11 @@ build_trajectory_overview_plot <- function(sample_data, event_data, selected_tas
   plot
 }
 
+# Build the lower plot on the Trajectories tab.
+#
+# Again this differs by task:
+# - for measurement tasks it shows absolute trial error over time,
+# - for exposure it shows final hit distance per attempt.
 build_attempt_error_plot <- function(event_data, selected_task = "Exposure", selected_block = "Exposure", overlap_blocks = FALSE) {
   if (selected_task != "Exposure") {
     error_col <- if (selected_task == "LineBisection") "ErrorCm" else "SignedOffsetCm"
@@ -763,6 +844,14 @@ build_attempt_error_plot <- function(event_data, selected_task = "Exposure", sel
     theme(legend.position = "top")
 }
 
+# ---------- Quality-tab helpers ----------
+
+# Convert task-specific Event rows into a common quality table with:
+# - TrialIndex
+# - absolute_error
+# - outcome
+#
+# This lets the Quality tab reuse one plotting/statistics pipeline across different tasks.
 extract_quality_trials <- function(event_data, selected_task, selected_block) {
   if (nrow(event_data) == 0) return(tibble())
 
@@ -823,6 +912,12 @@ extract_quality_trials <- function(event_data, selected_task, selected_block) {
   tibble()
 }
 
+# Compute quality metrics used by both the cards and the plot.
+# This includes:
+# - mean and median error,
+# - a simple outlier threshold,
+# - drift over trials (linear slope),
+# - and hit rate for exposure.
 compute_quality_metrics <- function(quality_trials, selected_task) {
   if (nrow(quality_trials) == 0) {
     return(list(
@@ -877,6 +972,8 @@ compute_quality_metrics <- function(quality_trials, selected_task) {
   )
 }
 
+# Small label helpers so the quality tab can talk about metres, centimetres,
+# or abstract task units without hardcoding those strings in many places.
 quality_units_label <- function(selected_task) {
   if (selected_task == "Exposure") {
     return("m")
@@ -906,6 +1003,11 @@ quality_error_label <- function(selected_task) {
   "Absolute error"
 }
 
+# Build the main Quality-tab plot.
+# It combines:
+# - per-trial values,
+# - a dashed outlier threshold,
+# - and a simple linear trend line across the block.
 build_quality_plot <- function(quality_trials, selected_task, selected_block) {
   if (nrow(quality_trials) == 0) {
     return(
@@ -936,12 +1038,18 @@ build_quality_plot <- function(quality_trials, selected_task, selected_block) {
     theme(legend.position = "top")
 }
 
+# Compact summary table used on the Summary tab.
+# This strips the raw Summary.csv down to the columns most useful for human inspection.
 summary_compact_table <- function(summary_data) {
   summary_data |>
     filter(SummaryType %in% c("Aftereffect", "BlockMetric")) |>
     select(TaskMode, BlockType, SummaryType, MetricName, MetricUnits, BaselineValue, BaselineSd, PostValue, PostSd, SignedDelta, Magnitude, NormalizedMagnitude, TrialCount, ConfiguredEffectMode)
 }
 
+# ---------- Compare-tab helpers ----------
+
+# Build one cross-session dataset by reading the Aftereffect rows from every available session.
+# This is the backbone of the Compare tab.
 build_comparison_dataset <- function(session_rows) {
   if (nrow(session_rows) == 0) return(tibble())
 
@@ -984,6 +1092,8 @@ build_comparison_dataset <- function(session_rows) {
     arrange(TimestampDt)
 }
 
+# Comparison plot #1:
+# one point per session, ordered in time, faceted by task.
 build_comparison_plot <- function(compare_data) {
   if (nrow(compare_data) == 0) {
     return(
@@ -1010,6 +1120,8 @@ build_comparison_plot <- function(compare_data) {
     theme_minimal(base_size = 13)
 }
 
+# Comparison plot #2:
+# grouped distributions by configured effect and input mode.
 build_grouped_comparison_plot <- function(compare_data) {
   if (nrow(compare_data) == 0) {
     return(
@@ -1036,6 +1148,11 @@ build_grouped_comparison_plot <- function(compare_data) {
     theme_minimal(base_size = 13)
 }
 
+# ---------- User interface ----------
+
+# The UI defines the visible structure of the app:
+# - one sidebar for log-folder/session controls,
+# - and one main tabset for Summary / Compare / Quality / Spatial / Trajectories.
 ui <- fluidPage(
   titlePanel("Prism Analysis"),
   tags$head(
@@ -1123,9 +1240,21 @@ ui <- fluidPage(
   )
 )
 
+# ---------- Server / reactivity ----------
+#
+# In Shiny, the server function is where inputs, reactive expressions, and outputs are connected.
+# A useful way to read this section is:
+# 1. session discovery and loading,
+# 2. per-tab helper reactives,
+# 3. UI outputs,
+# 4. plot outputs,
+# 5. observers that keep dropdowns in sync.
 server <- function(input, output, session) {
+  # session_index stores the discovered sessions for the currently selected folder.
   session_index <- reactiveVal(tibble())
 
+  # Refresh the session list from disk.
+  # If the folder does not exist, clear the index rather than erroring.
   refresh_sessions <- function() {
     log_dir <- normalizePath(input$log_dir, winslash = "/", mustWork = FALSE)
     if (!dir.exists(log_dir)) {
@@ -1135,9 +1264,11 @@ server <- function(input, output, session) {
     session_index(discover_sessions(log_dir))
   }
 
+  # Initial load and explicit manual refresh button.
   observeEvent(TRUE, refresh_sessions(), once = TRUE)
   observeEvent(input$refresh, refresh_sessions())
 
+  # Sidebar session picker generated from the current session index.
   output$session_picker <- renderUI({
     sessions <- session_index()
     if (nrow(sessions) == 0) {
@@ -1159,21 +1290,25 @@ server <- function(input, output, session) {
     selectInput("session_id", "Session", choices = setNames(sessions$session_id, labels))
   })
 
+  # Resolve the currently selected session row from the session index.
   current_session <- reactive({
     sessions <- session_index()
     req(nrow(sessions) > 0, input$session_id)
     sessions |> filter(session_id == input$session_id) |> slice(1)
   })
 
+  # Load the four CSV collections for the selected session.
   current_data <- reactive({
     row <- current_session()
     load_session_data(row)
   })
 
+  # Build the all-sessions comparison dataset once from the session index.
   comparison_data_all <- reactive({
     build_comparison_dataset(session_index())
   })
 
+  # Session-state status box in the sidebar.
   output$session_status <- renderUI({
     row <- current_session()
     state <- ifelse(is.na(row$session_state) || row$session_state == "", "Unknown", row$session_state)
@@ -1181,6 +1316,7 @@ server <- function(input, output, session) {
     div(class = paste("status-box", class_name), paste("Session State:", state))
   })
 
+  # Summary cards for one selected session.
   output$summary_cards <- renderUI({
     summary <- current_data()$summary
     aftereffect <- summary |>
@@ -1271,6 +1407,7 @@ server <- function(input, output, session) {
     do.call(tagList, cards)
   })
 
+  # Raw summary table from Summary.csv, trimmed to the most useful columns.
   output$summary_table <- renderDT({
     summary <- current_data()$summary
     if (nrow(summary) == 0) return(datatable(tibble(Message = "No Summary.csv for this session")))
@@ -1282,10 +1419,13 @@ server <- function(input, output, session) {
     )
   })
 
+  # Summary-tab plot.
   output$summary_plot <- renderPlotly({
     ggplotly(build_summary_plot(current_data()$summary))
   })
 
+  # When a new session is selected, update the task choices for the tab dropdowns
+  # based on the tasks actually present in that session's Event.csv.
   observe({
     event_data <- current_data()$event
     tasks <- sort(unique(na.omit(event_data$TaskMode)))
@@ -1295,6 +1435,7 @@ server <- function(input, output, session) {
     updateSelectInput(session, "trajectory_task", choices = tasks, selected = if ("Exposure" %in% tasks) "Exposure" else tasks[[1]])
   })
 
+  # Populate Compare-tab filter dropdowns from the full cross-session dataset.
   observe({
     compare_data <- comparison_data_all()
     tasks <- sort(unique(na.omit(compare_data$TaskMode)))
@@ -1306,6 +1447,7 @@ server <- function(input, output, session) {
     updateSelectInput(session, "compare_effect", choices = c("All", effects), selected = "All")
   })
 
+  # Apply the Compare-tab filters reactively.
   comparison_data_filtered <- reactive({
     compare_data <- comparison_data_all()
     if (nrow(compare_data) == 0) return(compare_data)
@@ -1333,6 +1475,7 @@ server <- function(input, output, session) {
     compare_data
   })
 
+  # Compare-tab metric cards.
   output$compare_cards <- renderUI({
     compare_data <- comparison_data_filtered()
 
@@ -1376,6 +1519,7 @@ server <- function(input, output, session) {
     )
   })
 
+  # Compare-tab plots and table.
   output$compare_plot <- renderPlotly({
     ggplotly(build_comparison_plot(comparison_data_filtered()))
   })
@@ -1413,6 +1557,7 @@ server <- function(input, output, session) {
     )
   })
 
+  # Keep block dropdowns synced with the selected task for each tab.
   observeEvent(input$quality_task, {
     event_data <- current_data()$event
     blocks <- event_data |>
@@ -1449,6 +1594,8 @@ server <- function(input, output, session) {
     updateSelectInput(session, "trajectory_block", choices = blocks, selected = if ("Exposure" %in% blocks) "Exposure" else blocks[[1]])
   }, ignoreNULL = FALSE)
 
+  # The Trajectories tab uses "attempt" terminology for exposure and "trial" for measurement tasks.
+  # This UI output switches label and choices accordingly.
   output$attempt_picker <- renderUI({
     event_data <- current_data()$event
     req(input$trajectory_task, input$trajectory_block)
@@ -1477,6 +1624,8 @@ server <- function(input, output, session) {
     selectInput("trajectory_attempt", if (input$trajectory_task == "Exposure") "Highlighted Attempt" else "Highlighted Trial", choices = attempts, selected = attempts[[1]])
   })
 
+  # Exposure gets a time-window slider because its trajectory view is time-based.
+  # Non-exposure tasks instead show a small explanatory note.
   output$trajectory_window_ui <- renderUI({
     if (input$trajectory_task == "Exposure") {
       return(sliderInput("trajectory_window", "Seconds Before Confirm", min = 0.25, max = 3, value = 1, step = 0.25))
@@ -1489,6 +1638,7 @@ server <- function(input, output, session) {
     )
   })
 
+  # Context-sensitive help text for the Trajectories tab.
   output$trajectory_help <- renderUI({
     if (input$trajectory_task == "Exposure") {
       return(tags$p("This tab focuses on approach behavior rather than raw controller wandering. It shows how the pointer converged on the target plane before each confirmation."))
@@ -1497,6 +1647,7 @@ server <- function(input, output, session) {
     tags$p("For OpenLoop and LineBisection, this tab is a trial-by-trial response overview. Each dot is one accepted trial, and the highlighted point is the selected trial. It is not a movement path through space.")
   })
 
+  # Quality-tab cards.
   output$quality_cards <- renderUI({
     req(input$quality_task, input$quality_block)
     quality_trials <- extract_quality_trials(current_data()$event, input$quality_task, input$quality_block)
@@ -1559,6 +1710,7 @@ server <- function(input, output, session) {
     do.call(tagList, cards)
   })
 
+  # Quality-tab plot and table.
   output$quality_plot <- renderPlotly({
     req(input$quality_task, input$quality_block)
     quality_trials <- extract_quality_trials(current_data()$event, input$quality_task, input$quality_block)
@@ -1586,10 +1738,12 @@ server <- function(input, output, session) {
     )
   })
 
+  # Spatial plot for the selected task/block.
   output$spatial_plot <- renderPlotly({
     ggplotly(build_spatial_plot(current_data()$event, input$spatial_task, input$spatial_block))
   })
 
+  # Main trajectories plot.
   output$trajectory_plot <- renderPlotly({
     req(input$trajectory_attempt)
     ggplotly(build_trajectory_overview_plot(
@@ -1603,6 +1757,7 @@ server <- function(input, output, session) {
     ))
   })
 
+  # Lower trajectories plot showing final error progression.
   output$trajectory_error_plot <- renderPlotly({
     ggplotly(build_attempt_error_plot(
       current_data()$event,
@@ -1613,4 +1768,5 @@ server <- function(input, output, session) {
   })
 }
 
+# Launch the app by combining the UI definition and the server logic.
 shinyApp(ui, server)

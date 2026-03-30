@@ -1,6 +1,23 @@
 using UnityEngine;
 using TMPro;
 
+// ExposureTask implements the adaptation-inducing part of the workflow.
+//
+// This task differs fundamentally from the measurement tasks:
+// - the participant does not reset fully between every response,
+// - one of three targets is repeatedly acquired,
+// - hit/miss feedback is part of the intended design,
+// - and the currently selected perturbation is active during this phase.
+//
+// In other words, this is the task meant to drive adaptation, not merely measure it.
+//
+// The script is responsible for:
+// - spawning/selecting the active exposure target,
+// - deciding whether a response counts as hit or miss,
+// - tracking successful hits and total attempts,
+// - updating target visuals and center-target cueing,
+// - logging exposure attempts and configuration,
+// - notifying SandboxRunner once exposure is complete.
 public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
 {
     private const string HitMarkerObjectName = "Hitmarker";
@@ -89,11 +106,13 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     public int GetCurrentAttemptNumber() => _attemptCount + 1;
     public int GetCurrentTargetIndex() => _currentTargetIndex;
 
+    // Editor reset hook.
     void Reset()
     {
         AutoAssignReferences();
     }
 
+    // Keep references and center-target cue visuals updated in the editor.
     void OnValidate()
     {
         if (!Application.isPlaying)
@@ -105,6 +124,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         }
     }
 
+    // Called by SandboxRunner when Exposure becomes active or inactive.
     public void SetTaskActive(bool active)
     {
         _isActive = active;
@@ -114,6 +134,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
             RefreshTargetVisuals();
     }
 
+    // Standard startup hook.
     void Awake()
     {
         AutoAssignReferences();
@@ -121,16 +142,20 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         EnsureCenterTargetBullseye();
     }
 
+    // Ensure the visual state matches the current active/inactive state once play starts.
     void Start()
     {
         UpdateVisualsFromState();
     }
 
+    // Small wrapper used to synchronize target/cursor/hit-marker visibility with task activity.
     void UpdateVisualsFromState()
     {
         SetVisualsVisible(_isActive);
     }
 
+    // Auto-finds the scene objects this task depends on:
+    // runner, board, HMD, three exposure targets, markers, readout, and logger.
     void AutoAssignReferences()
     {
         if (runner == null)
@@ -166,6 +191,17 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         if (targets[2] == null) targets[2] = GameObject.Find("ExposureTarget3")?.transform ?? GameObject.Find("ExposureTargetRight")?.transform;
     }
 
+    // Starts a fresh exposure block.
+    //
+    // This resets the participant-facing and logging-facing state:
+    // - hit counter,
+    // - attempt counter,
+    // - gate/latch state,
+    // - current live and last-attempt readouts,
+    // - configured hit radius for the whole block.
+    //
+    // It then activates visuals, logs the block configuration, chooses the first target,
+    // and updates the readout.
     public void StartExposureBlock()
     {
         _successCount = 0;
@@ -191,23 +227,42 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         UpdateReadout();
     }
 
+    // Main exposure loop.
+    //
+    // Chronological flow of one attempt:
+    // 1. make sure the task is active and references are valid,
+    // 2. update the center target cue visuals,
+    // 3. get the participant's transformed input,
+    // 4. apply confirm-latching and optional reset gating,
+    // 5. intersect the aim ray with the board,
+    // 6. compute distance from the active target,
+    // 7. if confirmed, judge hit or miss,
+    // 8. log the attempt,
+    // 9. if hit, advance toward completion and choose the next target,
+    // 10. if enough hits were made, notify SandboxRunner that exposure is complete.
     void Update()
     {
+        // If exposure is not the current task, do nothing.
         if (!_isActive) return;
+        // Exposure requires the runner, board, and target array to function.
         if (runner == null || boardPlane == null || targets == null || targets.Length < 3) return;
 
         UpdateCenterBullseyeVisuals();
 
+        // SandboxRunner already resolves controller vs hand input and any active effect.
         var (ray, pose, confirm) = runner.GetTransformedInput();
 
         if (latchConfirm)
         {
+            // Prevent a single held confirmation from being counted more than once.
             if (!confirm) _confirmLatched = false;
             if (confirm && _confirmLatched) confirm = false;
         }
 
         if (requireResetBetweenTrials && hmd != null)
         {
+            // Optional return-to-start gating, though exposure usually runs more continuously
+            // than the measurement tasks.
             float resetY = hmd.position.y - resetDropMeters;
 
             if (!_armed && pose.position.y <= resetY)
@@ -217,6 +272,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
                 confirm = false;
         }
 
+        // If the aim ray does not hit the board, there is no valid live cursor position.
         if (!IntersectRayWithBoard(ray, out Vector3 hitPoint))
         {
             _liveDistanceCm = null;
@@ -228,6 +284,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
             cursorMarker.position = hitPoint;
 
         Transform currentTarget = targets[_currentTargetIndex];
+        // Live distance is shown in centimeters because that is easier to read in the task UI.
         if (currentTarget != null)
             _liveDistanceCm = Vector3.Distance(hitPoint, currentTarget.position) * 100f;
         else
@@ -237,6 +294,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         {
             if (requireResetBetweenTrials)
             {
+                // Prevent double acceptance from nearly simultaneous repeated confirmation.
                 if (Time.time - _lastAcceptedTime < minSecondsBetweenAttempts)
                 {
                     UpdateReadout();
@@ -253,12 +311,15 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
             _attemptCount++;
 
             var target = targets[_currentTargetIndex];
+            // The block uses one resolved hit radius consistently across attempts.
             float currentHitRadius = _configuredHitRadiusMeters;
             float dist = Vector3.Distance(hitPoint, target.position);
             bool isHit = dist <= currentHitRadius;
             _lastAttemptDistanceCm = dist * 100f;
             _lastAttemptWasHit = isHit;
 
+            // Two logging calls are used here:
+            // one for the raw pointer shot event, one for the interpreted exposure attempt.
             experimentLogger?.LogPointerShoot(
                 _attemptCount,
                 _successCount,
@@ -277,12 +338,14 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
 
             if (hitMarker && showHitMarker)
             {
+                // Hit marker shows where the accepted response landed on the board.
                 hitMarker.gameObject.SetActive(true);
                 hitMarker.position = hitPoint;
             }
 
             if (isHit)
             {
+                // Hits advance the exposure block toward completion.
                 _successCount++;
 
                 if (logAttempts)
@@ -292,6 +355,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
 
                 if (_successCount >= successfulHitsToComplete)
                 {
+                    // Exposure is complete once the required number of successful hits is reached.
                     experimentLogger?.LogExposureCompleted(_successCount, _attemptCount);
                     UpdateReadout();
                     Debug.Log("[Exposure] Exposure block complete.");
@@ -306,6 +370,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
             }
             else
             {
+                // Misses are logged and visually marked, but do not advance successCount.
                 if (logAttempts)
                     Debug.Log($"[Exposure] MISS target {_currentTargetIndex} (attempt {_attemptCount}, dist={dist:0.000}m)");
 
@@ -316,6 +381,8 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         UpdateReadout();
     }
 
+    // Shows or hides the targets and marker visuals belonging to exposure.
+    // Unlike the measurement tasks, the targets themselves are part of the core task display.
     void SetVisualsVisible(bool visible)
     {
         for (int i = 0; i < targets.Length; i++)
@@ -334,6 +401,8 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
             RefreshTargetVisuals();
     }
 
+    // Tries to find the hit marker inside WorldRoot first, then falls back to a global search.
+    // This is more robust to different scene layouts.
     Transform FindHitMarker()
     {
         var worldRoot = GameObject.Find("WorldRoot")?.transform;
@@ -347,6 +416,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         return GameObject.Find(HitMarkerObjectName)?.transform ?? GameObject.Find("HitMarker")?.transform;
     }
 
+    // Ensures the renderer array matches the target array, auto-filling renderers from target children.
     void AutoFillRenderers()
     {
         if (targets == null) return;
@@ -361,6 +431,12 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         }
     }
 
+    // Chooses the next active target.
+    //
+    // Rules:
+    // - the very first target can be forced to center,
+    // - otherwise targets can cycle deterministically or be randomized,
+    // - optional immediate-repeat avoidance prevents the same target from being selected twice in a row.
     void PickNextTarget(bool forceCenterFirst)
     {
         _lastTargetIndex = _currentTargetIndex;
@@ -395,6 +471,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         _currentTargetIndex = next;
     }
 
+    // Colors the targets so the current one is visually distinguished from the idle ones.
     void RefreshTargetVisuals()
     {
         if (!_isActive) return;
@@ -408,6 +485,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         UpdateCenterBullseyeVisuals();
     }
 
+    // Temporary color flash for a single target to indicate hit or miss outcome.
     void FlashSingleTarget(int index, Color color)
     {
         if (index < 0 || index >= targetRenderers.Length) return;
@@ -416,6 +494,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         SetRendererColor(targetRenderers[index], color);
     }
 
+    // Uses a MaterialPropertyBlock so target colors can be changed without permanently modifying materials.
     void SetRendererColor(Renderer r, Color c)
     {
         if (r == null) return;
@@ -427,6 +506,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         r.SetPropertyBlock(props);
     }
 
+    // Ensures the center target has the extra bullseye cue overlays used to make it visually distinctive.
     void EnsureCenterTargetBullseye()
     {
         if (!showCenterBullseye || targets == null || targets.Length < 2 || targets[1] == null)
@@ -450,6 +530,9 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         UpdateCenterBullseyeVisuals();
     }
 
+    // Creates one overlay object for the center target cue.
+    // The overlay reuses the target's mesh and materials, then relies on color/scale/offset differences
+    // to produce the bullseye appearance.
     Transform CreateBullseyeOverlay(string objectName, Renderer sourceRenderer, float scaleMultiplier)
     {
         Transform existing = sourceRenderer.transform.Find(objectName);
@@ -474,6 +557,8 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         return overlay.transform;
     }
 
+    // Keeps the center target bullseye visuals synchronized with the current inspector settings.
+    // This updates visibility, local offsets, scales, rotations, and colors.
     void UpdateCenterBullseyeVisuals()
     {
         if (centerBullseyeRing == null || centerBullseyeInnerRing == null || centerBullseyeDot == null)
@@ -503,9 +588,12 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         SetRendererColor(centerBullseyeInnerRing.GetComponent<Renderer>(), bullseyeInnerRingColor);
         SetRendererColor(centerBullseyeDot.GetComponent<Renderer>(), bullseyeDotColor);
     }
+
+    // Finds where the aim ray intersects the board plane.
     bool IntersectRayWithBoard(Ray r, out Vector3 hit)
     {
         Vector3 n = boardPlane.up;
+        // If the ray is nearly parallel to the board, there is no stable intersection.
         float denom = Vector3.Dot(n, r.direction);
         if (Mathf.Abs(denom) < 1e-4f)
         {
@@ -524,6 +612,8 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         return false;
     }
 
+    // Updates the participant-facing readout for the exposure task.
+    // Exposure emphasizes current target, hit progress, attempt count, live distance, and last outcome.
     void UpdateReadout()
     {
         if (!readout || !_isActive) return;
@@ -550,6 +640,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
             $"Gate: {gateTxt}";
     }
 
+    // Converts the internal numeric target index into a human-readable label.
     string TargetLabel(int i)
     {
         return i switch
@@ -561,6 +652,8 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         };
     }
 
+    // Exposes the currently active exposure target to SandboxRunner.
+    // This is used for controller hover-confirm and trajectory/phase interpretation.
     public bool TryGetAimTarget(out Vector3 worldCenter, out Vector3 planeNormal, out float targetRadiusMeters)
     {
         worldCenter = Vector3.zero;
@@ -579,6 +672,8 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         return true;
     }
 
+    // Resolves the hit radius that should be used for the whole exposure block.
+    // The current implementation prefers the center target, then falls back to any valid target.
     float ResolveConfiguredHitRadiusMeters()
     {
         if (targets != null && targets.Length > 1 && targets[1] != null)
@@ -593,6 +688,8 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         return hitRadiusMeters;
     }
 
+    // Estimates target radius from the target object's world-space scale.
+    // If that estimate fails, it falls back to the configured default hitRadiusMeters.
     float EstimateTargetRadiusMeters(Transform target)
     {
         if (target == null)

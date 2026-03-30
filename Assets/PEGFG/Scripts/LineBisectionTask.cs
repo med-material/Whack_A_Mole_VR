@@ -2,6 +2,23 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
+// LineBisectionTask implements the measurement task where the participant indicates
+// the perceived midpoint of a horizontal line shown on the board.
+//
+// Compared with OpenLoopPointingTask, the motor structure is similar:
+// the participant still raises the arm, aims, and confirms a response.
+// The difference is perceptual rather than motor:
+// instead of pointing toward a single explicit target point, the participant must infer
+// where the midpoint of the visible line lies.
+//
+// The main dependent measure is the signed midpoint error in centimeters.
+// In other words:
+// "how far left or right from the true midpoint did the participant respond?"
+//
+// As with open-loop pointing, the important experimental distinction is that the task
+// is intended as a measurement task rather than an online correction task. A cursor can
+// be shown in the implementation for debugging, but the conceptual measurement is still
+// based on the final accepted estimate of the midpoint.
 public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
 {
     public enum BlockType { Baseline, Post }
@@ -65,22 +82,28 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     public string GetCurrentBlockName() => blockType.ToString();
     public int GetCurrentTrialNumber() => Mathf.Clamp(_trialIndex + 1, 1, trialsPerBlock);
 
+    // Standard startup hook. Auto-fills references so the script can work with minimal
+    // manual inspector setup.
     void Awake()
     {
         AutoAssignReferences();
     }
 
+    // Editor reset hook.
     void Reset()
     {
         AutoAssignReferences();
     }
 
+    // Keep references refreshed in edit mode when values change.
     void OnValidate()
     {
         if (!Application.isPlaying)
             AutoAssignReferences();
     }
 
+    // Called by SandboxRunner when the task should be shown or hidden.
+    // If the task has just become active, it also prepares the current trial line.
     public void SetTaskActive(bool active)
     {
         _isActive = active;
@@ -90,6 +113,8 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
             SetupNewLine();
     }
 
+    // Tries to find the scene objects this task depends on:
+    // runner, board, HMD, line renderer, cursor/midpoint markers, readout, and logger.
     void AutoAssignReferences()
     {
         if (runner == null)
@@ -121,6 +146,10 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
             experimentLogger = runner != null ? runner.GetExperimentLogger() : FindFirstObjectByType<PrismExperimentLogger>();
     }
 
+    // Shows or hides the task-specific visuals.
+    // lineRenderer is part of the actual stimulus.
+    // midpointMarker is a board reference.
+    // cursorMarker is mostly useful as a debug/development aid.
     void UpdateVisuals()
     {
         if (lineRenderer)
@@ -133,34 +162,57 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
             midpointMarker.gameObject.SetActive(_isActive && showBoardMidpoint);
     }
 
+    // Main task loop.
+    //
+    // Chronologically, one trial works like this:
+    // 1. make sure the task is active and its references exist,
+    // 2. keep the line/midpoint visuals in sync,
+    // 3. stop early if the block is already complete,
+    // 4. ensure the current trial has been logged as started,
+    // 5. get the participant's transformed input from SandboxRunner,
+    // 6. apply latching and optional reset gating,
+    // 7. intersect the aim ray with the board,
+    // 8. project that hit onto the current line,
+    // 9. convert the result into signed midpoint error,
+    // 10. if confirmed, accept/log the trial and possibly finish the block.
     void Update()
     {
+        // If this task is not currently active, do nothing.
         if (!_isActive) return;
+        // The task cannot run without the runner, board plane, and line renderer.
         if (runner == null || boardPlane == null || lineRenderer == null) return;
 
         UpdateVisuals();
 
+        // The midpoint marker stays at the board center.
+        // This is a spatial reference, not online correctness feedback.
         if (midpointMarker && showBoardMidpoint)
             midpointMarker.position = boardPlane.position;
 
+        // Once the block is complete, only show the final summary.
         if (_trialIndex >= trialsPerBlock)
         {
             UpdateReadout(final: true);
             return;
         }
 
+        // Make sure the logger knows the current trial exists before it is accepted.
         EnsureCurrentTrialLogged();
 
+        // SandboxRunner already resolves modality/effect differences,
+        // so the task just consumes the unified input package.
         var (ray, pose, confirm) = runner.GetTransformedInput();
 
         if (latchConfirm)
         {
+            // Prevent a single long press from being counted as multiple responses.
             if (!confirm) _confirmLatched = false;
             if (confirm && _confirmLatched) confirm = false;
         }
 
         if (requireResetBetweenTrials && hmd != null)
         {
+            // Optional return-to-start gating, identical in spirit to the one used in open-loop pointing.
             float resetY = hmd.position.y - resetDropMeters;
 
             if (!_armed && pose.position.y <= resetY)
@@ -170,6 +222,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
                 confirm = false;
         }
 
+        // If the ray does not hit the board plane, there is no valid current estimate.
         if (!IntersectRayWithBoard(ray, out Vector3 hit))
         {
             _liveErrorCm = null;
@@ -177,22 +230,31 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
             return;
         }
 
+        // Convert the world hit into board-local coordinates.
         Vector3 local = WorldToBoardMeters(hit);
+        // Force the point onto the current line's depth, since the participant is estimating
+        // the midpoint of the shown line rather than an arbitrary depth on the board.
         local.z = _currentLineZ;
+        // Live signed error before segment clamping, used mainly for debug/readout.
         _liveErrorCm = local.x * 100f;
 
         if (clampToLineSegment)
+            // Restrict the accepted point to the visible length of the displayed line.
             local.x = Mathf.Clamp(local.x, -_currentHalfLen, _currentHalfLen);
 
         Vector3 constrainedWorld = BoardMetersToWorld(local);
 
         if (cursorMarker && showCursor)
+            // If shown, the cursor visual indicates the currently aimed location on the line.
+            // This is helpful during development, but it should not be mistaken for the
+            // conceptual basis of the measurement design.
             cursorMarker.position = constrainedWorld;
 
         if (confirm)
         {
             if (requireResetBetweenTrials)
             {
+                // Prevent immediate double-acceptance on near-simultaneous inputs.
                 if (Time.time - _lastAcceptedTime < minSecondsBetweenTrials)
                 {
                     UpdateReadout(final: false);
@@ -204,13 +266,16 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
 
             if (latchConfirm) _confirmLatched = true;
 
+            // The signed error is the horizontal board coordinate relative to the true midpoint.
             float errorMeters = local.x;
             float errorCm = errorMeters * 100f;
 
+            // Store the accepted result and advance the trial counter.
             _errorsCm.Add(errorCm);
             _trialIndex++;
             _currentTrialLogged = false;
 
+            // Log both the accepted point and the stimulus configuration for this trial.
             experimentLogger?.LogMeasurementTrial(
                 TaskMode.ToString(),
                 blockType.ToString(),
@@ -228,6 +293,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
 
             if (_trialIndex >= trialsPerBlock)
             {
+                // End-of-block summary statistics.
                 var (mean, sd) = MeanAndSd(_errorsCm);
                 if (blockType == BlockType.Baseline)
                 {
@@ -245,6 +311,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
                 experimentLogger?.LogTaskMetricSummary(
                     TaskMode.ToString(),
                     blockType.ToString(),
+                    // BisectionError is the analysis-facing name used for this task's main measure.
                     "BisectionError",
                     "cm",
                     _errorsCm.Count,
@@ -254,6 +321,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
 
                 if (_baselineMeanCm.HasValue && _postMeanCm.HasValue)
                 {
+                    // Aftereffect is defined directionally as Post - Baseline.
                     float afterEffect = _postMeanCm.Value - _baselineMeanCm.Value;
                     Debug.Log($"[LineBisection] AFTER-EFFECT (Post - Baseline) = {afterEffect:0.0} cm");
 
@@ -298,6 +366,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
                 return;
             }
 
+            // Prepare the next stimulus line for the next trial.
             SetupNewLine();
             EnsureCurrentTrialLogged();
         }
@@ -305,6 +374,8 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         UpdateReadout(final: false);
     }
 
+    // Starts a fresh baseline or post block.
+    // Resets all counters, accepted errors, and gating state.
     public void StartNewBlock(BlockType newBlock)
     {
         blockType = newBlock;
@@ -323,6 +394,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         UpdateReadout(final: false);
     }
 
+    // Clears stored block summaries so a new experiment run does not inherit old aftereffect values.
     public void ClearSummaries()
     {
         _baselineMeanCm = null;
@@ -331,6 +403,13 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         _postSdCm = null;
     }
 
+    // Chooses the visual line used for the current trial.
+    //
+    // Two stimulus properties can vary:
+    // - its total length,
+    // - its depth position on the board.
+    //
+    // The resulting world-space endpoints are then written into the LineRenderer.
     void SetupNewLine()
     {
         float len = lineLength;
@@ -356,6 +435,8 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         lineRenderer.SetPosition(1, bWorld);
     }
 
+    // Ensures the logger has a "trial started" entry for the current line stimulus.
+    // The midpointWorld value records the true midpoint the participant is meant to estimate.
     void EnsureCurrentTrialLogged()
     {
         if (_currentTrialLogged || !_isActive || boardPlane == null || experimentLogger == null || _trialIndex >= trialsPerBlock)
@@ -379,9 +460,11 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         _currentTrialLogged = true;
     }
 
+    // Finds where the aim ray intersects the board plane.
     bool IntersectRayWithBoard(Ray r, out Vector3 hit)
     {
         Vector3 n = boardPlane.up;
+        // If the ray is nearly parallel to the board, there is no stable intersection.
         float denom = Vector3.Dot(n, r.direction);
         if (Mathf.Abs(denom) < 1e-4f)
         {
@@ -400,6 +483,12 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         return false;
     }
 
+    // Updates the on-screen readout for the task.
+    //
+    // Similar structure to open-loop pointing:
+    // - before any accepted trials: mainly live estimate and gate state,
+    // - during block: live estimate + last result + running mean/SD,
+    // - after block: final summary and aftereffect if available.
     void UpdateReadout(bool final)
     {
         if (!readout || !_isActive) return;
@@ -445,6 +534,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         readout.text = summary;
     }
 
+    // Computes mean and sample standard deviation for the accepted signed errors.
     static (float mean, float sd) MeanAndSd(List<float> xs)
     {
         int n = xs.Count;
@@ -468,6 +558,8 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         return ((float)mean, (float)sd);
     }
 
+    // Exposes the current target midpoint to SandboxRunner for controller hover-confirm.
+    // In line bisection, that target is the true midpoint of the currently displayed line.
     public bool TryGetAimTarget(out Vector3 worldCenter, out Vector3 planeNormal, out float targetRadiusMeters)
     {
         worldCenter = Vector3.zero;
@@ -482,6 +574,8 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         return true;
     }
 
+    // Converts board-local coordinates in meters to world-space positions.
+    // This uses the board's orientation in world space rather than relying on raw local scale.
     Vector3 BoardMetersToWorld(Vector3 localMeters)
     {
         Vector3 right = Vector3.ProjectOnPlane(boardPlane.right, boardPlane.up).normalized;
@@ -489,6 +583,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         return boardPlane.position + (right * localMeters.x) + (forward * localMeters.z);
     }
 
+    // Inverse of BoardMetersToWorld(): converts a world-space point into board-local meters.
     Vector3 WorldToBoardMeters(Vector3 worldPoint)
     {
         Vector3 relative = worldPoint - boardPlane.position;

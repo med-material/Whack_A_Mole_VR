@@ -2,6 +2,23 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
+// LandmarkTask implements a comparative perceptual judgement task.
+//
+// Unlike OpenLoopPointing and LineBisection, the participant is not trying to place
+// a response at one spatial point. Instead, two horizontal line segments are shown
+// with a small gap in the middle, and the participant chooses which side appears longer.
+//
+// In the present prototype this task is retained mainly as an assessment-oriented task
+// and future clinical extension, rather than as the main healthy-participant adaptation
+// measure. Even so, it still follows the same overall baseline/post block structure and
+// uses the same input pipeline from SandboxRunner.
+//
+// The script is responsible for:
+// - constructing the current left/right line stimulus,
+// - randomising which side is objectively longer,
+// - converting the participant's aim into a left/right choice,
+// - logging correctness and stimulus parameters,
+// - computing block-level accuracy summaries.
 public class LandmarkTask : MonoBehaviour, ISandboxTask
 {
     public enum BlockType { Baseline, Post }
@@ -80,22 +97,35 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
     public string GetCurrentBlockName() => blockType.ToString();
     public int GetCurrentTrialNumber() => Mathf.Clamp(_trialIndex + 1, 1, trialsPerBlock);
 
+    // Standard Unity startup hook. We use it to find scene references automatically
+    // so the task is easier to set up in the editor.
     void Awake()
     {
         AutoAssignReferences();
     }
 
+    // Reset is called when the component is first added in the editor.
+    // This makes sure the script tries to populate its references immediately.
     void Reset()
     {
         AutoAssignReferences();
     }
 
+    // OnValidate runs in the editor when values change in the Inspector.
+    // Keeping reference assignment here reduces manual setup errors.
     void OnValidate()
     {
         if (!Application.isPlaying)
             AutoAssignReferences();
     }
 
+    // Called by SandboxRunner when this task becomes active or inactive.
+    //
+    // When activated, LandmarkTask:
+    // - enables its visual objects,
+    // - ensures the board/line objects live under WorldRoot rather than the XR rig,
+    // - captures the board pose as a baseline for drift warnings,
+    // - and creates the current stimulus.
     public void SetTaskActive(bool active)
     {
         _isActive = active;
@@ -109,6 +139,16 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
             SetupNewStimulus();
     }
 
+    // Automatically finds the scene objects LandmarkTask depends on.
+    //
+    // This includes:
+    // - SandboxRunner for input and progression,
+    // - the board plane for geometric calculations,
+    // - the HMD for reset gating,
+    // - the two line renderers that display the landmark stimulus,
+    // - optional cursor/midpoint markers,
+    // - the UI readout,
+    // - the experiment logger.
     void AutoAssignReferences()
     {
         if (runner == null)
@@ -160,6 +200,11 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
         EnsureLandmarkObjectsAnchoredToWorldRoot();
     }
 
+    // The landmark lines and board must remain fixed in world space.
+    //
+    // If they accidentally become children of the HMD rig or another moving object,
+    // the stimulus would drift with head movement, which would invalidate the task.
+    // This helper therefore reparents them to WorldRoot if needed.
     void EnsureLandmarkObjectsAnchoredToWorldRoot()
     {
         Transform worldRoot = GameObject.Find("WorldRoot")?.transform;
@@ -184,6 +229,11 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
         }
     }
 
+    // Shows or hides the task visuals depending on whether the task is currently active.
+    //
+    // The cursor can be useful to indicate where the current selection falls,
+    // but it is not itself the task outcome. The actual measured output is the final
+    // categorical choice and whether it matched the objectively longer side.
     void UpdateVisuals()
     {
         if (leftRenderer)
@@ -199,33 +249,53 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
             midpointMarker.gameObject.SetActive(_isActive && showBoardMidpoint);
     }
 
+    // Main per-frame loop for the landmark task.
+    //
+    // Chronological trial flow:
+    // 1. verify that the task is active and references exist,
+    // 2. monitor whether the board/stimulus is drifting unexpectedly,
+    // 3. stop early if the block is already complete,
+    // 4. obtain the participant's transformed input from SandboxRunner,
+    // 5. apply confirm-latching and optional reset gating,
+    // 6. intersect the pointing ray with the board,
+    // 7. convert that hit into a left or right categorical choice,
+    // 8. if confirmed, accept and log the response,
+    // 9. if the block ends, compute summary accuracy,
+    // 10. otherwise create the next stimulus.
     void Update()
     {
+        // If the task is not currently the active task, do nothing.
         if (!_isActive) return;
+        // LandmarkTask depends on the runner, board, and both line renderers.
         if (runner == null || boardPlane == null || leftRenderer == null || rightRenderer == null) return;
 
         WarnIfBoardPoseDrifts();
         UpdateVisuals();
 
+        // Optional midpoint marker, mainly as a spatial reference/debug aid.
         if (midpointMarker && showBoardMidpoint)
             midpointMarker.position = boardPlane.position;
 
+        // Once all trials for this block are complete, just keep showing the summary.
         if (_trialIndex >= trialsPerBlock)
         {
             UpdateReadout(final: true);
             return;
         }
 
+        // Input is already unified by SandboxRunner, regardless of controller or hand mode.
         var (ray, pose, confirm) = runner.GetTransformedInput();
 
         if (latchConfirm)
         {
+            // Prevent a held button/gesture from being interpreted as multiple choices.
             if (!confirm) _confirmLatched = false;
             if (confirm && _confirmLatched) confirm = false;
         }
 
         if (requireResetBetweenTrials && hmd != null)
         {
+            // Optional return-to-start gating, similar to the other measurement tasks.
             float resetY = hmd.position.y - resetDropMeters;
 
             if (!_armed && pose.position.y <= resetY)
@@ -235,17 +305,23 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
                 confirm = false;
         }
 
+        // If the aim ray misses the board entirely, there is no valid current choice.
         if (!IntersectRayWithBoard(ray, out Vector3 hit))
         {
             UpdateReadout(final: false);
             return;
         }
 
+        // Convert the world-space hit into board-local metres.
         Vector3 local = WorldToBoardMeters(hit);
+        // Landmark lines live at the current task depth, not necessarily exactly at board origin.
         local.z = _currentLineZ;
 
+        // The sign of x tells us which side the participant is currently selecting.
         ChoiceSide chosenSide = (local.x >= 0f) ? ChoiceSide.Right : ChoiceSide.Left;
 
+        // The cursor can optionally be snapped onto the chosen segment, so the visual indicator
+        // stays on the displayed line rather than floating in empty board space.
         Vector3 snappedLocal = snapToNearestSegment
             ? SnapToSegment(local, chosenSide)
             : ClampToSegment(local, chosenSide);
@@ -253,12 +329,14 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
         Vector3 snappedWorld = BoardMetersToWorld(snappedLocal);
 
         if (cursorMarker && showCursor)
+            // This marker shows the currently selected side/position, not correctness.
             cursorMarker.position = snappedWorld;
 
         if (confirm)
         {
             if (requireResetBetweenTrials)
             {
+                // Avoid immediately double-counting two near-simultaneous confirms.
                 if (Time.time - _lastAcceptedTime < minSecondsBetweenTrials)
                 {
                     UpdateReadout(final: false);
@@ -270,12 +348,16 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
 
             if (latchConfirm) _confirmLatched = true;
 
+            // The response is correct only if the chosen side matches the objectively longer side.
             bool isCorrect = (chosenSide == _longerSide);
 
+            // _correct stores 1 or 0 so accuracy can be computed later.
             _correct.Add(isCorrect ? 1 : 0);
+            // _choices stores left/right tendency numerically, allowing a simple choice-bias measure.
             _choices.Add(chosenSide == ChoiceSide.Right ? 1 : -1);
             _trialIndex++;
 
+            // Log both the response and the exact stimulus parameters for this trial.
             experimentLogger?.LogMeasurementTrial(
                 TaskMode.ToString(),
                 blockType.ToString(),
@@ -298,6 +380,7 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
 
             if (_trialIndex >= trialsPerBlock)
             {
+                // Block-level summary: proportion correct and its variability across trials.
                 float acc = Accuracy01(_correct);
                 float accSd = AccuracySd01(_correct);
                 if (blockType == BlockType.Baseline) _baselineAcc = acc;
@@ -319,6 +402,7 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
 
                 if (_baselineAcc.HasValue && _postAcc.HasValue)
                 {
+                    // Post minus baseline is the simplest way to express change in accuracy across the run.
                     float delta = (_postAcc.Value - _baselineAcc.Value) * 100f;
                     Debug.Log($"[Landmark] CHANGE (Post - Baseline) = {delta:0.0} percentage points");
 
@@ -361,12 +445,14 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
                 return;
             }
 
+            // Prepare the next left/right comparison stimulus.
             SetupNewStimulus();
         }
 
         UpdateReadout(final: false);
     }
 
+    // Store the board pose at task start so we can warn if it begins moving later.
     void CaptureBoardPoseBaseline()
     {
         _boardBaselinePos = boardPlane.position;
@@ -375,6 +461,8 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
         _loggedBoardPoseDrift = false;
     }
 
+    // Landmark is meant to be judged against a stable world-fixed stimulus.
+    // If the board starts moving, log a warning once so the issue is not silently missed.
     void WarnIfBoardPoseDrifts()
     {
         if (!_hasBoardPoseBaseline || _loggedBoardPoseDrift || boardPlane == null)
@@ -391,6 +479,8 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
         }
     }
 
+    // Starts a fresh baseline or post block.
+    // This resets counters, accepted choices, and gating/latch state.
     public void StartNewBlock(BlockType newBlock)
     {
         blockType = newBlock;
@@ -409,6 +499,7 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
         UpdateReadout(final: false);
     }
 
+    // Clears stored baseline/post summaries so a new run starts cleanly.
     public void ClearSummaries()
     {
         _baselineAcc = null;
@@ -417,6 +508,15 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
         _postAccSd = null;
     }
 
+    // Creates the current landmark stimulus.
+    //
+    // Each trial can vary in:
+    // - total line length,
+    // - left-vs-right difference,
+    // - depth position on the board.
+    //
+    // One side is chosen to be objectively longer, then the exact left/right lengths
+    // are computed and drawn.
     void SetupNewStimulus()
     {
         if (randomiseLineZEachTrial)
@@ -451,6 +551,10 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
         DrawSegments();
     }
 
+    // Writes the current left and right segment endpoints into the two line renderers.
+    //
+    // The centre gap means the line is intentionally split into two visible segments
+    // rather than shown as one continuous line.
     void DrawSegments()
     {
         float halfGap = Mathf.Max(0f, centreGap) * 0.5f;
@@ -477,6 +581,9 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
         rightRenderer.SetPosition(1, r1w);
     }
 
+    // Projects the cursor onto whichever segment is currently being selected.
+    // This keeps the marker on the left segment when the user is choosing left,
+    // and on the right segment when the user is choosing right.
     Vector3 SnapToSegment(Vector3 local, ChoiceSide side)
     {
         float halfGap = Mathf.Max(0f, centreGap) * 0.5f;
@@ -497,14 +604,19 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
         return local;
     }
 
+    // ClampToSegment currently uses the same behaviour as SnapToSegment.
+    // It exists as a separate function so the behaviour could later diverge
+    // without having to rewrite the calling code.
     Vector3 ClampToSegment(Vector3 local, ChoiceSide side)
     {
         return SnapToSegment(local, side);
     }
 
+    // Finds where the current aim ray intersects the board plane.
     bool IntersectRayWithBoard(Ray r, out Vector3 hit)
     {
         Vector3 n = boardPlane.up;
+        // If the ray is almost parallel to the board, the intersection is unstable or absent.
         float denom = Vector3.Dot(n, r.direction);
         if (Mathf.Abs(denom) < 1e-4f)
         {
@@ -523,6 +635,16 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
         return false;
     }
 
+    // Updates the small task readout shown in the scene.
+    //
+    // Before any response is accepted:
+    // - shows trial number and gate state.
+    //
+    // During the block:
+    // - shows running accuracy and a simple left/right choice bias.
+    //
+    // After block completion:
+    // - shows final accuracy, bias, and post-baseline change if both blocks exist.
     void UpdateReadout(bool final)
     {
         if (!readout || !_isActive) return;
@@ -568,6 +690,7 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
         readout.text = summary;
     }
 
+    // Returns proportion correct as a value between 0 and 1.
     static float Accuracy01(List<int> xs)
     {
         if (xs.Count == 0) return 0f;
@@ -576,6 +699,7 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
         return (float)sum / xs.Count;
     }
 
+    // Sample standard deviation of the binary correctness list.
     static float AccuracySd01(List<int> xs)
     {
         if (xs.Count <= 1) return 0f;
@@ -589,6 +713,10 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
         return Mathf.Sqrt(sumSq / (xs.Count - 1));
     }
 
+    // Mean signed side choice:
+    // -1 means always left,
+    // +1 means always right,
+    // values near 0 mean no strong side bias.
     static float MeanChoice(List<int> xs)
     {
         if (xs.Count == 0) return 0f;
@@ -597,6 +725,7 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
         return (float)sum / xs.Count;
     }
 
+    // Converts board-local coordinates in metres to a world-space position.
     Vector3 BoardMetersToWorld(Vector3 localMeters)
     {
         Vector3 right = Vector3.ProjectOnPlane(boardPlane.right, boardPlane.up).normalized;
@@ -604,6 +733,7 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
         return boardPlane.position + (right * localMeters.x) + (forward * localMeters.z);
     }
 
+    // Inverse of BoardMetersToWorld(): converts a world-space point into board-local metres.
     Vector3 WorldToBoardMeters(Vector3 worldPoint)
     {
         Vector3 relative = worldPoint - boardPlane.position;
