@@ -3,6 +3,14 @@ using UnityEngine;
 [ExecuteAlways]
 [DisallowMultipleComponent]
 [RequireComponent(typeof(RectTransform))]
+// HandDwellProgressBar is a small UI utility that visualizes "progress toward confirmation".
+//
+// It began as a hand-dwell bar, but in the current project it serves two related purposes:
+// - showing dwell progress while the participant holds a confirming gesture,
+// - showing task-transition progress while the experiment waits before switching phase.
+//
+// The script is intentionally self-contained:
+// if the background/fill graphics do not exist yet, it creates them automatically.
 public class HandDwellProgressBar : MonoBehaviour
 {
     [SerializeField] private SandboxRunner runner;
@@ -19,6 +27,8 @@ public class HandDwellProgressBar : MonoBehaviour
     private RectTransform _fillRect;
     private bool _layoutDirty = true;
 
+    // Reset is called when the component is first added or manually reset in the editor.
+    // The goal is to make the bar usable immediately without extra setup.
     void Reset()
     {
         AutoAssignRunner();
@@ -26,6 +36,7 @@ public class HandDwellProgressBar : MonoBehaviour
         MarkDirty();
     }
 
+    // Standard startup hook in play mode.
     void Awake()
     {
         AutoAssignRunner();
@@ -33,17 +44,23 @@ public class HandDwellProgressBar : MonoBehaviour
         MarkDirty();
     }
 
+    // Rebuild again when the object is enabled, for example after being hidden and shown.
     void OnEnable()
     {
         EnsureVisualTree();
         MarkDirty();
     }
 
+    // Any inspector change should force the layout/colors to be recalculated.
     void OnValidate()
     {
         MarkDirty();
     }
 
+    // Main update loop.
+    //
+    // Structural work only happens when layoutDirty is true.
+    // Live progress refresh still happens every frame because the fill amount can change every frame.
     void Update()
     {
         if (_layoutDirty)
@@ -57,17 +74,25 @@ public class HandDwellProgressBar : MonoBehaviour
         RefreshVisualState();
     }
 
+    // Marks that one of the configurable values changed and the visual layout should be rebuilt.
     void MarkDirty()
     {
         _layoutDirty = true;
     }
 
+    // If the runner reference was not assigned manually, find the active SandboxRunner in the scene.
     void AutoAssignRunner()
     {
         if (runner == null)
             runner = FindFirstObjectByType<SandboxRunner>();
     }
 
+    // Ensures the expected UI hierarchy exists:
+    // this object
+    //   -> Background
+    //        -> Fill
+    //
+    // This lets the bar generate its own visuals instead of relying on a hand-built prefab.
     void EnsureVisualTree()
     {
         _rectTransform = GetComponent<RectTransform>();
@@ -103,6 +128,8 @@ public class HandDwellProgressBar : MonoBehaviour
         _fillRect = fillGraphic.rectTransform;
     }
 
+    // Applies the static RectTransform layout for the outer bar and the inner fill.
+    // The fill is anchored to the left so increasing progress simply increases its width.
     void ApplyLayout()
     {
         if (_rectTransform == null)
@@ -130,6 +157,8 @@ public class HandDwellProgressBar : MonoBehaviour
         }
     }
 
+    // Applies the current colors and rounded-corner settings.
+    // The fill gets a slightly smaller radius so it still looks neatly inset after padding.
     void ApplyColors()
     {
         if (backgroundGraphic != null)
@@ -145,6 +174,13 @@ public class HandDwellProgressBar : MonoBehaviour
         }
     }
 
+    // Reads the relevant state from SandboxRunner and updates:
+    // - whether the bar should be visible,
+    // - how much of the bar should be filled.
+    //
+    // There are two display modes:
+    // 1. transition mode, which uses TaskTransitionProgress01,
+    // 2. confirmation mode, which uses ConfirmDwellProgress01.
     void RefreshVisualState()
     {
         AutoAssignRunner();
@@ -157,11 +193,13 @@ public class HandDwellProgressBar : MonoBehaviour
         {
             if (runner.IsTaskTransitionActive)
             {
+                // During task transitions, reuse the same bar as a loading indicator.
                 progress = Mathf.Clamp01(runner.TaskTransitionProgress01);
                 shouldShow = true;
             }
             else
             {
+                // Otherwise, show dwell/confirm buildup if such a confirmation is active.
                 progress = Mathf.Clamp01(runner.ConfirmDwellProgress01);
                 shouldShow |= runner.IsConfirmDwellActive || progress > 0f;
             }
@@ -179,6 +217,8 @@ public class HandDwellProgressBar : MonoBehaviour
         if (_fillRect == null)
             return;
 
+        // The bar grows horizontally from left to right.
+        // Height stays constant; only width depends on progress.
         float height = Mathf.Max(0f, barSize.y - (fillPadding * 2f));
         float width = Mathf.Max(0f, barSize.x * progress);
 

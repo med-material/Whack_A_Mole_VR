@@ -12,17 +12,63 @@ using XRHands = UnityEngine.XR.Hands;
 using XRManagement = UnityEngine.XR.Management;
 using Valve.VR;
 
+// Shared interface used by every task script controlled by SandboxRunner.
+//
+// Why this exists:
+// SandboxRunner should be able to control OpenLoop, LineBisection, Landmark, and Exposure
+// in a uniform way instead of needing completely separate hard-coded logic for each one.
+//
+// What the two members mean:
+// - TaskMode tells SandboxRunner what kind of task this script represents.
+// - SetTaskActive lets SandboxRunner switch that task on or off when the experiment
+//   changes phase.
+//
+// In plain language:
+// this is the small "contract" every task script agrees to follow so the central runner
+// can treat all tasks in a consistent way.
 public interface ISandboxTask
 {
 SandboxRunner.TaskMode TaskMode { get; }
 void SetTaskActive(bool active);
 }
 
+// Optional interface for tasks that can expose a concrete target position in world space.
+//
+// Not every task has a single physical target that can be hovered over.
+// Open-loop pointing and exposure do, but something like Landmark is more of a comparison
+// task than a "hover over this point" task.
+//
+// SandboxRunner uses this interface for controller hover-confirm.
+// To auto-confirm, it must know:
+// - where the current target center is in the virtual world,
+// - which direction the target plane is facing,
+// - and how large the target region is.
+//
+// If a task cannot answer those questions, hover-confirm is not possible and the runner
+// falls back to a more ordinary confirmation method.
 public interface IAimTargetProvider
 {
 bool TryGetAimTarget(out Vector3 worldCenter, out Vector3 planeNormal, out float targetRadiusMeters);
 }
 
+// SandboxRunner is the central coordinator for the whole prototype.
+//
+// This script is best understood as the "traffic controller" of the experiment.
+// It does not itself decide where a line midpoint is or how exposure targets behave;
+// those details live inside the individual task scripts. Instead, SandboxRunner
+// takes care of the cross-cutting responsibilities that every task depends on.
+//
+// The most important responsibilities are:
+// 1. choosing which task is active right now,
+// 2. choosing which visuomotor effect is active right now,
+// 3. reading XR input from controllers or hands,
+// 4. turning that input into one unified format for the tasks,
+// 5. calibrating the participant's position/orientation,
+// 6. progressing the experiment between baseline, exposure, and post,
+// 7. exposing useful context to the logging system.
+//
+// If a task script asks "where is the participant aiming?" or "was a response confirmed?",
+// the answer usually comes from SandboxRunner.
 public class SandboxRunner : MonoBehaviour
 {
 public enum EffectMode { None, Translation, Rotation, Skew }
@@ -193,6 +239,18 @@ private float _taskTransitionStartTime;
 private float _taskTransitionDuration;
 private Coroutine _taskTransitionCoroutine;
 
+// Initial scene setup. This is the main entry point when play mode starts.
+//
+// Read this method as the script's boot sequence:
+// - remember the current inspector settings so later changes can be detected,
+// - fill in missing scene references automatically,
+// - prepare the XR input objects,
+// - make sure the correct visuals/effect/task are active,
+// - optionally calibrate the participant,
+// - and, if the current task is a measurement task, begin its baseline block.
+//
+// This means that simply pressing Play is usually enough to make the experiment
+// start in a sensible state without additional manual setup.
 void Start()
 {
     _lastEffectMode = effectMode;
@@ -215,6 +273,17 @@ void Start()
         BeginMeasurementBlock(taskMode, "Baseline");
 }
 
+// Startup calibration waits briefly for XR tracking to become valid.
+//
+// Why this matters:
+// XR systems often need a short moment after play mode starts before the headset pose
+// becomes meaningful. If calibration happened immediately, the script might calibrate
+// against a default zero pose rather than the participant's actual position.
+//
+// So this routine does three things:
+// - keep checking whether the HMD pose looks valid,
+// - wait a short additional delay for stability,
+// - then perform the real calibration.
 IEnumerator CalibrateOnStartRoutine()
 {
     // Wait until XR tracking is live so startup calibration uses a real HMD pose.
@@ -237,6 +306,16 @@ IEnumerator CalibrateOnStartRoutine()
     CalibrateNow();
 }
 
+// Checks whether the headset pose appears "real" rather than still being at a default value.
+//
+// For a non-coder, the important idea is:
+// the script is trying to detect whether the XR hardware is actually awake and tracked yet.
+//
+// The two checks used here are:
+// - position is not still almost exactly zero,
+// - rotation is not still almost exactly the identity rotation.
+//
+// If both still look like defaults, the script assumes it is too early to trust the HMD pose.
 bool HasUsableHmdPose()
 {
     if (hmd == null)
@@ -258,6 +337,22 @@ bool HasUsableHmdPose()
     return hmd.position.sqrMagnitude > 0.0001f || Quaternion.Angle(hmd.rotation, Quaternion.identity) > 0.01f;
 }
 
+// Per-frame update loop.
+//
+// This is the method that continually keeps the experiment "alive".
+// A useful way to read it is as a checklist that happens every frame:
+//
+// 1. react to debug keyboard shortcuts,
+// 2. see whether exposure should automatically return to post,
+// 3. detect whether inspector settings changed while running,
+// 4. refresh input and confirmation state,
+// 5. make sure the correct effect references are wired up,
+// 6. apply the active camera effect,
+// 7. refresh the debug rays.
+//
+// The repeated comparisons like "_lastEffectMode != effectMode" exist so the runner
+// only rebuilds state when something actually changed, instead of doing everything
+// from scratch every frame.
 void Update()
 {
     HandleKeyboardShortcuts();
@@ -311,6 +406,8 @@ void Update()
     UpdateDebugLines();
 }
 
+// When the runner is disabled, clean up the active visual effect and hide debug rays
+// so the scene is not left with stale effect state.
 void OnDisable()
 {
     if (mainCam != null)
@@ -319,18 +416,23 @@ void OnDisable()
     SetDebugLinesActive(false);
 }
 
+// Early one-time reference lookup before Start().
 void Awake()
 {
     AutoAssignReferences();
     AutoAssignXRInput();
 }
 
+// Called when the component is added or reset in the Unity editor.
 void Reset()
 {
     AutoAssignReferences();
     AutoAssignXRInput();
 }
 
+// Editor-only validation hook.
+// Keeps the inspector booleans in a consistent state and fills obvious references
+// while the scene is being configured, without requiring play mode.
 void OnValidate()
 {
     EnforceSingleControllerMitigationMode();
@@ -343,6 +445,21 @@ void OnValidate()
     }
 }
 
+// Tries to auto-find the scene objects this runner depends on.
+//
+// This method is long, but its purpose is straightforward:
+// if the user did not manually drag all references into the inspector,
+// SandboxRunner tries to find the important scene objects by common names.
+//
+// This is especially useful in a prototype, where scene hierarchy names are often stable
+// but not every reference has been manually assigned.
+//
+// A few notable choices:
+// - several possible camera names are tried because XR rigs differ between setups,
+// - boardMid is allowed to resolve to the center exposure target, because that object
+//   acts as a practical head-height anchor,
+// - bodyCenterAnchor defaults to the first child of DepthQue, because the project uses
+//   that object as a stable reference for body placement.
 void AutoAssignReferences()
 {
     if (mainCam == null)
@@ -430,6 +547,18 @@ void AutoAssignReferences()
 
 }
 
+// Tries to auto-find the currently relevant XR objects and input actions.
+//
+// Why the method branches so much:
+// the project supports two XR backends (SteamVR and OpenXR), and OpenXR itself
+// supports two interaction styles (controllers and hands). Each combination stores
+// its scene objects in slightly different places, so one search strategy is not enough.
+//
+// This method therefore decides:
+// - where the active controller objects are,
+// - where the ray origins are,
+// - where the hand visuals are,
+// - and which trigger/calibrate actions should be listened to.
 void AutoAssignXRInput()
 {
     if (xrBackend == XRBackend.OpenXR)
@@ -543,6 +672,8 @@ void AutoAssignXRInput()
     }
 }
 
+// Returns the transform of the currently active controller body.
+// In OpenXR hand-tracking mode there is no controller, so this returns null.
 Transform GetActiveControllerTransform()
 {
     if (xrBackend == XRBackend.OpenXR && openXRTrackingMode == OpenXRTrackingMode.Hands)
@@ -551,6 +682,9 @@ Transform GetActiveControllerTransform()
     return activeHand == Handedness.Left ? _leftControllerTransform : _rightControllerTransform;
 }
 
+// Returns the transform used as the ray origin for the active controller.
+// This is allowed to be different from the controller body, for example if a
+// stabilized attach point is used for more consistent aiming.
 Transform GetActiveControllerRayOriginTransform()
 {
     if (xrBackend == XRBackend.OpenXR)
@@ -559,6 +693,13 @@ Transform GetActiveControllerRayOriginTransform()
     return GetActiveControllerTransform();
 }
 
+// Returns the visual GameObject that should be manipulated by visual effects such as skew.
+//
+// This is an important distinction:
+// the "thing the user sees" and the "thing input is read from" are not always the same object.
+// For example, the ray may originate from a stabilized attach transform, while the visible
+// controller mesh is elsewhere. Effects like skew need the visible pointer object so the
+// participant actually sees the perturbation.
 Transform GetActivePointerVisual()
 {
     if (xrBackend == XRBackend.OpenXR)
@@ -583,6 +724,16 @@ Transform GetActivePointerVisual()
     return model != null ? model : controller;
 }
 
+// Unified confirmation update.
+//
+// The design goal here is that the task scripts should not care how confirmation works.
+// A task only needs to know "was a response just confirmed?"
+//
+// SandboxRunner hides the implementation differences:
+// - embodied input confirms through a held pointing gesture,
+// - controller input confirms through trigger input or a hover rule,
+// - transitions temporarily suppress confirmation so the participant cannot accidentally
+//   confirm while the experiment is changing phase.
 void UpdateXRConfirm()
 {
     bool down = false;
@@ -619,6 +770,11 @@ void UpdateXRConfirm()
     _confirmDown = down;
 }
 
+// Separate input path for manual calibration.
+//
+// Calibration should never be confused with task confirmation, so it is read through
+// a separate button/action path. This lets the participant recalibrate without affecting
+// the current task state.
 void UpdateCalibrationInput()
 {
     bool down = false;
@@ -657,6 +813,14 @@ public void CalibrateNow()
     ApplyCalibrationAnchors();
 }
 
+// Height-only calibration. Useful for debugging or for manually testing just
+// the vertical alignment behavior without changing horizontal body placement.
+//
+// The key line is:
+//   deltaY = boardMid.position.y - hmd.position.y
+// which simply asks:
+// "how much higher or lower should the whole rig move so the headset ends up
+// at the same height as the chosen head anchor?"
 [ContextMenu("Calibrate Height Now")]
 public void CalibrateHeight()
 {
@@ -677,6 +841,10 @@ public void CalibrateHeight()
     Debug.Log($"[SandboxRunner] Applied calibration deltaY={deltaY:0.000}m. HMD is now at board mid height.");
 }
 
+// Horizontal body-center calibration only.
+//
+// This version ignores height and only places the participant left/right/forward/backward
+// relative to the chosen body anchor.
 [ContextMenu("Calibrate Body Center Now")]
 public void CalibrateBodyCenter()
 {
@@ -697,6 +865,8 @@ public void CalibrateBodyCenter()
     Debug.Log($"[SandboxRunner] Applied body-center calibration to anchor '{bodyCenterAnchor.name}' at xz=({anchorPos.x:0.000}, {anchorPos.z:0.000}).");
 }
 
+// Requests an OpenXR recenter through the available XR input subsystems.
+// This only works for OpenXR, and even there it depends on the active runtime/device.
 bool TryRecenterXRTracking()
 {
     if (xrBackend != XRBackend.OpenXR)
@@ -724,6 +894,9 @@ bool TryRecenterXRTracking()
     return anySucceeded;
 }
 
+// Older helper that recenters the rig around the current headset pose.
+// The current calibration workflow mainly uses named anchors instead, but this remains
+// as a useful utility when testing rig-relative recentering behavior.
 void RecenterRigToCurrentHmd()
 {
     AutoAssignReferences();
@@ -750,6 +923,16 @@ void RecenterRigToCurrentHmd()
     Debug.Log("[SandboxRunner] Applied rig-root recenter from current HMD pose.");
 }
 
+// Applies the actual calibration logic using the configured anchors.
+//
+// Conceptually this does three separate jobs:
+// 1. rotate the participant to face the board correctly,
+// 2. lift/lower the rig so the HMD matches the head-height anchor,
+// 3. shift the rig horizontally so the participant's tracked body center lines up
+//    with the chosen body anchor.
+//
+// Those three steps are deliberately separated because each one solves a different
+// calibration problem: facing direction, head height, and body placement.
 void ApplyCalibrationAnchors()
 {
     bool appliedHeight = false;
@@ -759,6 +942,9 @@ void ApplyCalibrationAnchors()
 
     if (boardMid != null && bodyCenterAnchor != null && rigRoot != null && hmd != null)
     {
+        // Only yaw is adjusted here.
+        // In other words: the participant is rotated left/right to face the board,
+        // but the rig is not tilted upward/downward.
         Vector3 desiredForward = Vector3.ProjectOnPlane(boardMid.position - bodyCenterAnchor.position, Vector3.up);
         Vector3 currentForward = Vector3.ProjectOnPlane(hmd.forward, Vector3.up);
 
@@ -781,6 +967,10 @@ void ApplyCalibrationAnchors()
     if (bodyCenterAnchor != null)
     {
         Vector3 anchorPos = bodyCenterAnchor.position;
+        // XR Origin often contains an internal camera offset.
+        // So if we aligned only rigRoot.xz to the anchor, the participant could still
+        // end up physically shifted to the side. Subtracting the current HMD horizontal
+        // offset fixes that and aligns the tracked body, not just the root transform.
         Vector3 hmdOffset = hmd.position - rigRoot.position;
         hmdOffset.y = 0f;
 
@@ -804,6 +994,14 @@ void ApplyCalibrationAnchors()
         $"Rig position: {rigRoot.position}");
 }
 
+// Chooses which visuomotor effect implementation should currently be active.
+//
+// A crucial experimental design choice is encoded here:
+// visual perturbations are only active during Exposure.
+//
+// That means a participant can still have "Skew" selected in the inspector,
+// but while running baseline or post, the runner deliberately uses NoEffect.
+// This ensures baseline and post remain measurement phases rather than adaptation phases.
 void SelectEffect()
 {
     AutoAssignReferences();
@@ -826,6 +1024,8 @@ void SelectEffect()
     SyncEffectReferences();
 }
 
+// Updates the optional debug rays that show the raw pointing ray and the transformed ray
+// after the active effect has been applied.
 void UpdateDebugLines()
 {
     if (!drawDebugRays)
@@ -845,6 +1045,7 @@ void UpdateDebugLines()
     SetDebugLinesActive(true);
 }
 
+// Ensures the debug line objects exist in the scene.
 void EnsureDebugLines()
 {
     if (_rayDebugRoot == null)
@@ -868,6 +1069,7 @@ void EnsureDebugLines()
         _transformedRayLine = GetOrCreateDebugLine("TransformedRayLine");
 }
 
+// Creates or reuses a LineRenderer with sensible defaults for debug visualization.
 LineRenderer GetOrCreateDebugLine(string name)
 {
     Transform child = _rayDebugRoot.Find(name);
@@ -912,6 +1114,7 @@ LineRenderer GetOrCreateDebugLine(string name)
     return lr;
 }
 
+// Writes two world-space points into a LineRenderer.
 void SetDebugLine(LineRenderer lr, Vector3 a, Vector3 b)
 {
     if (lr == null) return;
@@ -919,6 +1122,7 @@ void SetDebugLine(LineRenderer lr, Vector3 a, Vector3 b)
     lr.SetPosition(1, b);
 }
 
+// Convenience helper for enabling/disabling both debug rays together.
 void SetDebugLinesActive(bool active)
 {
     if (_rawRayLine != null)
@@ -928,6 +1132,7 @@ void SetDebugLinesActive(bool active)
         _transformedRayLine.enabled = active;
 }
 
+// Enables exactly one task component at a time according to taskMode.
 void ApplyTaskMode()
 {
     SetTaskActive(openLoopTask, taskMode == TaskMode.OpenLoop);
@@ -936,6 +1141,7 @@ void ApplyTaskMode()
     SetTaskActive(exposureTask, taskMode == TaskMode.Exposure);
 }
 
+// Calls the common task activation interface, if the task implements it.
 static void SetTaskActive(MonoBehaviour taskMb, bool active)
 {
     if (taskMb == null) return;
@@ -946,6 +1152,20 @@ static void SetTaskActive(MonoBehaviour taskMb, bool active)
         Debug.LogWarning($"[SandboxRunner] Task does not implement ISandboxTask: {taskMb.name}");
 }
 
+// The main input abstraction used by the tasks.
+//
+// This is one of the most important methods in the whole file.
+// It gives the tasks a clean, already-processed input package:
+// - a ray for aiming,
+// - a pose for the pointing device/hand,
+// - and a confirmation signal.
+//
+// The task does not need to know:
+// - whether the participant uses controller or hands,
+// - whether the active backend is SteamVR or OpenXR,
+// - whether a perturbation is currently applied.
+//
+// SandboxRunner resolves all of that here, then hands the task one unified answer.
 public (Ray ray, Pose pose, bool confirm) GetTransformedInput()
 {
     AutoAssignXRInput();
@@ -969,6 +1189,7 @@ public (Ray ray, Pose pose, bool confirm) GetTransformedInput()
     return (ray, pose, confirm);
 }
 
+// Returns the raw, unmodified pointing ray before any effect transform is applied.
 Ray GetRawPointerRay()
 {
     AutoAssignXRInput();
@@ -979,6 +1200,13 @@ Ray GetRawPointerRay()
     return ray;
 }
 
+// Collects the raw input source in world space.
+//
+// "Raw" here means "before translation/rotation/skew effects are applied".
+//
+// The split is:
+// - hands: build an aim ray from tracked finger joints,
+// - controllers: use the controller ray origin transform directly.
 bool TryGetRawInput(out Ray ray, out Pose pose)
 {
     if (xrBackend == XRBackend.OpenXR && openXRTrackingMode == OpenXRTrackingMode.Hands)
@@ -998,6 +1226,7 @@ bool TryGetRawInput(out Ray ray, out Pose pose)
     return true;
 }
 
+// Convenience wrappers around OpenXR devices for the currently relevant hand.
 InputDevice GetOpenXRInputDevice()
 {
     return GetOpenXRInputDevice(activeHand);
@@ -1009,6 +1238,7 @@ InputDevice GetOpenXRInputDevice(Handedness hand)
     return InputDevices.GetDeviceAtXRNode(xrNode);
 }
 
+// Reads a boolean input usage from OpenXR.
 bool GetOpenXRButtonDown(InputFeatureUsage<bool> usage)
 {
     return GetOpenXRButtonDown(usage, activeHand);
@@ -1026,6 +1256,8 @@ bool GetOpenXRButtonDown(InputFeatureUsage<bool> usage, Handedness hand)
     return isPressed;
 }
 
+// Detects the "edge" of a button press: true only on the frame where the button
+// changed from not pressed to pressed. This avoids repeated triggers while held down.
 bool GetOpenXRButtonEdge(InputFeatureUsage<bool> usage, Handedness hand, ref bool pressedLastFrame)
 {
     bool isPressed = GetOpenXRButtonDown(usage, hand);
@@ -1034,6 +1266,14 @@ bool GetOpenXRButtonEdge(InputFeatureUsage<bool> usage, Handedness hand, ref boo
     return pressedThisFrame;
 }
 
+// Embodied confirmation logic.
+//
+// The underlying idea is a dwell gesture:
+// once the hand pose is recognized as a pointing gesture, a timer starts.
+// If the gesture is maintained long enough, the response is confirmed.
+//
+// This avoids button pressing for embodied mode and gives the UI enough information
+// to show a progress bar while the dwell is building up.
 bool UpdateHandDwellConfirm()
 {
     bool isPointing = IsActiveHandPointingGesture();
@@ -1066,6 +1306,11 @@ bool UpdateHandDwellConfirm()
     return false;
 }
 
+// Controller confirmation logic.
+// Depending on inspector settings, this becomes:
+// - normal dominant-hand trigger
+// - opposite-hand trigger
+// - controller hover confirm
 bool UpdateControllerConfirmForControllers()
 {
     if (useControllerHoverConfirm)
@@ -1077,6 +1322,20 @@ bool UpdateControllerConfirmForControllers()
     return GetControllerConfirmEdge(confirmHand);
 }
 
+// Controller hover confirm.
+//
+// This is the controller-side mitigation for the "Heisenberg effect" discussed in the project:
+// pressing a trigger can slightly disturb the user's aim at the critical moment.
+//
+// So instead of confirming on button press, this method:
+// - finds the current task target,
+// - projects the transformed controller ray onto that target plane,
+// - checks whether the hit point is inside an allowed hover region,
+// - starts a dwell timer,
+// - confirms automatically once the dwell time is long enough.
+//
+// If the task cannot provide a concrete target, the code falls back to normal trigger input,
+// because hover confirm would otherwise have nothing meaningful to hover over.
 bool UpdateControllerHoverConfirm()
 {
     if (!TryGetCurrentAimTarget(out Vector3 targetCenter, out Vector3 planeNormal, out float taskTargetRadius))
@@ -1111,6 +1370,7 @@ bool UpdateControllerHoverConfirm()
     }
 
     float activationRadius = Mathf.Max(controllerHoverActivationRadiusMeters, taskTargetRadius);
+    // If the active target changed, the dwell timer must restart from zero.
     bool targetChanged = !_controllerHoverHadTargetLastFrame ||
                          Vector3.Distance(_controllerHoverLastTargetCenter, targetCenter) > 0.001f;
     bool insideHoverZone = Vector3.Distance(hitPoint, targetCenter) <= activationRadius;
@@ -1150,6 +1410,7 @@ bool UpdateControllerHoverConfirm()
     return false;
 }
 
+// Clears all embodied dwell-confirm state.
 void ResetHandDwellConfirmState()
 {
     _handPointingActive = false;
@@ -1158,6 +1419,7 @@ void ResetHandDwellConfirmState()
     _handDwellTriggered = false;
 }
 
+// Clears all controller hover-confirm state.
 void ResetControllerHoverConfirmState()
 {
     _confirmDwellActive = false;
@@ -1167,11 +1429,13 @@ void ResetControllerHoverConfirmState()
     _controllerHoverHadTargetLastFrame = false;
 }
 
+// Small helper for choosing the non-dominant hand.
 Handedness GetOppositeHand(Handedness hand)
 {
     return hand == Handedness.Left ? Handedness.Right : Handedness.Left;
 }
 
+// Reads a controller trigger press from either OpenXR or SteamVR, depending on backend.
 bool GetControllerConfirmEdge(Handedness hand)
 {
     if (xrBackend == XRBackend.OpenXR)
@@ -1192,6 +1456,7 @@ bool GetControllerConfirmEdge(Handedness hand)
     return _confirmAction.GetStateDown(source);
 }
 
+// Asks the currently active task whether it can provide a concrete aim target.
 bool TryGetCurrentAimTarget(out Vector3 worldCenter, out Vector3 planeNormal, out float targetRadiusMeters)
 {
     worldCenter = Vector3.zero;
@@ -1206,6 +1471,8 @@ bool TryGetCurrentAimTarget(out Vector3 worldCenter, out Vector3 planeNormal, ou
     return targetProvider.TryGetAimTarget(out worldCenter, out planeNormal, out targetRadiusMeters);
 }
 
+// Intersects a ray with the task plane so hover confirm can determine where the
+// transformed controller ray lands relative to the target.
 bool IntersectRayWithPlane(Ray ray, Vector3 planePoint, Vector3 planeNormal, out Vector3 hitPoint)
 {
     hitPoint = Vector3.zero;
@@ -1218,6 +1485,9 @@ bool IntersectRayWithPlane(Ray ray, Vector3 planePoint, Vector3 planeNormal, out
     return true;
 }
 
+// Keeps the three controller-mitigation booleans mutually exclusive in the inspector.
+// This avoids ambiguous situations such as hover confirm and opposite-hand confirm
+// being active at the same time.
 void EnforceSingleControllerMitigationMode()
 {
     bool noChanged = noHeisenbergMitigation != _prevNoHeisenbergMitigation;
@@ -1271,6 +1541,7 @@ void EnforceSingleControllerMitigationMode()
     SyncControllerMitigationPreviousState();
 }
 
+// Stores the previous inspector state so OnValidate() can detect which checkbox changed.
 void SyncControllerMitigationPreviousState()
 {
     _prevNoHeisenbergMitigation = noHeisenbergMitigation;
@@ -1278,6 +1549,7 @@ void SyncControllerMitigationPreviousState()
     _prevUseControllerHoverConfirm = useControllerHoverConfirm;
 }
 
+// Returns the OpenXR hand subsystem used for tracked hand data.
 XRHands.XRHandSubsystem GetXRHandSubsystem()
 {
     if (_xrHandSubsystem != null && _xrHandSubsystem.running)
@@ -1289,6 +1561,13 @@ XRHands.XRHandSubsystem GetXRHandSubsystem()
     return _xrHandSubsystem;
 }
 
+// Builds a pointing ray from the user's index finger.
+//
+// A non-coder way to read this:
+// the system looks at the tracked index finger, takes the fingertip as the "start"
+// of the pointing ray, then estimates the direction of the finger from the finger bones.
+//
+// This creates a virtual pointer for hand-tracking mode even though there is no physical controller.
 bool TryGetOpenXRHandInput(out Ray ray, out Pose pose)
 {
     var handSubsystem = GetXRHandSubsystem();
@@ -1310,6 +1589,9 @@ bool TryGetOpenXRHandInput(out Ray ray, out Pose pose)
 
     Vector3 worldOrigin = TransformTrackingPointToWorld(indexTipPose.position);
     Vector3 worldKnuckle = TransformTrackingPointToWorld(indexKnucklePose.position);
+    // The basic finger direction is inferred from knuckle-to-tip.
+    // That is usually more intuitive and visually stable than trusting the fingertip
+    // rotation on its own.
     Vector3 worldDirection = (worldOrigin - worldKnuckle).normalized;
 
     if (worldDirection.sqrMagnitude < 0.0001f)
@@ -1323,6 +1605,14 @@ bool TryGetOpenXRHandInput(out Ray ray, out Pose pose)
     return true;
 }
 
+// Checks whether the current hand pose looks like a pointing gesture.
+//
+// The gesture definition is intentionally simple:
+// - the index finger should be fairly straight,
+// - the middle, ring, and little finger should be more curled.
+//
+// This gives the system a robust "yes/no" rule for embodied confirmation instead of
+// relying on a more ambiguous open hand pose.
 bool IsActiveHandPointingGesture()
 {
     var handSubsystem = GetXRHandSubsystem();
@@ -1348,6 +1638,13 @@ bool IsActiveHandPointingGesture()
     return indexStraight && middleCurled && ringCurled && littleCurled;
 }
 
+// Converts four joints on one finger into a simple "straightness" score.
+//
+// If the finger is straight, consecutive finger segments point in nearly the same direction.
+// If the finger is bent, those directions diverge.
+//
+// The dot products below measure that alignment numerically:
+// values near 1 mean "same direction", while lower values mean "more bent".
 bool TryGetFingerStraightness(
     XRHands.XRHand hand,
     XRHands.XRHandJointID proximalId,
@@ -1377,6 +1674,7 @@ bool TryGetFingerStraightness(
     return true;
 }
 
+// Reads a tracked pose for one XR hand joint.
 bool TryGetTrackedJointPose(XRHands.XRHand hand, XRHands.XRHandJointID jointId, out Pose jointPose)
 {
     jointPose = default;
@@ -1384,6 +1682,8 @@ bool TryGetTrackedJointPose(XRHands.XRHand hand, XRHands.XRHandJointID jointId, 
     return joint.TryGetPose(out jointPose);
 }
 
+// Hand tracking coordinates come from XR tracking space, so they are converted into
+// world space relative to rigRoot before the rest of the system uses them.
 Vector3 TransformTrackingPointToWorld(Vector3 trackingSpacePoint)
 {
     return rigRoot != null ? rigRoot.TransformPoint(trackingSpacePoint) : trackingSpacePoint;
@@ -1394,6 +1694,8 @@ Quaternion TransformTrackingRotationToWorld(Quaternion trackingSpaceRotation)
     return rigRoot != null ? rigRoot.rotation * trackingSpaceRotation : trackingSpaceRotation;
 }
 
+// Shows either controller visuals or hand visuals depending on the current OpenXR mode.
+// This keeps the scene visually consistent with the actual input method in use.
 void UpdateOpenXRVisualMode()
 {
     if (xrBackend != XRBackend.OpenXR)
@@ -1411,6 +1713,7 @@ void UpdateOpenXRVisualMode()
     SetControllerVisualState(Handedness.Right, !useHands && activeHand == Handedness.Right);
 }
 
+// Small accessors used by tasks and logging helpers.
 public TextMeshProUGUI GetStatReadout()
 {
     AutoAssignReferences();
@@ -1423,6 +1726,8 @@ public PrismExperimentLogger GetExperimentLogger()
     return experimentLogger;
 }
 
+// Called by measurement tasks when a baseline or post block finishes.
+// This is where automatic experiment progression is coordinated.
 public void NotifyMeasurementBlockCompleted(TaskMode completedTask, string blockName)
 {
     if (!autoProgressExperiment || _experimentCompleted)
@@ -1441,6 +1746,7 @@ public void NotifyMeasurementBlockCompleted(TaskMode completedTask, string block
     }
 }
 
+// Shows or hides the chosen controller model and any auxiliary poke/direct-interactor visuals.
 void SetControllerVisualState(Handedness hand, bool active)
 {
     Transform explicitVisual = hand == Handedness.Left ? _leftPointerVisualTransform : _rightPointerVisualTransform;
@@ -1464,6 +1770,7 @@ void SetControllerVisualState(Handedness hand, bool active)
     }
 }
 
+// Shows or hides the tracked hand visual.
 void SetHandVisualState(Handedness hand, bool active)
 {
     Transform handVisual = hand == Handedness.Left ? _leftHandVisualTransform : _rightHandVisualTransform;
@@ -1471,6 +1778,7 @@ void SetHandVisualState(Handedness hand, bool active)
         handVisual.gameObject.SetActive(active);
 }
 
+// Instantiates the OpenXR hand-visualizer prefabs when needed.
 void EnsureOpenXRHandVisuals()
 {
     if (rigRoot == null)
@@ -1483,6 +1791,17 @@ void EnsureOpenXRHandVisuals()
         _rightHandVisualTransform = InstantiateOpenXRHandPrefab(openXRRightHandTrackingPrefab, "Right Hand Tracking");
 }
 
+// Smooths hand-ray input so fingertip jitter does not produce extremely unstable aiming.
+//
+// The smoothing is exponential rather than a simple average.
+// In practice that means:
+// - recent movement still matters,
+// - old movement quickly loses influence,
+// - and the user can still aim responsively while avoiding noisy flicker.
+//
+// The parameter handRaySmoothingSeconds acts like a responsiveness knob:
+// larger values = steadier but slower,
+// smaller values = quicker but noisier.
 void ApplyHandRaySmoothing(ref Vector3 worldOrigin, ref Vector3 worldDirection)
 {
     float smoothTime = Mathf.Max(0f, handRaySmoothingSeconds);
@@ -1509,11 +1828,13 @@ void ApplyHandRaySmoothing(ref Vector3 worldOrigin, ref Vector3 worldDirection)
     worldDirection = _smoothedHandRayDirection;
 }
 
+// Resets the smoothing state when input mode/hand changes.
 void ResetHandRaySmoothing()
 {
     _smoothedHandRayInitialized = false;
 }
 
+// Creates a hand visualizer instance under the XR rig if it does not already exist.
 Transform InstantiateOpenXRHandPrefab(GameObject prefab, string objectName)
 {
     Transform existing = FindDeepChild(rigRoot, objectName);
@@ -1533,6 +1854,7 @@ Transform InstantiateOpenXRHandPrefab(GameObject prefab, string objectName)
     return instance.transform;
 }
 
+// Editor-time helper for loading the sample XR Hands visualizer prefabs from the project.
 void AutoAssignOpenXRHandPrefabs()
 {
 #if UNITY_EDITOR
@@ -1550,6 +1872,7 @@ void AutoAssignOpenXRHandPrefabs()
 #endif
 }
 
+// Recursive scene-hierarchy search by exact child name.
 static Transform FindDeepChild(Transform root, string childName)
 {
     if (root == null)
@@ -1571,6 +1894,7 @@ static Transform FindDeepChild(Transform root, string childName)
     return null;
 }
 
+// Recursive scene-hierarchy search for all children whose names contain a substring.
 static void FindDeepChildrenContaining(Transform root, string partialName, List<Transform> results)
 {
     if (root == null || string.IsNullOrEmpty(partialName))
@@ -1590,6 +1914,8 @@ static void FindDeepChildrenContaining(Transform root, string partialName, List<
     }
 }
 
+// Caches secondary controller visuals so effects such as skew can move/hide them too,
+// not just the main controller mesh.
 void CacheAuxControllerVisuals(Transform controllerRoot, List<Transform> cache)
 {
     if (controllerRoot == null || cache == null)
@@ -1604,6 +1930,7 @@ void CacheAuxControllerVisuals(Transform controllerRoot, List<Transform> cache)
     cache.RemoveAll(t => t == null || t == controllerRoot || t == primaryVisual);
 }
 
+// Some effects need up-to-date scene references. At the moment skew is the main one.
 void SyncEffectReferences()
 {
     if (effectMode != EffectMode.Skew)
@@ -1614,6 +1941,7 @@ void SyncEffectReferences()
     skew.visualAuxRoots = activeHand == Handedness.Left ? _leftAuxPointerVisualTransforms : _rightAuxPointerVisualTransforms;
 }
 
+// Keyboard shortcuts are mainly for debugging and development inside the editor.
 void HandleKeyboardShortcuts()
 {
     if (Input.GetKeyDown(restartBaselineKey))
@@ -1628,6 +1956,7 @@ void HandleKeyboardShortcuts()
     }
 }
 
+// Forces the experiment back to a baseline block from whatever state the runner is in.
 void RestartBaselineFromAnywhere()
 {
     _waitingForExposureReturn = false;
@@ -1646,6 +1975,7 @@ void RestartBaselineFromAnywhere()
     BeginMeasurementBlock(taskMode, "Baseline");
 }
 
+// Begins the transition from a measurement task into Exposure.
 public void BeginExposure()
 {
     if (!IsMeasurementTask(taskMode) || _taskTransitionActive)
@@ -1655,6 +1985,7 @@ public void BeginExposure()
     RunTaskTransition(BeginExposureNow);
 }
 
+// Called by ExposureTask when its required number of hits/attempts is complete.
 public void NotifyExposureCompleted()
 {
     if (!autoReturnFromExposure || _taskTransitionActive)
@@ -1665,6 +1996,8 @@ public void NotifyExposureCompleted()
     RunTaskTransition(ReturnFromExposureToPost);
 }
 
+// Returns from Exposure into the post-measurement version of the same task that
+// was used before exposure started.
 public void ReturnFromExposureToPost()
 {
     _waitingForExposureReturn = false;
@@ -1679,6 +2012,17 @@ public void ReturnFromExposureToPost()
     BeginMeasurementBlock(taskMode, "Post");
 }
 
+// Starts either a baseline or post block for the chosen measurement task.
+//
+// Notice that the runner does not directly know how to initialize every task block.
+// Instead it:
+// - activates the correct task,
+// - logs that the block started,
+// - optionally clears old summaries for baseline,
+// - then uses reflection to call task-specific setup methods if they exist.
+//
+// This keeps SandboxRunner generic while still allowing each task script to manage
+// its own internal block state.
 void BeginMeasurementBlock(TaskMode measurementTask, string blockName)
 {
     var targetTask = GetTaskComponent(measurementTask);
@@ -1694,6 +2038,7 @@ void BeginMeasurementBlock(TaskMode measurementTask, string blockName)
     TryInvokeBlockMethod(targetTask, "StartNewBlock", blockName);
 }
 
+// Internal helper that actually activates Exposure after the transition delay ends.
 void BeginExposureNow()
 {
     experimentLogger?.LogExposureStarted(_measurementTaskBeforeExposure.ToString());
@@ -1705,6 +2050,10 @@ void BeginExposureNow()
     TryInvokeNoArg(exposureTask, "StartExposureBlock");
 }
 
+// Runs the generic "loading bar / transition pause" between major experiment phases.
+//
+// This is not just a cosmetic pause. It also gives the participant a clear separation
+// between phases and prevents accidental confirmation during the switch.
 void RunTaskTransition(Action onTransitionComplete)
 {
     if (_taskTransitionCoroutine != null)
@@ -1713,6 +2062,8 @@ void RunTaskTransition(Action onTransitionComplete)
     _taskTransitionCoroutine = StartCoroutine(TaskTransitionRoutine(onTransitionComplete));
 }
 
+// Simple coroutine that blocks confirmation while a transition is active,
+// waits for the configured duration, then continues into the next phase.
 IEnumerator TaskTransitionRoutine(Action onTransitionComplete)
 {
     _taskTransitionActive = true;
@@ -1727,6 +2078,7 @@ IEnumerator TaskTransitionRoutine(Action onTransitionComplete)
     onTransitionComplete?.Invoke();
 }
 
+// Marks the experiment finished, saves logs, and optionally stops play mode.
 void CompleteExperiment()
 {
     if (_experimentCompleted)
@@ -1746,6 +2098,7 @@ void CompleteExperiment()
 #endif
 }
 
+// Exposes raw controller and ray-origin poses for logging/analysis code.
 public bool TryGetControllerPose(Handedness hand, out Pose controllerPose, out Pose rayPose)
 {
     AutoAssignXRInput();
@@ -1764,6 +2117,9 @@ public bool TryGetControllerPose(Handedness hand, out Pose controllerPose, out P
     return controller != null || rayOrigin != null;
 }
 
+// Returns the most meaningful movement anchor for the current input modality.
+// For hand tracking this is the palm. For controllers this is the controller body.
+// This is primarily used for movement-speed analysis and logging.
 public bool TryGetMovementAnchorPose(Handedness hand, out Pose anchorPose, out string anchorSource)
 {
     anchorPose = new Pose(Vector3.zero, Quaternion.identity);
@@ -1802,6 +2158,7 @@ public bool TryGetMovementAnchorPose(Handedness hand, out Pose anchorPose, out s
     return false;
 }
 
+// Returns the current trigger state without edge detection. This is useful for logging.
 public bool GetControllerTriggerState(Handedness hand)
 {
     if (xrBackend == XRBackend.OpenXR)
@@ -1817,6 +2174,14 @@ public bool GetControllerTriggerState(Handedness hand)
     return _confirmAction.GetState(source);
 }
 
+// Bundles contextual experiment state for the logging system.
+//
+// The logger uses this so every event/sample can later be interpreted correctly in R.
+// For example:
+// - measurement tasks care about block name and trial number,
+// - exposure cares about attempt number and target index.
+//
+// Without this context, later analysis would have to infer too much from timestamps alone.
 public void GetLoggingContext(out string blockType, out int? trialIndex, out int? attemptIndex, out int? targetIndex)
 {
     blockType = "";
@@ -1861,6 +2226,7 @@ public void GetLoggingContext(out string blockType, out int? trialIndex, out int
     }
 }
 
+// Maps a TaskMode enum to the corresponding task component.
 MonoBehaviour GetTaskComponent(TaskMode mode)
 {
     return mode switch
@@ -1873,6 +2239,7 @@ MonoBehaviour GetTaskComponent(TaskMode mode)
     };
 }
 
+// Convenience classification used throughout the experiment flow code.
 bool IsMeasurementTask(TaskMode mode)
 {
     return mode == TaskMode.OpenLoop ||
@@ -1880,6 +2247,14 @@ bool IsMeasurementTask(TaskMode mode)
            mode == TaskMode.Landmark;
 }
 
+// Reflection helper for optional task methods with no parameters.
+//
+// Reflection is used here so SandboxRunner can ask a task:
+// "Do you happen to have a method with this name?"
+// without needing every task to share one rigid implementation class.
+//
+// That makes the runner more flexible, but it also means these calls are a little more
+// indirect than ordinary method calls.
 static void TryInvokeNoArg(MonoBehaviour target, string methodName)
 {
     if (target == null) return;
@@ -1894,6 +2269,12 @@ static void TryInvokeNoArg(MonoBehaviour target, string methodName)
     method?.Invoke(target, null);
 }
 
+// Reflection helper for optional task methods that accept a single enum parameter,
+// for example StartNewBlock(Baseline/Post).
+//
+// The string enumValueName is converted into whatever enum type that task expects.
+// This lets SandboxRunner say "start the Baseline block" without hard-coding the exact
+// enum type used inside each task script.
 static void TryInvokeBlockMethod(MonoBehaviour target, string methodName, string enumValueName)
 {
     if (target == null) return;

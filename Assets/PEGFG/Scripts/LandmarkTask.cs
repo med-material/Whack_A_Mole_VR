@@ -29,8 +29,8 @@ public class LandmarkTask : MonoBehaviour, ISandboxTask
     private float minSecondsBetweenTrials = 0f;
 
     [Header("Landmark stimulus (metres, board local X)")]
-    private float centreGap = 0.02f;
-    private float totalLength = 0.4f;
+    private float centreGap = 0.1f;
+    private float totalLength = 1f;
     private float lengthDifference = 0.06f;
     private float lineZRange = 0.05f;
 
