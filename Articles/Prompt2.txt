@@ -1,0 +1,189 @@
+For each paper:
+
+1. Provide a detailed, step‑by‑step description of the experimental procedures
+Break down each phase of the experiment (baseline, exposure, post‑exposure, etc.).
+
+Describe exactly what participants did, in what order, and how many repetitions/trials were involved.
+
+Include any timing information, block structure, or task‑specific instructions if reported.
+
+2. Describe precisely how the visuomotor shift was introduced
+For each study, specify:
+
+a. Type of shift
+Lateral displacement, rotational, gain change, or other.
+
+Whether the shift affects:
+
+the full visual frustum / optical scene,
+
+the hand representation (controller, rod, real hand, virtual hand),
+
+the visible arm or body,
+
+or some combination.
+
+b. Magnitude of the shift
+Report in degrees, centimeters, or whatever unit the authors use.
+
+c. How the shift was scheduled
+Gradual during exposure  
+(shift increases incrementally while participants perform the task; note whether participants could perceive it)
+
+Discrete during exposure  
+(sudden jump from baseline to the shifted condition while the headset remains on)
+
+Discrete between exposures  
+(shift changed only between blocks, similar to removing and replacing prism goggles)
+
+If the shift changed over time, describe:
+
+how quickly,
+
+in what increments,
+
+over how many trials.
+
+d. Feedback
+Specify whether feedback was:
+
+concurrent,
+
+terminal,
+
+partial,
+
+or absent.
+
+Describe exactly what form the feedback took (visual, proprioceptive, haptic, etc.).
+
+3. Clarify what the authors mean by “trials”
+Does one “trial” correspond to one pointing movement?
+
+Or does a “trial” refer to a set/block of multiple movements?
+
+If blocks or sequences are used, describe:
+
+how they are structured,
+
+how many trials each contains,
+
+and how the authors define these terms.
+
+4. Use only information explicitly stated in the paper
+Do not infer or assume procedural details.
+
+Quote or paraphrase only what the authors directly report.
+
+5. What tasks are used for what purposes? (Full Prism‑Therapy Pipeline)
+Prism therapy typically unfolds across several stages, each with its own task types and functional goals. Many papers blur these boundaries or reuse the same task for different purposes, so please clarify exactly what each task is doing in each stage.
+
+Stage 1 — USN Assessment (Clinical Neglect Evaluation)
+Purpose: Determine whether the participant has unilateral spatial neglect (USN) and how severe it is.
+
+For each paper, specify:
+
+Which standardized tests were used (line bisection, cancellation, BIT, VR‑based tests).
+
+What each test measures (attentional bias, perceptual bias, representational neglect, near vs. far space).
+
+Whether these assessments are repeated later to evaluate clinical improvement.
+
+Note:  
+Some papers use the same task for both USN assessment and baseline pointing. Please clarify when this happens and how the authors justify it.
+
+Stage 2 — Baseline Visuomotor Assessment (Pre‑Exposure Pointing)
+Purpose: Establish the participant’s natural pointing accuracy before any visuomotor shift is introduced.
+
+For each paper, specify:
+
+Whether the baseline task is the same as the USN assessment or a separate pointing task.
+
+Whether the baseline involves:
+
+open‑loop pointing (no hand vision),
+
+closed‑loop pointing (hand visible),
+
+straight‑ahead judgments,
+
+VR controller pointing.
+
+Number of trials, target layout, timing, and what counts as a “trial.”
+
+Clarify:  
+Many papers use the same pointing task for baseline, exposure, and after‑effects. Explicitly distinguish the purpose of the task in each stage.
+
+Stage 3 — Exposure Task (Adaptation Phase)
+Purpose: Induce prism adaptation by exposing participants to a visuomotor shift while they perform repeated actions.
+
+For each paper, specify:
+
+a. The exact exposure task
+Pointing? Reaching? Touchscreen? VR controller? Throwing?
+
+Number and spatial arrangement of targets.
+
+Whether the hand is visible or occluded.
+
+Trial structure, timing, and feedback conditions.
+
+b. How the visuomotor shift is introduced
+Type of shift (lateral displacement, rotation, gain change).
+
+Magnitude (degrees, cm, or VR equivalent).
+
+Shift schedule:
+
+gradual during exposure,
+
+discrete during exposure,
+
+discrete between exposures.
+
+c. What “trials” mean
+One pointing movement?
+
+A block of multiple movements?
+
+A sequence of targets counted as one “trial”?
+
+d. What the exposure task measures
+Error reduction curve
+
+Rate of adaptation
+
+Strategic vs. implicit correction
+
+Stage 4 — Post‑Exposure Baseline Repetition (After‑Effect Assessment)
+Purpose: Measure the magnitude of prism adaptation by quantifying after‑effects once the shift is removed.
+
+For each paper, specify:
+
+Which task is used to measure after‑effects (often the same as baseline).
+
+Whether the hand is visible or occluded.
+
+Number of trials and target layout.
+
+How after‑effects are computed (difference from baseline, direction of deviation, etc.).
+
+How the authors interpret the results in terms of implicit adaptation.
+
+Important:  
+After‑effects are the primary evidence of true prism adaptation. Explain exactly how the authors link their results to adaptation mechanisms.
+
+Stage 5 — (Optional) Post‑Therapy USN Re‑Assessment
+Purpose: Determine whether prism adaptation produced clinical improvements in neglect.
+
+For each paper, specify:
+
+Which USN tests are repeated.
+
+Whether improvements are attributed to:
+
+sensorimotor recalibration,
+
+attentional realignment,
+
+or general rehabilitation effects.
