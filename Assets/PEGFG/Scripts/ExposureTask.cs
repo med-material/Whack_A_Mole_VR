@@ -20,6 +20,9 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     private Transform hitMarker;
     private TextMeshProUGUI readout;
     private PrismExperimentLogger experimentLogger;
+    private Transform centerBullseyeRing;
+    private Transform centerBullseyeInnerRing;
+    private Transform centerBullseyeDot;
 
     [Header("Exposure Block")]
     [Tooltip("Number of successful target hits required before exposure is complete.")]
@@ -53,6 +56,18 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     private Color hitColor = Color.cyan;
     private Color missColor = Color.red;
 
+    [Header("Center target visual cue")]
+    [SerializeField] private bool showCenterBullseye = true;
+    [SerializeField] private Color bullseyeRingColor = Color.black;
+    [SerializeField] private Color bullseyeInnerRingColor = Color.black;
+    [SerializeField] private Color bullseyeDotColor = Color.white;
+    [SerializeField, Range(0.1f, 1f)] private float bullseyeRingScale = 0.62f;
+    [SerializeField, Range(0.05f, 1f)] private float bullseyeInnerRingScale = 0.30f;
+    [SerializeField, Range(0.05f, 1f)] private float bullseyeDotScale = 0.24f;
+    [SerializeField] private float bullseyeRingSurfaceOffsetMeters = 0.0015f;
+    [SerializeField] private float bullseyeInnerRingSurfaceOffsetMeters = 0.0022f;
+    [SerializeField] private float bullseyeDotSurfaceOffsetMeters = 0.0030f;
+
     [Header("Debug")]
     public bool logAttempts = true;
 
@@ -82,7 +97,12 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     void OnValidate()
     {
         if (!Application.isPlaying)
+        {
             AutoAssignReferences();
+            AutoFillRenderers();
+            EnsureCenterTargetBullseye();
+            UpdateCenterBullseyeVisuals();
+        }
     }
 
     public void SetTaskActive(bool active)
@@ -98,6 +118,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     {
         AutoAssignReferences();
         AutoFillRenderers();
+        EnsureCenterTargetBullseye();
     }
 
     void Start()
@@ -158,6 +179,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         _configuredHitRadiusMeters = ResolveConfiguredHitRadiusMeters();
 
         AutoFillRenderers();
+        EnsureCenterTargetBullseye();
         SetVisualsVisible(true);
         experimentLogger?.LogExposureConfig(_configuredHitRadiusMeters);
         if (hitMarker != null)
@@ -173,6 +195,8 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     {
         if (!_isActive) return;
         if (runner == null || boardPlane == null || targets == null || targets.Length < 3) return;
+
+        UpdateCenterBullseyeVisuals();
 
         var (ray, pose, confirm) = runner.GetTransformedInput();
 
@@ -380,6 +404,8 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
             if (targetRenderers[i] == null) continue;
             SetRendererColor(targetRenderers[i], i == _currentTargetIndex ? activeColor : idleColor);
         }
+
+        UpdateCenterBullseyeVisuals();
     }
 
     void FlashSingleTarget(int index, Color color)
@@ -392,10 +418,91 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
 
     void SetRendererColor(Renderer r, Color c)
     {
-        if (r == null || r.material == null) return;
-        r.material.color = c;
+        if (r == null) return;
+        var props = new MaterialPropertyBlock();
+        r.GetPropertyBlock(props);
+        props.SetColor("_Color", c);
+        if (r.sharedMaterial != null && r.sharedMaterial.HasProperty("_BaseColor"))
+            props.SetColor("_BaseColor", c);
+        r.SetPropertyBlock(props);
     }
 
+    void EnsureCenterTargetBullseye()
+    {
+        if (!showCenterBullseye || targets == null || targets.Length < 2 || targets[1] == null)
+            return;
+
+        Renderer sourceRenderer = targetRenderers != null && targetRenderers.Length > 1
+            ? targetRenderers[1]
+            : targets[1].GetComponentInChildren<Renderer>();
+        if (sourceRenderer == null)
+            return;
+
+        if (centerBullseyeRing == null)
+            centerBullseyeRing = CreateBullseyeOverlay("CenterBullseyeRing", sourceRenderer, bullseyeRingScale);
+
+        if (centerBullseyeInnerRing == null)
+            centerBullseyeInnerRing = CreateBullseyeOverlay("CenterBullseyeInnerRing", sourceRenderer, bullseyeInnerRingScale);
+
+        if (centerBullseyeDot == null)
+            centerBullseyeDot = CreateBullseyeOverlay("CenterBullseyeDot", sourceRenderer, bullseyeDotScale);
+
+        UpdateCenterBullseyeVisuals();
+    }
+
+    Transform CreateBullseyeOverlay(string objectName, Renderer sourceRenderer, float scaleMultiplier)
+    {
+        Transform existing = sourceRenderer.transform.Find(objectName);
+        if (existing != null)
+            return existing;
+
+        GameObject overlay = new GameObject(objectName);
+        overlay.transform.SetParent(sourceRenderer.transform, false);
+        overlay.transform.localPosition = Vector3.zero;
+        overlay.transform.localRotation = Quaternion.identity;
+        overlay.transform.localScale = Vector3.one * scaleMultiplier;
+
+        MeshFilter sourceFilter = sourceRenderer.GetComponent<MeshFilter>();
+        if (sourceFilter != null && sourceFilter.sharedMesh != null)
+        {
+            MeshFilter meshFilter = overlay.AddComponent<MeshFilter>();
+            meshFilter.sharedMesh = sourceFilter.sharedMesh;
+        }
+
+        MeshRenderer meshRenderer = overlay.AddComponent<MeshRenderer>();
+        meshRenderer.sharedMaterials = sourceRenderer.sharedMaterials;
+        return overlay.transform;
+    }
+
+    void UpdateCenterBullseyeVisuals()
+    {
+        if (centerBullseyeRing == null || centerBullseyeInnerRing == null || centerBullseyeDot == null)
+            return;
+
+        Renderer sourceRenderer = targetRenderers != null && targetRenderers.Length > 1
+            ? targetRenderers[1]
+            : targets[1].GetComponentInChildren<Renderer>();
+        if (sourceRenderer == null)
+            return;
+
+        bool overlaysVisible = showCenterBullseye && (!Application.isPlaying || _isActive);
+        centerBullseyeRing.gameObject.SetActive(overlaysVisible);
+        centerBullseyeInnerRing.gameObject.SetActive(overlaysVisible);
+        centerBullseyeDot.gameObject.SetActive(overlaysVisible);
+        centerBullseyeRing.localPosition = Vector3.up * bullseyeRingSurfaceOffsetMeters;
+        centerBullseyeInnerRing.localPosition = Vector3.up * bullseyeInnerRingSurfaceOffsetMeters;
+        centerBullseyeDot.localPosition = Vector3.up * bullseyeDotSurfaceOffsetMeters;
+        centerBullseyeRing.localRotation = Quaternion.identity;
+        centerBullseyeInnerRing.localRotation = Quaternion.identity;
+        centerBullseyeDot.localRotation = Quaternion.identity;
+        centerBullseyeRing.localScale = Vector3.one * bullseyeRingScale;
+        centerBullseyeInnerRing.localScale = Vector3.one * bullseyeInnerRingScale;
+        centerBullseyeDot.localScale = Vector3.one * bullseyeDotScale;
+
+        SetRendererColor(centerBullseyeRing.GetComponent<Renderer>(), bullseyeRingColor);
+        SetRendererColor(centerBullseyeInnerRing.GetComponent<Renderer>(), bullseyeInnerRingColor);
+        SetRendererColor(centerBullseyeDot.GetComponent<Renderer>(), bullseyeDotColor);
+    }
     bool IntersectRayWithBoard(Ray r, out Vector3 hit)
     {
         Vector3 n = boardPlane.up;

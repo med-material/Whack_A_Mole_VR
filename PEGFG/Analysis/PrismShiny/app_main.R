@@ -471,27 +471,28 @@ build_spatial_plot <- function(meta_data, event_data, selected_task = "Exposure"
 
   targets <- spawn_events |>
     transmute(
-      kind = "Target",
       x = as_num(MolePositionWorldX),
       y = as_num(MolePositionWorldY),
-      radius_m = exposure_radius_m,
       label = case_when(
         as_num(MolePositionWorldX) < -0.1 ~ "Left",
         as_num(MolePositionWorldX) > 0.1 ~ "Right",
         TRUE ~ "Center"
-      ),
-      hover_text = paste0(
-        "Target: ", case_when(
-          as_num(MolePositionWorldX) < -0.1 ~ "Left",
-          as_num(MolePositionWorldX) > 0.1 ~ "Right",
-          TRUE ~ "Center"
-        ),
-        "<br>Target radius: ",
-        ifelse(is.finite(exposure_radius_m), sprintf("%.1f cm", exposure_radius_m * 100), "Not logged")
       )
     ) |>
     filter(!is.na(x), !is.na(y)) |>
-    distinct(x, y, label, .keep_all = TRUE)
+    group_by(label) |>
+    summarise(
+      kind = "Target",
+      x = median(x, na.rm = TRUE),
+      y = median(y, na.rm = TRUE),
+      radius_m = exposure_radius_m,
+      hover_text = paste0(
+        "Target: ", label[[1]],
+        "<br>Target radius: ",
+        ifelse(is.finite(exposure_radius_m), sprintf("%.1f cm", exposure_radius_m * 100), "Not logged")
+      ),
+      .groups = "drop"
+    )
 
   hit_events <- event_subset |>
     filter(Event == "Mole Hit")
@@ -1287,17 +1288,24 @@ build_phase_plot <- function(meta_data, sample_data, event_data, selected_task =
 
   phase_colors <- c("Acceleration" = "#2563eb", "Deceleration" = "#0ea5e9", "Hover" = "#16a34a")
 
+  phase_plot_df <- profile$phase_df |>
+    mutate(
+      PhaseLabel = as.character(Phase),
+      hover_text = paste0(PhaseLabel, "<br>Duration: ", round(DurationMs), " ms")
+    )
+
   phase_plot <- plot_ly(
-    data = profile$phase_df,
-    x = profile$phase_df$DurationMs,
-    y = rep("Phases", nrow(profile$phase_df)),
+    data = phase_plot_df,
+    x = ~DurationMs,
+    y = rep("Phases", nrow(phase_plot_df)),
     type = "bar",
     orientation = "h",
-    color = profile$phase_df$Phase,
+    color = ~PhaseLabel,
     colors = phase_colors,
-    text = paste0(profile$phase_df$Phase, "<br>", round(profile$phase_df$DurationMs), " ms"),
+    text = ~PhaseLabel,
     textposition = "inside",
-    hovertemplate = "%{text}<br>Duration: %{x:.0f} ms<extra></extra>"
+    hovertext = ~hover_text,
+    hovertemplate = "%{hovertext}<extra></extra>"
   ) |>
     layout(
       barmode = "stack",
@@ -1457,18 +1465,27 @@ compute_quality_metrics <- function(quality_trials, selected_task) {
       slope = NA_real_,
       trend_label = "No quality data",
       hit_rate = NA_real_,
-      trial_count = 0
+      trial_count = 0,
+      miss_count = 0L
     ))
   }
 
   x <- quality_trials$TrialIndex
   y <- quality_trials$absolute_error
 
-  q1 <- as.numeric(quantile(y, 0.25, na.rm = TRUE))
-  q3 <- as.numeric(quantile(y, 0.75, na.rm = TRUE))
-  iqr <- q3 - q1
-  outlier_threshold <- q3 + 1.5 * iqr
-  outlier_count <- sum(y > outlier_threshold, na.rm = TRUE)
+  if (selected_task == "Exposure") {
+    q1 <- as.numeric(quantile(y, 0.25, na.rm = TRUE))
+    q3 <- as.numeric(quantile(y, 0.75, na.rm = TRUE))
+    iqr <- q3 - q1
+    outlier_threshold <- q3 + 1.5 * iqr
+    outlier_count <- sum(quality_trials$outcome == "Miss" & y > outlier_threshold, na.rm = TRUE)
+  } else {
+    q1 <- as.numeric(quantile(y, 0.25, na.rm = TRUE))
+    q3 <- as.numeric(quantile(y, 0.75, na.rm = TRUE))
+    iqr <- q3 - q1
+    outlier_threshold <- q3 + 1.5 * iqr
+    outlier_count <- sum(y > outlier_threshold, na.rm = TRUE)
+  }
 
   slope <- if (length(unique(x)) > 1) {
     as.numeric(coef(lm(absolute_error ~ TrialIndex, data = quality_trials))[["TrialIndex"]])
@@ -1489,6 +1506,12 @@ compute_quality_metrics <- function(quality_trials, selected_task) {
     NA_real_
   }
 
+  miss_count <- if (selected_task == "Exposure") {
+    sum(quality_trials$outcome == "Miss", na.rm = TRUE)
+  } else {
+    NA_integer_
+  }
+
   list(
     mean_abs_error = mean(y, na.rm = TRUE),
     median_abs_error = median(y, na.rm = TRUE),
@@ -1497,7 +1520,8 @@ compute_quality_metrics <- function(quality_trials, selected_task) {
     slope = slope,
     trend_label = trend_label,
     hit_rate = hit_rate,
-    trial_count = nrow(quality_trials)
+    trial_count = nrow(quality_trials),
+    miss_count = miss_count
   )
 }
 
@@ -1555,30 +1579,49 @@ build_quality_plot <- function(quality_trials, selected_task, selected_block) {
       )
     )
 
-  ggplot(quality_trials, aes(x = TrialIndex, y = absolute_error)) +
+  plot_subtitle <- if (selected_task == "Exposure") {
+    "Points show each attempt. Red dashed line marks the unusually large miss guide for this block. Blue line shows the overall trend across the block."
+  } else {
+    "Points show each trial. Red dashed line marks the large-error guide for this block. Blue line shows the overall trend across the block."
+  }
+
+  p <- ggplot(quality_trials, aes(x = TrialIndex, y = absolute_error)) +
     geom_line(color = "#94a3b8", linewidth = 0.8) +
     geom_point(aes(color = outcome, text = hover_text), size = 2.8) +
-    geom_hline(yintercept = metrics$outlier_threshold, linetype = "dashed", color = "#dc2626") +
     geom_smooth(method = "lm", formula = y ~ x, se = FALSE, color = "#1d4ed8", linewidth = 0.8) +
-    annotate(
-      "text",
-      x = max(quality_trials$TrialIndex, na.rm = TRUE),
-      y = metrics$outlier_threshold,
-      label = paste0("Large-error guide: ", sprintf("%.3f %s", metrics$outlier_threshold, units_label)),
-      hjust = 1,
-      vjust = -0.5,
-      color = "#dc2626",
-      size = 3.6
-    ) +
     labs(
       title = plot_title,
-      subtitle = "Points show each trial. Red dashed line marks the large-error guide for this block. Blue line shows the overall trend across the block.",
+      subtitle = plot_subtitle,
       x = x_label,
       y = paste(error_label, "(", units_label, ")"),
       color = NULL
     ) +
     theme_minimal(base_size = 13) +
     theme(legend.position = "top")
+
+  show_outlier_guide <- is.finite(metrics$outlier_threshold) &&
+    (selected_task != "Exposure" || (metrics$miss_count > 0 && metrics$outlier_count > 0))
+
+  if (show_outlier_guide) {
+    p <- p +
+      geom_hline(yintercept = metrics$outlier_threshold, linetype = "dashed", color = "#dc2626") +
+      annotate(
+        "text",
+        x = max(quality_trials$TrialIndex, na.rm = TRUE),
+        y = metrics$outlier_threshold,
+        label = if (selected_task == "Exposure") {
+          paste0("Unusually large miss guide: ", sprintf("%.3f %s", metrics$outlier_threshold, units_label))
+        } else {
+          paste0("Large-error guide: ", sprintf("%.3f %s", metrics$outlier_threshold, units_label))
+        },
+        hjust = 1,
+        vjust = -0.5,
+        color = "#dc2626",
+        size = 3.6
+      )
+  }
+
+  p
 }
 
 summary_compact_table <- function(summary_data) {
@@ -1672,6 +1715,7 @@ build_comparison_plot <- function(compare_data) {
 
   ggplot(grouped, aes(x = EffectGroup, y = Magnitude, color = InputModeLabel, fill = InputModeLabel)) +
     geom_boxplot(
+      data = grouped |> filter(GroupCount >= 2),
       aes(group = interaction(EffectGroup, InputModeLabel)),
       position = position_dodge2(width = 0.65, preserve = "single"),
       width = 0.55,
@@ -1692,6 +1736,7 @@ build_comparison_plot <- function(compare_data) {
     labs(
       title = "Main Comparison: Aftereffect Magnitude by Condition",
       subtitle = "Primary comparison view. Compare controller vs embodied within each effect, separated by task. Higher values mean larger changes from baseline to post.",
+      caption = "Conditions with only one session show points and a flat box/line rather than a full distribution.",
       x = "Configured effect",
       y = "Size of change from baseline to post",
       color = "Input mode",
@@ -2492,8 +2537,8 @@ server <- function(input, output, session) {
       div(class = "metric-card",
           div(class = "metric-title", "Unusually Large Errors"),
           div(class = "metric-value", metrics$outlier_count),
-          div(class = "metric-sub", "Trials that were much farther from the target than the rest of this block"),
-          div(class = "metric-sub", paste("Flagged above", sprintf("%.3f %s", metrics$outlier_threshold, units_label)))
+          div(class = "metric-sub", if (input$quality_task == "Exposure") "Misses that were much farther from the target than the rest of this block" else "Trials that were much farther from the target than the rest of this block"),
+          div(class = "metric-sub", if (input$quality_task == "Exposure" && (is.na(metrics$outlier_threshold) || metrics$outlier_count == 0)) "No unusually large misses in this block" else paste("Flagged above", sprintf("%.3f %s", metrics$outlier_threshold, units_label)))
       ),
       div(class = "metric-card",
           div(class = "metric-title", "Change Over Trials"),

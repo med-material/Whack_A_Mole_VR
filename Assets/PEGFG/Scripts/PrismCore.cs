@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public interface IInputProvider
 {
@@ -79,12 +80,14 @@ public class SkewEffect : IEffectTransform
 
     [Tooltip("Visible controller/pointer visual to shift. This should be the visual model child, not the tracked controller root.")]
     [System.NonSerialized] public Transform visualPointerRoot;
+    [System.NonSerialized] public List<Transform> visualAuxRoots = new List<Transform>();
 
     [Tooltip("Stable prism shift direction in WORLD space.")]
     public Vector3 worldShiftAxis = Vector3.right;
 
     Vector3 _originalWorldPosition;
     Vector3 _originalPointerLocalPosition;
+    readonly List<Vector3> _originalAuxLocalPositions = new List<Vector3>();
     bool _hasOriginalWorldPosition = false;
     bool _hasOriginalPointerLocalPosition = false;
 
@@ -132,6 +135,32 @@ public class SkewEffect : IEffectTransform
 
             visualPointerRoot.localPosition = _originalPointerLocalPosition + localShift;
         }
+
+        if (visualAuxRoots != null && visualAuxRoots.Count > 0)
+        {
+            if (_originalAuxLocalPositions.Count != visualAuxRoots.Count)
+            {
+                _originalAuxLocalPositions.Clear();
+                for (int i = 0; i < visualAuxRoots.Count; i++)
+                {
+                    Transform aux = visualAuxRoots[i];
+                    _originalAuxLocalPositions.Add(aux != null ? aux.localPosition : Vector3.zero);
+                }
+            }
+
+            for (int i = 0; i < visualAuxRoots.Count; i++)
+            {
+                Transform aux = visualAuxRoots[i];
+                if (aux == null)
+                    continue;
+
+                Vector3 auxLocalShift = aux.parent != null
+                    ? aux.parent.InverseTransformVector(shift)
+                    : shift;
+
+                aux.localPosition = _originalAuxLocalPositions[i] + auxLocalShift;
+            }
+        }
     }
 
     public void ResetCameraEffect(Camera cam)
@@ -142,8 +171,18 @@ public class SkewEffect : IEffectTransform
         if (visualPointerRoot != null && _hasOriginalPointerLocalPosition)
             visualPointerRoot.localPosition = _originalPointerLocalPosition;
 
+        if (visualAuxRoots != null && _originalAuxLocalPositions.Count > 0)
+        {
+            for (int i = 0; i < visualAuxRoots.Count && i < _originalAuxLocalPositions.Count; i++)
+            {
+                if (visualAuxRoots[i] != null)
+                    visualAuxRoots[i].localPosition = _originalAuxLocalPositions[i];
+            }
+        }
+
         _hasOriginalWorldPosition = false;
         _hasOriginalPointerLocalPosition = false;
+        _originalAuxLocalPositions.Clear();
     }
 
     Vector3 GetShiftVector()

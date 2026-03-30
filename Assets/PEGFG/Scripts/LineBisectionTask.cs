@@ -27,16 +27,17 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     private float minSecondsBetweenTrials = 0f;
 
     [Header("Line settings (in metres)")]
-    private float lineLength = 1f;
-    private float lineZRange = 0.1f;
-    private bool clampToLineSegment = true;
+    [SerializeField] private float lineLength = 1f;
+    [SerializeField] private float lineZRange = 0.1f;
+    [SerializeField] private bool clampToLineSegment = true;
     [SerializeField] private float analysisMidpointRadiusMeters = 0.03f;
 
     [Header("Randomisation")]
-    private bool randomiseLineZEachTrial = true;
+    [SerializeField] private bool randomiseLineZEachTrial = true;
+    [SerializeField, Tooltip("If enabled, line length changes between trials. If disabled, the same lineLength is used for the whole block.")]
     private bool randomiseLineLengthEachTrial = true;
-    private float minLineLength = 1f;
-    private float maxLineLength = 1.25f;
+    [SerializeField] private float minLineLength = 1f;
+    [SerializeField] private float maxLineLength = 1.25f;
 
     [Header("Debug")]
     public bool showCursor = true;

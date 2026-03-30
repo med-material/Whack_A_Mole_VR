@@ -113,6 +113,8 @@ private Transform _leftControllerRayOriginTransform;
 private Transform _rightControllerRayOriginTransform;
 private Transform _leftPointerVisualTransform;
 private Transform _rightPointerVisualTransform;
+private readonly List<Transform> _leftAuxPointerVisualTransforms = new();
+private readonly List<Transform> _rightAuxPointerVisualTransforms = new();
 private Transform _leftHandVisualTransform;
 private Transform _rightHandVisualTransform;
 private GameObject _openXRHandVisualizerRoot;
@@ -500,6 +502,9 @@ void AutoAssignXRInput()
 
             if (_rightPointerVisualTransform == null && _rightControllerTransform != null)
                 _rightPointerVisualTransform = FindDeepChild(_rightControllerTransform, "UniversalController");
+
+            CacheAuxControllerVisuals(_leftControllerTransform, _leftAuxPointerVisualTransforms);
+            CacheAuxControllerVisuals(_rightControllerTransform, _rightAuxPointerVisualTransforms);
         }
 
         return;
@@ -1439,16 +1444,24 @@ public void NotifyMeasurementBlockCompleted(TaskMode completedTask, string block
 void SetControllerVisualState(Handedness hand, bool active)
 {
     Transform explicitVisual = hand == Handedness.Left ? _leftPointerVisualTransform : _rightPointerVisualTransform;
+    List<Transform> auxVisuals = hand == Handedness.Left ? _leftAuxPointerVisualTransforms : _rightAuxPointerVisualTransforms;
     if (explicitVisual != null)
     {
         explicitVisual.gameObject.SetActive(active);
-        return;
+    }
+    else
+    {
+        Transform controllerTransform = hand == Handedness.Left ? _leftControllerTransform : _rightControllerTransform;
+        Transform controllerVisual = controllerTransform != null ? FindDeepChild(controllerTransform, "UniversalController") : null;
+        if (controllerVisual != null)
+            controllerVisual.gameObject.SetActive(active);
     }
 
-    Transform controllerTransform = hand == Handedness.Left ? _leftControllerTransform : _rightControllerTransform;
-    Transform controllerVisual = controllerTransform != null ? FindDeepChild(controllerTransform, "UniversalController") : null;
-    if (controllerVisual != null)
-        controllerVisual.gameObject.SetActive(active);
+    for (int i = 0; i < auxVisuals.Count; i++)
+    {
+        if (auxVisuals[i] != null)
+            auxVisuals[i].gameObject.SetActive(active);
+    }
 }
 
 void SetHandVisualState(Handedness hand, bool active)
@@ -1558,6 +1571,39 @@ static Transform FindDeepChild(Transform root, string childName)
     return null;
 }
 
+static void FindDeepChildrenContaining(Transform root, string partialName, List<Transform> results)
+{
+    if (root == null || string.IsNullOrEmpty(partialName))
+        return;
+
+    var stack = new Stack<Transform>();
+    stack.Push(root);
+
+    while (stack.Count > 0)
+    {
+        var current = stack.Pop();
+        if (current.name.IndexOf(partialName, StringComparison.OrdinalIgnoreCase) >= 0)
+            results.Add(current);
+
+        for (int i = 0; i < current.childCount; i++)
+            stack.Push(current.GetChild(i));
+    }
+}
+
+void CacheAuxControllerVisuals(Transform controllerRoot, List<Transform> cache)
+{
+    if (controllerRoot == null || cache == null)
+        return;
+
+    cache.Clear();
+    FindDeepChildrenContaining(controllerRoot, "poke", cache);
+    FindDeepChildrenContaining(controllerRoot, "interactor", cache);
+    FindDeepChildrenContaining(controllerRoot, "direct", cache);
+
+    Transform primaryVisual = FindDeepChild(controllerRoot, "UniversalController");
+    cache.RemoveAll(t => t == null || t == controllerRoot || t == primaryVisual);
+}
+
 void SyncEffectReferences()
 {
     if (effectMode != EffectMode.Skew)
@@ -1565,6 +1611,7 @@ void SyncEffectReferences()
 
     skew.visualWorldRoot = visualWorldRoot;
     skew.visualPointerRoot = GetActivePointerVisual();
+    skew.visualAuxRoots = activeHand == Handedness.Left ? _leftAuxPointerVisualTransforms : _rightAuxPointerVisualTransforms;
 }
 
 void HandleKeyboardShortcuts()
