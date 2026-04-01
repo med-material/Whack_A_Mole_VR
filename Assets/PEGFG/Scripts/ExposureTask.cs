@@ -15,7 +15,7 @@ using TMPro;
 // - spawning/selecting the active exposure target,
 // - deciding whether a response counts as hit or miss,
 // - tracking successful hits and total attempts,
-// - updating target visuals and center-target cueing,
+// - updating target visuals and bullseye cueing,
 // - logging exposure attempts and configuration,
 // - notifying SandboxRunner once exposure is complete.
 public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
@@ -73,7 +73,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     private Color hitColor = Color.cyan;
     private Color missColor = Color.red;
 
-    [Header("Center target visual cue")]
+    [Header("Bullseye target cue")]
     [SerializeField] private bool showCenterBullseye = true;
     [SerializeField] private Color bullseyeRingColor = Color.black;
     [SerializeField] private Color bullseyeInnerRingColor = Color.black;
@@ -112,15 +112,15 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         AutoAssignReferences();
     }
 
-    // Keep references and center-target cue visuals updated in the editor.
+    // Keep references updated in the editor.
+    // Avoid mesh/material reassignment here because Unity does not allow those
+    // changes during OnValidate/CheckConsistency.
     void OnValidate()
     {
         if (!Application.isPlaying)
         {
             AutoAssignReferences();
             AutoFillRenderers();
-            EnsureCenterTargetBullseye();
-            UpdateCenterBullseyeVisuals();
         }
     }
 
@@ -231,7 +231,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     //
     // Chronological flow of one attempt:
     // 1. make sure the task is active and references are valid,
-    // 2. update the center target cue visuals,
+    // 2. update the bullseye cue visuals,
     // 3. get the participant's transformed input,
     // 4. apply confirm-latching and optional reset gating,
     // 5. intersect the aim ray with the board,
@@ -506,15 +506,13 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         r.SetPropertyBlock(props);
     }
 
-    // Ensures the center target has the extra bullseye cue overlays used to make it visually distinctive.
+    // Ensures the currently active target can receive the bullseye cue overlays used to make it visually distinctive.
     void EnsureCenterTargetBullseye()
     {
-        if (!showCenterBullseye || targets == null || targets.Length < 2 || targets[1] == null)
+        if (!showCenterBullseye || targets == null || targets.Length == 0)
             return;
 
-        Renderer sourceRenderer = targetRenderers != null && targetRenderers.Length > 1
-            ? targetRenderers[1]
-            : targets[1].GetComponentInChildren<Renderer>();
+        Renderer sourceRenderer = GetBullseyeSourceRenderer();
         if (sourceRenderer == null)
             return;
 
@@ -530,7 +528,7 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         UpdateCenterBullseyeVisuals();
     }
 
-    // Creates one overlay object for the center target cue.
+    // Creates one overlay object for the bullseye cue.
     // The overlay reuses the target's mesh and materials, then relies on color/scale/offset differences
     // to produce the bullseye appearance.
     Transform CreateBullseyeOverlay(string objectName, Renderer sourceRenderer, float scaleMultiplier)
@@ -557,23 +555,66 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
         return overlay.transform;
     }
 
-    // Keeps the center target bullseye visuals synchronized with the current inspector settings.
-    // This updates visibility, local offsets, scales, rotations, and colors.
+    // Returns the renderer belonging to the currently selected target.
+    Renderer GetBullseyeSourceRenderer()
+    {
+        if (targets == null || targets.Length == 0)
+            return null;
+
+        int targetIndex = Mathf.Clamp(_currentTargetIndex, 0, targets.Length - 1);
+        Renderer sourceRenderer = targetRenderers != null && targetIndex < targetRenderers.Length
+            ? targetRenderers[targetIndex]
+            : null;
+
+        if (sourceRenderer == null && targets[targetIndex] != null)
+            sourceRenderer = targets[targetIndex].GetComponentInChildren<Renderer>();
+
+        return sourceRenderer;
+    }
+
+    // Reattaches one bullseye overlay to the currently active target and synchronizes
+    // its mesh/material references with that target's renderer.
+    void SyncBullseyeOverlay(Transform overlay, Renderer sourceRenderer)
+    {
+        if (overlay == null || sourceRenderer == null)
+            return;
+
+        if (overlay.parent != sourceRenderer.transform)
+            overlay.SetParent(sourceRenderer.transform, false);
+
+        overlay.localPosition = Vector3.zero;
+        overlay.localRotation = Quaternion.identity;
+
+        MeshFilter sourceFilter = sourceRenderer.GetComponent<MeshFilter>();
+        MeshFilter overlayFilter = overlay.GetComponent<MeshFilter>();
+        if (overlayFilter != null)
+            overlayFilter.sharedMesh = sourceFilter != null ? sourceFilter.sharedMesh : null;
+
+        MeshRenderer overlayRenderer = overlay.GetComponent<MeshRenderer>();
+        if (overlayRenderer != null)
+            overlayRenderer.sharedMaterials = sourceRenderer.sharedMaterials;
+    }
+
+    // Keeps the bullseye visuals synchronized with the current inspector settings and the current target.
+    // This updates visibility, parent target, local offsets, scales, rotations, and colors.
     void UpdateCenterBullseyeVisuals()
     {
         if (centerBullseyeRing == null || centerBullseyeInnerRing == null || centerBullseyeDot == null)
             return;
 
-        Renderer sourceRenderer = targetRenderers != null && targetRenderers.Length > 1
-            ? targetRenderers[1]
-            : targets[1].GetComponentInChildren<Renderer>();
-        if (sourceRenderer == null)
-            return;
-
-        bool overlaysVisible = showCenterBullseye && (!Application.isPlaying || _isActive);
+        Renderer sourceRenderer = GetBullseyeSourceRenderer();
+        bool overlaysVisible = showCenterBullseye && (!Application.isPlaying || _isActive) && sourceRenderer != null;
         centerBullseyeRing.gameObject.SetActive(overlaysVisible);
         centerBullseyeInnerRing.gameObject.SetActive(overlaysVisible);
         centerBullseyeDot.gameObject.SetActive(overlaysVisible);
+
+        if (sourceRenderer == null)
+            return;
+
+        SyncBullseyeOverlay(centerBullseyeRing, sourceRenderer);
+        SyncBullseyeOverlay(centerBullseyeInnerRing, sourceRenderer);
+        SyncBullseyeOverlay(centerBullseyeDot, sourceRenderer);
+
         centerBullseyeRing.localPosition = Vector3.up * bullseyeRingSurfaceOffsetMeters;
         centerBullseyeInnerRing.localPosition = Vector3.up * bullseyeInnerRingSurfaceOffsetMeters;
         centerBullseyeDot.localPosition = Vector3.up * bullseyeDotSurfaceOffsetMeters;
