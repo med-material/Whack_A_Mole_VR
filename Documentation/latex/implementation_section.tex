@@ -1,0 +1,183 @@
+% Suggested packages for the main Overleaf document:
+% \usepackage{graphicx}
+% \usepackage{tikz}
+% \usetikzlibrary{positioning,arrows.meta,fit}
+% \usepackage{tabularx}
+% \usepackage{booktabs}
+% \usepackage{array}
+% \usepackage{xcolor}
+% \usepackage{listings}
+%
+% Suggested code-listing style for later implementation snippets:
+% \lstdefinestyle{pegfgcode}{
+%   basicstyle=\ttfamily\footnotesize,
+%   breaklines=true,
+%   breakatwhitespace=false,
+%   columns=fullflexible,
+%   frame=single,
+%   framerule=0.4pt,
+%   numbers=left,
+%   numberstyle=\scriptsize\color{gray},
+%   stepnumber=1,
+%   tabsize=2,
+%   showstringspaces=false,
+%   keepspaces=true,
+%   keywordstyle=\color{blue!60!black}\bfseries,
+%   commentstyle=\color{green!35!black},
+%   stringstyle=\color{orange!50!black}
+% }
+%
+% Example usage for C#:
+% \begin{lstlisting}[style=pegfgcode, language={[Sharp]C}, caption={Central runtime orchestration in SandboxRunner.}]
+% ...
+% \end{lstlisting}
+%
+% Example usage for R:
+% \begin{lstlisting}[style=pegfgcode, language=R, caption={Session discovery in the Shiny analysis app.}]
+% ...
+% \end{lstlisting}
+
+\section{Implementation Architecture of the Prototype}
+\label{sec:implementation-architecture}
+
+Where the design chapter described the experiment from the participant's point of view, the present section describes how the prototype was implemented as a coherent software pipeline. The main goal of the implementation was not merely to make each task work in isolation, but to ensure that input handling, effect application, task execution, logging, and analysis were structured consistently enough that the resulting data could later be compared and interpreted within one shared workflow. In practice, this required the Unity side and the RShiny side to be designed together: the Unity runtime needed to expose stable event and sample data, and the Shiny application needed to reconstruct these data into interpretable summaries, quality measures, spatial plots, and trajectory plots.
+
+The implemented system can therefore be understood as four connected layers. First, the Unity runtime receives embodied or controller-based input and normalizes it through a central controller script. Second, the task scripts use this normalized input to run the individual baseline, exposure, and post-exposure procedures under the active perturbation. Third, two custom logging scripts translate the runtime state into a session structure composed of metadata, discrete events, continuous samples, and summary rows. Finally, the RShiny dashboard reads these files back in and visualizes the completed sessions through a unified analysis interface. Figure~\ref{fig:implementation-pipeline} summarizes this red thread from participant action to post-hoc analysis.
+
+\begin{figure}[t]
+    \centering
+    \resizebox{\linewidth}{!}{%
+    \begin{tikzpicture}[
+        x=1cm,
+        y=1cm,
+        >=Latex,
+        bigbox/.style={draw, rounded corners=3pt, align=center, fill=blue!7, minimum width=6.2cm, minimum height=1.0cm, font=\small\bfseries},
+        midbox/.style={draw, rounded corners=2pt, align=center, fill=green!7, minimum width=4.2cm, minimum height=1.0cm, font=\small},
+        smallbox/.style={draw, rounded corners=2pt, align=center, fill=yellow!10, minimum width=4.5cm, minimum height=1.05cm, font=\footnotesize, text width=4.1cm},
+        layerbox/.style={draw, dashed, rounded corners=4pt, inner sep=6pt},
+        arr/.style={-Latex, line width=0.8pt}
+    ]
+        % Input
+        \node[bigbox] (input) at (7.0,0) {Participant input\\controller or embodied hand};
+
+        % Runtime layer
+        \node[bigbox] (runner) at (7.0,-2.0) {\texttt{SandboxRunner.cs}\\calibration, input abstraction, confirmation logic, and block progression};
+
+        \node[midbox] (core) at (2.3,-4.2) {\texttt{PrismCore.cs}\\translation, rotation, and skew transforms};
+        \node[midbox, text width=4.6cm] (tasks) at (7.0,-4.2) {\texttt{OpenLoopPointingTask.cs}\\\texttt{LineBisectionTask.cs}\\\texttt{LandmarkTask.cs}\\\texttt{ExposureTask.cs}};
+        \node[midbox, text width=4.6cm] (helpers) at (11.7,-4.2) {\texttt{HandDwellProgressBar.cs}\\\texttt{RoundedRectGraphic.cs}\\\texttt{DepthQueGradient.cs}};
+
+        \node[layerbox, fit=(runner)(core)(tasks)(helpers)] (runtimegroup) {};
+        \node[font=\scriptsize\bfseries, anchor=west, fill=white, inner sep=1pt] at ([xshift=2pt,yshift=2pt]runtimegroup.north west) {Unity runtime layer};
+
+        % Logging layer
+        \node[midbox, text width=4.6cm] (elog) at (4.2,-7.1) {\texttt{PrismExperimentLogger.cs}\\metadata, events, and summary rows};
+        \node[midbox, text width=4.6cm] (slog) at (9.8,-7.1) {\texttt{PrismSampleLogger.cs}\\continuous sample snapshots};
+
+        \node[layerbox, fit=(elog)(slog)] (loggroup) {};
+        \node[font=\scriptsize\bfseries, anchor=west, fill=white, inner sep=1pt] at ([xshift=2pt,yshift=2pt]loggroup.north west) {Project logging layer};
+
+        % CSV output
+        \node[bigbox, fill=yellow!14, text width=6.3cm] (csv) at (7.0,-9.8) {CSV session collections\\\texttt{Meta}, \texttt{Event}, \texttt{Sample}, and \texttt{Summary}};
+
+        % Analysis layer
+        \node[bigbox, fill=green!9, text width=8.4cm] (analysis) at (7.0,-12.5) {\texttt{app.R}\\session discovery, summary, compare, quality, spatial, and trajectory analysis views};
+        \node[layerbox, fit=(analysis)] (analysisgroup) {};
+        \node[font=\scriptsize\bfseries, anchor=west, fill=white, inner sep=1pt] at ([xshift=2pt,yshift=2pt]analysisgroup.north west) {Analysis layer};
+
+        % Arrows
+        \draw[arr] (input) -- (runner);
+        \draw[arr] (runner) -- (core);
+        \draw[arr] (runner) -- (tasks);
+        \draw[arr] (runner) -- (helpers);
+        \draw[arr] (tasks) -- (elog);
+        \draw[arr] (runner.south west) .. controls +(0.0,-1.2) and +(0.0,1.0) .. (elog.north);
+        \draw[arr] (runner.south east) .. controls +(0.0,-1.2) and +(0.0,1.0) .. (slog.north);
+        \draw[arr] (elog) -- (csv);
+        \draw[arr] (slog) -- (csv);
+        \draw[arr] (csv) -- (analysis);
+    \end{tikzpicture}}
+    \caption{Implementation pipeline from participant action to analysis. \texttt{SandboxRunner.cs} coordinates runtime behaviour, the task scripts implement the experiment phases, the Prism loggers transform runtime state into stable CSV collections, and \texttt{app.R} reconstructs these collections into analysis views.}
+    \label{fig:implementation-pipeline}
+\end{figure}
+
+\subsection{Central Runtime Orchestration}
+\label{subsec:implementation-runtime}
+
+The central implementation decision was to organise the Unity prototype around \texttt{SandboxRunner.cs}. Rather than allowing each task to query controllers, hand rays, calibration anchors, and perturbation logic independently, the runner acts as the single orchestration layer. It is responsible for initializing references, handling calibration, selecting the active task and effect mode, progressing from baseline to exposure to post-exposure, and providing a unified input representation to the task scripts. This is important because the project does not only compare different visual perturbations; it also compares controller-based interaction with embodied hand-based interaction. By resolving these two modalities into the same \emph{transformed input} interface, the rest of the runtime can treat them as different implementations of the same experimental pipeline instead of as separate applications.
+
+The second central file in the runtime is \texttt{PrismCore.cs}. This script collects the effect abstractions used by the prototype, including the neutral \emph{no effect} condition together with \emph{translation}, \emph{rotation}, and \emph{skew}. The important implementation point is that the effect layer is kept separate from the task layer. In other words, Open-Loop Pointing, Line Bisection, Landmark, and Exposure do not each implement their own perturbation logic. Instead, the runner requests the current effect transform from \texttt{PrismCore.cs}, applies it to the active input representation, and only then passes the transformed result to the task scripts. This separation makes it possible to keep the task logic comparatively clean while still switching effects at runtime.
+
+Although the runtime is centered on the runner and the effect layer, three smaller support scripts help present the interaction clearly enough for the participant to perform the tasks. \texttt{HandDwellProgressBar.cs} drives the dwell-confirmation and transition progress visualization, making the embodied confirmation state and the between-trial timing readable without exposing unnecessary implementation details. \texttt{RoundedRectGraphic.cs} generates the rounded UI geometry used by that progress indicator so the interface can be constructed directly in Unity rather than through external textures. \texttt{DepthQueGradient.cs} serves a different purpose: it colors the scene's depth-cue stripes to strengthen the participant's sense of forward distance toward the target wall. These scripts are not analytically central in the same way as the runner or the effect layer, but they close the loop between the formal task structure and the participant's actual perceptual experience of the prototype.
+
+\subsection{Task-Specific Execution}
+\label{subsec:implementation-tasks}
+
+On top of the shared runtime sit the four task scripts: \texttt{OpenLoopPointingTask.cs}, \texttt{LineBisectionTask.cs}, \texttt{LandmarkTask.cs}, and \texttt{ExposureTask.cs}. All four consume the unified input supplied by \texttt{SandboxRunner.cs}, but each script defines its own stimulus construction, acceptance rule, and task-specific measurement logic.
+
+\texttt{OpenLoopPointingTask.cs} implements the simplest measurement task. The script creates one visible target, waits for the participant to adopt the required posture, accepts a single response, and records the signed endpoint error relative to the intended target center. Its main function is therefore to translate one accepted pointing response into a stable per-trial measurement that can later be compared between baseline and post-exposure blocks. \texttt{LineBisectionTask.cs} reuses much of the same structural logic, but replaces the point target with a displayed line. The implementation difference is that the accepted response must be interpreted relative to the line's true midpoint, making the main output a signed midpoint error rather than a signed endpoint deviation. \texttt{LandmarkTask.cs} differs more strongly from the other two: instead of pointing toward one location, the participant chooses which of two line segments appears longer. The script therefore constructs a split stimulus, randomizes which side is objectively longer, and reduces the participant's response to a categorical left/right decision and a correctness measure.
+
+\texttt{ExposureTask.cs} is implemented separately because it serves a different experimental purpose. Rather than isolating one accepted response, it drives repeated acquisition of one of three horizontally arranged targets under the currently active perturbation. The task script cycles among left, center, and right targets, judges each confirmed attempt as hit or miss, tracks the count of successful hits, and signals back to the runner when exposure is complete. This is also the file in which the participant-facing feedback is most explicit: target highlighting, hit markers, and the center-target visual cue all belong to the exposure implementation because they are part of what makes the adaptation phase legible as a repeated target-to-target task.
+
+What ties these four scripts together is that they all adopt the same experimental grammar even though the stimuli differ. Each task defines how a trial or attempt is started, how the participant's input is interpreted, when a response is accepted, and which values must be written to the logger. The implementation is therefore modular, but not fragmented: different task scripts solve different local problems while remaining aligned to one shared runtime and one shared logging format.
+
+\subsection{Logging as the Bridge Between Unity and Analysis}
+\label{subsec:implementation-logging}
+
+The most important implementation bridge between Unity and the later analysis is the custom Prism logging layer. Two project-specific scripts were created for this purpose: \texttt{PrismExperimentLogger.cs} and \texttt{PrismSampleLogger.cs}. Although both write CSV rows through the inherited \texttt{LoggingManager}, they serve different roles and should be understood as complementary rather than redundant.
+
+\texttt{PrismExperimentLogger.cs} writes the discrete structure of the run. It stores session metadata, block transitions, accepted measurement trials, exposure attempts, target spawns, exposure completion, and block- or task-level summaries. It also decides whether a session should count as \emph{Finished} or \emph{Aborted}, based on whether the participant actually passed through baseline, exposure, and post-exposure. This file is therefore the implementation counterpart to the experimental logic described in the design chapter: it records not only what the participant did, but in which phase, under which effect mode, with which input mode, and under which confirmation condition the action occurred.
+
+\texttt{PrismSampleLogger.cs}, by contrast, writes the continuous time series. At a fixed sampling rate it stores the currently transformed pointer ray, head pose, controller poses, movement-anchor poses, dwell state, confirmation state, and the current task context such as block, trial, attempt, and target index. This is the file that later enables the RShiny dashboard to reconstruct approach trajectories and compute the acceleration, deceleration, and hover phases that were added during the project. The distinction between the two loggers is therefore analytically important: the experiment logger captures \emph{discrete structure}, whereas the sample logger captures \emph{continuous movement}.
+
+This logging architecture is also where the project's concern for consistency becomes most concrete. The same run is represented in four collections --- \texttt{Meta}, \texttt{Event}, \texttt{Sample}, and \texttt{Summary} --- and each collection contributes a different perspective on the same session. By keeping the field names and block/task labels stable across these collections, the implementation makes it possible to reconstruct the same experimental run in different ways without needing a different loader for every task and every effect.
+
+\subsection{RShiny Analysis Layer}
+\label{subsec:implementation-rshiny}
+
+The final script in the PEGFG implementation is \texttt{app.R}, which serves as the entry point to the local RShiny analysis dashboard. In implementation terms, this file is not merely a plotting script; it is the analysis-side counterpart to the Unity logging layer. The app first discovers completed sessions by grouping together the separate \texttt{Meta}, \texttt{Event}, \texttt{Sample}, and \texttt{Summary} CSV files belonging to the same session. It then loads the selected session into memory and derives a series of task-specific data structures that can be reused across tabs. In practice, this means that the same raw logs can be viewed as single-session summaries, cross-session comparisons, quality checks, spatial hit distributions, or projected approach trajectories.
+
+Within \texttt{app.R}, the logic is organized around a set of helper functions that each transform one part of the logging schema into a more interpretable view. Summary helpers reconstruct aftereffect interpretations from \texttt{Summary.csv}. Quality helpers turn accepted trials or exposure attempts into outlier counts, trend lines, and hit-rate summaries. Spatial helpers interpret event rows differently depending on whether the selected task is Open-Loop, Line Bisection, or Exposure. Trajectory helpers combine \texttt{Event.csv} and \texttt{Sample.csv} so that one accepted exposure attempt can be reconstructed as a projected aim path on the target plane. Finally, the Shiny server logic binds these helpers together through reactive expressions, so that changing the selected session or task automatically updates the visible cards, tables, and plots.
+
+This part of the implementation is essential for the project's overall red thread. Without the Shiny layer, the Unity prototype would produce data, but the data would remain opaque. Without the structured Unity logging layer, the Shiny app could not reconstruct the run in a reliable way. The implementation chapter should therefore present Unity and R as two parts of the same system rather than as separate deliverables: the prototype produces structured sessions, and the analysis interface turns those sessions into digestible evidence.
+
+\subsection{Script Inventory}
+\label{subsec:implementation-script-inventory}
+
+Table~\ref{tab:pegfg-script-inventory} lists the project-specific scripts and their primary role in the implemented architecture. The purpose of the table is not to replace the prose above, but to make explicit which files belong to the PEGFG layer and how each contributes to the final workflow.
+
+\begin{table}[t]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{5pt}
+    \renewcommand{\arraystretch}{1.16}
+    \begin{tabularx}{\linewidth}{
+        >{\raggedright\arraybackslash}p{0.27\linewidth}
+        >{\raggedright\arraybackslash}p{0.18\linewidth}
+        X
+    }
+        \toprule
+        \textbf{Script} & \textbf{Layer} & \textbf{Primary responsibility} \\
+        \midrule
+        \texttt{SandboxRunner.cs} & Runtime orchestration & Coordinates calibration, input normalization, confirmation rules, effect selection, and progression between baseline, exposure, and post-exposure blocks. \\
+        \texttt{PrismCore.cs} & Effect layer & Defines the effect abstractions and the concrete \emph{none}, \emph{translation}, \emph{rotation}, and \emph{skew} transforms used during the exposure phase. \\
+        \texttt{OpenLoopPointingTask.cs} & Task layer & Implements the single-target measurement task and computes signed endpoint error relative to the intended target center. \\
+        \texttt{LineBisectionTask.cs} & Task layer & Implements midpoint estimation on a displayed line and computes signed deviation from the true midpoint. \\
+        \texttt{LandmarkTask.cs} & Task layer & Implements the comparative left/right judgment task and computes correctness and response bias. \\
+        \texttt{ExposureTask.cs} & Task layer & Implements the repeated target-acquisition phase under perturbation, including target selection, hit/miss classification, and exposure completion. \\
+        \texttt{HandDwellProgressBar.cs} & UI / feedback & Visualizes dwell progress and transition timing so confirmation and loading phases are readable to the participant. \\
+        \texttt{RoundedRectGraphic.cs} & UI support & Generates rounded rectangle meshes used by the custom progress-bar interface. \\
+        \texttt{DepthQueGradient.cs} & Scene support & Applies graded coloring to the depth-cue objects so forward distance toward the target wall is easier to perceive. \\
+        \texttt{PrismExperimentLogger.cs} & Logging & Writes metadata, event rows, block summaries, and aftereffect summaries in a format aligned with the experiment structure. \\
+        \texttt{PrismSampleLogger.cs} & Logging & Writes regular sample snapshots of pointer, head, controller, and movement-anchor state for later trajectory analysis. \\
+        \texttt{app.R} & Analysis & Loads completed sessions and visualizes them as summary, compare, quality, spatial, and trajectory views in the local RShiny dashboard. \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Project-specific script inventory for the PEGFG implementation. The table groups the files by architectural role rather than by folder location.}
+    \label{tab:pegfg-script-inventory}
+\end{table}
+
+\subsection{Implementation Red Thread}
+\label{subsec:implementation-red-thread}
+
+Taken together, the implementation follows a consistent red thread from interaction to interpretation. \texttt{SandboxRunner.cs} ensures that different input modalities and perturbation modes can be treated within one runtime grammar. The task scripts then operationalize the individual measurement and exposure procedures while reusing that shared grammar. The Prism logging layer converts these runtime events and trajectories into a stable session structure, and \texttt{app.R} reconstructs the same structure into analysis views that can be read session by session or compared across runs. For the report, this means the implementation chapter does not need to describe the prototype as a set of unrelated scripts. Instead, it can present the prototype as one layered system whose parts were designed to support one another: runtime control, task execution, logging, and analysis.
