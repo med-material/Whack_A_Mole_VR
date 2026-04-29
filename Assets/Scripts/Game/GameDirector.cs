@@ -223,6 +223,7 @@ public class GameDirector : MonoBehaviour
         }
 
         UpdateState(GameState.Playing);
+        Mole.ResetMoleOccurrenceIDCounter();
         if (gazeRecorder != null) gazeRecorder.StartRecording();
         loggerNotifier.NotifyLogger("Game Started", EventLogger.EventType.GameEvent, new Dictionary<string, object>()
         {

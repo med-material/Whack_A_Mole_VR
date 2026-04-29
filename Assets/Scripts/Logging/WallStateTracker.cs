@@ -1,14 +1,16 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 /*
 Class keeping track of the state of the wall, meaning the state of the Mole. Keeps a list of the activated moles to
-calculate the closest active mole when a laser is shot and misses.
+calculate the closest active mole when a laser is shot and misses. Also tracks active mole IDs ordered by expiration time.
 */
 
 public class WallStateTracker : MonoBehaviour
 {
     private List<Mole> activeMoles = new List<Mole>();
+    private Dictionary<int, float> activeMoleIDsWithExpiration = new Dictionary<int, float>();
 
     void Start()
     {
@@ -39,6 +41,7 @@ public class WallStateTracker : MonoBehaviour
         Dictionary<int, TargetSpawner> targetSpawners = wallInfo.targetSpawners;
         if (isActivating)
         {
+            activeMoleIDsWithExpiration.Clear();
             foreach (TargetSpawner targetSpawner in targetSpawners.Values)
             {
                 targetSpawner.GetUpdateEvent().AddListener(MoleStateUpdate);
@@ -47,19 +50,23 @@ public class WallStateTracker : MonoBehaviour
         else
         {
             activeMoles.Clear();
+            activeMoleIDsWithExpiration.Clear();
         }
     }
 
-    // Function called through an event whan a Mole's state changes.
+    // Function called through an event when a Mole's state changes.
     public void MoleStateUpdate(bool isActivating, Mole concernedMole)
     {
         if (isActivating)
         {
             activeMoles.Add(concernedMole);
+            float expirationTime = Time.time + concernedMole.GetLifeTime();
+            activeMoleIDsWithExpiration[concernedMole.GetMoleOccurrenceID()] = expirationTime;
         }
         else
         {
             activeMoles.Remove(concernedMole);
+            activeMoleIDsWithExpiration.Remove(concernedMole.GetMoleOccurrenceID());
         }
     }
 }

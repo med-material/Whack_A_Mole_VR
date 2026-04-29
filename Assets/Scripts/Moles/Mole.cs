@@ -53,6 +53,8 @@ public abstract class Mole : MonoBehaviour
     private LoggerNotifier loggerNotifier;
     private bool isOnDisabledCoolDown = false;
     private bool performanceFeedback = true;
+    private int moleOccurrenceID = -1;
+    private static int moleOccurrenceIDCounter = 0;
 
     protected States state = States.Disabled;
     protected MoleOutcome moleOutcome = MoleOutcome.Valid;
@@ -78,6 +80,7 @@ public abstract class Mole : MonoBehaviour
         // Initialization of the LoggerNotifier. Here we will only raise Event, and we will use a function to pass and update
         // certain parameters values every time we raise an event (UpdateLogNotifierGeneralValues). We don't set any starting values.
         loggerNotifier = new LoggerNotifier(UpdateLogNotifierGeneralValues, new Dictionary<string, string>(){
+            {"MoleOccurenceID", "NULL"},
             {"MolePositionWorldX", "NULL"},
             {"MolePositionWorldY", "NULL"},
             {"MolePositionWorldZ", "NULL"},
@@ -150,6 +153,26 @@ public abstract class Mole : MonoBehaviour
     {
         return id;
     }
+
+    public int GetMoleOccurrenceID()
+    {
+        return moleOccurrenceID;
+    }
+
+    public float GetLifeTime()
+    {
+        return lifeTime;
+    }
+
+    public float GetActivatedTimeLeft()
+    {
+        return activatedTimeLeft;
+    }
+
+    public static void ResetMoleOccurrenceIDCounter()
+    {
+        moleOccurrenceIDCounter = 0;
+    }
     public string GetValidationArg() => validationArg;
     public void SetValidationArg(string data) => validationArg = data;
 
@@ -184,6 +207,7 @@ public abstract class Mole : MonoBehaviour
         lifeTime = enabledLifeTime;
         expiringTime = expiringDuration;
         spawnOrder = moleSpawnOrder;
+        moleOccurrenceID = moleOccurrenceIDCounter++;
         ChangeState(States.Enabling);
     }
 
@@ -442,6 +466,7 @@ public abstract class Mole : MonoBehaviour
         string MoleIndexY = moleId.Substring(5, 2);
 
         return new LogEventContainer(new Dictionary<string, object>(){
+            {"MoleOccurenceID", moleOccurrenceID},
             {"MolePositionWorldX", transform.position.x},
             {"MolePositionWorldY", transform.position.y},
             {"MolePositionWorldZ", transform.position.z},
