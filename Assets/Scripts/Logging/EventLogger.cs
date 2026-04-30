@@ -34,6 +34,8 @@ public class EventLogger : MonoBehaviour
     private Dictionary<string, object> currentMoleLog = new Dictionary<string, object>();
     private Dictionary<string, Dictionary<int, string>> logs = new Dictionary<string, Dictionary<int, string>>();
     private Dictionary<string, string> defaultValues = new Dictionary<string, string>();
+    private Vector3 lastMolePosition = Vector3.zero;
+
     private int logCount = 0;
     private string email = "";
     private LoggingManager loggingManager;
@@ -125,6 +127,7 @@ public class EventLogger : MonoBehaviour
                 trackerHub.StartTrackers();
                 gameId = GenerateUid();
                 //InitFile();
+                ResetDistanceFromLastMole();
                 SaveEventDatas(datas);
                 break;
             case "Game Stopped":
@@ -137,6 +140,7 @@ public class EventLogger : MonoBehaviour
                 break;
             case "Mole Spawned":
                 UpdateCurrentMoleLog(datas);
+                UpdateDistToLastMole(datas);
                 SaveEventDatas(datas, true, true);
                 break;
             case "DistractorRight Mole Spawned":
@@ -266,6 +270,27 @@ public class EventLogger : MonoBehaviour
 
         loggingManager.Log("Event", datas);
     }
+
+    private void UpdateDistToLastMole(Dictionary<string, object> datas) {
+        Vector3 currentMolePosition = new Vector3(
+            (float)datas["MolePositionWorldX"],
+            (float)datas["MolePositionWorldY"],
+            (float)datas["MolePositionWorldZ"]
+        );
+
+        datas.Add("DistFromLastMole", GetDistanceFromLastMole(currentMolePosition));
+
+        lastMolePosition = currentMolePosition;
+    }
+
+    private float GetDistanceFromLastMole(Vector3 currentPosition) {
+        return Vector3.Distance(currentPosition, lastMolePosition);
+    }
+
+    private void ResetDistanceFromLastMole() {
+        lastMolePosition = Vector3.zero;
+    }
+
 
     // // Generates a "logs" row (see class description) from the given datas. Adds mandatory parameters and
     // // the PersistentEvents parameters to the row when generating it.
