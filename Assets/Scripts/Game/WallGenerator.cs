@@ -123,6 +123,7 @@ public class WallGenerator : MonoBehaviour
                     {"TargetPositionWorldZ", newTargetSpawner.transform.position.z},
                     {"TargetIndexX", (int)Mathf.Floor(newTargetSpawner.GetId()/100)},
                     {"TargetIndexY", newTargetSpawner.GetId() % 100},
+                    {"PlayPeriod", GameDirector.currentPlayPeriod}
                 });
             }
         }
@@ -327,7 +328,7 @@ public class WallGenerator : MonoBehaviour
         {
             outlineRenderer.material = outlineMaterial;
         }
-        
+    
         // Apply the outline color directly to the material
         if (outlineRenderer.material != null)
         {

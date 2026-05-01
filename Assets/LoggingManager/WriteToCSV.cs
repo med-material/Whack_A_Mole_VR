@@ -44,7 +44,7 @@ public class WriteToCSV
     //Writes all the logs into the file at the given filepath
     public void WriteAll(Action callback)
     {
-        //This part has to be executed in the main Thread 
+        //This part has to be executed in the main Thread
         if (logStore.CurrentLogRow.Count != 0)
         {
             logStore.EndRow();
@@ -78,7 +78,7 @@ public class WriteToCSV
         Stopwatch writeStopwatch = new Stopwatch();
         writeStopwatch.Start();
 
-        try { 
+        try {
             using (var file = new StreamWriter(filePath, true))
             {
                 file.WriteLine(headers);
@@ -95,6 +95,7 @@ public class WriteToCSV
                 file.Write(dataString);
             }
         }
+        GameDirector.currentPlayPeriod = "PreGame";
 
         writeStopwatch.Stop();
         TimeSpan writeTs = writeStopwatch.Elapsed;
@@ -102,5 +103,5 @@ public class WriteToCSV
             writeTs.Seconds, writeTs.Milliseconds);
         Debug.Log(logStore.Label + " logs wrote to file in " + writeElapsedTime);
     }
-
+    
 }

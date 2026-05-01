@@ -88,6 +88,8 @@ public class GameDirector : MonoBehaviour
     [SerializeField]
     public TestChangeEvent testChanged = new TestChangeEvent();
 
+    public static string currentPlayPeriod = "PreGame";
+
     private Dictionary<string, float> difficultySettings;
     private Coroutine spawnTimer;
     private float currentGameTimeLeft;
@@ -225,6 +227,7 @@ public class GameDirector : MonoBehaviour
         UpdateState(GameState.Playing);
         Mole.ResetMoleOccurrenceIDCounter();
         if (gazeRecorder != null) gazeRecorder.StartRecording();
+        currentPlayPeriod = "Game";
         loggerNotifier.NotifyLogger("Game Started", EventLogger.EventType.GameEvent, new Dictionary<string, object>()
         {
             {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
@@ -252,6 +255,7 @@ public class GameDirector : MonoBehaviour
             {"testID", testId}
         };
         loggingManager.Log("Meta", metaLog);
+        currentPlayPeriod = "PostGame";
         loggerNotifier.NotifyLogger("Game Stopped", EventLogger.EventType.GameEvent, new Dictionary<string, object>()
         {
             {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}
@@ -532,6 +536,7 @@ public class GameDirector : MonoBehaviour
             {"TestID", testId}
         };
         loggingManager.Log("Meta", metaLog);
+        currentPlayPeriod = "PostGame";
         loggerNotifier.NotifyLogger("Game Finished", EventLogger.EventType.GameEvent, new Dictionary<string, object>()
         {
             {"GameState", System.Enum.GetName(typeof(GameDirector.GameState), gameState)}

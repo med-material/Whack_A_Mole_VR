@@ -169,6 +169,7 @@ public class BubbleDisplay : MonoBehaviour
                 {
                     {"Event", "Pointer Inside MotorSpace"},
                     {"EventType", "MotorSpaceEvent"},
+                    {"PlayPeriod", GameDirector.currentPlayPeriod},
                 });
                 if (soundManager != null)
                 {
@@ -200,6 +201,7 @@ public class BubbleDisplay : MonoBehaviour
                 {
                     {"Event", "Pointer Outside MotorSpace"},
                     {"EventType", "MotorSpaceEvent"},
+                    {"PlayPeriod", GameDirector.currentPlayPeriod},
                 });
                 if (soundManager != null)
                 {

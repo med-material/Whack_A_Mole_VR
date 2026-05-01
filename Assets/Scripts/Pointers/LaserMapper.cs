@@ -267,6 +267,7 @@ public class LaserMapper : MonoBehaviour
             {"MotorSpaceGainX", gainX},
             {"MotorSpaceGainY", gainY},
             {"MotorSpaceName", gameObject.name},
+            {"PlayPeriod", GameDirector.currentPlayPeriod}
         });
     }
 

@@ -258,6 +258,7 @@ public class EventLogger : MonoBehaviour
             }
         }
 
+        datas["PlayPeriod"] = GameDirector.currentPlayPeriod;
         datas["TimeSinceLastEvent"] = GetPreviousEventTimeDiff().ToString("0.0000").Replace(",", ".");
         datas["PupilTime"] = timeSync != null ? timeSync.GetPupilTimestamp().ToString().Replace(",", ".") : "NULL";
         datas["UnityToPupilTimeOffset"] = timeSync != null ? timeSync.UnityToPupilTimeOffset.ToString().Replace(",", ".") : "NULL";
