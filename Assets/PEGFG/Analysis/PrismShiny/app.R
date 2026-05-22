@@ -1975,7 +1975,7 @@ build_participant_signed_plot <- function(participant_data) {
       )
     )
 
-  ggplot(plot_data, aes(x = EffectGroup, y = SignedDelta, color = TaskMode, group = TaskMode, text = hover_text)) +
+  ggplot(plot_data, aes(x = EffectGroup, y = SignedDelta, color = TaskMode, group = TaskMode)) +
     geom_hline(yintercept = 0, color = "#94a3b8", linetype = "dashed") +
     geom_line(alpha = 0.45) +
     geom_point(size = 3) +
@@ -2011,7 +2011,7 @@ build_participant_magnitude_plot <- function(participant_data) {
       )
     )
 
-  ggplot(plot_data, aes(x = EffectGroup, y = Magnitude, fill = TaskMode, text = hover_text)) +
+  ggplot(plot_data, aes(x = EffectGroup, y = Magnitude, fill = TaskMode)) +
     geom_col(position = position_dodge(width = 0.7), width = 0.65, alpha = 0.82) +
     labs(
       title = "Participant Absolute Shift",
@@ -2057,7 +2057,12 @@ build_effect_minus_none_dataset <- function(compare_data) {
 }
 
 build_participant_normalized_plot <- function(participant_data) {
-  normalized <- build_effect_minus_none_dataset(participant_data) |>
+  normalized_source <- build_effect_minus_none_dataset(participant_data)
+  if (!"ConfiguredEffectMode" %in% names(normalized_source)) {
+    return(ggplot() + annotate("text", x = 1, y = 1, label = "No normalized participant data available") + theme_void())
+  }
+
+  normalized <- normalized_source |>
     filter(ConfiguredEffectMode != "None")
 
   if (nrow(normalized) == 0) {
@@ -2077,7 +2082,7 @@ build_participant_normalized_plot <- function(participant_data) {
       )
     )
 
-  ggplot(plot_data, aes(x = EffectGroup, y = MagnitudeMinusNone, fill = TaskMode, text = hover_text)) +
+  ggplot(plot_data, aes(x = EffectGroup, y = MagnitudeMinusNone, fill = TaskMode)) +
     geom_hline(yintercept = 0, color = "#475569", linetype = "dashed") +
     geom_col(position = position_dodge(width = 0.7), width = 0.65, alpha = 0.84) +
     labs(
@@ -2115,11 +2120,16 @@ build_normalized_group_plot <- function(normalized_data) {
   ggplot(plot_data, aes(x = EffectGroup, y = MagnitudeMinusNone, color = InputModeLabel)) +
     geom_hline(yintercept = 0, color = "#475569", linetype = "dashed") +
     geom_boxplot(outlier.shape = NA, alpha = 0.22, position = position_dodge(width = 0.6)) +
-    geom_jitter(width = 0.10, height = 0, size = 2.6, alpha = 0.86) +
+    geom_rug(
+      aes(color = InputModeLabel),
+      sides = "l",
+      alpha = 0.7,
+      linewidth = 0.55
+    ) +
     facet_wrap(~TaskMode, scales = "free_y") +
     labs(
       title = "Perturbation Shift Above Participant-specific None",
-      subtitle = "Each point subtracts that participant's no-effect baseline-to-post shift for the same task. Values above zero suggest effect beyond ordinary drift/noise. Units: cm.",
+      subtitle = "Boxplots show the distribution after subtracting each participant's no-effect shift. Side ticks show individual modules. Values above zero suggest effect beyond ordinary drift/noise. Units: cm.",
       x = "Configured effect",
       y = "Extra shift beyond None (cm)",
       color = "Input mode"
@@ -2128,9 +2138,7 @@ build_normalized_group_plot <- function(normalized_data) {
 }
 
 # Comparison plot #1:
-# compact condition summary. The old run-order line plot was useful while testing
-# the pipeline, but it is too visually noisy for interpretation once many sessions
-# are loaded.
+# grouped distributions by configured effect and input mode.
 build_comparison_plot <- function(compare_data) {
   if (nrow(compare_data) == 0) {
     return(
@@ -2140,67 +2148,21 @@ build_comparison_plot <- function(compare_data) {
     )
   }
 
-  summary_data <- compare_data |>
-    mutate(
-      EffectGroup = factor(ConfiguredEffectMode, levels = c("None", "Translation", "Rotation", "Skew")),
-      InputModeLabel = ifelse(is.na(InputModeLabel) | InputModeLabel == "", "unknown", InputModeLabel)
-    ) |>
-    group_by(TaskMode, EffectGroup, InputModeLabel) |>
-    summarise(
-      MedianMagnitude = median(Magnitude, na.rm = TRUE),
-      Q1 = quantile(Magnitude, 0.25, na.rm = TRUE),
-      Q3 = quantile(Magnitude, 0.75, na.rm = TRUE),
-      N = n(),
-      .groups = "drop"
-    ) |>
-    filter(!is.na(EffectGroup), is.finite(MedianMagnitude))
-
-  ggplot(summary_data, aes(x = EffectGroup, y = MedianMagnitude, fill = InputModeLabel)) +
-    geom_col(position = position_dodge(width = 0.75), width = 0.65, alpha = 0.82) +
-    geom_errorbar(
-      aes(ymin = Q1, ymax = Q3),
-      position = position_dodge(width = 0.75),
-      width = 0.2,
-      linewidth = 0.65
-    ) +
-    geom_text(
-      aes(label = paste0("n=", N)),
-      position = position_dodge(width = 0.75),
-      vjust = -0.45,
-      size = 3
-    ) +
-    facet_wrap(~TaskMode, scales = "free_y") +
-    labs(
-      title = "Typical Baseline-to-post Shift by Condition",
-      subtitle = "Bars show median absolute shift in perceived middle; whiskers show the middle 50% of participants. Units: cm.",
-      x = "Configured effect",
-      y = "Median shift from baseline to post (cm)",
-      fill = "Input mode"
-    ) +
-    theme_minimal(base_size = 13)
-}
-
-# Comparison plot #2:
-# grouped distributions by configured effect and input mode.
-build_grouped_comparison_plot <- function(compare_data) {
-  if (nrow(compare_data) == 0) {
-    return(
-      ggplot() +
-        annotate("text", x = 1, y = 1, label = "No grouped comparison data available") +
-        theme_void()
-    )
-  }
-
   grouped <- compare_data |>
-    mutate(EffectGroup = ifelse(is.na(ConfiguredEffectMode) | ConfiguredEffectMode == "", "Unknown", ConfiguredEffectMode))
+    mutate(EffectGroup = factor(ConfiguredEffectMode, levels = c("None", "Translation", "Rotation", "Skew")))
 
   ggplot(grouped, aes(x = EffectGroup, y = Magnitude, color = InputModeLabel)) +
     geom_boxplot(outlier.shape = NA, alpha = 0.25, position = position_dodge(width = 0.6)) +
-    geom_jitter(width = 0.12, height = 0, size = 2.4, alpha = 0.8) +
+    geom_rug(
+      aes(color = InputModeLabel),
+      sides = "l",
+      alpha = 0.7,
+      linewidth = 0.55
+    ) +
     facet_wrap(~TaskMode, scales = "free_y") +
     labs(
       title = "Participant-level Baseline-to-post Shifts",
-      subtitle = "Each dot is one module. The value is the absolute shift in perceived middle from baseline to post. Units: cm.",
+      subtitle = "Boxplots summarize the distribution. Side ticks show individual modules without using dot markers. Units: cm.",
       x = "Configured effect",
       y = "Absolute shift from baseline to post (cm)",
       color = "Input mode"
@@ -2244,7 +2206,7 @@ ui <- fluidPage(
           "Summary",
           fluidRow(
             column(4, uiOutput("summary_cards")),
-            column(8, plotlyOutput("summary_plot", height = "360px"))
+            column(8, plotOutput("summary_plot", height = "360px"))
           ),
           h3("Session Summary Table"),
           DTOutput("summary_table")
@@ -2267,7 +2229,6 @@ ui <- fluidPage(
             column(4, uiOutput("compare_cards")),
             column(8, plotOutput("compare_plot", height = "360px"))
           ),
-          plotOutput("compare_group_plot", height = "360px"),
           plotOutput("compare_normalized_plot", height = "380px"),
           h3("Comparison Table"),
           DTOutput("compare_table")
@@ -2283,10 +2244,10 @@ ui <- fluidPage(
             column(8, uiOutput("participant_cards"))
           ),
           fluidRow(
-            column(6, plotlyOutput("participant_signed_plot", height = "380px")),
-            column(6, plotlyOutput("participant_magnitude_plot", height = "380px"))
+            column(6, plotOutput("participant_signed_plot", height = "380px")),
+            column(6, plotOutput("participant_magnitude_plot", height = "380px"))
           ),
-          plotlyOutput("participant_normalized_plot", height = "360px"),
+          plotOutput("participant_normalized_plot", height = "360px"),
           h3("Participant Module Table"),
           DTOutput("participant_table")
         ),
@@ -2298,7 +2259,7 @@ ui <- fluidPage(
           ),
           fluidRow(
             column(4, uiOutput("quality_cards")),
-            column(8, plotlyOutput("quality_plot", height = "420px"))
+            column(8, plotOutput("quality_plot", height = "420px"))
           ),
           DTOutput("quality_table")
         ),
@@ -2308,7 +2269,7 @@ ui <- fluidPage(
             column(3, selectInput("spatial_task", "Task", choices = c("Exposure", "OpenLoop"))),
             column(3, selectInput("spatial_block", "Block", choices = c("Exposure", "Baseline", "Post")))
           ),
-          plotlyOutput("spatial_plot", height = "620px")
+          plotOutput("spatial_plot", height = "620px")
         ),
         tabPanel(
           "Trajectories",
@@ -2320,9 +2281,9 @@ ui <- fluidPage(
           ),
           checkboxInput("trajectory_overlap", "Overlay Baseline and Post for non-exposure tasks", value = FALSE),
           uiOutput("trajectory_help"),
-          plotlyOutput("trajectory_plot", height = "520px"),
+          plotOutput("trajectory_plot", height = "520px"),
           plotlyOutput("trajectory_phase_plot", height = "640px"),
-          plotlyOutput("trajectory_error_plot", height = "320px")
+          plotOutput("trajectory_error_plot", height = "320px")
         )
       )
     )
@@ -2611,8 +2572,8 @@ server <- function(input, output, session) {
   })
 
   # Summary-tab plot.
-  output$summary_plot <- renderPlotly({
-    ggplotly(build_summary_plot(current_summary_data()))
+  output$summary_plot <- renderPlot({
+    build_summary_plot(current_summary_data())
   })
 
   # When a new session is selected, update the task choices for the tab dropdowns
@@ -2779,16 +2740,16 @@ server <- function(input, output, session) {
     )
   })
 
-  output$participant_signed_plot <- renderPlotly({
-    ggplotly(build_participant_signed_plot(participant_data()), tooltip = "text")
+  output$participant_signed_plot <- renderPlot({
+    build_participant_signed_plot(participant_data())
   })
 
-  output$participant_magnitude_plot <- renderPlotly({
-    ggplotly(build_participant_magnitude_plot(participant_data()), tooltip = "text")
+  output$participant_magnitude_plot <- renderPlot({
+    build_participant_magnitude_plot(participant_data())
   })
 
-  output$participant_normalized_plot <- renderPlotly({
-    ggplotly(build_participant_normalized_plot(participant_data()), tooltip = "text")
+  output$participant_normalized_plot <- renderPlot({
+    build_participant_normalized_plot(participant_data())
   })
 
   output$participant_table <- renderDT({
@@ -2871,10 +2832,6 @@ server <- function(input, output, session) {
   # Compare-tab plots and table.
   output$compare_plot <- renderPlot({
     build_comparison_plot(comparison_data_filtered())
-  })
-
-  output$compare_group_plot <- renderPlot({
-    build_grouped_comparison_plot(comparison_data_filtered())
   })
 
   output$compare_normalized_plot <- renderPlot({
@@ -3086,10 +3043,10 @@ server <- function(input, output, session) {
   })
 
   # Quality-tab plot and table.
-  output$quality_plot <- renderPlotly({
+  output$quality_plot <- renderPlot({
     req(input$quality_task, input$quality_block)
     quality_trials <- extract_quality_trials(current_data()$event, input$quality_task, input$quality_block)
-    ggplotly(build_quality_plot(quality_trials, input$quality_task, input$quality_block))
+    build_quality_plot(quality_trials, input$quality_task, input$quality_block)
   })
 
   output$quality_table <- renderDT({
@@ -3114,14 +3071,14 @@ server <- function(input, output, session) {
   })
 
   # Spatial plot for the selected task/block.
-  output$spatial_plot <- renderPlotly({
-    ggplotly(build_spatial_plot(current_data()$event, input$spatial_task, input$spatial_block))
+  output$spatial_plot <- renderPlot({
+    build_spatial_plot(current_data()$event, input$spatial_task, input$spatial_block)
   })
 
   # Main trajectories plot.
-  output$trajectory_plot <- renderPlotly({
+  output$trajectory_plot <- renderPlot({
     req(input$trajectory_attempt)
-    ggplotly(build_trajectory_overview_plot(
+    build_trajectory_overview_plot(
       current_data()$sample,
       current_data()$event,
       selected_task = input$trajectory_task,
@@ -3129,7 +3086,7 @@ server <- function(input, output, session) {
       selected_attempt = as_num(input$trajectory_attempt),
       time_window = input$trajectory_window,
       overlap_blocks = isTRUE(input$trajectory_overlap)
-    ))
+    )
   })
 
   # Phase plot that breaks a highlighted attempt into acceleration,
@@ -3150,13 +3107,13 @@ server <- function(input, output, session) {
   })
 
   # Lower trajectories plot showing final error progression.
-  output$trajectory_error_plot <- renderPlotly({
-    ggplotly(build_attempt_error_plot(
+  output$trajectory_error_plot <- renderPlot({
+    build_attempt_error_plot(
       current_data()$event,
       selected_task = input$trajectory_task,
       selected_block = input$trajectory_block,
       overlap_blocks = isTRUE(input$trajectory_overlap)
-    ))
+    )
   })
 }
 
