@@ -1,0 +1,2 @@
+DeviceID;Email;ExposureHitRadiusCm;ExposureHitRadiusMeters;Framecount;InputModeLabel;MainController;Product;RightControllerMain;Scene;SessionDuration;SessionID;SessionState;Timestamp;TrackingMode;XRBackend
+85449bb515d38eca111016248ac99e8c86479117;anonymous;11.2000;0.1120;52824;embodied;Right Controller;PrismEffectAdaptation;TRUE;TestAndDebug;59.9734;d288266b-4d38-407e-a4e5-bdf182e8a1e7;Finished;2026-03-23 14:00:10.1582;Hands;OpenXR

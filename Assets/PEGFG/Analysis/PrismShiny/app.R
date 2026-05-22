@@ -26,20 +26,112 @@ library(tidyr)
 #    when the user changes a dropdown, the relevant reactive expressions
 #    automatically recompute and the visible plots/tables update.
 
-# Resolve the app folder and then walk up to the project Assets folder.
-# This makes the app portable inside the repository without hardcoding a full path.
-app_dir <- normalizePath(getwd(), winslash = "/", mustWork = FALSE)
-project_assets_dir <- normalizePath(file.path(app_dir, "..", "..", ".."), winslash = "/", mustWork = FALSE)
-default_log_dir <- normalizePath(file.path(project_assets_dir, "PrismLogging"), winslash = "/", mustWork = FALSE)
+# Resolve the most likely PrismLogging folder without assuming that getwd()
+# necessarily equals the Shiny app directory. Depending on whether the app is
+# launched from Overleaf/RStudio buttons, sourced manually, or run from the repo
+# root, getwd() can point at different places. We therefore search nearby
+# ancestors for both the current canonical location (Assets/PrismLogging) and the
+# older root-level fallback (PrismLogging), then pick the richest match.
+find_prism_log_dir <- function(start_dir = getwd(), max_depth = 8) {
+  start_dir <- normalizePath(start_dir, winslash = "/", mustWork = FALSE)
+
+  ancestors <- character()
+  current <- start_dir
+  for (i in seq_len(max_depth)) {
+    ancestors <- c(ancestors, current)
+    parent <- dirname(current)
+    if (identical(parent, current)) break
+    current <- parent
+  }
+
+  candidate_dirs <- unique(c(
+    ancestors,
+    file.path(ancestors, "Assets", "PrismLogging", "Participants"),
+    file.path(ancestors, "Assets", "PrismLogging"),
+    file.path(ancestors, "PrismLogging", "Participants"),
+    file.path(ancestors, "PrismLogging")
+  ))
+
+  existing_dirs <- candidate_dirs[dir.exists(candidate_dirs)]
+  if (length(existing_dirs) == 0) {
+    return(normalizePath(file.path(start_dir, "Assets", "PrismLogging", "Participants"), winslash = "/", mustWork = FALSE))
+  }
+
+  session_counts <- map_int(existing_dirs, function(dir_path) {
+    length(list.files(dir_path, pattern = "_Meta\\.csv$", full.names = FALSE))
+  })
+
+  preference_bonus <- ifelse(grepl("Assets/PrismLogging/Participants$", existing_dirs), 200000L,
+                       ifelse(grepl("Assets/PrismLogging$", existing_dirs), 100000L,
+                       ifelse(grepl("PrismLogging/Participants$", existing_dirs), 50000L, 0L)))
+  best_index <- which.max(session_counts + preference_bonus)
+  normalizePath(existing_dirs[[best_index]], winslash = "/", mustWork = FALSE)
+}
+
+# If the user pastes the repo root or Assets folder instead of the actual
+# logging directory, this helper resolves that into the real PrismLogging folder.
+resolve_log_dir <- function(path) {
+  path <- normalizePath(path, winslash = "/", mustWork = FALSE)
+
+  candidates <- unique(c(
+    path,
+    file.path(path, "Participants"),
+    file.path(path, "Assets", "PrismLogging", "Participants"),
+    file.path(path, "Assets", "PrismLogging"),
+    file.path(path, "PrismLogging", "Participants"),
+    file.path(path, "PrismLogging")
+  ))
+
+  existing <- candidates[dir.exists(candidates)]
+  if (length(existing) == 0) return(path)
+
+  session_counts <- map_int(existing, function(dir_path) {
+    length(list.files(dir_path, pattern = "_Meta\\.csv$", full.names = FALSE))
+  })
+
+  preference_bonus <- ifelse(grepl("Assets/PrismLogging/Participants$", existing), 200000L,
+                       ifelse(grepl("Assets/PrismLogging$", existing), 100000L,
+                       ifelse(grepl("PrismLogging/Participants$", existing), 50000L, 0L)))
+  best_index <- which.max(session_counts + preference_bonus)
+  normalizePath(existing[[best_index]], winslash = "/", mustWork = FALSE)
+}
+
+normalize_session_scope <- function(scope) {
+  if (is.null(scope) || identical(scope, "")) return("Participant")
+  if (startsWith(scope, "Participant")) return("Participant")
+  if (startsWith(scope, "Debug")) return("Debug")
+  if (startsWith(scope, "All")) return("All")
+  "Participant"
+}
+
+format_session_timestamp <- function(timestamp_text) {
+  if (is.na(timestamp_text) || identical(timestamp_text, "")) return("")
+  sub("\\.[0-9]+$", "", timestamp_text)
+}
+
+default_log_dir <- find_prism_log_dir()
 
 # ---------- Basic CSV / parsing helpers ----------
 
 # Read one semicolon-separated CSV file and fail safely.
 # If a file is malformed or temporarily unavailable, return an empty tibble
 # instead of crashing the whole app.
-safe_read_csv <- function(path) {
+safe_read_csv <- function(path, n_max = Inf, columns = NULL) {
   tryCatch(
-    suppressMessages(read_delim(path, delim = ";", show_col_types = FALSE, progress = FALSE)),
+    suppressMessages(
+      if (is.null(columns)) {
+        read_delim(path, delim = ";", show_col_types = FALSE, progress = FALSE, n_max = n_max)
+      } else {
+        read_delim(
+          path,
+          delim = ";",
+          show_col_types = FALSE,
+          progress = FALSE,
+          n_max = n_max,
+          col_select = any_of(columns)
+        )
+      }
+    ),
     error = function(e) tibble()
   )
 }
@@ -57,31 +149,254 @@ clean_log_df <- function(df) {
 # These are intentionally tiny wrappers around safe_read_csv() so session discovery
 # can inspect files without loading everything at once.
 read_session_id <- function(path) {
-  data <- clean_log_df(safe_read_csv(path))
+  data <- clean_log_df(safe_read_csv(path, n_max = 1, columns = "SessionID"))
   if (!"SessionID" %in% names(data) || nrow(data) == 0) return(NA_character_)
   as.character(data$SessionID[[1]])
 }
 
 read_session_timestamp <- function(path) {
-  data <- clean_log_df(safe_read_csv(path))
+  data <- clean_log_df(safe_read_csv(path, n_max = 1, columns = "Timestamp"))
   if (!"Timestamp" %in% names(data) || nrow(data) == 0) return(NA_character_)
   as.character(data$Timestamp[[1]])
 }
 
 read_session_state <- function(path) {
-  data <- clean_log_df(safe_read_csv(path))
+  data <- clean_log_df(safe_read_csv(path, n_max = 1, columns = "SessionState"))
   if (!"SessionState" %in% names(data) || nrow(data) == 0) return(NA_character_)
   as.character(data$SessionState[[1]])
 }
 
 read_meta_value <- function(path, key) {
-  data <- clean_log_df(safe_read_csv(path))
+  data <- clean_log_df(safe_read_csv(path, n_max = 1, columns = key))
   if (!(key %in% names(data)) || nrow(data) == 0) return(NA_character_)
   as.character(data[[key]][[1]])
 }
 
+derive_global_participant_id <- function(experiment_mode, input_mode_label, study_participant_index) {
+  experiment_mode <- tolower(trimws(coalesce(experiment_mode, "")))
+  input_mode_label <- tolower(trimws(coalesce(input_mode_label, "")))
+  participant_index <- suppressWarnings(as.integer(study_participant_index))
+
+  if (experiment_mode != "participant" || is.na(participant_index) || participant_index < 1) {
+    return(NA_integer_)
+  }
+
+  if (input_mode_label == "controller") {
+    return((participant_index * 2L) - 1L)
+  }
+
+  if (input_mode_label == "embodied") {
+    return(participant_index * 2L)
+  }
+
+  NA_integer_
+}
+
 as_num <- function(x) suppressWarnings(as.numeric(x))
 as_time <- function(x) suppressWarnings(as.POSIXct(x, tz = "UTC"))
+
+coerce_summary_numeric_columns <- function(summary_data) {
+  if (nrow(summary_data) == 0) return(summary_data)
+
+  numeric_columns <- c(
+    "BaselineValue", "BaselineSd", "PostValue", "PostSd",
+    "SignedDelta", "Magnitude", "NormalizedMagnitude", "TrialCount",
+    "RawBaselineMean", "RawPostMean", "RawSignedDelta", "RawMagnitude",
+    "StudyGlobalParticipantId", "StudyParticipantIndex", "StudySessionIndex",
+    "Framecount"
+  )
+
+  for (column_name in intersect(numeric_columns, names(summary_data))) {
+    summary_data[[column_name]] <- as_num(summary_data[[column_name]])
+  }
+
+  summary_data
+}
+
+has_cols <- function(data, ...) {
+  required <- c(...)
+  all(required %in% names(data))
+}
+
+safe_num_col <- function(data, key, default = NA_real_) {
+  if (key %in% names(data)) {
+    return(as_num(data[[key]]))
+  }
+  rep(default, nrow(data))
+}
+
+safe_chr_col <- function(data, key, default = NA_character_) {
+  if (key %in% names(data)) {
+    return(as.character(data[[key]]))
+  }
+  rep(default, nrow(data))
+}
+
+meta_num <- function(meta_data, key, default = NA_real_) {
+  if (!has_cols(meta_data, key) || nrow(meta_data) == 0) return(default)
+  value <- as_num(meta_data[[key]][[1]])
+  if (is.na(value)) default else value
+}
+
+resolve_exposure_radius_m <- function(meta_data, event_data) {
+  meta_radius <- meta_num(meta_data, "ExposureHitRadiusMeters", NA_real_)
+  if (is.finite(meta_radius)) {
+    return(meta_radius)
+  }
+
+  event_radius <- event_data |>
+    mutate(target_radius_m = safe_num_col(event_data, "TargetRadiusMeters")) |>
+    filter(!is.na(target_radius_m), is.finite(target_radius_m), target_radius_m > 0) |>
+    summarise(value = dplyr::first(target_radius_m)) |>
+    pull(value)
+
+  if (length(event_radius) == 0 || !is.finite(event_radius)) {
+    return(NA_real_)
+  }
+
+  event_radius
+}
+
+stable_cluster_center <- function(x) {
+  x <- x[is.finite(x)]
+  if (length(x) == 0) return(NA_real_)
+  if (length(x) == 1) return(x[[1]])
+
+  raw_center <- median(x, na.rm = TRUE)
+  robust_scale <- IQR(x, na.rm = TRUE) / 1.349
+  if (!is.finite(robust_scale) || robust_scale < 1e-6) {
+    robust_scale <- sd(x, na.rm = TRUE)
+  }
+  if (!is.finite(robust_scale) || robust_scale < 1e-6) {
+    return(mean(x, na.rm = TRUE))
+  }
+
+  weights <- 1 / (1 + (abs(x - raw_center) / robust_scale)^2)
+  weighted.mean(x, weights, na.rm = TRUE)
+}
+
+stable_cluster_spread <- function(x) {
+  x <- x[is.finite(x)]
+  if (length(x) <= 1) return(NA_real_)
+
+  center <- stable_cluster_center(x)
+  robust_scale <- IQR(x, na.rm = TRUE) / 1.349
+  if (!is.finite(robust_scale) || robust_scale < 1e-6) {
+    robust_scale <- sd(x, na.rm = TRUE)
+  }
+  if (!is.finite(robust_scale) || robust_scale < 1e-6) {
+    return(0)
+  }
+
+  weights <- 1 / (1 + (abs(x - median(x, na.rm = TRUE)) / robust_scale)^2)
+  sqrt(weighted.mean((x - center)^2, weights, na.rm = TRUE))
+}
+
+extract_perceived_center_trials <- function(event_data) {
+  if (nrow(event_data) == 0) return(tibble())
+
+  event_data |>
+    filter(
+      TaskMode %in% c("OpenLoop", "LineBisection"),
+      BlockType %in% c("Baseline", "Post"),
+      Event == "Trial Accepted"
+    ) |>
+    mutate(
+      TrialIndex = as_num(TrialIndex),
+      PerceivedCenterCm = case_when(
+        TaskMode == "OpenLoop" ~ as_num(SignedOffsetCm),
+        TaskMode == "LineBisection" ~ as_num(ErrorCm),
+        TRUE ~ NA_real_
+      )
+    ) |>
+    filter(!is.na(TrialIndex), is.finite(PerceivedCenterCm))
+}
+
+build_stable_perceived_center_aftereffects <- function(summary_aftereffect, event_data) {
+  trials <- extract_perceived_center_trials(event_data)
+  if (nrow(trials) == 0) return(summary_aftereffect)
+
+  block_centers <- trials |>
+    group_by(TaskMode, BlockType) |>
+    summarise(
+      CenterValue = stable_cluster_center(PerceivedCenterCm),
+      CenterSpread = stable_cluster_spread(PerceivedCenterCm),
+      RawMeanValue = mean(PerceivedCenterCm, na.rm = TRUE),
+      RawSdValue = sd(PerceivedCenterCm, na.rm = TRUE),
+      TrialCount = n(),
+      .groups = "drop"
+    )
+
+  robust_wide <- block_centers |>
+    select(TaskMode, BlockType, CenterValue, CenterSpread, RawMeanValue, RawSdValue, TrialCount) |>
+    pivot_wider(
+      names_from = BlockType,
+      values_from = c(CenterValue, CenterSpread, RawMeanValue, RawSdValue, TrialCount),
+      names_sep = ""
+    )
+
+  required_wide_cols <- c("CenterValueBaseline", "CenterValuePost")
+  if (!all(required_wide_cols %in% names(robust_wide))) {
+    return(summary_aftereffect)
+  }
+
+  for (missing_col in setdiff(
+    c(
+      "CenterSpreadBaseline", "CenterSpreadPost", "RawMeanValueBaseline", "RawMeanValuePost",
+      "TrialCountBaseline", "TrialCountPost"
+    ),
+    names(robust_wide)
+  )) {
+    robust_wide[[missing_col]] <- NA_real_
+  }
+
+  robust_rows <- robust_wide |>
+    filter(!is.na(CenterValueBaseline), !is.na(CenterValuePost)) |>
+    mutate(
+      SummaryType = "Aftereffect",
+      BlockType = "BaselineToPost",
+      MetricName = "StablePerceivedCenter",
+      MetricUnits = "cm",
+      BaselineValue = CenterValueBaseline,
+      PostValue = CenterValuePost,
+      BaselineSd = CenterSpreadBaseline,
+      PostSd = CenterSpreadPost,
+      SignedDelta = PostValue - BaselineValue,
+      Magnitude = abs(SignedDelta),
+      NormalizedMagnitude = ifelse(
+        is.na(BaselineSd) | BaselineSd < 1e-6,
+        NA_real_,
+        Magnitude / BaselineSd
+      ),
+      TrialCount = pmin(TrialCountBaseline, TrialCountPost, na.rm = TRUE),
+      Notes = "Stable perceived-center shift; all accepted trials included with far responses down-weighted, not removed.",
+      Estimator = "StableClusterCenter",
+      RawBaselineMean = RawMeanValueBaseline,
+      RawPostMean = RawMeanValuePost,
+      RawSignedDelta = RawPostMean - RawBaselineMean,
+      RawMagnitude = abs(RawSignedDelta)
+    )
+
+  if (nrow(robust_rows) == 0) return(summary_aftereffect)
+
+  metadata_source <- summary_aftereffect |>
+    select(any_of(c(
+      "SessionID", "Timestamp", "ExperimentMode", "StudyGlobalParticipantId", "StudyInputMode",
+      "StudyParticipantIndex", "StudyResolvedEffect", "StudyResolvedTask", "StudySessionIndex",
+      "StudyTaskOrder", "ConfiguredEffectMode", "AppliedEffectMode", "ConfirmMitigationMode",
+      "ActiveHand", "TrackingMode", "XRBackend"
+    ))) |>
+    slice(1)
+
+  if (nrow(metadata_source) == 0) {
+    return(robust_rows)
+  }
+
+  bind_cols(
+    metadata_source[rep(1, nrow(robust_rows)), , drop = FALSE],
+    robust_rows |> select(-any_of(names(metadata_source)))
+  )
+}
 
 # Scan one logging directory and reconstruct complete sessions from the separate
 # Meta / Event / Sample / Summary CSV files.
@@ -89,6 +404,7 @@ as_time <- function(x) suppressWarnings(as.POSIXct(x, tz = "UTC"))
 # The Unity pipeline writes one file per collection, so this function groups those
 # files back into one "session index" row that the rest of the app can work with.
 discover_sessions <- function(log_dir) {
+  log_dir <- resolve_log_dir(log_dir)
   files <- list.files(log_dir, pattern = "\\.(csv)$", full.names = TRUE)
   files <- files[!grepl("\\.meta$", files, ignore.case = TRUE)]
   files <- files[grepl("_(Meta|Event|Sample|Summary)\\.csv$", basename(files))]
@@ -100,9 +416,13 @@ discover_sessions <- function(log_dir) {
       file_name = basename(path),
       file_type = str_match(file_name, "_(Meta|Event|Sample|Summary)\\.csv$")[, 2],
       session_id = map_chr(path, read_session_id),
-      timestamp = map_chr(path, read_session_timestamp),
+      timestamp = map_chr(path, ~if (grepl("_Meta\\.csv$", .x)) read_session_timestamp(.x) else NA_character_),
       session_state = map_chr(path, ~if (grepl("_Meta\\.csv$", .x)) read_session_state(.x) else NA_character_),
-      input_mode_label = map_chr(path, ~if (grepl("_Meta\\.csv$", .x)) read_meta_value(.x, "InputModeLabel") else NA_character_)
+      input_mode_label = map_chr(path, ~if (grepl("_Meta\\.csv$", .x)) read_meta_value(.x, "InputModeLabel") else NA_character_),
+      experiment_mode = map_chr(path, ~if (grepl("_Meta\\.csv$", .x)) read_meta_value(.x, "ExperimentMode") else NA_character_),
+      study_participant_index = map_chr(path, ~if (grepl("_Meta\\.csv$", .x)) read_meta_value(.x, "StudyParticipantIndex") else NA_character_),
+      study_global_participant_id = map_chr(path, ~if (grepl("_Meta\\.csv$", .x)) read_meta_value(.x, "StudyGlobalParticipantId") else NA_character_),
+      study_session_index = map_chr(path, ~if (grepl("_Meta\\.csv$", .x)) read_meta_value(.x, "StudySessionIndex") else NA_character_)
     ) |>
     filter(!is.na(session_id), session_id != "") |>
     group_by(session_id) |>
@@ -110,11 +430,31 @@ discover_sessions <- function(log_dir) {
       timestamp = first(na.omit(timestamp)),
       session_state = first(na.omit(session_state)),
       input_mode_label = first(na.omit(input_mode_label)),
+      experiment_mode = first(na.omit(experiment_mode)),
+      study_participant_index = first(na.omit(study_participant_index)),
+      study_global_participant_id = first(na.omit(study_global_participant_id)),
+      study_session_index = first(na.omit(study_session_index)),
       Meta = first(path[file_type == "Meta"]),
       Event = first(path[file_type == "Event"]),
       Sample = first(path[file_type == "Sample"]),
       Summary = first(path[file_type == "Summary"]),
       .groups = "drop"
+    ) |>
+    mutate(
+      experiment_mode = ifelse(is.na(experiment_mode), "", trimws(experiment_mode)),
+      input_mode_label = ifelse(is.na(input_mode_label), "", trimws(input_mode_label)),
+      session_state = ifelse(is.na(session_state), "", trimws(session_state)),
+      study_participant_index = suppressWarnings(as.integer(study_participant_index)),
+      study_global_participant_id = suppressWarnings(as.integer(study_global_participant_id)),
+      study_session_index = suppressWarnings(as.integer(study_session_index)),
+      study_global_participant_id = dplyr::coalesce(
+        study_global_participant_id,
+        vapply(
+          seq_len(n()),
+          function(i) derive_global_participant_id(experiment_mode[[i]], input_mode_label[[i]], study_participant_index[[i]]),
+          integer(1)
+        )
+      )
     ) |>
     arrange(desc(timestamp))
 }
@@ -127,7 +467,7 @@ load_session_data <- function(session_row) {
     meta = clean_log_df(safe_read_csv(session_row$Meta)),
     event = clean_log_df(safe_read_csv(session_row$Event)),
     sample = clean_log_df(safe_read_csv(session_row$Sample)),
-    summary = clean_log_df(safe_read_csv(session_row$Summary))
+    summary = coerce_summary_numeric_columns(clean_log_df(safe_read_csv(session_row$Summary)))
   )
 }
 
@@ -154,7 +494,7 @@ build_summary_plot <- function(summary_data) {
     geom_col(width = 0.6) +
     geom_text(aes(label = sprintf("%.2f", Magnitude)), vjust = -0.4, size = 4) +
     labs(
-      title = "Aftereffect Magnitude",
+      title = "Stable Perceived-center Shift",
       x = "Task",
       y = "Magnitude"
     ) +
@@ -411,20 +751,69 @@ build_spatial_plot <- function(event_data, selected_task = "Exposure", selected_
     )
   }
 
-  targets <- event_subset |>
+  targets_raw <- event_subset |>
     filter(Event == "Mole Spawned") |>
     transmute(
       kind = "Target",
       x = as_num(MolePositionWorldX),
-      y = as_num(MolePositionWorldY),
-      label = case_when(
-        as_num(MolePositionWorldX) < -0.1 ~ "Left",
-        as_num(MolePositionWorldX) > 0.1 ~ "Right",
-        TRUE ~ "Center"
-      )
+      y = as_num(MolePositionWorldY)
     ) |>
     filter(!is.na(x), !is.na(y)) |>
-    distinct(x, y, label, .keep_all = TRUE)
+    mutate(
+      x_group = round(x, 2),
+      y_group = round(y, 2)
+    ) |>
+    group_by(x_group, y_group) |>
+    summarise(
+      kind = "Target",
+      x = median(x, na.rm = TRUE),
+      y = median(y, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    arrange(x)
+
+  targets <- if (nrow(targets_raw) >= 1) {
+    # Spawn positions can differ by tiny floating-point amounts across repeated
+    # trials. Rather than rely on kmeans, which can become brittle on tiny or odd
+    # subsets, keep a deterministic set of logical target anchors ordered by x.
+    #
+    # If 3 or more grouped positions exist, use:
+    # - leftmost as Left
+    # - median-x position as Center
+    # - rightmost as Right
+    #
+    # If only 2 positions are present, keep Left and Right.
+    # If only 1 is present, treat it as Center.
+    ordered_targets <- targets_raw |>
+      arrange(x)
+
+    if (nrow(ordered_targets) >= 3) {
+      center_index <- ceiling(nrow(ordered_targets) / 2)
+
+      ordered_targets |>
+        slice(c(1, center_index, n())) |>
+        mutate(label = c("Left", "Center", "Right")) |>
+        select(kind, x, y, label)
+    } else if (nrow(ordered_targets) == 2) {
+      ordered_targets |>
+        mutate(label = c("Left", "Right")) |>
+        select(kind, x, y, label)
+    } else {
+      ordered_targets |>
+        mutate(label = "Center") |>
+        select(kind, x, y, label)
+    }
+  } else {
+    targets_raw |>
+      mutate(
+        label = case_when(
+          x < -0.1 ~ "Left",
+          x > 0.1 ~ "Right",
+          TRUE ~ "Center"
+        )
+      ) |>
+      select(kind, x, y, label)
+  }
 
   hits <- event_subset |>
     filter(Event == "Mole Hit") |>
@@ -759,6 +1148,414 @@ build_trajectory_overview_plot <- function(sample_data, event_data, selected_tas
   plot
 }
 
+extract_phase_profile <- function(meta_data, sample_data, event_data, selected_task = "Exposure", selected_block = "Exposure", selected_attempt = NA_real_, time_window = 1.0) {
+  sample_task_subset <- sample_data |>
+    filter(TaskMode == selected_task)
+
+  sample_subset <- sample_data |>
+    filter(TaskMode == selected_task) |>
+    mutate(
+      ts = as_time(Timestamp),
+      active_hand = as.character(ActiveHand),
+      px = as_num(PointerOriginX),
+      py = as_num(PointerOriginY),
+      pz = as_num(PointerOriginZ),
+      fx = as_num(PointerForwardX),
+      fy = as_num(PointerForwardY),
+      fz = as_num(PointerForwardZ),
+      right_move_x = coalesce(safe_num_col(sample_task_subset, "RightMovementAnchorPosWorldX"), safe_num_col(sample_task_subset, "RightControllerPosWorldX")),
+      right_move_y = coalesce(safe_num_col(sample_task_subset, "RightMovementAnchorPosWorldY"), safe_num_col(sample_task_subset, "RightControllerPosWorldY")),
+      right_move_z = coalesce(safe_num_col(sample_task_subset, "RightMovementAnchorPosWorldZ"), safe_num_col(sample_task_subset, "RightControllerPosWorldZ")),
+      left_move_x = coalesce(safe_num_col(sample_task_subset, "LeftMovementAnchorPosWorldX"), safe_num_col(sample_task_subset, "LeftControllerPosWorldX")),
+      left_move_y = coalesce(safe_num_col(sample_task_subset, "LeftMovementAnchorPosWorldY"), safe_num_col(sample_task_subset, "LeftControllerPosWorldY")),
+      left_move_z = coalesce(safe_num_col(sample_task_subset, "LeftMovementAnchorPosWorldZ"), safe_num_col(sample_task_subset, "LeftControllerPosWorldZ")),
+      right_move_source = safe_chr_col(sample_task_subset, "RightMovementAnchorSource"),
+      left_move_source = safe_chr_col(sample_task_subset, "LeftMovementAnchorSource"),
+      move_x = case_when(
+        active_hand == "Left" ~ left_move_x,
+        active_hand == "Right" ~ right_move_x,
+        TRUE ~ coalesce(right_move_x, left_move_x)
+      ),
+      move_y = case_when(
+        active_hand == "Left" ~ left_move_y,
+        active_hand == "Right" ~ right_move_y,
+        TRUE ~ coalesce(right_move_y, left_move_y)
+      ),
+      move_z = case_when(
+        active_hand == "Left" ~ left_move_z,
+        active_hand == "Right" ~ right_move_z,
+        TRUE ~ coalesce(right_move_z, left_move_z)
+      ),
+      move_source = case_when(
+        active_hand == "Left" ~ coalesce(left_move_source, "ControllerPosFallback"),
+        active_hand == "Right" ~ coalesce(right_move_source, "ControllerPosFallback"),
+        TRUE ~ coalesce(right_move_source, left_move_source, "ControllerPosFallback")
+      )
+    ) |>
+    filter(!is.na(ts), !is.na(px), !is.na(py), !is.na(pz), !is.na(fx), !is.na(fy), !is.na(fz))
+
+  if (nrow(sample_subset) == 0) {
+    return(list(error = "No sample rows available for phase analysis"))
+  }
+
+  if (selected_task == "Exposure") {
+    attempt_event <- event_data |>
+      filter(TaskMode == selected_task, BlockType == selected_block, Event %in% c("Mole Hit", "Mole Missed")) |>
+      mutate(
+        AttemptIndex = as_num(AttemptIndex),
+        ts = as_time(Timestamp),
+        target_x = as_num(MolePositionWorldX),
+        target_y = as_num(MolePositionWorldY),
+        target_z = as_num(MolePositionWorldZ),
+        outcome = ifelse(Event == "Mole Hit", "Hit", "Miss"),
+        MoleIdValue = as.character(MoleId)
+      ) |>
+      filter(!is.na(AttemptIndex), !is.na(ts), !is.na(target_x), !is.na(target_y), !is.na(target_z)) |>
+      filter(AttemptIndex == selected_attempt) |>
+      arrange(ts) |>
+      slice(1)
+
+    if (nrow(attempt_event) == 0) {
+      return(list(error = "No exposure attempt was found for the selected index"))
+    }
+
+    spawn_events <- event_data |>
+      filter(TaskMode == selected_task, BlockType == selected_block, Event == "Mole Spawned") |>
+      mutate(
+        ts = as_time(Timestamp),
+        MoleIdValue = as.character(MoleId)
+      ) |>
+      filter(!is.na(ts))
+
+    attempt_mole_id <- attempt_event$MoleIdValue[[1]]
+    confirm_ts <- attempt_event$ts[[1]]
+    spawn_match <- spawn_events |>
+      filter(ts <= confirm_ts)
+    if (!is.na(attempt_mole_id) && attempt_mole_id != "" && attempt_mole_id != "NULL") {
+      spawn_match <- spawn_match |>
+        filter(MoleIdValue == attempt_mole_id)
+    }
+    spawn_match <- spawn_match |>
+      arrange(desc(ts)) |>
+      slice(1)
+
+    spawn_ts <- if (nrow(spawn_match) == 0) confirm_ts - time_window else spawn_match$ts[[1]]
+    window_start <- max(confirm_ts - time_window, spawn_ts)
+    target_radius <- resolve_exposure_radius_m(meta_data, event_data)
+
+    path <- sample_subset |>
+      filter(ts >= window_start, ts <= confirm_ts) |>
+      mutate(
+        ray_t = ifelse(abs(fz) < 1e-4, NA_real_, (attempt_event$target_z[[1]] - pz) / fz),
+        board_x = px + fx * ray_t,
+        board_y = py + fy * ray_t,
+        relative_x = board_x - attempt_event$target_x[[1]],
+        relative_y = board_y - attempt_event$target_y[[1]]
+      ) |>
+      filter(
+        !is.na(ray_t),
+        is.finite(ray_t),
+        ray_t > 0,
+        ray_t < 5,
+        !is.na(relative_x),
+        !is.na(relative_y),
+        is.finite(relative_x),
+        is.finite(relative_y),
+        abs(relative_x) < 1.5,
+        abs(relative_y) < 1.5
+      ) |>
+      arrange(ts)
+
+    title_text <- paste(selected_task, "Attempt", selected_attempt, "Phase Breakdown")
+    subtitle_text <- sprintf("Window limited to the last %.2fs before confirm, capped at target spawn. Outcome: %s.", abs(as.numeric(difftime(confirm_ts, window_start, units = "secs"))), attempt_event$outcome[[1]])
+  } else {
+    trial_start_events <- event_data |>
+      filter(TaskMode == selected_task, BlockType == selected_block, Event == "Trial Started")
+
+    start_event <- trial_start_events |>
+      mutate(
+        TrialIndex = as_num(TrialIndex),
+        ts = as_time(Timestamp),
+        target_x = as_num(TargetWorldX),
+        target_y = as_num(TargetWorldY),
+        target_z = as_num(TargetWorldZ),
+        target_radius = safe_num_col(trial_start_events, "TargetRadiusMeters")
+      ) |>
+      filter(!is.na(TrialIndex), !is.na(ts), !is.na(target_x), !is.na(target_y), !is.na(target_z)) |>
+      filter(TrialIndex == selected_attempt) |>
+      arrange(ts) |>
+      slice(1)
+
+    accepted_event <- event_data |>
+      filter(TaskMode == selected_task, BlockType == selected_block, Event == "Trial Accepted") |>
+      mutate(
+        TrialIndex = as_num(TrialIndex),
+        ts = as_time(Timestamp)
+      ) |>
+      filter(!is.na(TrialIndex), !is.na(ts)) |>
+      filter(TrialIndex == selected_attempt) |>
+      arrange(ts) |>
+      slice(1)
+
+    if (nrow(start_event) == 0 || nrow(accepted_event) == 0) {
+      return(list(error = "Phase timing for this task needs newer sessions with Trial Started logging"))
+    }
+
+    start_ts <- start_event$ts[[1]]
+    confirm_ts <- accepted_event$ts[[1]]
+    target_radius <- ifelse(is.na(start_event$target_radius[[1]]), 0.03, start_event$target_radius[[1]])
+
+    path <- sample_subset |>
+      filter(ts >= start_ts, ts <= confirm_ts) |>
+      mutate(
+        ray_t = ifelse(abs(fz) < 1e-4, NA_real_, (start_event$target_z[[1]] - pz) / fz),
+        board_x = px + fx * ray_t,
+        board_y = py + fy * ray_t,
+        relative_x = board_x - start_event$target_x[[1]],
+        relative_y = board_y - start_event$target_y[[1]]
+      ) |>
+      filter(
+        !is.na(ray_t),
+        is.finite(ray_t),
+        ray_t > 0,
+        ray_t < 5,
+        !is.na(relative_x),
+        !is.na(relative_y),
+        is.finite(relative_x),
+        is.finite(relative_y),
+        abs(relative_x) < 1.5,
+        abs(relative_y) < 1.5
+      ) |>
+      arrange(ts)
+
+    title_text <- paste(selected_task, selected_block, "Trial", selected_attempt, "Phase Breakdown")
+    subtitle_text <- "Full trial window from Trial Started to Trial Accepted."
+  }
+
+  if (nrow(path) < 3) {
+    return(list(error = "Not enough projected samples were available to estimate phases"))
+  }
+
+  path <- path |>
+    mutate(
+      time_sec = as.numeric(difftime(ts, first(ts), units = "secs")),
+      dx = c(NA_real_, diff(relative_x)),
+      dy = c(NA_real_, diff(relative_y)),
+      move_dx = c(NA_real_, diff(move_x)),
+      move_dy = c(NA_real_, diff(move_y)),
+      move_dz = c(NA_real_, diff(move_z)),
+      dt = c(NA_real_, diff(time_sec)),
+      projected_speed_mps = sqrt(dx^2 + dy^2) / pmax(dt, 1e-4),
+      projected_speed_mps = ifelse(is.finite(projected_speed_mps), projected_speed_mps, NA_real_),
+      projected_speed_mps = replace_na(projected_speed_mps, 0),
+      movement_speed_mps = sqrt(move_dx^2 + move_dy^2 + move_dz^2) / pmax(dt, 1e-4),
+      movement_speed_mps = ifelse(is.finite(movement_speed_mps), movement_speed_mps, NA_real_),
+      movement_speed_mps = replace_na(movement_speed_mps, 0),
+      distance_to_target = sqrt(relative_x^2 + relative_y^2)
+    )
+
+  peak_idx <- which.max(path$movement_speed_mps)
+  if (length(peak_idx) == 0 || !is.finite(path$movement_speed_mps[[peak_idx]])) {
+    return(list(error = "Peak speed could not be estimated for this response"))
+  }
+
+  peak_speed <- path$movement_speed_mps[[peak_idx]]
+  speed_threshold <- max(0.02, peak_speed * 0.2)
+  near_target <- path$distance_to_target <= target_radius
+  slow_enough <- path$movement_speed_mps <= speed_threshold
+
+  hover_start_idx <- NA_integer_
+  idx <- nrow(path)
+  while (idx >= 1 && isTRUE(near_target[[idx]]) && isTRUE(slow_enough[[idx]])) {
+    idx <- idx - 1
+  }
+  if (idx < nrow(path)) hover_start_idx <- idx + 1L
+  if (!is.na(hover_start_idx) && hover_start_idx <= peak_idx) hover_start_idx <- NA_integer_
+
+  total_time_ms <- max(path$time_sec, na.rm = TRUE) * 1000
+  peak_time_ms <- path$time_sec[[peak_idx]] * 1000
+  hover_start_ms <- if (!is.na(hover_start_idx)) path$time_sec[[hover_start_idx]] * 1000 else NA_real_
+
+  acceleration_ms <- max(0, peak_time_ms)
+  if (!is.na(hover_start_ms)) {
+    deceleration_ms <- max(0, hover_start_ms - peak_time_ms)
+    hover_ms <- max(0, total_time_ms - hover_start_ms)
+  } else {
+    deceleration_ms <- max(0, total_time_ms - peak_time_ms)
+    hover_ms <- 0
+  }
+
+  phase_df <- tibble(
+    Phase = factor(c("Acceleration", "Deceleration", "Hover"), levels = c("Acceleration", "Deceleration", "Hover")),
+    DurationMs = c(acceleration_ms, deceleration_ms, hover_ms)
+  ) |>
+    filter(DurationMs > 0.5)
+
+  final_phase <- if (hover_ms > 0.5) "Hover" else if (deceleration_ms > 0.5) "Deceleration" else "Acceleration"
+  final_distance_m <- path$distance_to_target[[nrow(path)]]
+  peak_speed_mps <- max(path$movement_speed_mps, na.rm = TRUE)
+  peak_projected_speed_mps <- max(path$projected_speed_mps, na.rm = TRUE)
+  movement_anchor_source <- {
+    vals <- unique(na.omit(path$move_source))
+    if (length(vals) == 0) "ControllerPosFallback" else vals[[1]]
+  }
+
+  list(
+    error = NULL,
+    title = title_text,
+    subtitle = paste0(subtitle_text, " Confirm ended during: ", final_phase, "."),
+    target_radius_m = target_radius,
+    speed_threshold_mps = speed_threshold,
+    phase_df = phase_df,
+    speed_df = path |>
+      transmute(
+        TimeMs = time_sec * 1000,
+        SpeedMps = movement_speed_mps,
+        ProjectedSpeedMps = projected_speed_mps,
+        DistanceM = distance_to_target
+      ),
+    total_time_ms = total_time_ms,
+    peak_speed_mps = peak_speed_mps,
+    peak_projected_speed_mps = peak_projected_speed_mps,
+    movement_anchor_source = movement_anchor_source,
+    peak_time_ms = peak_time_ms,
+    hover_start_ms = hover_start_ms,
+    hover_ms = hover_ms,
+    final_distance_m = final_distance_m,
+    final_phase = final_phase
+  )
+}
+
+build_phase_plot <- function(meta_data, sample_data, event_data, selected_task = "Exposure", selected_block = "Exposure", selected_attempt = NA_real_, time_window = 1.0) {
+  profile <- extract_phase_profile(meta_data, sample_data, event_data, selected_task, selected_block, selected_attempt, time_window)
+
+  if (!is.null(profile$error)) {
+    return(
+      plot_ly() |>
+        layout(
+          annotations = list(
+            text = profile$error,
+            x = 0.5,
+            y = 0.5,
+            xref = "paper",
+            yref = "paper",
+            showarrow = FALSE,
+            font = list(size = 18)
+          ),
+          xaxis = list(visible = FALSE),
+          yaxis = list(visible = FALSE)
+        )
+    )
+  }
+
+  phase_colors <- c("Acceleration" = "#2563eb", "Deceleration" = "#0ea5e9", "Hover" = "#16a34a")
+
+  phase_plot_df <- profile$phase_df |>
+    mutate(
+      PhaseLabel = as.character(Phase),
+      hover_text = paste0(PhaseLabel, "<br>Duration: ", round(DurationMs), " ms")
+    )
+
+  phase_plot <- plot_ly(
+    data = phase_plot_df,
+    x = ~DurationMs,
+    y = rep("Phases", nrow(phase_plot_df)),
+    type = "bar",
+    orientation = "h",
+    color = ~PhaseLabel,
+    colors = phase_colors,
+    text = ~hover_text,
+    textposition = "inside",
+    hoverinfo = "text"
+  ) |>
+    layout(
+      barmode = "stack",
+      showlegend = TRUE,
+      xaxis = list(title = "Time within visible response window (ms)", zeroline = FALSE),
+      yaxis = list(title = "", showticklabels = FALSE)
+    )
+
+  speed_plot <- plot_ly(
+    data = profile$speed_df,
+    x = ~TimeMs,
+    y = ~SpeedMps,
+    type = "scatter",
+    mode = "lines",
+    line = list(color = "#475569", width = 3),
+    hovertemplate = paste0(
+      "Time: %{x:.0f} ms<br>",
+      "Movement-anchor speed: %{y:.3f} m/s<extra></extra>"
+    ),
+    name = "Movement-anchor speed"
+  ) |>
+    add_trace(
+      x = c(min(profile$speed_df$TimeMs, na.rm = TRUE), max(profile$speed_df$TimeMs, na.rm = TRUE)),
+      y = c(profile$speed_threshold_mps, profile$speed_threshold_mps),
+      type = "scatter",
+      mode = "lines",
+      line = list(color = "#16a34a", dash = "dash"),
+      inherit = FALSE,
+      hoverinfo = "skip",
+      name = "Hover speed threshold",
+      showlegend = FALSE
+    ) |>
+    add_markers(
+      x = profile$peak_time_ms,
+      y = max(profile$speed_df$SpeedMps, na.rm = TRUE),
+      marker = list(color = "#1d4ed8", size = 9),
+      name = "Peak speed",
+      hoverinfo = "skip",
+      showlegend = FALSE
+    ) |>
+    layout(
+      xaxis = list(title = "Time within visible response window (ms)"),
+      yaxis = list(title = "Movement-anchor speed (m/s)", zeroline = FALSE),
+      showlegend = FALSE
+    )
+
+  if (!is.na(profile$hover_start_ms)) {
+    speed_plot <- speed_plot |>
+      add_trace(
+        x = c(profile$hover_start_ms, profile$hover_start_ms),
+        y = c(0, max(profile$speed_df$SpeedMps, na.rm = TRUE)),
+        type = "scatter",
+        mode = "lines",
+        line = list(color = "#16a34a", dash = "dot"),
+        inherit = FALSE,
+        hoverinfo = "skip",
+        name = "Hover starts",
+        showlegend = FALSE
+      )
+  }
+
+  summary_items <- c(
+    paste0("Window: ", round(profile$total_time_ms), " ms"),
+    paste0("Anchor: ", profile$movement_anchor_source),
+    paste0("Peak movement speed: ", sprintf("%.2f", profile$peak_speed_mps), " m/s"),
+    paste0("Peak projected speed: ", sprintf("%.2f", profile$peak_projected_speed_mps), " m/s"),
+    paste0("Hover: ", round(profile$hover_ms), " ms"),
+    paste0("Final distance: ", sprintf("%.1f", profile$final_distance_m * 100), " cm")
+  )
+
+  subplot(phase_plot, speed_plot, nrows = 2, heights = c(0.32, 0.68), shareX = FALSE, titleY = TRUE) |>
+    layout(
+      title = list(
+        text = paste0(
+          profile$title,
+          "<br><sup>",
+          profile$subtitle,
+          " Hover radius: ",
+          sprintf("%.1f", profile$target_radius_m * 100),
+          " cm. Dashed green = hover speed threshold. Dotted green = hover start.</sup>",
+          "<br><sup>",
+          paste(summary_items, collapse = " | "),
+          "</sup>"
+        )
+      ),
+      margin = list(t = 110)
+    )
+}
+
 # Build the lower plot on the Trajectories tab.
 #
 # Again this differs by task:
@@ -928,6 +1725,8 @@ compute_quality_metrics <- function(quality_trials, selected_task) {
       slope = NA_real_,
       trend_label = "No quality data",
       hit_rate = NA_real_,
+      stable_center = NA_real_,
+      stable_spread = NA_real_,
       trial_count = 0
     ))
   }
@@ -960,6 +1759,18 @@ compute_quality_metrics <- function(quality_trials, selected_task) {
     NA_real_
   }
 
+  stable_center <- if ("signed_error" %in% names(quality_trials)) {
+    stable_cluster_center(quality_trials$signed_error)
+  } else {
+    NA_real_
+  }
+
+  stable_spread <- if ("signed_error" %in% names(quality_trials)) {
+    stable_cluster_spread(quality_trials$signed_error)
+  } else {
+    NA_real_
+  }
+
   list(
     mean_abs_error = mean(y, na.rm = TRUE),
     median_abs_error = median(y, na.rm = TRUE),
@@ -968,6 +1779,8 @@ compute_quality_metrics <- function(quality_trials, selected_task) {
     slope = slope,
     trend_label = trend_label,
     hit_rate = hit_rate,
+    stable_center = stable_center,
+    stable_spread = stable_spread,
     trial_count = nrow(quality_trials)
   )
 }
@@ -1043,7 +1856,12 @@ build_quality_plot <- function(quality_trials, selected_task, selected_block) {
 summary_compact_table <- function(summary_data) {
   summary_data |>
     filter(SummaryType %in% c("Aftereffect", "BlockMetric")) |>
-    select(TaskMode, BlockType, SummaryType, MetricName, MetricUnits, BaselineValue, BaselineSd, PostValue, PostSd, SignedDelta, Magnitude, NormalizedMagnitude, TrialCount, ConfiguredEffectMode)
+    select(any_of(c(
+      "TaskMode", "BlockType", "SummaryType", "MetricName", "Estimator", "MetricUnits",
+      "BaselineValue", "BaselineSd", "PostValue", "PostSd", "SignedDelta", "Magnitude",
+      "NormalizedMagnitude", "RawBaselineMean", "RawPostMean", "RawSignedDelta",
+      "RawMagnitude", "TrialCount", "ConfiguredEffectMode", "Notes"
+    )))
 }
 
 # ---------- Compare-tab helpers ----------
@@ -1053,19 +1871,46 @@ summary_compact_table <- function(summary_data) {
 build_comparison_dataset <- function(session_rows) {
   if (nrow(session_rows) == 0) return(tibble())
 
-  purrr::map_dfr(seq_len(nrow(session_rows)), function(i) {
+  start_time <- Sys.time()
+
+  result <- purrr::map_dfr(seq_len(nrow(session_rows)), function(i) {
     row <- session_rows[i, ]
-    summary_data <- clean_log_df(safe_read_csv(row$Summary))
+    summary_data <- coerce_summary_numeric_columns(clean_log_df(safe_read_csv(row$Summary)))
     if (nrow(summary_data) == 0) return(tibble())
 
-    summary_data |>
-      filter(SummaryType == "Aftereffect") |>
+    aftereffect_data <- summary_data |>
+      filter(SummaryType == "Aftereffect")
+
+    if (nrow(aftereffect_data) == 0) return(tibble())
+
+    event_data <- clean_log_df(safe_read_csv(row$Event))
+    aftereffect_data <- coerce_summary_numeric_columns(
+      build_stable_perceived_center_aftereffects(aftereffect_data, event_data)
+    )
+
+    if (!"StudyGlobalParticipantId" %in% names(aftereffect_data)) {
+      aftereffect_data$StudyGlobalParticipantId <- row$study_global_participant_id[[1]]
+    }
+
+    if (!"StudySessionIndex" %in% names(aftereffect_data)) {
+      aftereffect_data$StudySessionIndex <- row$study_session_index[[1]]
+    }
+
+    aftereffect_data |>
       mutate(
         SessionID = row$session_id[[1]],
         TimestampLabel = row$timestamp[[1]],
         TimestampDt = as_time(row$timestamp[[1]]),
         SessionState = row$session_state[[1]],
         InputModeLabel = row$input_mode_label[[1]],
+        StudyGlobalParticipantId = dplyr::coalesce(
+          suppressWarnings(as.integer(StudyGlobalParticipantId)),
+          row$study_global_participant_id[[1]]
+        ),
+        StudySessionIndex = dplyr::coalesce(
+          suppressWarnings(as.integer(StudySessionIndex)),
+          row$study_session_index[[1]]
+        ),
         Magnitude = as_num(Magnitude),
         SignedDelta = as_num(SignedDelta),
         BaselineValue = as_num(BaselineValue),
@@ -1090,6 +1935,196 @@ build_comparison_dataset <- function(session_rows) {
       )
   }) |>
     arrange(TimestampDt)
+
+  cat(sprintf(
+    "[PrismShiny] built comparison dataset sessions=%d rows=%d in %.1fs\n",
+    nrow(session_rows),
+    nrow(result),
+    as.numeric(difftime(Sys.time(), start_time, units = "secs"))
+  ))
+
+  result
+}
+
+# ---------- Participant-tab helpers ----------
+
+participant_label <- function(participant_id) {
+  ifelse(is.na(participant_id), "Unknown participant", paste0("P", participant_id))
+}
+
+build_participant_signed_plot <- function(participant_data) {
+  if (nrow(participant_data) == 0) {
+    return(ggplot() + annotate("text", x = 1, y = 1, label = "No participant selected") + theme_void())
+  }
+
+  plot_data <- participant_data |>
+    mutate(
+      EffectGroup = factor(
+        ConfiguredEffectMode,
+        levels = c("None", "Translation", "Rotation", "Skew")
+      ),
+      hover_text = paste0(
+        "Participant: P", StudyGlobalParticipantId,
+        "<br>Run: ", StudySessionIndex,
+        "<br>Task: ", TaskMode,
+        "<br>Effect: ", ConfiguredEffectMode,
+        "<br>Signed delta: ", sprintf("%.2f", SignedDelta), " ", MetricUnits,
+        "<br>Magnitude: ", sprintf("%.2f", Magnitude), " ", MetricUnits,
+        "<br>Baseline SD: ", sprintf("%.2f", BaselineSd),
+        "<br>Post SD: ", sprintf("%.2f", PostSd)
+      )
+    )
+
+  ggplot(plot_data, aes(x = EffectGroup, y = SignedDelta, color = TaskMode, group = TaskMode, text = hover_text)) +
+    geom_hline(yintercept = 0, color = "#94a3b8", linetype = "dashed") +
+    geom_line(alpha = 0.45) +
+    geom_point(size = 3) +
+    facet_wrap(~TaskMode, scales = "free_y") +
+    labs(
+      title = "Participant Stable-center Profile",
+      subtitle = "Signed baseline-to-post shift of the stable perceived-center cluster.",
+      x = "Configured effect",
+      y = "Signed aftereffect",
+      color = "Task"
+    ) +
+    theme_minimal(base_size = 13)
+}
+
+build_participant_magnitude_plot <- function(participant_data) {
+  if (nrow(participant_data) == 0) {
+    return(ggplot() + annotate("text", x = 1, y = 1, label = "No participant selected") + theme_void())
+  }
+
+  plot_data <- participant_data |>
+    mutate(
+      EffectGroup = factor(
+        ConfiguredEffectMode,
+        levels = c("None", "Translation", "Rotation", "Skew")
+      ),
+      hover_text = paste0(
+        "Run: ", StudySessionIndex,
+        "<br>Task: ", TaskMode,
+        "<br>Effect: ", ConfiguredEffectMode,
+        "<br>Magnitude: ", sprintf("%.2f", Magnitude), " ", MetricUnits,
+        "<br>Baseline: ", sprintf("%.2f", BaselineValue),
+        "<br>Post: ", sprintf("%.2f", PostValue)
+      )
+    )
+
+  ggplot(plot_data, aes(x = EffectGroup, y = Magnitude, fill = TaskMode, text = hover_text)) +
+    geom_col(position = position_dodge(width = 0.7), width = 0.65, alpha = 0.82) +
+    labs(
+      title = "Absolute Stable-center Shift",
+      subtitle = "Useful for spotting noisy no-effect runs and unusually weak/strong adaptation.",
+      x = "Configured effect",
+      y = "Magnitude",
+      fill = "Task"
+    ) +
+    theme_minimal(base_size = 13)
+}
+
+build_effect_minus_none_dataset <- function(compare_data) {
+  if (nrow(compare_data) == 0) return(tibble())
+
+  normalized_source <- compare_data |>
+    mutate(
+      StudyGlobalParticipantId = suppressWarnings(as.integer(StudyGlobalParticipantId)),
+      Magnitude = as_num(Magnitude),
+      SignedDelta = as_num(SignedDelta),
+      BaselineSd = as_num(BaselineSd),
+      PostSd = as_num(PostSd)
+    ) |>
+    filter(!is.na(StudyGlobalParticipantId), !is.na(TaskMode), !is.na(ConfiguredEffectMode))
+
+  none_reference <- normalized_source |>
+    filter(ConfiguredEffectMode == "None") |>
+    group_by(StudyGlobalParticipantId, TaskMode) |>
+    summarise(
+      NoneMagnitude = mean(Magnitude, na.rm = TRUE),
+      NoneSignedDelta = mean(SignedDelta, na.rm = TRUE),
+      NoneBaselineSd = mean(BaselineSd, na.rm = TRUE),
+      .groups = "drop"
+    )
+
+  normalized_source |>
+    left_join(none_reference, by = c("StudyGlobalParticipantId", "TaskMode")) |>
+    mutate(
+      MagnitudeMinusNone = Magnitude - NoneMagnitude,
+      SignedDeltaMinusNone = SignedDelta - NoneSignedDelta,
+      EffectCategory = ifelse(ConfiguredEffectMode == "None", "Control", "Perturbation"),
+      IsNormalizedReferenceAvailable = !is.na(NoneMagnitude)
+    )
+}
+
+build_participant_normalized_plot <- function(participant_data) {
+  normalized <- build_effect_minus_none_dataset(participant_data) |>
+    filter(ConfiguredEffectMode != "None")
+
+  if (nrow(normalized) == 0) {
+    return(ggplot() + annotate("text", x = 1, y = 1, label = "No normalized participant data available") + theme_void())
+  }
+
+  plot_data <- normalized |>
+    mutate(
+      EffectGroup = factor(ConfiguredEffectMode, levels = c("Translation", "Rotation", "Skew")),
+      hover_text = paste0(
+        "Participant: P", StudyGlobalParticipantId,
+        "<br>Task: ", TaskMode,
+        "<br>Effect: ", ConfiguredEffectMode,
+        "<br>Effect magnitude: ", sprintf("%.2f", Magnitude),
+        "<br>None magnitude: ", sprintf("%.2f", NoneMagnitude),
+        "<br>Effect - None: ", sprintf("%.2f", MagnitudeMinusNone)
+      )
+    )
+
+  ggplot(plot_data, aes(x = EffectGroup, y = MagnitudeMinusNone, fill = TaskMode, text = hover_text)) +
+    geom_hline(yintercept = 0, color = "#475569", linetype = "dashed") +
+    geom_col(position = position_dodge(width = 0.7), width = 0.65, alpha = 0.84) +
+    labs(
+      title = "Effect Above No-effect Drift",
+      subtitle = "Positive values mean the perturbation shifted the stable perceived center more than this participant's None run.",
+      x = "Configured effect",
+      y = "Magnitude minus None",
+      fill = "Task"
+    ) +
+    theme_minimal(base_size = 13)
+}
+
+build_normalized_group_plot <- function(normalized_data) {
+  plot_data <- normalized_data |>
+    filter(ConfiguredEffectMode != "None", IsNormalizedReferenceAvailable)
+
+  if (nrow(plot_data) == 0) {
+    return(ggplot() + annotate("text", x = 1, y = 1, label = "No normalized comparison data available") + theme_void())
+  }
+
+  plot_data <- plot_data |>
+    mutate(
+      EffectGroup = factor(ConfiguredEffectMode, levels = c("Translation", "Rotation", "Skew")),
+      hover_text = paste0(
+        "P", StudyGlobalParticipantId,
+        "<br>Input: ", InputModeLabel,
+        "<br>Task: ", TaskMode,
+        "<br>Effect: ", ConfiguredEffectMode,
+        "<br>Effect magnitude: ", sprintf("%.2f", Magnitude),
+        "<br>None magnitude: ", sprintf("%.2f", NoneMagnitude),
+        "<br>Effect - None: ", sprintf("%.2f", MagnitudeMinusNone)
+      )
+    )
+
+  ggplot(plot_data, aes(x = EffectGroup, y = MagnitudeMinusNone, color = InputModeLabel, text = hover_text)) +
+    geom_hline(yintercept = 0, color = "#475569", linetype = "dashed") +
+    geom_boxplot(outlier.shape = NA, alpha = 0.22, position = position_dodge(width = 0.6)) +
+    geom_jitter(width = 0.10, height = 0, size = 2.6, alpha = 0.86) +
+    facet_wrap(~TaskMode, scales = "free_y") +
+    labs(
+      title = "Effect Above Participant-specific None",
+      subtitle = "Each point is normalized by that participant's no-effect stable-center shift for the same task.",
+      x = "Configured effect",
+      y = "Magnitude minus None",
+      color = "Input mode"
+    ) +
+    theme_minimal(base_size = 13)
 }
 
 # Comparison plot #1:
@@ -1104,15 +2139,23 @@ build_comparison_plot <- function(compare_data) {
   }
 
   compare_plot_data <- compare_data |>
-    mutate(RunIndex = row_number())
+    mutate(
+      RunIndex = dplyr::coalesce(as_num(StudySessionIndex), row_number()),
+      hover_text = paste0(
+        "Run order: ", RunIndex,
+        "<br>Magnitude: ", sprintf("%.3f", Magnitude),
+        "<br>Input mode: ", InputModeLabel,
+        "<br>Effect: ", ConfiguredEffectMode
+      )
+    )
 
-  ggplot(compare_plot_data, aes(x = RunIndex, y = Magnitude, color = InputModeLabel)) +
+  ggplot(compare_plot_data, aes(x = RunIndex, y = Magnitude, color = InputModeLabel, text = hover_text)) +
     geom_line(aes(group = interaction(TaskMode, ConfiguredEffectMode, InputModeLabel)), alpha = 0.4) +
     geom_point(size = 3) +
     facet_wrap(~TaskMode, scales = "free_y") +
     labs(
       title = "Aftereffect Magnitude Across Sessions",
-      subtitle = "Each point is one finished session. Compare tasks, effects, and input modes across runs.",
+      subtitle = "Each point is one finished session, estimated from the stable response cluster rather than the raw mean.",
       x = "Run order",
       y = "Aftereffect magnitude",
       color = "Input mode"
@@ -1140,7 +2183,7 @@ build_grouped_comparison_plot <- function(compare_data) {
     facet_wrap(~TaskMode, scales = "free_y") +
     labs(
       title = "Aftereffect Magnitude by Condition",
-      subtitle = "Use this to compare effects within each task, and controller vs embodied within the same effect.",
+      subtitle = "Stable perceived-center shifts by effect, task, and input mode.",
       x = "Configured effect",
       y = "Aftereffect magnitude",
       color = "Input mode"
@@ -1169,6 +2212,7 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       textInput("log_dir", "Log Folder", value = default_log_dir),
+      selectInput("session_scope", "Show Sessions", choices = c("Participant", "Debug", "All"), selected = "Participant"),
       actionButton("refresh", "Refresh Sessions"),
       br(), br(),
       uiOutput("session_picker"),
@@ -1177,6 +2221,7 @@ ui <- fluidPage(
     ),
     mainPanel(
       tabsetPanel(
+        id = "main_tabs",
         tabPanel(
           "Summary",
           fluidRow(
@@ -1199,8 +2244,23 @@ ui <- fluidPage(
             column(8, plotlyOutput("compare_plot", height = "360px"))
           ),
           plotlyOutput("compare_group_plot", height = "360px"),
+          plotlyOutput("compare_normalized_plot", height = "380px"),
           h3("Comparison Table"),
           DTOutput("compare_table")
+        ),
+        tabPanel(
+          "Participant",
+          fluidRow(
+            column(4, selectInput("participant_id", "Participant", choices = c("No participants loaded"))),
+            column(8, uiOutput("participant_cards"))
+          ),
+          fluidRow(
+            column(6, plotlyOutput("participant_signed_plot", height = "380px")),
+            column(6, plotlyOutput("participant_magnitude_plot", height = "380px"))
+          ),
+          plotlyOutput("participant_normalized_plot", height = "360px"),
+          h3("Participant Module Table"),
+          DTOutput("participant_table")
         ),
         tabPanel(
           "Quality",
@@ -1233,6 +2293,7 @@ ui <- fluidPage(
           checkboxInput("trajectory_overlap", "Overlay Baseline and Post for non-exposure tasks", value = FALSE),
           uiOutput("trajectory_help"),
           plotlyOutput("trajectory_plot", height = "520px"),
+          plotlyOutput("trajectory_phase_plot", height = "640px"),
           plotlyOutput("trajectory_error_plot", height = "320px")
         )
       )
@@ -1251,39 +2312,124 @@ ui <- fluidPage(
 # 5. observers that keep dropdowns in sync.
 server <- function(input, output, session) {
   # session_index stores the discovered sessions for the currently selected folder.
-  session_index <- reactiveVal(tibble())
+  session_index <- reactiveVal(discover_sessions(default_log_dir))
+
+  filtered_session_index <- reactive({
+    sessions <- session_index()
+    if (nrow(sessions) == 0) {
+      return(sessions)
+    }
+
+    session_state_norm <- tolower(trimws(coalesce(sessions$session_state, "")))
+    sessions <- sessions[session_state_norm == "" | session_state_norm == "finished", , drop = FALSE]
+
+    if (nrow(sessions) == 0) {
+      return(sessions)
+    }
+
+    scope <- normalize_session_scope(input$session_scope)
+    experiment_mode <- tolower(trimws(coalesce(sessions$experiment_mode, "")))
+    resolved_dir <- resolve_log_dir(if (is.null(input$log_dir) || identical(input$log_dir, "")) default_log_dir else input$log_dir)
+    folder_is_participants <- grepl("(^|/)Participants$", resolved_dir)
+
+    if (scope == "Participant") {
+      if (!folder_is_participants) {
+        sessions <- sessions |> filter(experiment_mode == "participant")
+      }
+    } else if (scope == "Debug") {
+      sessions <- sessions |> filter(experiment_mode == "debug" | experiment_mode == "")
+    }
+
+    sessions
+  })
+
+  observe({
+    sessions <- session_index()
+    if (nrow(sessions) == 0) {
+      participant_count <- 0
+      debug_count <- 0
+    } else {
+      session_state_norm <- tolower(trimws(coalesce(sessions$session_state, "")))
+      sessions <- sessions[session_state_norm == "" | session_state_norm == "finished", , drop = FALSE]
+      experiment_mode <- tolower(trimws(coalesce(sessions$experiment_mode, "")))
+      participant_count <- sum(experiment_mode == "participant", na.rm = TRUE)
+      debug_count <- sum(experiment_mode == "debug" | experiment_mode == "", na.rm = TRUE)
+    }
+
+    current_scope <- normalize_session_scope(input$session_scope)
+    scope_choices <- setNames(
+      c("Participant", "Debug", "All"),
+      c(
+        paste0("Participant (", participant_count, ")"),
+        paste0("Debug (", debug_count, ")"),
+        paste0("All (", participant_count + debug_count, ")")
+      )
+    )
+    updateSelectInput(
+      session,
+      "session_scope",
+      choices = scope_choices,
+      selected = current_scope
+    )
+  })
 
   # Refresh the session list from disk.
   # If the folder does not exist, clear the index rather than erroring.
-  refresh_sessions <- function() {
-    log_dir <- normalizePath(input$log_dir, winslash = "/", mustWork = FALSE)
+  refresh_sessions <- function(log_dir_override = NULL) {
+    raw_log_dir <- if (!is.null(log_dir_override) && !identical(log_dir_override, "")) {
+      normalizePath(log_dir_override, winslash = "/", mustWork = FALSE)
+    } else if (!is.null(input$log_dir) && !identical(input$log_dir, "")) {
+      normalizePath(input$log_dir, winslash = "/", mustWork = FALSE)
+    } else {
+      normalizePath(default_log_dir, winslash = "/", mustWork = FALSE)
+    }
+    log_dir <- resolve_log_dir(raw_log_dir)
     if (!dir.exists(log_dir)) {
       session_index(tibble())
       return()
     }
-    session_index(discover_sessions(log_dir))
+    if (!identical(raw_log_dir, log_dir)) {
+      updateTextInput(session, "log_dir", value = log_dir)
+    }
+    discovered_sessions <- discover_sessions(log_dir)
+    cat(sprintf("[PrismShiny] refresh_sessions raw='%s' resolved='%s' found=%d\n", raw_log_dir, log_dir, nrow(discovered_sessions)))
+    session_index(discovered_sessions)
   }
 
   # Initial load and explicit manual refresh button.
-  observeEvent(TRUE, refresh_sessions(), once = TRUE)
+  observeEvent(TRUE, refresh_sessions(default_log_dir), once = TRUE)
   observeEvent(input$refresh, refresh_sessions())
+  session$onFlushed(function() {
+    updateTextInput(session, "log_dir", value = default_log_dir)
+    refresh_sessions(default_log_dir)
+  }, once = TRUE)
 
   # Sidebar session picker generated from the current session index.
   output$session_picker <- renderUI({
-    sessions <- session_index()
+    sessions <- filtered_session_index()
     if (nrow(sessions) == 0) {
-      return(tags$p("No sessions found in the selected folder."))
+      return(tags$p("No sessions found in the selected folder for the current filter."))
     }
 
     labels <- ifelse(
       is.na(sessions$timestamp) | sessions$timestamp == "",
       sessions$session_id,
       paste0(
-        sessions$timestamp,
+        ifelse(
+          !is.na(sessions$study_global_participant_id),
+          paste0("P", sessions$study_global_participant_id, " | "),
+          ""
+        ),
+        tools::toTitleCase(ifelse(is.na(sessions$experiment_mode) | sessions$experiment_mode == "", "debug", sessions$experiment_mode)),
         " | ",
         ifelse(is.na(sessions$input_mode_label) | sessions$input_mode_label == "", "unknown", sessions$input_mode_label),
+        ifelse(
+          !is.na(sessions$study_session_index),
+          paste0(" | S", sessions$study_session_index),
+          ""
+        ),
         " | ",
-        substr(sessions$session_id, 1, 8)
+        vapply(sessions$timestamp, format_session_timestamp, character(1))
       )
     )
 
@@ -1292,7 +2438,7 @@ server <- function(input, output, session) {
 
   # Resolve the currently selected session row from the session index.
   current_session <- reactive({
-    sessions <- session_index()
+    sessions <- filtered_session_index()
     req(nrow(sessions) > 0, input$session_id)
     sessions |> filter(session_id == input$session_id) |> slice(1)
   })
@@ -1303,9 +2449,26 @@ server <- function(input, output, session) {
     load_session_data(row)
   })
 
+  current_summary_data <- reactive({
+    data <- current_data()
+    summary <- coerce_summary_numeric_columns(data$summary)
+    if (nrow(summary) == 0) return(summary)
+
+    aftereffect <- summary |> filter(SummaryType == "Aftereffect")
+    non_aftereffect <- summary |> filter(SummaryType != "Aftereffect")
+    robust_aftereffect <- coerce_summary_numeric_columns(
+      build_stable_perceived_center_aftereffects(aftereffect, data$event)
+    )
+
+    bind_rows(
+      coerce_summary_numeric_columns(non_aftereffect),
+      robust_aftereffect
+    )
+  })
+
   # Build the all-sessions comparison dataset once from the session index.
   comparison_data_all <- reactive({
-    build_comparison_dataset(session_index())
+    build_comparison_dataset(filtered_session_index())
   })
 
   # Session-state status box in the sidebar.
@@ -1318,7 +2481,7 @@ server <- function(input, output, session) {
 
   # Summary cards for one selected session.
   output$summary_cards <- renderUI({
-    summary <- current_data()$summary
+    summary <- current_summary_data()
     aftereffect <- summary |>
       filter(SummaryType == "Aftereffect") |>
       mutate(
@@ -1355,13 +2518,13 @@ server <- function(input, output, session) {
       div(class = "metric-card",
           div(class = "metric-title", "Baseline to Post"),
           div(class = "metric-value", sprintf("%.2f", aftereffect$SignedDelta[[1]])),
-          div(class = "metric-sub", paste("Signed change in mean error", aftereffect$MetricUnits[[1]])),
+          div(class = "metric-sub", paste("Signed change in stable perceived center", aftereffect$MetricUnits[[1]])),
           div(class = "metric-sub", interpretation$signed_shift_label)
       ),
       div(class = "metric-card",
           div(class = "metric-title", "Magnitude"),
           div(class = "metric-value", sprintf("%.2f", aftereffect$Magnitude[[1]])),
-          div(class = "metric-sub", paste("Absolute change in mean error from baseline to post", aftereffect$MetricUnits[[1]])),
+          div(class = "metric-sub", paste("Absolute stable-center shift from baseline to post", aftereffect$MetricUnits[[1]])),
           div(class = "metric-sub", interpretation$strength_label)
       ),
       div(class = "metric-card",
@@ -1377,7 +2540,7 @@ server <- function(input, output, session) {
       div(class = "metric-card",
           div(class = "metric-title", "Baseline / Post"),
           div(class = "metric-value", sprintf("%.2f -> %.2f", aftereffect$BaselineValue[[1]], aftereffect$PostValue[[1]])),
-          div(class = "metric-sub", "Participant-specific reference and post value")
+          div(class = "metric-sub", "Stable perceived-center estimate for baseline and post")
       )
     )
 
@@ -1409,7 +2572,7 @@ server <- function(input, output, session) {
 
   # Raw summary table from Summary.csv, trimmed to the most useful columns.
   output$summary_table <- renderDT({
-    summary <- current_data()$summary
+    summary <- current_summary_data()
     if (nrow(summary) == 0) return(datatable(tibble(Message = "No Summary.csv for this session")))
 
     datatable(
@@ -1421,13 +2584,20 @@ server <- function(input, output, session) {
 
   # Summary-tab plot.
   output$summary_plot <- renderPlotly({
-    ggplotly(build_summary_plot(current_data()$summary))
+    ggplotly(build_summary_plot(current_summary_data()))
   })
 
   # When a new session is selected, update the task choices for the tab dropdowns
   # based on the tasks actually present in that session's Event.csv.
   observe({
     event_data <- current_data()$event
+    if (nrow(event_data) == 0 || !"TaskMode" %in% names(event_data)) {
+      updateSelectInput(session, "quality_task", choices = c("Exposure"), selected = "Exposure")
+      updateSelectInput(session, "spatial_task", choices = c("Exposure"), selected = "Exposure")
+      updateSelectInput(session, "trajectory_task", choices = c("Exposure"), selected = "Exposure")
+      return()
+    }
+
     tasks <- sort(unique(na.omit(event_data$TaskMode)))
     if (length(tasks) == 0) tasks <- c("Exposure")
     updateSelectInput(session, "quality_task", choices = tasks, selected = if ("Exposure" %in% tasks) "Exposure" else tasks[[1]])
@@ -1437,7 +2607,16 @@ server <- function(input, output, session) {
 
   # Populate Compare-tab filter dropdowns from the full cross-session dataset.
   observe({
+    req(input$main_tabs == "Compare")
+
     compare_data <- comparison_data_all()
+    if (nrow(compare_data) == 0 || !all(c("TaskMode", "InputModeLabel", "ConfiguredEffectMode") %in% names(compare_data))) {
+      updateSelectInput(session, "compare_task", choices = c("All"), selected = "All")
+      updateSelectInput(session, "compare_input_mode", choices = c("All"), selected = "All")
+      updateSelectInput(session, "compare_effect", choices = c("All"), selected = "All")
+      return()
+    }
+
     tasks <- sort(unique(na.omit(compare_data$TaskMode)))
     input_modes <- sort(unique(na.omit(compare_data$InputModeLabel)))
     effects <- sort(unique(na.omit(compare_data$ConfiguredEffectMode)))
@@ -1475,6 +2654,148 @@ server <- function(input, output, session) {
     compare_data
   })
 
+  comparison_normalized_filtered <- reactive({
+    build_effect_minus_none_dataset(comparison_data_filtered())
+  })
+
+  observe({
+    req(input$main_tabs == "Participant")
+
+    compare_data <- comparison_data_all()
+    if (nrow(compare_data) == 0 || !"StudyGlobalParticipantId" %in% names(compare_data)) {
+      updateSelectInput(session, "participant_id", choices = c("No participants loaded"), selected = "No participants loaded")
+      return()
+    }
+
+    participant_ids <- compare_data |>
+      mutate(StudyGlobalParticipantId = suppressWarnings(as.integer(StudyGlobalParticipantId))) |>
+      filter(!is.na(StudyGlobalParticipantId)) |>
+      pull(StudyGlobalParticipantId) |>
+      unique() |>
+      sort()
+
+    if (length(participant_ids) == 0) {
+      updateSelectInput(session, "participant_id", choices = c("No participants loaded"), selected = "No participants loaded")
+      return()
+    }
+
+    choices <- setNames(as.character(participant_ids), paste0("P", participant_ids))
+    selected <- if (!is.null(input$participant_id) && input$participant_id %in% choices) input$participant_id else as.character(participant_ids[[1]])
+    updateSelectInput(session, "participant_id", choices = choices, selected = selected)
+  })
+
+  participant_data <- reactive({
+    compare_data <- comparison_data_all()
+    if (nrow(compare_data) == 0 || is.null(input$participant_id)) return(tibble())
+
+    selected_id <- suppressWarnings(as.integer(input$participant_id))
+    if (is.na(selected_id)) return(tibble())
+
+    compare_data |>
+      mutate(
+        StudyGlobalParticipantId = suppressWarnings(as.integer(StudyGlobalParticipantId)),
+        StudySessionIndex = suppressWarnings(as.integer(StudySessionIndex)),
+        Magnitude = as_num(Magnitude),
+        SignedDelta = as_num(SignedDelta),
+        BaselineValue = as_num(BaselineValue),
+        PostValue = as_num(PostValue),
+        BaselineSd = as_num(BaselineSd),
+        PostSd = as_num(PostSd)
+      ) |>
+      filter(StudyGlobalParticipantId == selected_id) |>
+      arrange(StudySessionIndex, TimestampDt)
+  })
+
+  output$participant_cards <- renderUI({
+    pdata <- participant_data()
+
+    if (nrow(pdata) == 0) {
+      return(tagList(
+        div(class = "metric-card",
+            div(class = "metric-title", "Participant"),
+            div(class = "metric-value", "No Data"),
+            div(class = "metric-sub", "No finished aftereffect rows for this participant.")
+        )
+      ))
+    }
+
+    participant_id <- pdata$StudyGlobalParticipantId[[1]]
+    input_mode <- paste(sort(unique(na.omit(pdata$InputModeLabel))), collapse = ", ")
+    run_count <- n_distinct(pdata$SessionID)
+    expected_runs <- 8L
+    no_effect <- pdata |> filter(ConfiguredEffectMode == "None")
+    no_effect_max <- if (nrow(no_effect) == 0) NA_real_ else max(no_effect$Magnitude, na.rm = TRUE)
+    strongest <- pdata |> arrange(desc(Magnitude)) |> slice(1)
+
+    tagList(
+      div(class = "metric-card",
+          div(class = "metric-title", "Participant"),
+          div(class = "metric-value", paste0("P", participant_id)),
+          div(class = "metric-sub", paste("Input mode:", input_mode))
+      ),
+      div(class = "metric-card",
+          div(class = "metric-title", "Completed Modules"),
+          div(class = "metric-value", paste0(run_count, "/", expected_runs)),
+          div(class = "metric-sub", "Expected design is 4 effects x 2 tasks")
+      ),
+      div(class = "metric-card",
+          div(class = "metric-title", "No-effect magnitude"),
+          div(class = "metric-value", ifelse(is.finite(no_effect_max), sprintf("%.2f", no_effect_max), "N/A")),
+          div(class = "metric-sub", "Large values here suggest baseline noisiness, strategy differences, or poor task compliance.")
+      ),
+      div(class = "metric-card",
+          div(class = "metric-title", "Strongest Module"),
+          div(class = "metric-value", sprintf("%.2f", strongest$Magnitude[[1]])),
+          div(class = "metric-sub", paste(strongest$TaskMode[[1]], "/", strongest$ConfiguredEffectMode[[1]]))
+      )
+    )
+  })
+
+  output$participant_signed_plot <- renderPlotly({
+    ggplotly(build_participant_signed_plot(participant_data()), tooltip = "text")
+  })
+
+  output$participant_magnitude_plot <- renderPlotly({
+    ggplotly(build_participant_magnitude_plot(participant_data()), tooltip = "text")
+  })
+
+  output$participant_normalized_plot <- renderPlotly({
+    ggplotly(build_participant_normalized_plot(participant_data()), tooltip = "text")
+  })
+
+  output$participant_table <- renderDT({
+    pdata <- build_effect_minus_none_dataset(participant_data())
+
+    if (nrow(pdata) == 0) {
+      return(datatable(tibble(Message = "No participant rows available")))
+    }
+
+    datatable(
+      pdata |>
+        transmute(
+          Participant = paste0("P", StudyGlobalParticipantId),
+          Run = StudySessionIndex,
+          Timestamp = TimestampLabel,
+          InputMode = InputModeLabel,
+          Task = TaskMode,
+          Effect = ConfiguredEffectMode,
+          Metric = MetricName,
+          BaselineMean = BaselineValue,
+          BaselineSd = BaselineSd,
+          PostMean = PostValue,
+          PostSd = PostSd,
+          SignedDelta = SignedDelta,
+          Magnitude = Magnitude,
+          NoneMagnitude = NoneMagnitude,
+          MagnitudeMinusNone = MagnitudeMinusNone,
+          TowardTarget = TowardTargetDelta,
+          Session = substr(SessionID, 1, 8)
+        ),
+      options = list(pageLength = 8, scrollX = TRUE),
+      rownames = FALSE
+    )
+  })
+
   # Compare-tab metric cards.
   output$compare_cards <- renderUI({
     compare_data <- comparison_data_filtered()
@@ -1503,12 +2824,12 @@ server <- function(input, output, session) {
       div(class = "metric-card",
           div(class = "metric-title", "Mean Magnitude"),
           div(class = "metric-value", sprintf("%.2f", mean_mag)),
-          div(class = "metric-sub", "Average aftereffect magnitude across filtered sessions")
+          div(class = "metric-sub", "Average stable-center shift across filtered sessions")
       ),
       div(class = "metric-card",
           div(class = "metric-title", "Median Magnitude"),
           div(class = "metric-value", sprintf("%.2f", median_mag)),
-          div(class = "metric-sub", "Median aftereffect magnitude across filtered sessions")
+          div(class = "metric-sub", "Median stable-center shift across filtered sessions")
       ),
       div(class = "metric-card",
           div(class = "metric-title", "Toward Target"),
@@ -1521,11 +2842,15 @@ server <- function(input, output, session) {
 
   # Compare-tab plots and table.
   output$compare_plot <- renderPlotly({
-    ggplotly(build_comparison_plot(comparison_data_filtered()))
+    ggplotly(build_comparison_plot(comparison_data_filtered()), tooltip = "text")
   })
 
   output$compare_group_plot <- renderPlotly({
     ggplotly(build_grouped_comparison_plot(comparison_data_filtered()))
+  })
+
+  output$compare_normalized_plot <- renderPlotly({
+    ggplotly(build_normalized_group_plot(comparison_normalized_filtered()), tooltip = "text")
   })
 
   output$compare_table <- renderDT({
@@ -1536,9 +2861,10 @@ server <- function(input, output, session) {
     }
 
     datatable(
-      compare_data |>
+      build_effect_minus_none_dataset(compare_data) |>
         transmute(
           Timestamp = TimestampLabel,
+          Participant = ifelse(is.na(StudyGlobalParticipantId), "", paste0("P", StudyGlobalParticipantId)),
           Session = substr(SessionID, 1, 8),
           Task = TaskMode,
           Effect = ConfiguredEffectMode,
@@ -1549,6 +2875,8 @@ server <- function(input, output, session) {
           Post = PostValue,
           SignedDelta = SignedDelta,
           Magnitude = Magnitude,
+          NoneMagnitude = NoneMagnitude,
+          MagnitudeMinusNone = MagnitudeMinusNone,
           ConsistencyChange = ConsistencyDelta,
           TowardTarget = TowardTargetDelta
         ),
@@ -1658,7 +2986,15 @@ server <- function(input, output, session) {
     trend_value <- ifelse(
       is.na(metrics$slope),
       "N/A",
-      sprintf("%.4f %s per trial", metrics$slope, units_label)
+      ifelse(
+        identical(units_label, "m"),
+        ifelse(
+          abs(metrics$slope * 100) < 0.01,
+          sprintf("%.2f mm per trial", metrics$slope * 1000),
+          sprintf("%.3f cm per trial", metrics$slope * 100)
+        ),
+        sprintf("%.3f %s per trial", metrics$slope, units_label)
+      )
     )
 
     if (nrow(quality_trials) == 0) {
@@ -1680,7 +3016,7 @@ server <- function(input, output, session) {
       div(class = "metric-card",
           div(class = "metric-title", "Absolute Error"),
           div(class = "metric-value", sprintf("%.3f", metrics$mean_abs_error)),
-          div(class = "metric-sub", paste("Average", tolower(error_label), "across trials")),
+          div(class = "metric-sub", paste("Mean absolute", tolower(error_label), "across trials")),
           div(class = "metric-sub", paste("Units:", units_label))
       ),
       div(class = "metric-card",
@@ -1703,6 +3039,17 @@ server <- function(input, output, session) {
             div(class = "metric-title", "Hit Rate"),
             div(class = "metric-value", sprintf("%.1f%%", metrics$hit_rate * 100)),
             div(class = "metric-sub", "Confirmed hits divided by all exposure attempts")
+        )
+      ))
+    }
+
+    if (input$quality_task %in% c("OpenLoop", "LineBisection") && !is.na(metrics$stable_center)) {
+      cards <- append(cards, list(
+        div(class = "metric-card",
+            div(class = "metric-title", "Stable Perceived Center"),
+            div(class = "metric-value", sprintf("%.2f cm", metrics$stable_center)),
+            div(class = "metric-sub", "Cluster center of accepted signed responses"),
+            div(class = "metric-sub", sprintf("Weighted spread: %.2f cm", metrics$stable_spread))
         )
       ))
     }
@@ -1755,6 +3102,23 @@ server <- function(input, output, session) {
       time_window = input$trajectory_window,
       overlap_blocks = isTRUE(input$trajectory_overlap)
     ))
+  })
+
+  # Phase plot that breaks a highlighted attempt into acceleration,
+  # deceleration, and hover so the user can inspect how the movement unfolded.
+  output$trajectory_phase_plot <- renderPlotly({
+    req(input$trajectory_attempt)
+    phase_time_window <- if (is.null(input$trajectory_window)) 1 else input$trajectory_window
+
+    build_phase_plot(
+      current_data()$meta,
+      current_data()$sample,
+      current_data()$event,
+      selected_task = input$trajectory_task,
+      selected_block = input$trajectory_block,
+      selected_attempt = as_num(input$trajectory_attempt),
+      time_window = phase_time_window
+    )
   })
 
   # Lower trajectories plot showing final error progression.

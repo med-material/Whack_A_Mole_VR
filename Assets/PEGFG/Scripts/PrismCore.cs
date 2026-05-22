@@ -50,7 +50,8 @@ public class NoEffect : IEffectTransform
 // The pointing direction itself is not rotated; only the position is displaced.
 public class TranslationEffect : IEffectTransform
 {
-    public Vector3 offsetWorld = new Vector3(0.12f, 0f, 0f);
+    // 10° equivalent at a 2 m board distance is tan(10°) * 2 m ≈ 0.35 m.
+    public Vector3 offsetWorld = new Vector3(0.35f, 0f, 0f);
 
     // The input pose is translated in world space, but its rotation stays the same.
     public Pose TransformPose(Pose rawPose)
@@ -73,7 +74,8 @@ public class TranslationEffect : IEffectTransform
 // Instead, it changes the direction/orientation of the input.
 public class RotationEffect : IEffectTransform
 {
-    public float rotationDegrees = 20f;
+    // Match the common 10° prism-equivalent magnitude used in several VR/AR PA studies.
+    public float rotationDegrees = 10f;
     public Vector3 axisWorld = Vector3.up;
 
     // The pose keeps the same position but its rotation is turned by the chosen angle.
@@ -99,11 +101,11 @@ public class RotationEffect : IEffectTransform
 // SkewEffect is the most visually oriented perturbation in this project.
 //
 // Important conceptual difference:
-// - TransformPose shifts the *visible* pose so markers/cues can appear displaced.
-// - TransformRay leaves the scoring ray unchanged.
+// - TransformPose shifts the apparent effector pose.
+// - TransformRay shifts the effective aim origin by the same amount when enabled.
 //
-// In other words, Skew is mainly a visual prism-style shift rather than a change
-// to the actual interaction ray used for hit detection.
+// In other words, Skew represents the hand/controller as being in a displaced
+// location, and the aim ray follows that displaced location.
 public class SkewEffect : IEffectTransform
 {
     public enum SkewUnits { Meters, Degrees, PrismDiopters }
@@ -112,67 +114,57 @@ public class SkewEffect : IEffectTransform
     public SkewUnits units = SkewUnits.Meters;
 
     [Tooltip("Meters: direct visual shift.\nDegrees: converted at reference distance.\nPrismDiopters: converted at reference distance.")]
-    public float value = 0.10f;
+    // Default to a 10° prism-equivalent visual shift.
+    public float value = 10f;
 
     [Tooltip("Reference distance to target plane (e.g. board) in metres.")]
     public float referenceDistanceMeters = 2.0f;
 
-    [Tooltip("Visible world root to shift.")]
-    [System.NonSerialized] public Transform visualWorldRoot;
-
     [Tooltip("Visible controller/pointer visual to shift. This should be the visual model child, not the tracked controller root.")]
     [System.NonSerialized] public Transform visualPointerRoot;
     [System.NonSerialized] public List<Transform> visualAuxRoots = new List<Transform>();
+    [System.NonSerialized] public bool shiftInputPoseAndRay = true;
 
     [Tooltip("Stable prism shift direction in WORLD space.")]
     public Vector3 worldShiftAxis = Vector3.right;
 
-    Vector3 _originalWorldPosition;
     Vector3 _originalPointerLocalPosition;
     readonly List<Vector3> _originalAuxLocalPositions = new List<Vector3>();
-    bool _hasOriginalWorldPosition = false;
     bool _hasOriginalPointerLocalPosition = false;
 
     // Visible cues and visible pointer markers can be shifted so the participant
     // perceives a displaced visual scene.
     public Pose TransformPose(Pose rawPose)
     {
+        if (!shiftInputPoseAndRay)
+            return rawPose;
+
         // Shift the visible pose so markers / visible cues can appear shifted.
         Vector3 shift = GetShiftVector();
         return new Pose(rawPose.position + shift, rawPose.rotation);
     }
 
-    // The interaction/scoring ray is intentionally kept real.
-    // This lets the project separate what is *seen* from what is *physically scored*.
+    // The skew effect offsets both the visible effector and the effective aiming ray.
+    // The direction is unchanged; only the apparent hand/controller position moves.
     public Ray TransformRay(Ray rawRay)
     {
-        // Keep scoring / interaction ray real and unchanged.
-        return rawRay;
+        if (!shiftInputPoseAndRay)
+            return rawRay;
+
+        Vector3 shift = GetShiftVector();
+        return new Ray(rawRay.origin + shift, rawRay.direction);
     }
 
     // Applies the visual prism shift to scene elements.
     //
-    // Three things can move visually:
-    // 1. the visible world root,
-    // 2. the visible pointer/controller model,
-    // 3. extra auxiliary controller visuals such as poke/direct-interactor objects.
+    // Two things can move visually:
+    // 1. the visible pointer/controller model,
+    // 2. extra auxiliary controller visuals such as poke/direct-interactor objects.
     //
     // The original positions are cached the first time so ResetCameraEffect can put them back.
     public void ApplyCameraEffect(Camera cam)
     {
         Vector3 shift = GetShiftVector();
-
-        // Shift the visible world in world space.
-        if (visualWorldRoot != null)
-        {
-            if (!_hasOriginalWorldPosition)
-            {
-                _originalWorldPosition = visualWorldRoot.position;
-                _hasOriginalWorldPosition = true;
-            }
-
-            visualWorldRoot.position = _originalWorldPosition + shift;
-        }
 
         // Shift the visible controller MODEL relative to its tracked parent.
         if (visualPointerRoot != null)
@@ -208,6 +200,12 @@ public class SkewEffect : IEffectTransform
                 if (aux == null)
                     continue;
 
+                // If an auxiliary visual already lives under the main shifted pointer root,
+                // moving the parent is enough. Applying the same shift again here would
+                // double-offset child visuals such as attached beams or direct-interactor cues.
+                if (visualPointerRoot != null && aux.IsChildOf(visualPointerRoot))
+                    continue;
+
                 Vector3 auxLocalShift = aux.parent != null
                     ? aux.parent.InverseTransformVector(shift)
                     : shift;
@@ -221,9 +219,6 @@ public class SkewEffect : IEffectTransform
     // This is critical because otherwise old effect offsets would leak into later phases.
     public void ResetCameraEffect(Camera cam)
     {
-        if (visualWorldRoot != null && _hasOriginalWorldPosition)
-            visualWorldRoot.position = _originalWorldPosition;
-
         if (visualPointerRoot != null && _hasOriginalPointerLocalPosition)
             visualPointerRoot.localPosition = _originalPointerLocalPosition;
 
@@ -232,11 +227,15 @@ public class SkewEffect : IEffectTransform
             for (int i = 0; i < visualAuxRoots.Count && i < _originalAuxLocalPositions.Count; i++)
             {
                 if (visualAuxRoots[i] != null)
+                {
+                    if (visualPointerRoot != null && visualAuxRoots[i].IsChildOf(visualPointerRoot))
+                        continue;
+
                     visualAuxRoots[i].localPosition = _originalAuxLocalPositions[i];
+                }
             }
         }
 
-        _hasOriginalWorldPosition = false;
         _hasOriginalPointerLocalPosition = false;
         _originalAuxLocalPositions.Clear();
     }
@@ -253,6 +252,28 @@ public class SkewEffect : IEffectTransform
 
         axis.Normalize();
         return axis * shiftMeters;
+    }
+
+    // Expose the currently configured visual shift vector so other systems can reason
+    // about the pointer-only visual offset without duplicating the skew conversion math.
+    public Vector3 GetConfiguredShiftVector()
+    {
+        return GetShiftVector();
+    }
+
+    public bool TryGetVisualPointerWorldDelta(out Vector3 delta)
+    {
+        delta = Vector3.zero;
+
+        if (visualPointerRoot == null || !_hasOriginalPointerLocalPosition)
+            return false;
+
+        Vector3 originalWorldPosition = visualPointerRoot.parent != null
+            ? visualPointerRoot.parent.TransformPoint(_originalPointerLocalPosition)
+            : _originalPointerLocalPosition;
+
+        delta = visualPointerRoot.position - originalWorldPosition;
+        return true;
     }
 
     // Converts the user-facing skew value into meters.

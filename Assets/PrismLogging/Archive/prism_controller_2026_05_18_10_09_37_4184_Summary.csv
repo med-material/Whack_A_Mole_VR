@@ -1,0 +1,2 @@
+ActiveHand;AppliedEffectMode;BaselineSd;BaselineValue;BlockType;ConfiguredEffectMode;ConfirmMitigationMode;Email;Framecount;Magnitude;MetricName;MetricUnits;NormalizedMagnitude;Notes;PostSd;PostValue;SessionID;SignedDelta;SummaryType;TaskMode;Timestamp;TrackingMode;TrialCount;XRBackend
+Right;None;NULL;NULL;Baseline;None;NoMitigation;anonymous;1306;NULL;BisectionError;cm;NULL;Mean signed line bisection error;11.0705;12.3451;8e86c8a2-f02a-4adf-beb3-e059b2a71bed;NULL;BlockMetric;LineBisection;2026-05-18 10:09:20.6576;Controllers;20;OpenXR

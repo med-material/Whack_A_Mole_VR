@@ -72,6 +72,14 @@ public class PrismExperimentLogger : MonoBehaviour
         "TrackingMode",
         "ActiveHand",
         "ConfirmMitigationMode",
+        "ExperimentMode",
+        "StudyInputMode",
+        "StudyParticipantIndex",
+        "StudyGlobalParticipantId",
+        "StudySessionIndex",
+        "StudyTaskOrder",
+        "StudyResolvedTask",
+        "StudyResolvedEffect",
         "TrialIndex",
         "TrialsPerBlock",
         "AttemptIndex",
@@ -191,6 +199,14 @@ public class PrismExperimentLogger : MonoBehaviour
         "TrackingMode",
         "ActiveHand",
         "ConfirmMitigationMode",
+        "ExperimentMode",
+        "StudyInputMode",
+        "StudyParticipantIndex",
+        "StudyGlobalParticipantId",
+        "StudySessionIndex",
+        "StudyTaskOrder",
+        "StudyResolvedTask",
+        "StudyResolvedEffect",
         "TrialCount",
         "BaselineValue",
         "BaselineSd",
@@ -215,9 +231,12 @@ public class PrismExperimentLogger : MonoBehaviour
 
         if (loggingManager != null)
         {
-            resolvedSavePath = Path.Combine(Application.dataPath, "PrismLogging");
+            string baseLogPath = Path.Combine(Application.dataPath, "PrismLogging");
+            bool saveToParticipantFolder = runner != null && runner.CurrentExperimentMode == SandboxRunner.ExperimentMode.Participant;
+            resolvedSavePath = saveToParticipantFolder ? Path.Combine(baseLogPath, "Participants") : baseLogPath;
             Directory.CreateDirectory(resolvedSavePath);
             loggingManager.SetSavePath(resolvedSavePath);
+            Debug.Log($"[PrismExperimentLogger] CSV save path resolved to: {resolvedSavePath}");
             UpdateFilePrefixFromRunner();
             loggingManager.CreateLog(EventCollection, EventHeaders);
         }
@@ -240,6 +259,14 @@ public class PrismExperimentLogger : MonoBehaviour
             loggingManager.Log("Meta", "InputModeLabel", GetInputModeLabel());
             loggingManager.Log("Meta", "XRBackend", runner.CurrentXRBackend.ToString());
             loggingManager.Log("Meta", "ConfirmMitigationMode", runner.CurrentConfirmMitigationMode);
+            loggingManager.Log("Meta", "ExperimentMode", runner.CurrentExperimentMode.ToString());
+            loggingManager.Log("Meta", "StudyInputMode", runner.CurrentStudyInputMode.ToString());
+            loggingManager.Log("Meta", "StudyParticipantIndex", runner.CurrentStudyParticipantIndex);
+            loggingManager.Log("Meta", "StudyGlobalParticipantId", runner.CurrentStudyGlobalParticipantId);
+            loggingManager.Log("Meta", "StudySessionIndex", runner.CurrentStudySessionIndex);
+            loggingManager.Log("Meta", "StudyTaskOrder", runner.CurrentStudyTaskOrderLabel);
+            loggingManager.Log("Meta", "StudyResolvedTask", runner.CurrentStudyResolvedTaskLabel);
+            loggingManager.Log("Meta", "StudyResolvedEffect", runner.CurrentStudyResolvedEffectLabel);
         }
     }
 
@@ -261,6 +288,7 @@ public class PrismExperimentLogger : MonoBehaviour
             return;
 
         UpdateFilePrefixFromRunner();
+        Debug.Log($"[PrismExperimentLogger] Saving logs to: {resolvedSavePath}");
         hasSavedLogs = true;
         loggingManager.SaveAllLogs(clear: false);
     }
@@ -642,6 +670,14 @@ public class PrismExperimentLogger : MonoBehaviour
             data["TrackingMode"] = runner.CurrentOpenXRTrackingMode.ToString();
             data["ActiveHand"] = runner.CurrentActiveHand.ToString();
             data["ConfirmMitigationMode"] = runner.CurrentConfirmMitigationMode;
+            data["ExperimentMode"] = runner.CurrentExperimentMode.ToString();
+            data["StudyInputMode"] = runner.CurrentStudyInputMode.ToString();
+            data["StudyParticipantIndex"] = runner.CurrentStudyParticipantIndex > 0 ? runner.CurrentStudyParticipantIndex : "";
+            data["StudyGlobalParticipantId"] = runner.CurrentStudyGlobalParticipantId > 0 ? runner.CurrentStudyGlobalParticipantId : "";
+            data["StudySessionIndex"] = runner.CurrentStudySessionIndex > 0 ? runner.CurrentStudySessionIndex : "";
+            data["StudyTaskOrder"] = runner.CurrentStudyTaskOrderLabel;
+            data["StudyResolvedTask"] = runner.CurrentStudyResolvedTaskLabel;
+            data["StudyResolvedEffect"] = runner.CurrentStudyResolvedEffectLabel;
             // Add a pose snapshot at the time of this event.
             AddTrackerSnapshot(data);
         }
@@ -801,6 +837,14 @@ public class PrismExperimentLogger : MonoBehaviour
             data["TrackingMode"] = runner.CurrentOpenXRTrackingMode.ToString();
             data["ActiveHand"] = runner.CurrentActiveHand.ToString();
             data["ConfirmMitigationMode"] = runner.CurrentConfirmMitigationMode;
+            data["ExperimentMode"] = runner.CurrentExperimentMode.ToString();
+            data["StudyInputMode"] = runner.CurrentStudyInputMode.ToString();
+            data["StudyParticipantIndex"] = runner.CurrentStudyParticipantIndex > 0 ? runner.CurrentStudyParticipantIndex : "";
+            data["StudyGlobalParticipantId"] = runner.CurrentStudyGlobalParticipantId > 0 ? runner.CurrentStudyGlobalParticipantId : "";
+            data["StudySessionIndex"] = runner.CurrentStudySessionIndex > 0 ? runner.CurrentStudySessionIndex : "";
+            data["StudyTaskOrder"] = runner.CurrentStudyTaskOrderLabel;
+            data["StudyResolvedTask"] = runner.CurrentStudyResolvedTaskLabel;
+            data["StudyResolvedEffect"] = runner.CurrentStudyResolvedEffectLabel;
         }
 
         return data;

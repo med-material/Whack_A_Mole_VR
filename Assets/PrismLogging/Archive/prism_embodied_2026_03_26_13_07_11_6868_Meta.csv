@@ -1,0 +1,2 @@
+ConfirmMitigationMode;DeviceID;Email;Framecount;InputModeLabel;MainController;Product;RightControllerMain;Scene;SessionDuration;SessionID;SessionState;Timestamp;TrackingMode;XRBackend
+NoMitigation;85449bb515d38eca111016248ac99e8c86479117;anonymous;131;embodied;Right Controller;PrismEffectAdaptation;TRUE;TestAndDebug;1.0114;9c841c6f-9f45-47f0-a619-99494c34cf8b;Aborted;2026-03-26 13:07:11.6838;Hands;OpenXR

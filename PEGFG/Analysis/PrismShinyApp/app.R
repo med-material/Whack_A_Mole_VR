@@ -1238,7 +1238,7 @@ extract_quality_trials <- function(event_data, selected_task, selected_block) {
         filter(TaskMode == selected_task, BlockType == selected_block, Event %in% c("Mole Hit", "Mole Missed")) |>
         mutate(
           TrialIndex = as_num(AttemptIndex),
-          absolute_error = as_num(HitDistanceMeters),
+          absolute_error = as_num(HitDistanceMeters) * 100,
           outcome = ifelse(Event == "Mole Hit", "Hit", "Miss")
         ) |>
         filter(!is.na(TrialIndex), !is.na(absolute_error))
@@ -1298,6 +1298,11 @@ compute_quality_metrics <- function(quality_trials, selected_task) {
       outlier_threshold = NA_real_,
       slope = NA_real_,
       trend_label = "No quality data",
+      adaptation_speed = NA_real_,
+      adaptation_percent = NA_real_,
+      adaptation_label = "No adaptation estimate",
+      early_error = NA_real_,
+      late_error = NA_real_,
       hit_rate = NA_real_,
       trial_count = 0
     ))
@@ -1325,6 +1330,47 @@ compute_quality_metrics <- function(quality_trials, selected_task) {
            ifelse(slope > 0, "Error increased over trials", "Error decreased over trials"))
   )
 
+  adaptation_speed <- NA_real_
+  adaptation_percent <- NA_real_
+  adaptation_label <- "Only shown for exposure"
+  early_error <- NA_real_
+  late_error <- NA_real_
+
+  if (selected_task == "Exposure") {
+    ordered_trials <- quality_trials |>
+      arrange(TrialIndex)
+
+    segment_size <- max(1L, floor(nrow(ordered_trials) / 3))
+    early_segment <- head(ordered_trials$absolute_error, segment_size)
+    late_segment <- tail(ordered_trials$absolute_error, segment_size)
+
+    early_error <- mean(early_segment, na.rm = TRUE)
+    late_error <- mean(late_segment, na.rm = TRUE)
+
+    attempt_span <- max(ordered_trials$TrialIndex, na.rm = TRUE) - min(ordered_trials$TrialIndex, na.rm = TRUE)
+    adaptation_speed <- if (!is.na(attempt_span) && attempt_span > 0) {
+      (early_error - late_error) / attempt_span
+    } else {
+      NA_real_
+    }
+
+    adaptation_percent <- if (!is.na(early_error) && early_error > 0) {
+      ((early_error - late_error) / early_error) * 100
+    } else {
+      NA_real_
+    }
+
+    adaptation_label <- if (is.na(adaptation_speed) || is.na(adaptation_percent)) {
+      "Not enough exposure data to estimate adaptation speed"
+    } else if (abs(adaptation_speed) < 0.0005) {
+      "Early and late exposure error were very similar"
+    } else if (adaptation_speed > 0) {
+      "Positive values mean error reduced from early to late exposure"
+    } else {
+      "Negative values mean error increased from early to late exposure"
+    }
+  }
+
   hit_rate <- if (selected_task == "Exposure") {
     mean(quality_trials$outcome == "Hit", na.rm = TRUE)
   } else {
@@ -1338,6 +1384,11 @@ compute_quality_metrics <- function(quality_trials, selected_task) {
     outlier_threshold = outlier_threshold,
     slope = slope,
     trend_label = trend_label,
+    adaptation_speed = adaptation_speed,
+    adaptation_percent = adaptation_percent,
+    adaptation_label = adaptation_label,
+    early_error = early_error,
+    late_error = late_error,
     hit_rate = hit_rate,
     trial_count = nrow(quality_trials)
   )
@@ -1345,7 +1396,7 @@ compute_quality_metrics <- function(quality_trials, selected_task) {
 
 quality_units_label <- function(selected_task) {
   if (selected_task == "Exposure") {
-    return("m")
+    return("cm")
   }
   if (selected_task %in% c("OpenLoop", "LineBisection")) {
     return("cm")
@@ -2191,11 +2242,12 @@ server <- function(input, output, session) {
     metrics <- compute_quality_metrics(quality_trials, input$quality_task)
     units_label <- quality_units_label(input$quality_task)
     error_label <- quality_error_label(input$quality_task)
+    slope_display <- ifelse(!is.na(metrics$slope) && abs(metrics$slope) < 0.00005, 0, metrics$slope)
 
     trend_value <- ifelse(
-      is.na(metrics$slope),
+      is.na(slope_display),
       "N/A",
-      sprintf("%.4f %s per trial", metrics$slope, units_label)
+      sprintf("%.4f %s per trial", slope_display, units_label)
     )
 
     if (nrow(quality_trials) == 0) {
@@ -2236,6 +2288,20 @@ server <- function(input, output, session) {
 
     if (input$quality_task == "Exposure" && !is.na(metrics$hit_rate)) {
       cards <- append(cards, list(
+        div(class = "metric-card",
+            div(class = "metric-title", "Adaptation Speed"),
+            div(class = "metric-value", ifelse(
+              is.na(metrics$adaptation_speed),
+              "N/A",
+              sprintf("%.4f %s per trial", metrics$adaptation_speed, units_label)
+            )),
+            div(class = "metric-sub", ifelse(
+              is.na(metrics$adaptation_percent),
+              "No early-vs-late reduction estimate available",
+              sprintf("Early %.3f %s -> late %.3f %s (%.1f%% change)", metrics$early_error, units_label, metrics$late_error, units_label, metrics$adaptation_percent)
+            )),
+            div(class = "metric-sub", metrics$adaptation_label)
+        ),
         div(class = "metric-card",
             div(class = "metric-title", "Hit Rate"),
             div(class = "metric-value", sprintf("%.1f%%", metrics$hit_rate * 100)),

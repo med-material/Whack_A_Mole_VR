@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.Serialization;
 
 // ExposureTask implements the adaptation-inducing part of the workflow.
 //
@@ -42,8 +43,9 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     private Transform centerBullseyeDot;
 
     [Header("Exposure Block")]
-    [Tooltip("Number of successful target hits required before exposure is complete.")]
-    public int successfulHitsToComplete = 90;
+    [FormerlySerializedAs("successfulHitsToComplete")]
+    [Tooltip("Number of total attempts required before exposure is complete. Both hits and misses count toward this total.")]
+    public int attemptsToComplete = 90;
 
     [Tooltip("If true, target order is randomized. If false, cycles Left-Center-Right.")]
     private bool randomizeTargetOrder = true;
@@ -240,146 +242,161 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     // 8. log the attempt,
     // 9. if hit, advance toward completion and choose the next target,
     // 10. if enough hits were made, notify SandboxRunner that exposure is complete.
-    void Update()
+void Update()
+{
+    // If exposure is not the current task, do nothing.
+    if (!_isActive) return;
+
+    // Exposure requires the runner, board, and target array to function.
+    if (runner == null || boardPlane == null || targets == null || targets.Length < 3) return;
+
+    UpdateCenterBullseyeVisuals();
+
+    // SandboxRunner already resolves controller vs hand input and any active effect.
+    var (ray, pose, confirm) = runner.GetTransformedInput();
+
+    if (latchConfirm)
     {
-        // If exposure is not the current task, do nothing.
-        if (!_isActive) return;
-        // Exposure requires the runner, board, and target array to function.
-        if (runner == null || boardPlane == null || targets == null || targets.Length < 3) return;
+        // Prevent a single held confirmation from being counted more than once.
+        if (!confirm) _confirmLatched = false;
+        if (confirm && _confirmLatched) confirm = false;
+    }
 
-        UpdateCenterBullseyeVisuals();
+    if (requireResetBetweenTrials && hmd != null)
+    {
+        // Optional return-to-start gating, though exposure usually runs more continuously
+        // than the measurement tasks.
+        float resetY = hmd.position.y - resetDropMeters;
 
-        // SandboxRunner already resolves controller vs hand input and any active effect.
-        var (ray, pose, confirm) = runner.GetTransformedInput();
+        if (!_armed && pose.position.y <= resetY)
+            _armed = true;
 
-        if (latchConfirm)
+        if (confirm && !_armed)
+            confirm = false;
+    }
+
+    // If the aim ray does not hit the board, there is no valid live cursor position.
+    if (!IntersectRayWithBoard(ray, out Vector3 hitPoint))
+    {
+        _liveDistanceCm = null;
+        UpdateReadout();
+        return;
+    }
+
+    if (cursorMarker && showCursor)
+        cursorMarker.position = hitPoint;
+
+    Transform currentTarget = targets[_currentTargetIndex];
+
+    // Live distance is shown in centimeters because that is easier to read in the task UI.
+    if (currentTarget != null)
+        _liveDistanceCm = Vector3.Distance(hitPoint, currentTarget.position) * 100f;
+    else
+        _liveDistanceCm = null;
+
+    if (confirm)
+    {
+        // Always keep a short minimum gap between accepted attempts.
+        // Exposure usually runs without full reset gating, but we still do not want
+        // two near-simultaneous confirm edges to count as two separate attempts.
+        if (Time.time - _lastAcceptedTime < minSecondsBetweenAttempts)
         {
-            // Prevent a single held confirmation from being counted more than once.
-            if (!confirm) _confirmLatched = false;
-            if (confirm && _confirmLatched) confirm = false;
-        }
-
-        if (requireResetBetweenTrials && hmd != null)
-        {
-            // Optional return-to-start gating, though exposure usually runs more continuously
-            // than the measurement tasks.
-            float resetY = hmd.position.y - resetDropMeters;
-
-            if (!_armed && pose.position.y <= resetY)
-                _armed = true;
-
-            if (confirm && !_armed)
-                confirm = false;
-        }
-
-        // If the aim ray does not hit the board, there is no valid live cursor position.
-        if (!IntersectRayWithBoard(ray, out Vector3 hitPoint))
-        {
-            _liveDistanceCm = null;
             UpdateReadout();
             return;
         }
 
-        if (cursorMarker && showCursor)
-            cursorMarker.position = hitPoint;
+        _lastAcceptedTime = Time.time;
 
-        Transform currentTarget = targets[_currentTargetIndex];
-        // Live distance is shown in centimeters because that is easier to read in the task UI.
-        if (currentTarget != null)
-            _liveDistanceCm = Vector3.Distance(hitPoint, currentTarget.position) * 100f;
-        else
-            _liveDistanceCm = null;
-
-        if (confirm)
+        if (requireResetBetweenTrials)
         {
-            if (requireResetBetweenTrials)
-            {
-                // Prevent double acceptance from nearly simultaneous repeated confirmation.
-                if (Time.time - _lastAcceptedTime < minSecondsBetweenAttempts)
-                {
-                    UpdateReadout();
-                    return;
-                }
-
-                _lastAcceptedTime = Time.time;
-                _armed = false;
-            }
-
-            if (latchConfirm)
-                _confirmLatched = true;
-
-            _attemptCount++;
-
-            var target = targets[_currentTargetIndex];
-            // The block uses one resolved hit radius consistently across attempts.
-            float currentHitRadius = _configuredHitRadiusMeters;
-            float dist = Vector3.Distance(hitPoint, target.position);
-            bool isHit = dist <= currentHitRadius;
-            _lastAttemptDistanceCm = dist * 100f;
-            _lastAttemptWasHit = isHit;
-
-            // Two logging calls are used here:
-            // one for the raw pointer shot event, one for the interpreted exposure attempt.
-            experimentLogger?.LogPointerShoot(
-                _attemptCount,
-                _successCount,
-                _currentTargetIndex,
-                hitPoint,
-                target.position);
-
-            experimentLogger?.LogExposureAttempt(
-                _attemptCount,
-                _successCount,
-                _currentTargetIndex,
-                isHit,
-                dist,
-                hitPoint,
-                target.position);
-
-            if (hitMarker && showHitMarker)
-            {
-                // Hit marker shows where the accepted response landed on the board.
-                hitMarker.gameObject.SetActive(true);
-                hitMarker.position = hitPoint;
-            }
-
-            if (isHit)
-            {
-                // Hits advance the exposure block toward completion.
-                _successCount++;
-
-                if (logAttempts)
-                    Debug.Log($"[Exposure] HIT {_successCount}/{successfulHitsToComplete} on target {_currentTargetIndex} (attempt {_attemptCount}, dist={dist:0.000}m)");
-
-                FlashSingleTarget(_currentTargetIndex, hitColor);
-
-                if (_successCount >= successfulHitsToComplete)
-                {
-                    // Exposure is complete once the required number of successful hits is reached.
-                    experimentLogger?.LogExposureCompleted(_successCount, _attemptCount);
-                    UpdateReadout();
-                    Debug.Log("[Exposure] Exposure block complete.");
-                    runner?.NotifyExposureCompleted();
-                    return;
-                }
-
-                PickNextTarget(forceCenterFirst: false);
-                if (targets[_currentTargetIndex] != null)
-                    experimentLogger?.LogExposureTargetSpawned(_currentTargetIndex, targets[_currentTargetIndex].position);
-                RefreshTargetVisuals();
-            }
-            else
-            {
-                // Misses are logged and visually marked, but do not advance successCount.
-                if (logAttempts)
-                    Debug.Log($"[Exposure] MISS target {_currentTargetIndex} (attempt {_attemptCount}, dist={dist:0.000}m)");
-
-                FlashSingleTarget(_currentTargetIndex, missColor);
-            }
+            _armed = false;
         }
 
-        UpdateReadout();
+        if (latchConfirm)
+            _confirmLatched = true;
+
+        _attemptCount++;
+
+        var target = targets[_currentTargetIndex];
+
+        // The block uses one resolved hit radius consistently across attempts.
+        float currentHitRadius = _configuredHitRadiusMeters;
+        float dist = Vector3.Distance(hitPoint, target.position);
+        bool isHit = dist <= currentHitRadius;
+
+        _lastAttemptDistanceCm = dist * 100f;
+        _lastAttemptWasHit = isHit;
+
+        // Two logging calls are used here:
+        // one for the raw pointer shot event, one for the interpreted exposure attempt.
+        experimentLogger?.LogPointerShoot(
+            _attemptCount,
+            _successCount,
+            _currentTargetIndex,
+            hitPoint,
+            target.position);
+
+        experimentLogger?.LogExposureAttempt(
+            _attemptCount,
+            _successCount,
+            _currentTargetIndex,
+            isHit,
+            dist,
+            hitPoint,
+            target.position);
+
+        if (hitMarker && showHitMarker)
+        {
+            // Hit marker shows where the accepted response landed on the board.
+            hitMarker.gameObject.SetActive(true);
+            hitMarker.position = hitPoint;
+        }
+
+        if (isHit)
+        {
+            // Hits still matter analytically, but completion is now based on total
+            // attempts so participants who miss often do not get trapped in an
+            // overly long exposure block.
+            _successCount++;
+
+            if (logAttempts)
+                Debug.Log($"[Exposure] HIT success={_successCount}, attempt={_attemptCount}/{attemptsToComplete} on target {_currentTargetIndex} (dist={dist:0.000}m)");
+
+            FlashSingleTarget(_currentTargetIndex, hitColor);
+        }
+        else
+        {
+            // Misses are still counted as attempts for block completion.
+            if (logAttempts)
+                Debug.Log($"[Exposure] MISS attempt={_attemptCount}/{attemptsToComplete} on target {_currentTargetIndex} (dist={dist:0.000}m)");
+
+            FlashSingleTarget(_currentTargetIndex, missColor);
+        }
+
+        if (_attemptCount >= attemptsToComplete)
+        {
+            // Exposure is complete once the configured number of total attempts
+            // has been reached, regardless of hit/miss ratio.
+            experimentLogger?.LogExposureCompleted(_successCount, _attemptCount);
+            UpdateReadout();
+            Debug.Log("[Exposure] Exposure block complete.");
+            runner?.NotifyExposureCompleted();
+            return;
+        }
+
+        PickNextTarget(forceCenterFirst: false);
+
+        if (targets[_currentTargetIndex] != null)
+            experimentLogger?.LogExposureTargetSpawned(_currentTargetIndex, targets[_currentTargetIndex].position);
+
+        RefreshTargetVisuals();
+
+        // Play sound LAST, after the accepted attempt has fully completed.
+        runner?.PlayAcceptedClickSound();
     }
+
+    UpdateReadout();
+}
 
     // Shows or hides the targets and marker visuals belonging to exposure.
     // Unlike the measurement tasks, the targets themselves are part of the core task display.
@@ -674,8 +691,8 @@ public class ExposureTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
             $"Exposure\n" +
             $"Effect: {runner.CurrentEffectMode}\n" +
             $"Target: {targetName}\n" +
-            $"Hits: {_successCount}/{successfulHitsToComplete}\n" +
-            $"Attempts: {_attemptCount}\n" +
+            $"Hits: {_successCount}\n" +
+            $"Attempts: {_attemptCount}/{attemptsToComplete}\n" +
             $"Aim: {liveTxt}\n" +
             $"Last: {lastTxt}\n" +
             $"Gate: {gateTxt}";

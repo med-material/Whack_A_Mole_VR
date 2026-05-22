@@ -3,13 +3,15 @@
 % \usepackage{tikz}
 % \usetikzlibrary{positioning,arrows.meta,fit,backgrounds}
 % \usepackage{xcolor}
+% \usepackage{float}
+% \usepackage{tabularx}
 
 \section{Task Decomposition of the Prism Adaptation Workflow}
 \label{sec:task-decomposition}
 
 This section visualises how the prototype was designed from the participant's point of view. Rather than starting from scripts or interfaces, the design is described as a small set of repeated interaction loops and block transitions. The overall workflow follows a \emph{measurement--exposure--measurement} structure: a baseline task is first performed without perturbation, then an exposure block is completed under one of the implemented visual effects, and finally the same measurement task is repeated in a post-exposure phase. The key distinction is therefore between tasks that \emph{measure} a spatial estimate and the task that is intended to \emph{change} it through repeated visuomotor correction.
 
-Because the project compares both input modes and effect modes, the design also had to preserve comparability across conditions. Changing from controller input to embodied input, or from one perturbation to another, should not change the basic block order, the role of baseline and post-exposure measurement, or the participant's understanding of when a response has been accepted. An additional design consideration therefore concerns how responses are confirmed and what visual information is available before and after an action. The default controller implementation uses trigger confirmation, whereas embodied interaction uses dwell-based confirmation. The system also includes prototype-specific Heisenberg-mitigation variants, such as opposite-hand confirmation and controller-hover confirmation. These variants should therefore be understood as configurable design alternatives in the prototype rather than as fixed assumptions inherited from the prism-adaptation literature. Across the tasks, the most important feedforward cues are the currently shown target or stimulus layout, while the most important feedback cues are the accepted response, the loading/progress indicator, and the visible shift to the next required interaction. Figure~\ref{fig:prism-task-cycles} therefore shows the abstract task structure, while a separate movement illustration can be used alongside it to show the concrete body posture and arm motion associated with each task.
+Because the project compares both input modes and effect modes, the design also had to preserve comparability across conditions. Changing from controller input to embodied input, or from one perturbation to another, should not change the basic block order, the role of baseline and post-exposure measurement, or the participant's understanding of when a response has been accepted. An additional design consideration therefore concerns how responses are confirmed and what visual information is available before and after an action. The default controller implementation uses trigger confirmation, whereas embodied interaction uses dwell-based confirmation. The system also includes prototype-specific Heisenberg-mitigation variants, such as opposite-hand confirmation and controller-hover confirmation. These variants should therefore be understood as configurable design alternatives in the prototype rather than as fixed assumptions inherited from the prism-adaptation literature. Across the tasks, the most important feedforward cues are the currently shown target or stimulus layout, while the most important feedback cues are the accepted response, the loading/progress indicator, and the visible shift to the next required interaction. Figures~\ref{fig:prism-task-cycles} and~\ref{fig:design-task-posture} therefore work together: the first shows the abstract task structure, while the second ties the task modes to the intended body posture and wall-based interaction setup used during testing.
 
 \begin{figure}[t]
     \centering
@@ -82,6 +84,15 @@ Because the project compares both input modes and effect modes, the design also 
     \label{fig:prism-task-cycles}
 \end{figure}
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.97\linewidth]{img/2_Design/Unity inspector illusrations.jpg}
+    \caption{Design illustration linking task selection to participant posture. The Inspector view on the left shows the task-mode switch in \texttt{SandboxRunner.cs}, while the sketches on the right show the intended posture and wall stimulus for the corresponding tasks. The figure was used to keep the participant's standing position, raised-arm workspace, and target or line relationship consistent across Open-Loop Pointing, Line Bisection, Landmark, and Exposure.}
+    \label{fig:design-task-posture}
+\end{figure}
+
+The participant's body placement was intentionally constrained by design. Across the tasks, the participant remains oriented toward the same target wall and works within one frontal interaction space, moving between a lowered resting posture and a raised aiming posture rather than walking or reorienting between trials. This keeps the bodily setup stable while allowing the task stimulus and response rule to change. In design terms, the task differences should come from what is shown on the wall and how that response is interpreted, not from a different room layout or a different whole-body movement pattern.
+
 \subsection{Open-Loop Pointing}
 \label{subsec:open-loop-decomposition}
 
@@ -106,3 +117,70 @@ Exposure is the adaptation-inducing task and is therefore structured differently
 \label{subsec:measurement-vs-exposure}
 
 The workflow therefore contains two different experimental logics. Open-loop pointing and line bisection are measurement tasks that isolate a single accepted response and compare it between baseline and post-exposure phases. Exposure, by contrast, is a repeated target-acquisition task whose purpose is to induce sensorimotor adaptation under perturbation. Landmark remains conceptually separate as a perceptual comparison task that may be useful for later clinical use, but is less central to the present healthy-participant workflow. These distinctions also define what the later implementation has to preserve: one stable baseline--exposure--post-exposure structure, configurable confirmation variants across input modes, and task-specific differences that remain local to the task itself rather than changing the overall workflow.
+
+\subsection{Data Collection and Analysis Design}
+\label{subsec:analysis-layer-design}
+
+The task decomposition above defines how the participant should move through the prototype, but it also defines what the system must record. Once the task loops had been specified, the next design question was therefore how to translate those loops into a data structure that would still be interpretable after the session had ended. The guiding principle was to keep the smallest meaningful unit of behaviour intact: one accepted measurement trial should remain one readable record, one exposure attempt should remain one readable adaptation event, and the whole session should still be reconstructable as one baseline--exposure--post-exposure sequence.
+
+This produced two linked design requirements. First, each task needed a task-specific output structure that matched its own logic rather than forcing all tasks into one identical metric. Second, those task-specific outputs needed to be attached to enough shared session context that they could be compared across task, effect, and input conditions. Table~\ref{tab:design-data-requirements} summarizes the first requirement.
+
+\begin{table}[H]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{5pt}
+    \renewcommand{\arraystretch}{1.18}
+    \begin{tabularx}{\linewidth}{|
+        >{\raggedright\arraybackslash}p{0.19\linewidth}|
+        >{\raggedright\arraybackslash}X|
+        >{\raggedright\arraybackslash}p{0.29\linewidth}|}
+        \hline
+        \textbf{Task or level} & \textbf{Data that had to be preserved by design} & \textbf{Why it was needed later} \\
+        \hline
+        Open-Loop Pointing & Block and trial identity, target identity, accepted response position, signed endpoint deviation, and absolute error. & To compare baseline and post-exposure pointing directly and compute aftereffect magnitude and direction. \\
+        \hline
+        Line Bisection & Block and trial identity, displayed line state, accepted response position, signed deviation from the true midpoint, and absolute midpoint error. & To preserve midpoint judgments in a form that can be compared across baseline and post-exposure blocks. \\
+        \hline
+        Landmark & Block and trial identity, line-segment arrangement, objectively longer side, chosen side, and correctness. & To inspect response bias and perceptual judgment without forcing the task into an endpoint-error format it does not naturally have. \\
+        \hline
+        Exposure & Attempt order, active target identity, accepted hit position, hit or miss outcome, distance from target center, and completion state. & To inspect adaptation across attempts, hit rate, drift, unusually large misses, and the overall stability of the exposure block. \\
+        \hline
+        Session-wide context & Session identifier, timestamps, task mode, effect mode, input mode, confirmation mode, handedness, phase transitions, and summary rows linking baseline and post-exposure. & To compare conditions across runs and keep each accepted response anchored to the correct experimental configuration. \\
+        \hline
+        Continuous samples & Time-ordered pointer, hand, controller, and head samples together with current task context. & To reconstruct trajectories and later inspect movement phases such as approach, deceleration, and hover. \\
+        \hline
+    \end{tabularx}
+    \caption{Design-level data requirements derived from the task decomposition.}
+    \label{tab:design-data-requirements}
+\end{table}
+
+The second requirement concerns how those outputs are used collectively. The project does not only ask whether one participant adapted in one sequence of trials; it asks how different combinations of task, effect, and input mode behave. Every accepted response therefore also needs session-wide context such as the active perturbation, the chosen input mode, the confirmation rule, the current phase of the experiment, and a session identifier that links metadata, event rows, continuous samples, and later summaries together. Table~\ref{tab:analysis-design-questions} summarizes how this shared structure supports the later analysis layer.
+
+\begin{table}[H]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{5pt}
+    \renewcommand{\arraystretch}{1.18}
+    \begin{tabularx}{\linewidth}{|
+        >{\raggedright\arraybackslash}p{0.29\linewidth}|
+        >{\raggedright\arraybackslash}X|
+        >{\raggedright\arraybackslash}p{0.20\linewidth}|}
+        \hline
+        \textbf{Design question} & \textbf{What the data structure must support} & \textbf{Later analysis view} \\
+        \hline
+        How large is the aftereffect, and in which direction does it point? & Baseline and post-exposure values must be linked by task, session, and condition so signed change and magnitude can be calculated directly. & Summary \\
+        \hline
+        How do different task, effect, and input combinations compare? & Accepted responses and summaries must retain shared condition labels so sessions can be filtered and grouped without manual recoding. & Compare \\
+        \hline
+        Does the exposure block look stable, noisy, or adaptive? & Exposure attempts must preserve order, hit or miss status, target-relative error, and enough information to estimate change over attempts. & Quality \\
+        \hline
+        Where do responses land relative to targets, midpoints, and left/right structure? & Accepted responses must remain attached to task-relevant spatial coordinates rather than only to scalar scores. & Spatial \\
+        \hline
+        How does one attempt unfold as movement rather than only as an endpoint? & Continuous samples must remain linked to accepted attempts and task context so the path can be reconstructed later. & Trajectories \\
+        \hline
+    \end{tabularx}
+    \caption{Analysis-layer design questions derived from the shared logging structure.}
+    \label{tab:analysis-design-questions}
+\end{table}
+
+Taken together, the task side and the analysis side describe one continuous design. The Unity runtime specifies what the participant should see and do, while the data structure specifies what the system must preserve so that those actions can later be interpreted as baseline performance, exposure behaviour, aftereffects, spatial bias, and movement form. The implementation chapter can then be read as the concrete realization of these design decisions.

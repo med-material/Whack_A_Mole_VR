@@ -1,4 +1,5 @@
 using UnityEngine;
+using TMPro;
 
 [ExecuteAlways]
 [DisallowMultipleComponent]
@@ -181,47 +182,62 @@ public class HandDwellProgressBar : MonoBehaviour
     // There are two display modes:
     // 1. transition mode, which uses TaskTransitionProgress01,
     // 2. confirmation mode, which uses ConfirmDwellProgress01.
-    void RefreshVisualState()
+void RefreshVisualState()
+{
+    AutoAssignRunner();
+    EnsureVisualTree();
+
+    float progress = 0f;
+    bool shouldShow = !autoHideWhenIdle;
+
+    if (runner != null)
     {
-        AutoAssignRunner();
-        EnsureVisualTree();
-
-        float progress = 0f;
-        bool shouldShow = !autoHideWhenIdle;
-
-        if (runner != null)
+        if (runner.IsTaskTransitionActive)
         {
-            if (runner.IsTaskTransitionActive)
+            // During task transitions, reuse the same bar as a loading indicator.
+            progress = Mathf.Clamp01(runner.TaskTransitionProgress01);
+            shouldShow = true;
+        }
+        else
+        {
+            // Do not show confirm/dwell progress while the task is explicitly in RESET.
+            // This avoids implying that the participant can confirm while gated.
+            bool gateAllowsConfirm = true;
+
+            TextMeshProUGUI readout = runner.GetStatReadout();
+            if (readout != null && !string.IsNullOrEmpty(readout.text))
             {
-                // During task transitions, reuse the same bar as a loading indicator.
-                progress = Mathf.Clamp01(runner.TaskTransitionProgress01);
-                shouldShow = true;
+                gateAllowsConfirm = !readout.text.Contains("Gate: RESET");
             }
-            else
+
+            if (gateAllowsConfirm)
             {
-                // Otherwise, show dwell/confirm buildup if such a confirmation is active.
                 progress = Mathf.Clamp01(runner.ConfirmDwellProgress01);
                 shouldShow |= runner.IsConfirmDwellActive || progress > 0f;
             }
+            else
+            {
+                progress = 0f;
+                shouldShow = false;
+            }
         }
-
-        if (backgroundGraphic != null)
-            backgroundGraphic.enabled = shouldShow;
-
-        if (fillGraphic != null)
-            fillGraphic.enabled = shouldShow;
-
-        if (_fillRect == null)
-            _fillRect = fillGraphic != null ? fillGraphic.rectTransform : null;
-
-        if (_fillRect == null)
-            return;
-
-        // The bar grows horizontally from left to right.
-        // Height stays constant; only width depends on progress.
-        float height = Mathf.Max(0f, barSize.y - (fillPadding * 2f));
-        float width = Mathf.Max(0f, barSize.x * progress);
-
-        _fillRect.sizeDelta = new Vector2(width, height);
     }
+
+    if (backgroundGraphic != null)
+        backgroundGraphic.enabled = shouldShow;
+
+    if (fillGraphic != null)
+        fillGraphic.enabled = shouldShow;
+
+    if (_fillRect == null)
+        _fillRect = fillGraphic != null ? fillGraphic.rectTransform : null;
+
+    if (_fillRect == null)
+        return;
+
+    float height = Mathf.Max(0f, barSize.y - (fillPadding * 2f));
+    float width = Mathf.Max(0f, barSize.x * progress);
+
+    _fillRect.sizeDelta = new Vector2(width, height);
+}
 }

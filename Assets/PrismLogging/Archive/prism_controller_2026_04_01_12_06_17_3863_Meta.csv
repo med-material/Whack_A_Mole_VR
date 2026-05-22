@@ -1,0 +1,2 @@
+ConfirmMitigationMode;DeviceID;Email;ExposureHitRadiusCm;ExposureHitRadiusMeters;Framecount;InputModeLabel;MainController;Product;RightControllerMain;Scene;SessionDuration;SessionID;SessionState;Timestamp;TrackingMode;XRBackend
+NoMitigation;85449bb515d38eca111016248ac99e8c86479117;anonymous;10.0000;0.1000;12441;controller;Right Controller;PrismEffectAdaptation;TRUE;TestAndDebug;104.1744;bbfc04fc-4c93-477f-9fcb-ca0779db41a4;Finished;2026-04-01 12:06:17.3858;Controllers;OpenXR

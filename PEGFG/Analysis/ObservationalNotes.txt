@@ -1,0 +1,19 @@
+participant 1: meget erfaring i VR, langsom og præcis
+
+participant 2: Ekstremt hurtigt gennemgang missede mange gange
+
+participant 3: Stabil ikke meget at notere
+
+participant 4: Ikke meget erfaring missede mange, headset blev løst.
+
+participant 5: Meget erfaring, ekstremt præcis.
+
+Particpant 6: Tracking som i de andre embodiment tests var finicky i nogle tilfælde. Adaptation virkede til at transfer til efterfølgende tasks specielt run 2's post til run 3 baseline. Siden deres hånd var sidelæns så var små justeringer nok til store forskelle i distancer. Open loop var meget mere præcis end line bisection med no effect.
+
+Participant 7: Lærte hurtigt og rammer godt med fin hastighed. Havde meget svært ved at ramme i skew fra open loop. Justerede den modsatte vej end hvad exposure burde. Justering fra skew blev fikset af justering af translation imellem task 2-3. Ret inconsistent, men har elers god form. Har moderate experience i VR.
+
+Participant 8: Blev hurtigt træt og var ikke specielt fokuseret. Brugeren kalibrerde imens de kiggede en anden vej så deres første post hits blev hårde outliers under open loop post skew post. Brugeren er ekstremt forvirret over hvor han skulle klikke hvilket ledte til en del outliers. 
+
+Participant 9: Rolig og præcis gennemgang. virkede som om fatigue byggede sig op. Meget præcis resistant over for adaptation, skew havde effect. Bruger lidt af overkroppen til at sigte selv efter kommentar, hvilket lignede at resulted var meget mere prøcist og resistent over for perbutation.
+
+participant 10: Endnu en embodiment test participant lyttede og forstod opgaven godt. adaptation bløder ind i næste opgave ved task 3 baseline. Peger meget opad selv med kommentar, burde ikke affect vores horizontale målinger though. Blev hurtigere mod starten hvilket også gjorde dem upræcis.

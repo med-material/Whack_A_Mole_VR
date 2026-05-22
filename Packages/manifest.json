@@ -1,8 +1,10 @@
 {
   "dependencies": {
+    "com.meta.xr.sdk.all": "201.0.0",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.2d.tilemap": "1.0.0",
-    "com.unity.ai.navigation": "2.0.8",
+    "com.unity.ai.assistant": "2.8.0-pre.1",
+    "com.unity.ai.inference": "2.6.1",
     "com.unity.analytics": "3.8.1",
     "com.unity.collab-proxy": "2.8.2",
     "com.unity.ext.nunit": "2.0.5",
@@ -19,7 +21,6 @@
     "com.unity.xr.hands": "1.5.1",
     "com.unity.xr.interaction.toolkit": "3.2.1",
     "com.unity.xr.meta-openxr": "2.2.1",
-    "com.unity.xr.oculus": "4.5.1",
     "com.unity.xr.openxr": "1.15.1",
     "com.valvesoftware.unity.openvr": "file:../Assets/SteamVR/OpenVRUnityXRPackage/Editor/com.valvesoftware.unity.openvr-1.1.4.tgz",
     "com.unity.modules.accessibility": "1.0.0",

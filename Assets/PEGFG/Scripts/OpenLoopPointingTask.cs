@@ -54,7 +54,7 @@ public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask, IAimTargetProvi
 
     [Header("Block")]
     private BlockType blockType = BlockType.Baseline;
-    private int trialsPerBlock = 30;
+    private int trialsPerBlock = 10;
     private bool latchConfirm = true;
 
     [Header("Debug")]
@@ -274,6 +274,7 @@ public class OpenLoopPointingTask : MonoBehaviour, ISandboxTask, IAimTargetProvi
 
             if (latchConfirm) _confirmLatched = true;
 
+            runner?.PlayAcceptedClickSound();
             // If the live marker is hidden, the marker can still be placed at the accepted hit.
             // In practice this is mainly useful for debugging and verification rather than
             // as a defining part of the open-loop task logic.

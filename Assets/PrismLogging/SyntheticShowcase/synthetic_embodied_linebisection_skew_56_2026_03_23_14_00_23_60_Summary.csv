@@ -1,0 +1,4 @@
+ActiveHand;AppliedEffectMode;BaselineSd;BaselineValue;BlockType;ConfiguredEffectMode;Email;Framecount;Magnitude;MetricName;MetricUnits;NormalizedMagnitude;Notes;PostSd;PostValue;SessionID;SignedDelta;SummaryType;TaskMode;Timestamp;TrackingMode;TrialCount;XRBackend
+Right;None;NULL;NULL;Baseline;Skew;anonymous;41204;NULL;BisectionError;cm;NULL;Mean signed LineBisection error;1.8556;0.2651;02380e94-305e-40ee-96f4-ba201ac8d715;NULL;BlockMetric;LineBisection;2026-03-23 14:00:23.6048;Hands;20;OpenXR
+Right;None;NULL;NULL;Post;Skew;anonymous;23662;NULL;BisectionError;cm;NULL;Mean signed LineBisection error;2.9235;1.9929;02380e94-305e-40ee-96f4-ba201ac8d715;NULL;BlockMetric;LineBisection;2026-03-23 14:00:23.6048;Hands;20;OpenXR
+Right;None;1.8556;0.2651;Post;Skew;anonymous;48252;1.7278;BisectionError;cm;0.9311;Post minus baseline LineBisection error;2.9235;1.9929;02380e94-305e-40ee-96f4-ba201ac8d715;1.7278;Aftereffect;LineBisection;2026-03-23 14:00:23.6048;Hands;20;OpenXR

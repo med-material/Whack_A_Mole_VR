@@ -5,6 +5,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.XR;
 using TMPro;
+using System.IO;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -76,17 +77,44 @@ public enum TaskMode { OpenLoop, LineBisection, Landmark, Exposure }
 public enum Handedness { Left, Right }
 public enum XRBackend { SteamVR, OpenXR }
 public enum OpenXRTrackingMode { Controllers, Hands }
+public enum ExperimentMode { Debug, Participant }
+public enum StudyInputMode { Controller, Embodied }
 
 [Header("Mode")]
 [SerializeField] private EffectMode effectMode = EffectMode.None;
 [Tooltip("Active mode. Exposure is entered via key or automatically.")]
 [SerializeField] private TaskMode taskMode = TaskMode.OpenLoop;
+[Header("Participant Display")]
+[SerializeField] private bool hideParticipantStats = true;
+[SerializeField] private bool hideInputRenderers = true;
+
+[Header("Study Mode")]
+[SerializeField] private ExperimentMode experimentMode = ExperimentMode.Debug;
+[SerializeField, HideInInspector] private StudyInputMode studyInputMode = StudyInputMode.Controller;
+[SerializeField, HideInInspector] private bool startNewParticipant = false;
+[SerializeField, HideInInspector] private int studyParticipantIndex = 1;
+[SerializeField, HideInInspector, Min(1), Tooltip("Resolved automatically from finished runs for the selected participant in the selected input-modality group.")]
+private int studySessionIndex = 1;
+[SerializeField, HideInInspector, Min(1)] private int studyGlobalParticipantId = 1;
+[SerializeField, HideInInspector] private TaskMode studyResolvedTask = TaskMode.LineBisection;
+[SerializeField, HideInInspector] private EffectMode studyResolvedEffect = EffectMode.None;
+[SerializeField, HideInInspector] private string studyTaskOrderLabel = "LineBisectionFirst";
+[SerializeField, HideInInspector] private string studyEffectSequencePreview = "None -> Translation -> Rotation -> Skew";
+
+[Header("Accepted Click Feedback")]
+[SerializeField] private bool playAcceptedClickSound = true;
+[SerializeField, Range(0f, 1f)] private float acceptedClickVolume = 0.22f;
+[SerializeField] private float acceptedClickFrequency = 520f;
+[SerializeField] private float acceptedClickDurationSeconds = 0.075f;
+
+private AudioSource _acceptedClickAudioSource;
+private AudioClip _acceptedClickClip;
 
 [Header("Scene References")]
- [SerializeField] private Camera mainCam;
- [SerializeField] private Transform visualWorldRoot;
- [SerializeField] private TextMeshProUGUI statReadout;
- [SerializeField] private PrismExperimentLogger experimentLogger;
+ [SerializeField, HideInInspector] private Camera mainCam;
+ [SerializeField, HideInInspector] private Transform visualWorldRoot;
+ [SerializeField, HideInInspector] private TextMeshProUGUI statReadout;
+ [SerializeField, HideInInspector] private PrismExperimentLogger experimentLogger;
 
 
 [Header("XR Input")]
@@ -96,6 +124,8 @@ public enum OpenXRTrackingMode { Controllers, Hands }
 [SerializeField] private float handDwellSeconds = 2f;
 [SerializeField, Tooltip("Lower values are more responsive. 0 disables smoothing.")]
 private float handRaySmoothingSeconds = 0.06f;
+[SerializeField, Tooltip("Target standing distance from the middle board target during calibration.")]
+private float calibrationDistanceMeters = 2f;
 [SerializeField, HideInInspector] private GameObject openXRLeftHandTrackingPrefab;
 [SerializeField, HideInInspector] private GameObject openXRRightHandTrackingPrefab;
 
@@ -106,21 +136,21 @@ public bool noHeisenbergMitigation = true;
 public bool useOppositeHandTrigger = false;
 [Tooltip("Auto-confirm after dwelling near the current task target with the controller aim.")]
 public bool useControllerHoverConfirm = false;
-[SerializeField, Min(0.05f)] private float controllerHoverSeconds = 1.0f;
-[SerializeField, Min(0.01f)] private float controllerHoverActivationRadiusMeters = 0.50f;
+[SerializeField, HideInInspector, Min(0.05f)] private float controllerHoverSeconds = 1.0f;
+[SerializeField, HideInInspector, Min(0.01f)] private float controllerHoverActivationRadiusMeters = 0.50f;
 
 [Header("Task Transition")]
-[SerializeField] private float taskTransitionSeconds = 2f;
+[SerializeField, HideInInspector] private float taskTransitionSeconds = 2f;
 
 [Header("Calibration")]
-[SerializeField] private Transform rigRoot;
-[SerializeField] private Transform hmd;
-[SerializeField, Tooltip("Preferred head-height anchor. The HMD height is aligned to this object.")]
+[SerializeField, HideInInspector] private Transform rigRoot;
+[SerializeField, HideInInspector] private Transform hmd;
+[SerializeField, HideInInspector, Tooltip("Preferred head-height anchor. The HMD height is aligned to this object.")]
 private Transform boardMid;
-[SerializeField, Tooltip("Preferred body-center anchor. The rig root horizontal position is aligned to this object.")]
+[SerializeField, HideInInspector, Tooltip("Preferred body-center anchor. The rig root horizontal position is aligned to this object.")]
 private Transform bodyCenterAnchor;
-[SerializeField] private bool calibrateOnStart = true;
-[SerializeField] private bool recenterXRTrackingOnCalibrate = true;
+[SerializeField, HideInInspector] private bool calibrateOnStart = true;
+[SerializeField, HideInInspector] private bool recenterXRTrackingOnCalibrate = true;
 private float calibrateOnStartDelaySeconds = 0.25f;
 private SteamVR_Action_Boolean _calibrateAction;
 private SteamVR_Input_Sources calibrationHand = SteamVR_Input_Sources.RightHand;
@@ -137,19 +167,23 @@ private MonoBehaviour exposureTask;
 [SerializeField] private SkewEffect skew = new();
 
 [Header("Experiment Flow")]
-[SerializeField] private KeyCode enterExposureKey = KeyCode.E;
-[SerializeField] private KeyCode restartBaselineKey = KeyCode.R;
- [SerializeField] private bool autoProgressExperiment = true;
- [SerializeField] private bool stopPlayModeWhenExperimentCompletes = true;
+[SerializeField, HideInInspector] private KeyCode enterExposureKey = KeyCode.E;
+[SerializeField, HideInInspector] private KeyCode restartBaselineKey = KeyCode.R;
+ [SerializeField, HideInInspector] private bool autoProgressExperiment = true;
+ [SerializeField, HideInInspector] private bool stopPlayModeWhenExperimentCompletes = true;
 
 private bool autoReturnFromExposure = true;
 
 [Header("Debug")]
 [SerializeField] private bool drawDebugRays = true;
+[SerializeField] private bool examinerOnlyDebugRays = true;
+[SerializeField] private bool logOppositeConfirmDebug = true;
 
 private LineRenderer _rawRayLine;
 private LineRenderer _transformedRayLine;
 private Transform _rayDebugRoot;
+private Camera _examinerDebugCamera;
+const int ExaminerDebugRayLayer = 31;
 
 private IEffectTransform _effect;
 
@@ -168,7 +202,8 @@ private SteamVR_Action_Boolean _confirmAction;
 private bool _confirmDown;
 private bool _confirmPressedLastFrameLeft;
 private bool _confirmPressedLastFrameRight;
-private bool _calibrateDownLastFrame;
+private bool _calibratePressedLastFrameLeft;
+private bool _calibratePressedLastFrameRight;
 private bool _handPointingActive;
 private float _handPointingStartTime = -1f;
 private float _handDwellProgress01;
@@ -179,10 +214,22 @@ private float _controllerHoverStartTime = -1f;
 private bool _controllerHoverTriggered;
 private bool _controllerHoverHadTargetLastFrame;
 private Vector3 _controllerHoverLastTargetCenter;
+private bool _metaConcurrentHandsControllersEnabled;
+private bool _metaConcurrentHandsControllersInitialized;
+private bool _metaConcurrentHandsControllersRequestedState;
+private bool _metaConcurrentHandsControllersSupportKnown;
+private bool _metaConcurrentHandsControllersSupported;
+private bool _leftControllerWasAvailable;
+private bool _rightControllerWasAvailable;
+private bool _xrDevicesChanged;
 private bool _smoothedHandRayInitialized;
 private Handedness _smoothedHandRayHand;
 private Vector3 _smoothedHandRayOrigin;
 private Vector3 _smoothedHandRayDirection = Vector3.forward;
+private bool _lastDebugInputValid;
+private int _lastDebugInputFrame = -1;
+private Ray _lastDebugRawRay;
+private Ray _lastDebugTransformedRay;
 private bool _prevNoHeisenbergMitigation = true;
 private bool _prevUseOppositeHandTrigger;
 private bool _prevUseControllerHoverConfirm;
@@ -193,7 +240,16 @@ public TaskMode CurrentTaskMode => taskMode;
 public XRBackend CurrentXRBackend => xrBackend;
 public OpenXRTrackingMode CurrentOpenXRTrackingMode => openXRTrackingMode;
 public Handedness CurrentActiveHand => activeHand;
+public ExperimentMode CurrentExperimentMode => experimentMode;
+public StudyInputMode CurrentStudyInputMode => studyInputMode;
 public EffectMode CurrentAppliedEffectMode => taskMode == TaskMode.Exposure ? effectMode : EffectMode.None;
+public int CurrentStudyParticipantIndex => experimentMode == ExperimentMode.Participant ? studyParticipantIndex : 0;
+public int CurrentStudyGlobalParticipantId => experimentMode == ExperimentMode.Participant ? studyGlobalParticipantId : 0;
+public int CurrentStudySessionIndex => experimentMode == ExperimentMode.Participant ? studySessionIndex : 0;
+public string CurrentStudyTaskOrderLabel => experimentMode == ExperimentMode.Participant ? studyTaskOrderLabel : "Manual";
+public string CurrentStudyResolvedTaskLabel => experimentMode == ExperimentMode.Participant ? studyResolvedTask.ToString() : taskMode.ToString();
+public string CurrentStudyResolvedEffectLabel => experimentMode == ExperimentMode.Participant ? studyResolvedEffect.ToString() : effectMode.ToString();
+public string CurrentStudyEffectSequencePreview => experimentMode == ExperimentMode.Participant ? studyEffectSequencePreview : "Manual";
 public bool IsHandPointing => _handPointingActive;
 public float HandDwellProgress01 => _handDwellProgress01;
 public bool IsConfirmDwellActive => _confirmDwellActive;
@@ -253,6 +309,13 @@ private Coroutine _taskTransitionCoroutine;
 // start in a sensible state without additional manual setup.
 void Start()
 {
+    ApplyParticipantModeConfiguration();
+
+    if (experimentMode == ExperimentMode.Participant)
+    {
+        Debug.Log($"[SandboxRunner] Participant mode resolved to: Input={studyInputMode}, Participant={studyParticipantIndex}, Session={studySessionIndex}, TaskOrder={studyTaskOrderLabel}, Task={studyResolvedTask}, Effect={studyResolvedEffect}");
+    }
+
     _lastEffectMode = effectMode;
     _lastTaskMode = taskMode;
     _lastActiveHand = activeHand;
@@ -263,6 +326,8 @@ void Start()
     AutoAssignReferences();
     AutoAssignXRInput();
     UpdateOpenXRVisualMode();
+    UpdateMetaConcurrentHandsAndControllersState();
+    UpdateControllerHotplugState();
     SelectEffect();
     ApplyTaskMode();
 
@@ -357,6 +422,13 @@ void Update()
 {
     HandleKeyboardShortcuts();
 
+    if (_xrDevicesChanged)
+    {
+        _xrDevicesChanged = false;
+        AutoAssignXRInput();
+        ResetInputLatchState();
+    }
+
     if (_waitingForExposureReturn && Time.time >= _pendingExposureReturnTime)
     {
         _waitingForExposureReturn = false;
@@ -394,6 +466,8 @@ void Update()
 
     AutoAssignXRInput();
     UpdateOpenXRVisualMode();
+    UpdateMetaConcurrentHandsAndControllersState();
+    UpdateControllerHotplugState();
     UpdateXRConfirm();
     UpdateCalibrationInput();
     SyncEffectReferences();
@@ -403,7 +477,66 @@ void Update()
 
     _effect.ApplyCameraEffect(mainCam);
 
+}
+
+void OnXRDeviceConnected(InputDevice device)
+{
+    _xrDevicesChanged = true;
+}
+
+void OnXRDeviceDisconnected(InputDevice device)
+{
+    _xrDevicesChanged = true;
+}
+
+void LateUpdate()
+{
     UpdateDebugLines();
+    SanitizeParticipantStatReadout();
+}
+
+void SanitizeParticipantStatReadout()
+{
+    if (!hideParticipantStats)
+        return;
+
+    if (experimentMode != ExperimentMode.Participant)
+        return;
+
+    if (statReadout == null)
+        return;
+
+    string raw = statReadout.text;
+    if (string.IsNullOrWhiteSpace(raw))
+        return;
+
+    string[] lines = raw.Split('\n');
+
+    string titleLine = lines.Length > 0 ? lines[0] : taskMode.ToString();
+    string trialLine = "";
+    string gateLine = "";
+
+    foreach (string line in lines)
+    {
+        string trimmed = line.Trim();
+
+        if (trimmed.StartsWith("Trial ") || trimmed.StartsWith("Attempts:"))
+            trialLine = trimmed;
+
+        if (trimmed.StartsWith("Gate:"))
+            gateLine = trimmed;
+    }
+
+    if (string.IsNullOrEmpty(trialLine))
+        trialLine = "Block in progress";
+
+    if (string.IsNullOrEmpty(gateLine))
+        gateLine = "Gate: —";
+
+    statReadout.text =
+        $"{titleLine}\n" +
+        $"{trialLine}\n" +
+        $"{gateLine}";
 }
 
 // When the runner is disabled, clean up the active visual effect and hide debug rays
@@ -413,6 +546,10 @@ void OnDisable()
     if (mainCam != null)
         _effect?.ResetCameraEffect(mainCam);
 
+    InputDevices.deviceConnected -= OnXRDeviceConnected;
+    InputDevices.deviceDisconnected -= OnXRDeviceDisconnected;
+    SetMetaConcurrentHandsAndControllersEnabled(false);
+
     SetDebugLinesActive(false);
 }
 
@@ -421,6 +558,15 @@ void Awake()
 {
     AutoAssignReferences();
     AutoAssignXRInput();
+}
+
+void OnEnable()
+{
+    InputDevices.deviceConnected -= OnXRDeviceConnected;
+    InputDevices.deviceDisconnected -= OnXRDeviceDisconnected;
+    InputDevices.deviceConnected += OnXRDeviceConnected;
+    InputDevices.deviceDisconnected += OnXRDeviceDisconnected;
+    _xrDevicesChanged = true;
 }
 
 // Called when the component is added or reset in the Unity editor.
@@ -437,12 +583,248 @@ void OnValidate()
 {
     EnforceSingleControllerMitigationMode();
 
-    if (!Application.isPlaying)
+    // During play mode, inspector tweaks such as debug visualization should not
+    // re-resolve the participant schedule. Otherwise harmless toggles can reshuffle
+    // the current run by reapplying participant-mode task/effect assignment.
+    if (Application.isPlaying)
+        return;
+
+    ApplyParticipantModeConfiguration();
+    AutoAssignReferences();
+    AutoAssignOpenXRHandPrefabs();
+    AutoAssignXRInput();
+}
+
+void ApplyParticipantModeConfiguration()
+{
+    if (experimentMode != ExperimentMode.Participant)
+        return;
+
+    openXRTrackingMode = studyInputMode == StudyInputMode.Embodied
+        ? OpenXRTrackingMode.Hands
+        : OpenXRTrackingMode.Controllers;
+
+    ResolveParticipantStudyAssignment();
+    taskMode = studyResolvedTask;
+    effectMode = studyResolvedEffect;
+}
+
+void ResolveParticipantStudyAssignment()
+{
+    string logDir = Path.Combine(Application.dataPath, "PrismLogging");
+    List<StudySessionInfo> allStudySessions = ReadFinishedStudySessions(logDir);
+    const int runsPerParticipant = 8;
+
+    var controllerCounts = new Dictionary<int, int>();
+    var embodiedCounts = new Dictionary<int, int>();
+
+    for (int i = 0; i < allStudySessions.Count; i++)
     {
-        AutoAssignReferences();
-        AutoAssignOpenXRHandPrefabs();
-        AutoAssignXRInput();
+        StudySessionInfo session = allStudySessions[i];
+        var counts = session.InputMode == StudyInputMode.Controller ? controllerCounts : embodiedCounts;
+        counts.TryGetValue(session.ParticipantIndex, out int currentCount);
+        counts[session.ParticipantIndex] = currentCount + 1;
     }
+
+    int maxParticipantIndex = 1;
+    foreach (var kvp in controllerCounts)
+        maxParticipantIndex = Mathf.Max(maxParticipantIndex, kvp.Key);
+    foreach (var kvp in embodiedCounts)
+        maxParticipantIndex = Mathf.Max(maxParticipantIndex, kvp.Key);
+
+    int finishedRunsForParticipant = 0;
+    int maxSlotsToInspect = Mathf.Max(2, (maxParticipantIndex + 1) * 2);
+    bool foundAssignment = false;
+
+    for (int slotIndex = 1; slotIndex <= maxSlotsToInspect; slotIndex++)
+    {
+        bool controllerSlot = (slotIndex % 2) == 1;
+        StudyInputMode candidateMode = controllerSlot ? StudyInputMode.Controller : StudyInputMode.Embodied;
+        int candidateParticipantIndex = (slotIndex + 1) / 2;
+        var counts = controllerSlot ? controllerCounts : embodiedCounts;
+        counts.TryGetValue(candidateParticipantIndex, out int candidateFinishedRuns);
+
+        if (candidateFinishedRuns < runsPerParticipant)
+        {
+            studyGlobalParticipantId = slotIndex;
+            studyInputMode = candidateMode;
+            studyParticipantIndex = Mathf.Max(1, candidateParticipantIndex);
+            finishedRunsForParticipant = candidateFinishedRuns;
+            foundAssignment = true;
+            break;
+        }
+    }
+
+    if (!foundAssignment)
+    {
+        studyGlobalParticipantId = (maxParticipantIndex * 2) + 1;
+        studyInputMode = StudyInputMode.Controller;
+        studyParticipantIndex = Mathf.Max(1, maxParticipantIndex + 1);
+        finishedRunsForParticipant = 0;
+    }
+
+    studySessionIndex = finishedRunsForParticipant + 1;
+    if (studySessionIndex > runsPerParticipant)
+    {
+        Debug.LogWarning($"[SandboxRunner] Study participant {studyParticipantIndex} in {studyInputMode} mode already has {finishedRunsForParticipant} finished sessions. The planned design expects 8 runs (2 tasks x 4 effects).");
+    }
+
+    bool lineBisectionFirst = (studyParticipantIndex % 2) == 1;
+    TaskMode firstTask = lineBisectionFirst ? TaskMode.LineBisection : TaskMode.OpenLoop;
+    TaskMode secondTask = lineBisectionFirst ? TaskMode.OpenLoop : TaskMode.LineBisection;
+    studyTaskOrderLabel = lineBisectionFirst ? "LineBisectionFirst" : "OpenLoopFirst";
+
+    int taskPhaseIndex = Mathf.Min(1, Mathf.Max(0, (studySessionIndex - 1) / 4));
+    int effectPhaseIndex = Mathf.Min(3, Mathf.Max(0, (studySessionIndex - 1) % 4));
+    studyResolvedTask = taskPhaseIndex == 0 ? firstTask : secondTask;
+
+    EffectMode[] effectOrder = BuildParticipantEffectOrder(studyParticipantIndex, studyInputMode, studyResolvedTask);
+    studyResolvedEffect = effectOrder[effectPhaseIndex];
+    studyEffectSequencePreview = $"{effectOrder[0]} -> {effectOrder[1]} -> {effectOrder[2]} -> {effectOrder[3]}";
+}
+
+EffectMode[] BuildParticipantEffectOrder(int participantIndex, StudyInputMode inputMode, TaskMode measurementTask)
+{
+    EffectMode[] order = new[]
+    {
+        EffectMode.None,
+        EffectMode.Translation,
+        EffectMode.Rotation,
+        EffectMode.Skew
+    };
+
+    int seed =
+        participantIndex * 100 +
+        (inputMode == StudyInputMode.Controller ? 10 : 20) +
+        (measurementTask == TaskMode.OpenLoop ? 1 : 2);
+
+    var rng = new System.Random(seed);
+    for (int i = order.Length - 1; i > 1; i--)
+    {
+        int j = rng.Next(1, i + 1);
+        (order[i], order[j]) = (order[j], order[i]);
+    }
+
+    return order;
+}
+
+List<StudySessionInfo> ReadFinishedStudySessions(string logDir, StudyInputMode targetMode)
+{
+    List<StudySessionInfo> allSessions = ReadFinishedStudySessions(logDir);
+    var filtered = new List<StudySessionInfo>();
+
+    for (int i = 0; i < allSessions.Count; i++)
+    {
+        if (allSessions[i].InputMode == targetMode)
+            filtered.Add(allSessions[i]);
+    }
+
+    return filtered;
+}
+
+List<StudySessionInfo> ReadFinishedStudySessions(string logDir)
+{
+    var sessions = new List<StudySessionInfo>();
+    var metaFiles = new List<string>();
+    if (Directory.Exists(logDir))
+        metaFiles.AddRange(Directory.GetFiles(logDir, "*_Meta.csv"));
+
+    string participantsDir = Path.Combine(logDir, "Participants");
+    if (Directory.Exists(participantsDir))
+        metaFiles.AddRange(Directory.GetFiles(participantsDir, "*_Meta.csv"));
+
+    if (metaFiles.Count == 0)
+        return sessions;
+
+    for (int i = 0; i < metaFiles.Count; i++)
+    {
+        string[] lines;
+        try
+        {
+            lines = File.ReadAllLines(metaFiles[i]);
+        }
+        catch
+        {
+            continue;
+        }
+
+        if (lines.Length < 2)
+            continue;
+
+        string[] headers = lines[0].Split(';');
+        string[] values = lines[1].Split(';');
+        if (headers.Length != values.Length)
+            continue;
+
+        var row = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        for (int c = 0; c < headers.Length; c++)
+            row[headers[c]] = values[c];
+
+        if (!row.TryGetValue("SessionState", out string sessionState) || !string.Equals(sessionState, "Finished", StringComparison.OrdinalIgnoreCase))
+            continue;
+
+        if (!row.TryGetValue("ExperimentMode", out string storedExperimentMode) || !string.Equals(storedExperimentMode, "Participant", StringComparison.OrdinalIgnoreCase))
+            continue;
+
+        if (!row.TryGetValue("InputModeLabel", out string inputModeLabel))
+            continue;
+
+        StudyInputMode inputMode;
+        if (string.Equals(inputModeLabel, "controller", StringComparison.OrdinalIgnoreCase))
+            inputMode = StudyInputMode.Controller;
+        else if (string.Equals(inputModeLabel, "embodied", StringComparison.OrdinalIgnoreCase))
+            inputMode = StudyInputMode.Embodied;
+        else
+            continue;
+
+        if (!row.TryGetValue("StudyParticipantIndex", out string participantText) || !int.TryParse(participantText, out int participantIndex))
+            continue;
+
+        sessions.Add(new StudySessionInfo
+        {
+            ParticipantIndex = participantIndex,
+            InputMode = inputMode
+        });
+    }
+
+    return sessions;
+}
+
+class StudySessionInfo
+{
+    public int ParticipantIndex;
+    public StudyInputMode InputMode;
+}
+
+// Builds a simple 8-run textual plan for the current participant assignment.
+//
+// Why this exists:
+// the actual participant schedule is intentionally automated, which is good for
+// consistency but can feel opaque in the inspector. This helper gives the editor
+// a clean, read-only summary of the whole plan so the researcher can confirm that:
+// - the first task is correct for this participant within the current modality group,
+// - None is first for each task,
+// - and the participant is currently on the expected run number.
+public string[] GetStudyRunPreviewLines()
+{
+    if (experimentMode != ExperimentMode.Participant)
+        return Array.Empty<string>();
+
+    bool lineBisectionFirst = (studyParticipantIndex % 2) == 1;
+    TaskMode firstTask = lineBisectionFirst ? TaskMode.LineBisection : TaskMode.OpenLoop;
+    TaskMode secondTask = lineBisectionFirst ? TaskMode.OpenLoop : TaskMode.LineBisection;
+
+    EffectMode[] firstTaskEffects = BuildParticipantEffectOrder(studyParticipantIndex, studyInputMode, firstTask);
+    EffectMode[] secondTaskEffects = BuildParticipantEffectOrder(studyParticipantIndex, studyInputMode, secondTask);
+
+    string[] lines = new string[8];
+    for (int i = 0; i < 4; i++)
+        lines[i] = $"Run {i + 1}: {firstTask} / {firstTaskEffects[i]}";
+
+    for (int i = 0; i < 4; i++)
+        lines[i + 4] = $"Run {i + 5}: {secondTask} / {secondTaskEffects[i]}";
+
+    return lines;
 }
 
 // Tries to auto-find the scene objects this runner depends on.
@@ -586,7 +968,8 @@ void AutoAssignXRInput()
                 _rightHandVisualTransform = rightHandVisual.transform;
         }
 
-        if (openXRTrackingMode == OpenXRTrackingMode.Controllers)
+        bool needsControllerObjects = openXRTrackingMode == OpenXRTrackingMode.Controllers || ShouldUseOppositeControllerConfirmInHandTracking();
+        if (needsControllerObjects)
         {
             if (_leftControllerTransform == null)
             {
@@ -740,11 +1123,7 @@ void UpdateXRConfirm()
 
     if (_taskTransitionActive)
     {
-        _confirmPressedLastFrameLeft = false;
-        _confirmPressedLastFrameRight = false;
-        ResetHandDwellConfirmState();
-        ResetControllerHoverConfirmState();
-        _confirmDown = false;
+        ResetInputLatchState();
         return;
     }
 
@@ -753,7 +1132,25 @@ void UpdateXRConfirm()
         if (openXRTrackingMode == OpenXRTrackingMode.Hands)
         {
             ResetControllerHoverConfirmState();
-            down = UpdateHandDwellConfirm();
+
+            if (useOppositeHandTrigger)
+            {
+                // Embodied mode:
+                // aiming still comes from the tracked hand,
+                // but confirmation comes from the opposite controller trigger.
+                ResetHandDwellConfirmState();
+
+                Handedness confirmHand = GetOppositeHand(activeHand);
+                down = GetControllerConfirmEdge(confirmHand);
+
+                if (logOppositeConfirmDebug && down)
+                    Debug.Log($"[SandboxRunner] Opposite-hand confirm fired. AimHand={activeHand} ConfirmHand={confirmHand}");
+            }
+            else
+            {
+                // Original embodied dwell-confirm behavior.
+                down = UpdateHandDwellConfirm();
+            }
         }
         else
         {
@@ -768,6 +1165,94 @@ void UpdateXRConfirm()
     }
 
     _confirmDown = down;
+
+    if (down)
+        PlayAcceptedClickSound();
+}
+
+// Returns true only for the one mixed-input mode we care about:
+// tracked hands provide the aim ray, while the opposite controller trigger confirms.
+bool ShouldUseOppositeControllerConfirmInHandTracking()
+{
+    return xrBackend == XRBackend.OpenXR &&
+           openXRTrackingMode == OpenXRTrackingMode.Hands &&
+           useOppositeHandTrigger;
+}
+
+// Meta Quest exposes an explicit runtime switch for concurrent hands and controllers.
+// We only need this for the mixed-input mode where hands aim and the opposite controller
+// confirms. On Quest builds that support simultaneous hands and controllers, enabling it
+// once is the correct route. The important part is to avoid hammering the runtime every
+// frame or on every small state change.
+void UpdateMetaConcurrentHandsAndControllersState()
+{
+    bool shouldEnable = ShouldUseOppositeControllerConfirmInHandTracking();
+    SetMetaConcurrentHandsAndControllersEnabled(shouldEnable);
+}
+
+void SetMetaConcurrentHandsAndControllersEnabled(bool shouldEnable)
+{
+    if (_metaConcurrentHandsControllersInitialized &&
+        _metaConcurrentHandsControllersRequestedState == shouldEnable)
+    {
+        return;
+    }
+
+    _metaConcurrentHandsControllersInitialized = true;
+    _metaConcurrentHandsControllersRequestedState = shouldEnable;
+
+    if (shouldEnable &&
+        _metaConcurrentHandsControllersSupportKnown &&
+        !_metaConcurrentHandsControllersSupported)
+    {
+        _metaConcurrentHandsControllersEnabled = false;
+        return;
+    }
+
+    try
+    {
+        bool supported = shouldEnable
+            ? OVRInput.EnableSimultaneousHandsAndControllers()
+            : OVRInput.DisableSimultaneousHandsAndControllers();
+
+        _metaConcurrentHandsControllersEnabled = shouldEnable && supported;
+        _metaConcurrentHandsControllersSupportKnown = true;
+        _metaConcurrentHandsControllersSupported = !shouldEnable || supported;
+
+        if (shouldEnable && !supported)
+        {
+            Debug.LogWarning("[SandboxRunner] Concurrent hands+controllers was requested, but the Meta runtime reported it is not supported.");
+        }
+    }
+    catch (Exception ex)
+    {
+        _metaConcurrentHandsControllersEnabled = false;
+        _metaConcurrentHandsControllersSupportKnown = true;
+        _metaConcurrentHandsControllersSupported = false;
+        Debug.LogWarning($"[SandboxRunner] Failed to change Meta concurrent hands+controllers mode: {ex.Message}");
+    }
+}
+
+void UpdateControllerHotplugState()
+{
+    bool leftAvailable = IsControllerAvailable(Handedness.Left);
+    bool rightAvailable = IsControllerAvailable(Handedness.Right);
+
+    bool leftChanged = leftAvailable != _leftControllerWasAvailable;
+    bool rightChanged = rightAvailable != _rightControllerWasAvailable;
+
+    if (!leftChanged && !rightChanged)
+        return;
+
+    _leftControllerWasAvailable = leftAvailable;
+    _rightControllerWasAvailable = rightAvailable;
+
+    // Controller hot-plug is exactly the case where stale edge-detection state can
+    // survive longer than the hardware state. Reset the transient latches, but do
+    // not keep re-poking Meta's concurrent hands/controllers request here; if the
+    // runtime does not support that feature, repeatedly retrying it only creates
+    // noise and can destabilize the otherwise working launch path.
+    ResetInputLatchState();
 }
 
 // Separate input path for manual calibration.
@@ -781,7 +1266,12 @@ void UpdateCalibrationInput()
 
     if (xrBackend == XRBackend.OpenXR)
     {
-        down = GetOpenXRButtonEdge(CommonUsages.primaryButton, activeHand, ref _calibrateDownLastFrame);
+        // Accept either controller's face button for recalibration.
+        // Prefer Meta's explicit button path on Quest (X left / A right), then fall back
+        // to the generic OpenXR primary button if the Meta path is unavailable.
+        bool leftPressed = GetControllerCalibrateEdge(Handedness.Left);
+        bool rightPressed = GetControllerCalibrateEdge(Handedness.Right);
+        down = leftPressed || rightPressed;
     }
     else if (_calibrateAction != null)
     {
@@ -791,6 +1281,77 @@ void UpdateCalibrationInput()
     if (down)
     {
         CalibrateNow();
+    }
+}
+
+bool GetControllerCalibrateEdge(Handedness hand)
+{
+    if (xrBackend == XRBackend.OpenXR && TryGetOVRCalibrateEdge(hand, out bool ovrEdge))
+        return ovrEdge;
+
+    if (hand == Handedness.Left)
+        return GetOpenXRButtonEdge(CommonUsages.primaryButton, hand, ref _calibratePressedLastFrameLeft);
+
+    return GetOpenXRButtonEdge(CommonUsages.primaryButton, hand, ref _calibratePressedLastFrameRight);
+}
+
+bool TryGetOVRCalibrateEdge(Handedness hand, out bool pressedThisFrame)
+{
+    pressedThisFrame = false;
+
+    OVRInput.Controller controller =
+        hand == Handedness.Left ? OVRInput.Controller.LTouch : OVRInput.Controller.RTouch;
+
+    OVRInput.RawButton rawButton =
+        hand == Handedness.Left ? OVRInput.RawButton.X : OVRInput.RawButton.A;
+
+    OVRInput.Controller connectedControllers = OVRInput.GetConnectedControllers();
+    if ((connectedControllers & controller) == 0)
+        return false;
+
+    pressedThisFrame = OVRInput.GetDown(rawButton, controller);
+    if (!pressedThisFrame)
+    {
+        if (hand == Handedness.Left)
+            _calibratePressedLastFrameLeft = false;
+        else
+            _calibratePressedLastFrameRight = false;
+    }
+
+    return true;
+}
+
+bool IsControllerAvailable(Handedness hand)
+{
+    if (xrBackend == XRBackend.OpenXR)
+    {
+        if (TryGetOVRControllerAvailability(hand, out bool ovrAvailable))
+            return ovrAvailable;
+
+        InputDevice device = GetOpenXRInputDevice(hand);
+        return device.isValid;
+    }
+
+    Transform controller = hand == Handedness.Left ? _leftControllerTransform : _rightControllerTransform;
+    return controller != null && controller.gameObject.activeInHierarchy;
+}
+
+bool TryGetOVRControllerAvailability(Handedness hand, out bool available)
+{
+    available = false;
+
+    OVRInput.Controller controller =
+        hand == Handedness.Left ? OVRInput.Controller.LTouch : OVRInput.Controller.RTouch;
+
+    try
+    {
+        OVRInput.Controller connectedControllers = OVRInput.GetConnectedControllers();
+        available = (connectedControllers & controller) != 0;
+        return true;
+    }
+    catch
+    {
+        return false;
     }
 }
 
@@ -810,7 +1371,22 @@ public void CalibrateNow()
         TryRecenterXRTracking();
     }
 
+    // Calibration should use the logical, unperturbed scene references.
+    // In skew mode the visible world root is shifted, which can move boardMid
+    // away from its true reference location. Temporarily resetting the active
+    // visual effect ensures we calibrate against the real layout, then we reapply
+    // the effect immediately afterward so the task continues visually unchanged.
+    bool effectTemporarilyReset = false;
+    if (_effect != null && mainCam != null)
+    {
+        _effect.ResetCameraEffect(mainCam);
+        effectTemporarilyReset = true;
+    }
+
     ApplyCalibrationAnchors();
+
+    if (effectTemporarilyReset && _effect != null && mainCam != null)
+        _effect.ApplyCameraEffect(mainCam);
 }
 
 // Height-only calibration. Useful for debugging or for manually testing just
@@ -938,14 +1514,17 @@ void ApplyCalibrationAnchors()
     bool appliedHeight = false;
     bool appliedBodyCenter = false;
     string heightAnchorName = boardMid ? boardMid.name : "none";
-    string bodyAnchorName = bodyCenterAnchor ? bodyCenterAnchor.name : "none";
+    string bodyAnchorName = boardMid ? $"{boardMid.name} @ {calibrationDistanceMeters:0.##}m" :
+        (bodyCenterAnchor ? bodyCenterAnchor.name : "none");
+    Vector3 logicalBoardMidPosition = boardMid != null ? GetLogicalBoardMidPosition() : Vector3.zero;
+    Vector3 logicalBoardMidForward = boardMid != null ? GetLogicalBoardMidForward() : Vector3.forward;
 
-    if (boardMid != null && bodyCenterAnchor != null && rigRoot != null && hmd != null)
+    if (boardMid != null && rigRoot != null && hmd != null)
     {
-        // Only yaw is adjusted here.
-        // In other words: the participant is rotated left/right to face the board,
-        // but the rig is not tilted upward/downward.
-        Vector3 desiredForward = Vector3.ProjectOnPlane(boardMid.position - bodyCenterAnchor.position, Vector3.up);
+        // Face the board based on the target's forward axis.
+        // In the current scene the middle target's forward points outward from the board,
+        // which is the direction the participant should face after calibration.
+        Vector3 desiredForward = Vector3.ProjectOnPlane(logicalBoardMidForward, Vector3.up);
         Vector3 currentForward = Vector3.ProjectOnPlane(hmd.forward, Vector3.up);
 
         if (desiredForward.sqrMagnitude > 0.0001f && currentForward.sqrMagnitude > 0.0001f)
@@ -957,20 +1536,36 @@ void ApplyCalibrationAnchors()
 
     if (boardMid != null)
     {
-        float deltaY = boardMid.position.y - hmd.position.y;
+        float deltaY = logicalBoardMidPosition.y - hmd.position.y;
         Vector3 p = rigRoot.position;
         p.y += deltaY;
         rigRoot.position = p;
         appliedHeight = true;
     }
 
-    if (bodyCenterAnchor != null)
+    if (boardMid != null)
+    {
+        // Place the participant centered on the middle target and exactly the requested
+        // distance in front of the board plane. This is stricter and easier to reason
+        // about than relying on an auxiliary anchor object in the scene.
+        Vector3 desiredBodyCenter = logicalBoardMidPosition - logicalBoardMidForward.normalized * Mathf.Max(0f, calibrationDistanceMeters);
+
+        // XR Origin often contains an internal camera offset.
+        // So if we aligned only rigRoot.xz to the desired standing point, the participant
+        // could still end up shifted to the side. Subtracting the current HMD horizontal
+        // offset aligns the tracked body, not just the root transform.
+        Vector3 hmdOffset = hmd.position - rigRoot.position;
+        hmdOffset.y = 0f;
+
+        Vector3 p = rigRoot.position;
+        p.x = desiredBodyCenter.x - hmdOffset.x;
+        p.z = desiredBodyCenter.z - hmdOffset.z;
+        rigRoot.position = p;
+        appliedBodyCenter = true;
+    }
+    else if (bodyCenterAnchor != null)
     {
         Vector3 anchorPos = bodyCenterAnchor.position;
-        // XR Origin often contains an internal camera offset.
-        // So if we aligned only rigRoot.xz to the anchor, the participant could still
-        // end up physically shifted to the side. Subtracting the current HMD horizontal
-        // offset fixes that and aligns the tracked body, not just the root transform.
         Vector3 hmdOffset = hmd.position - rigRoot.position;
         hmdOffset.y = 0f;
 
@@ -992,6 +1587,22 @@ void ApplyCalibrationAnchors()
         $"Head anchor: {(appliedHeight ? heightAnchorName : "none")} | " +
         $"Body anchor: {(appliedBodyCenter ? bodyAnchorName : "none")} | " +
         $"Rig position: {rigRoot.position}");
+}
+
+Vector3 GetLogicalBoardMidPosition()
+{
+    if (boardMid == null)
+        return Vector3.zero;
+
+    return boardMid.position;
+}
+
+Vector3 GetLogicalBoardMidForward()
+{
+    if (boardMid == null)
+        return Vector3.forward;
+
+    return boardMid.forward;
 }
 
 // Chooses which visuomotor effect implementation should currently be active.
@@ -1034,14 +1645,32 @@ void UpdateDebugLines()
         return;
     }
 
+    // Debug rays should only visualize the same input the tasks actually consumed this
+    // frame. If no task sampled input yet, hide the rays rather than re-sampling and
+    // risking side effects in the live hand/controller pipeline.
+    if (!_lastDebugInputValid || _lastDebugInputFrame != Time.frameCount)
+    {
+        SetDebugLinesActive(false);
+        return;
+    }
+
+    Ray raw = _lastDebugRawRay;
+    Ray trn = _lastDebugTransformedRay;
+    Vector3 rawEnd = raw.origin + raw.direction * 2f;
+    Vector3 trnEnd = trn.origin + trn.direction * 2f;
+
+    if (!IsFiniteVector3(raw.origin) || !IsFiniteVector3(rawEnd) ||
+        !IsFiniteVector3(trn.origin) || !IsFiniteVector3(trnEnd))
+    {
+        SetDebugLinesActive(false);
+        return;
+    }
+
     EnsureDebugLines();
-
-    var raw = GetRawPointerRay();
-    var trn = _effect != null ? _effect.TransformRay(raw) : raw;
-
-    SetDebugLine(_rawRayLine, raw.origin, raw.origin + raw.direction * 2f);
-    SetDebugLine(_transformedRayLine, trn.origin, trn.origin + trn.direction * 2f);
-
+    SyncDebugRayPresentation();
+    SetDebugLine(_transformedRayLine, trn.origin, trnEnd);
+    if (_rawRayLine != null)
+        _rawRayLine.enabled = false;
     SetDebugLinesActive(true);
 }
 
@@ -1069,6 +1698,65 @@ void EnsureDebugLines()
         _transformedRayLine = GetOrCreateDebugLine("TransformedRayLine");
 }
 
+// Keeps the debug rays visible to the examiner while optionally hiding them from the
+// participant camera by placing them on a dedicated layer outside the HMD culling mask.
+void SyncDebugRayPresentation()
+{
+    if (_rayDebugRoot == null)
+        return;
+
+    int targetLayer = examinerOnlyDebugRays ? ExaminerDebugRayLayer : gameObject.layer;
+    SetLayerRecursively(_rayDebugRoot.gameObject, targetLayer);
+
+    if (mainCam == null)
+        return;
+
+    if (examinerOnlyDebugRays)
+    {
+        mainCam.cullingMask &= ~(1 << ExaminerDebugRayLayer);
+        EnsureExaminerDebugCamera();
+    }
+    else
+    {
+        mainCam.cullingMask |= (1 << ExaminerDebugRayLayer);
+        if (_examinerDebugCamera != null)
+            _examinerDebugCamera.enabled = false;
+    }
+}
+
+void EnsureExaminerDebugCamera()
+{
+    if (mainCam == null)
+        return;
+
+    if (_examinerDebugCamera == null)
+    {
+        var existing = GameObject.Find("ExaminerDebugCamera");
+        if (existing != null)
+            _examinerDebugCamera = existing.GetComponent<Camera>();
+
+        if (_examinerDebugCamera == null)
+        {
+            var go = new GameObject("ExaminerDebugCamera");
+            _examinerDebugCamera = go.AddComponent<Camera>();
+        }
+    }
+
+    if (_examinerDebugCamera == null)
+        return;
+
+    _examinerDebugCamera.CopyFrom(mainCam);
+    _examinerDebugCamera.stereoTargetEye = StereoTargetEyeMask.None;
+    _examinerDebugCamera.clearFlags = mainCam.clearFlags;
+    _examinerDebugCamera.depth = mainCam.depth + 10f;
+    _examinerDebugCamera.allowHDR = false;
+    _examinerDebugCamera.allowMSAA = false;
+    _examinerDebugCamera.targetTexture = null;
+    _examinerDebugCamera.enabled = true;
+    _examinerDebugCamera.cullingMask = mainCam.cullingMask | (1 << ExaminerDebugRayLayer);
+    _examinerDebugCamera.transform.SetPositionAndRotation(mainCam.transform.position, mainCam.transform.rotation);
+}
+
 // Creates or reuses a LineRenderer with sensible defaults for debug visualization.
 LineRenderer GetOrCreateDebugLine(string name)
 {
@@ -1094,7 +1782,7 @@ LineRenderer GetOrCreateDebugLine(string name)
     lr.widthMultiplier = 0.01f;
     lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
     lr.receiveShadows = false;
-    lr.alignment = LineAlignment.View;
+    lr.alignment = LineAlignment.TransformZ;
 
     // Simple built-in material choice
     if (lr.sharedMaterial == null)
@@ -1122,11 +1810,26 @@ void SetDebugLine(LineRenderer lr, Vector3 a, Vector3 b)
     lr.SetPosition(1, b);
 }
 
+static void SetLayerRecursively(GameObject root, int layer)
+{
+    if (root == null)
+        return;
+
+    root.layer = layer;
+    foreach (Transform child in root.transform)
+        SetLayerRecursively(child.gameObject, layer);
+}
+
+bool IsFiniteVector3(Vector3 value)
+{
+    return float.IsFinite(value.x) && float.IsFinite(value.y) && float.IsFinite(value.z);
+}
+
 // Convenience helper for enabling/disabling both debug rays together.
 void SetDebugLinesActive(bool active)
 {
     if (_rawRayLine != null)
-        _rawRayLine.enabled = active;
+        _rawRayLine.enabled = false;
 
     if (_transformedRayLine != null)
         _transformedRayLine.enabled = active;
@@ -1179,14 +1882,97 @@ public (Ray ray, Pose pose, bool confirm) GetTransformedInput()
     Pose rawPose;
     Ray rawRay;
     if (!TryGetRawInput(out rawRay, out rawPose))
+    {
+        _lastDebugInputValid = false;
         return (new Ray(Vector3.zero, Vector3.forward), new Pose(Vector3.zero, Quaternion.identity), false);
+    }
 
     var confirm = _taskTransitionActive ? false : _confirmDown;
 
-    var ray = _effect.TransformRay(rawRay);
-    var pose = _effect.TransformPose(rawPose);
+    Ray ray;
+    Pose pose;
+    if (TryGetSkewControllerVisualInput(rawRay, rawPose, out ray, out pose))
+    {
+        // Controller skew is visual-first: the ray follows the already-shifted
+        // controller model instead of applying a second independent skew.
+    }
+    else
+    {
+        ray = _effect.TransformRay(rawRay);
+        pose = _effect.TransformPose(rawPose);
+    }
+
+    _lastDebugInputValid = true;
+    _lastDebugInputFrame = Time.frameCount;
+    _lastDebugRawRay = rawRay;
+    _lastDebugTransformedRay = ray;
 
     return (ray, pose, confirm);
+}
+
+bool TryGetSkewControllerVisualInput(Ray rawRay, Pose rawPose, out Ray ray, out Pose pose)
+{
+    ray = rawRay;
+    pose = rawPose;
+
+    if (taskMode != TaskMode.Exposure ||
+        effectMode != EffectMode.Skew ||
+        xrBackend != XRBackend.OpenXR ||
+        openXRTrackingMode != OpenXRTrackingMode.Controllers ||
+        skew == null)
+    {
+        return false;
+    }
+
+    SyncEffectReferences();
+    if (mainCam != null)
+        skew.ApplyCameraEffect(mainCam);
+
+    if (skew.visualPointerRoot != null)
+    {
+        Vector3 visualOrigin = GetVisualBoundsCenter(skew.visualPointerRoot);
+        ray = new Ray(visualOrigin, rawRay.direction);
+        pose = new Pose(visualOrigin, rawPose.rotation);
+        return true;
+    }
+
+    Vector3 visualDelta;
+    if (!skew.TryGetVisualPointerWorldDelta(out visualDelta))
+        visualDelta = skew.GetConfiguredShiftVector();
+
+    Vector3 shiftedOrigin = rawRay.origin + visualDelta;
+    ray = new Ray(shiftedOrigin, rawRay.direction);
+    pose = new Pose(rawPose.position + visualDelta, rawPose.rotation);
+    return true;
+}
+
+Vector3 GetVisualBoundsCenter(Transform visualRoot)
+{
+    if (visualRoot == null)
+        return Vector3.zero;
+
+    Renderer[] renderers = visualRoot.GetComponentsInChildren<Renderer>(true);
+    bool hasBounds = false;
+    Bounds bounds = default;
+
+    for (int i = 0; i < renderers.Length; i++)
+    {
+        Renderer renderer = renderers[i];
+        if (renderer == null)
+            continue;
+
+        if (!hasBounds)
+        {
+            bounds = renderer.bounds;
+            hasBounds = true;
+        }
+        else
+        {
+            bounds.Encapsulate(renderer.bounds);
+        }
+    }
+
+    return hasBounds ? bounds.center : visualRoot.position;
 }
 
 // Returns the raw, unmodified pointing ray before any effect transform is applied.
@@ -1260,7 +2046,19 @@ bool GetOpenXRButtonDown(InputFeatureUsage<bool> usage, Handedness hand)
 // changed from not pressed to pressed. This avoids repeated triggers while held down.
 bool GetOpenXRButtonEdge(InputFeatureUsage<bool> usage, Handedness hand, ref bool pressedLastFrame)
 {
-    bool isPressed = GetOpenXRButtonDown(usage, hand);
+    var device = GetOpenXRInputDevice(hand);
+    if (!device.isValid)
+    {
+        pressedLastFrame = false;
+        return false;
+    }
+
+    if (!device.TryGetFeatureValue(usage, out bool isPressed))
+    {
+        pressedLastFrame = false;
+        return false;
+    }
+
     bool pressedThisFrame = isPressed && !pressedLastFrame;
     pressedLastFrame = isPressed;
     return pressedThisFrame;
@@ -1429,6 +2227,30 @@ void ResetControllerHoverConfirmState()
     _controllerHoverHadTargetLastFrame = false;
 }
 
+// Clears all transient confirm/calibration latch state.
+//
+// This is important around task/block transitions and XR hand/controller mode changes.
+// Without an explicit reset, edge-detection booleans can remain in a stale state after
+// tracking loss, mode switches, or transition pauses, which makes confirm appear dead
+// until the mitigation mode is toggled manually.
+void ResetInputLatchState(bool reassertConcurrentHandsControllers = false)
+{
+    _confirmDown = false;
+    _confirmPressedLastFrameLeft = false;
+    _confirmPressedLastFrameRight = false;
+    _calibratePressedLastFrameLeft = false;
+    _calibratePressedLastFrameRight = false;
+
+    ResetHandDwellConfirmState();
+    ResetControllerHoverConfirmState();
+
+    if (reassertConcurrentHandsControllers)
+    {
+        _metaConcurrentHandsControllersInitialized = false;
+        UpdateMetaConcurrentHandsAndControllersState();
+    }
+}
+
 // Small helper for choosing the non-dominant hand.
 Handedness GetOppositeHand(Handedness hand)
 {
@@ -1438,22 +2260,69 @@ Handedness GetOppositeHand(Handedness hand)
 // Reads a controller trigger press from either OpenXR or SteamVR, depending on backend.
 bool GetControllerConfirmEdge(Handedness hand)
 {
+    return TryGetControllerConfirmEdgeForHand(hand, out bool pressedThisFrame, out _)
+        ? pressedThisFrame
+        : false;
+}
+
+bool TryGetControllerConfirmEdgeForHand(Handedness hand, out bool pressedThisFrame, out bool handAvailable)
+{
+    pressedThisFrame = false;
+    handAvailable = false;
+
     if (xrBackend == XRBackend.OpenXR)
     {
-        if (hand == Handedness.Left)
-            return GetOpenXRButtonEdge(CommonUsages.triggerButton, hand, ref _confirmPressedLastFrameLeft);
+        if (TryGetOVRControllerConfirmEdge(hand, out bool ovrEdge))
+        {
+            handAvailable = true;
+            pressedThisFrame = ovrEdge;
+            return true;
+        }
 
-        return GetOpenXRButtonEdge(CommonUsages.triggerButton, hand, ref _confirmPressedLastFrameRight);
+        handAvailable = IsControllerAvailable(hand);
+        if (hand == Handedness.Left)
+            pressedThisFrame = GetOpenXRButtonEdge(CommonUsages.triggerButton, hand, ref _confirmPressedLastFrameLeft);
+        else
+            pressedThisFrame = GetOpenXRButtonEdge(CommonUsages.triggerButton, hand, ref _confirmPressedLastFrameRight);
+
+        return handAvailable;
     }
 
     if (_confirmAction == null)
         return false;
 
+    handAvailable = true;
     var source = hand == Handedness.Left
         ? SteamVR_Input_Sources.LeftHand
         : SteamVR_Input_Sources.RightHand;
 
-    return _confirmAction.GetStateDown(source);
+    pressedThisFrame = _confirmAction.GetStateDown(source);
+    return true;
+}
+
+// When hands are the active OpenXR input mode, Unity's standard XR controller path can
+// stop reporting controller trigger edges even though the opposite controller is still held.
+// In that specific mixed-input case, ask Meta's controller API directly.
+bool TryGetOVRControllerConfirmEdge(Handedness hand, out bool pressedThisFrame)
+{
+    pressedThisFrame = false;
+
+    OVRInput.Controller controller =
+        hand == Handedness.Left ? OVRInput.Controller.LTouch : OVRInput.Controller.RTouch;
+
+    OVRInput.Controller connectedControllers = OVRInput.GetConnectedControllers();
+    if ((connectedControllers & controller) == 0)
+    {
+        if (logOppositeConfirmDebug && ShouldUseOppositeControllerConfirmInHandTracking())
+            Debug.Log($"[SandboxRunner] Opposite confirm controller not connected. Hand={hand} Connected={connectedControllers}");
+        return false;
+    }
+
+    OVRInput.RawButton rawButton =
+        hand == Handedness.Left ? OVRInput.RawButton.LIndexTrigger : OVRInput.RawButton.RIndexTrigger;
+
+    pressedThisFrame = OVRInput.GetDown(rawButton, controller);
+    return true;
 }
 
 // Asks the currently active task whether it can provide a concrete aim target.
@@ -1565,7 +2434,8 @@ XRHands.XRHandSubsystem GetXRHandSubsystem()
 //
 // A non-coder way to read this:
 // the system looks at the tracked index finger, takes the fingertip as the "start"
-// of the pointing ray, then estimates the direction of the finger from the finger bones.
+// of the pointing ray, then estimates the direction from the whole index-finger chain
+// instead of trusting only the very last fingertip pose.
 //
 // This creates a virtual pointer for hand-tracking mode even though there is no physical controller.
 bool TryGetOpenXRHandInput(out Ray ray, out Pose pose)
@@ -1579,20 +2449,29 @@ bool TryGetOpenXRHandInput(out Ray ray, out Pose pose)
     }
 
     var hand = activeHand == Handedness.Left ? handSubsystem.leftHand : handSubsystem.rightHand;
-    if (!TryGetTrackedJointPose(hand, XRHands.XRHandJointID.IndexTip, out Pose indexTipPose) ||
-        !TryGetTrackedJointPose(hand, XRHands.XRHandJointID.IndexIntermediate, out Pose indexKnucklePose))
+    if (!TryGetTrackedJointPose(hand, XRHands.XRHandJointID.IndexProximal, out Pose indexProximalPose) ||
+        !TryGetTrackedJointPose(hand, XRHands.XRHandJointID.IndexIntermediate, out Pose indexIntermediatePose) ||
+        !TryGetTrackedJointPose(hand, XRHands.XRHandJointID.IndexDistal, out Pose indexDistalPose) ||
+        !TryGetTrackedJointPose(hand, XRHands.XRHandJointID.IndexTip, out Pose indexTipPose))
     {
         ray = new Ray(Vector3.zero, Vector3.forward);
         pose = new Pose(Vector3.zero, Quaternion.identity);
         return false;
     }
 
+    Vector3 worldProximal = TransformTrackingPointToWorld(indexProximalPose.position);
+    Vector3 worldIntermediate = TransformTrackingPointToWorld(indexIntermediatePose.position);
+    Vector3 worldDistal = TransformTrackingPointToWorld(indexDistalPose.position);
     Vector3 worldOrigin = TransformTrackingPointToWorld(indexTipPose.position);
-    Vector3 worldKnuckle = TransformTrackingPointToWorld(indexKnucklePose.position);
-    // The basic finger direction is inferred from knuckle-to-tip.
-    // That is usually more intuitive and visually stable than trusting the fingertip
-    // rotation on its own.
-    Vector3 worldDirection = (worldOrigin - worldKnuckle).normalized;
+
+    // Estimate direction from all three finger segments:
+    // proximal -> intermediate, intermediate -> distal, distal -> tip.
+    // This is more robust than a single tip-based vector when the fingertip dips or jitters.
+    Vector3 segA = (worldIntermediate - worldProximal).normalized;
+    Vector3 segB = (worldDistal - worldIntermediate).normalized;
+    Vector3 segC = (worldOrigin - worldDistal).normalized;
+
+    Vector3 worldDirection = (segA + segB + segC).normalized;
 
     if (worldDirection.sqrMagnitude < 0.0001f)
         worldDirection = TransformTrackingRotationToWorld(indexTipPose.rotation) * Vector3.forward;
@@ -1702,6 +2581,7 @@ void UpdateOpenXRVisualMode()
         return;
 
     bool useHands = openXRTrackingMode == OpenXRTrackingMode.Hands;
+    bool showOppositeConfirmController = ShouldUseOppositeControllerConfirmInHandTracking();
 
     if (_openXRHandVisualizerRoot != null)
         _openXRHandVisualizerRoot.SetActive(useHands);
@@ -1709,8 +2589,13 @@ void UpdateOpenXRVisualMode()
     SetHandVisualState(Handedness.Left, useHands);
     SetHandVisualState(Handedness.Right, useHands);
 
-    SetControllerVisualState(Handedness.Left, !useHands && activeHand == Handedness.Left);
-    SetControllerVisualState(Handedness.Right, !useHands && activeHand == Handedness.Right);
+    bool showLeftController = (!useHands && activeHand == Handedness.Left) ||
+                              (showOppositeConfirmController && GetOppositeHand(activeHand) == Handedness.Left);
+    bool showRightController = (!useHands && activeHand == Handedness.Right) ||
+                               (showOppositeConfirmController && GetOppositeHand(activeHand) == Handedness.Right);
+
+    SetControllerVisualState(Handedness.Left, showLeftController);
+    SetControllerVisualState(Handedness.Right, showRightController);
 }
 
 // Small accessors used by tasks and logging helpers.
@@ -1749,33 +2634,62 @@ public void NotifyMeasurementBlockCompleted(TaskMode completedTask, string block
 // Shows or hides the chosen controller model and any auxiliary poke/direct-interactor visuals.
 void SetControllerVisualState(Handedness hand, bool active)
 {
+    bool showRenderers = ShouldShowInputRenderersForCurrentPhase();
     Transform explicitVisual = hand == Handedness.Left ? _leftPointerVisualTransform : _rightPointerVisualTransform;
     List<Transform> auxVisuals = hand == Handedness.Left ? _leftAuxPointerVisualTransforms : _rightAuxPointerVisualTransforms;
     if (explicitVisual != null)
     {
-        explicitVisual.gameObject.SetActive(active);
+        SetVisualRenderersEnabled(explicitVisual, active && showRenderers);
     }
     else
     {
         Transform controllerTransform = hand == Handedness.Left ? _leftControllerTransform : _rightControllerTransform;
         Transform controllerVisual = controllerTransform != null ? FindDeepChild(controllerTransform, "UniversalController") : null;
         if (controllerVisual != null)
-            controllerVisual.gameObject.SetActive(active);
+            SetVisualRenderersEnabled(controllerVisual, active && showRenderers);
     }
 
     for (int i = 0; i < auxVisuals.Count; i++)
     {
         if (auxVisuals[i] != null)
-            auxVisuals[i].gameObject.SetActive(active);
+            SetVisualRenderersEnabled(auxVisuals[i], active && showRenderers);
     }
 }
 
 // Shows or hides the tracked hand visual.
 void SetHandVisualState(Handedness hand, bool active)
 {
+    bool showRenderers = ShouldShowInputRenderersForCurrentPhase();
     Transform handVisual = hand == Handedness.Left ? _leftHandVisualTransform : _rightHandVisualTransform;
     if (handVisual != null)
-        handVisual.gameObject.SetActive(active);
+        SetVisualRenderersEnabled(handVisual, active && showRenderers);
+}
+
+// Baseline/post should hide the visible effector to avoid corrective feedback, while
+// exposure should show the shifted effector so the participant actually receives the
+// visuomotor mismatch the adaptation literature relies on.
+bool ShouldShowInputRenderersForCurrentPhase()
+{
+    if (!hideInputRenderers)
+        return true;
+
+    return taskMode == TaskMode.Exposure;
+}
+
+// Enables/disables only visible renderers below a visual root, without disabling the
+// tracked object itself. This preserves input functionality while hiding embodiment
+// and controller meshes from the participant.
+void SetVisualRenderersEnabled(Transform visualRoot, bool enabled)
+{
+    if (visualRoot == null)
+        return;
+
+    var renderers = visualRoot.GetComponentsInChildren<Renderer>(true);
+    for (int i = 0; i < renderers.Length; i++)
+    {
+        if (renderers[i] != null)
+            renderers[i].enabled = enabled;
+    }
 }
 
 // Instantiates the OpenXR hand-visualizer prefabs when needed.
@@ -1936,14 +2850,55 @@ void SyncEffectReferences()
     if (effectMode != EffectMode.Skew)
         return;
 
-    skew.visualWorldRoot = visualWorldRoot;
+    var auxRoots = new List<Transform>();
+
+    if (xrBackend == XRBackend.OpenXR && openXRTrackingMode == OpenXRTrackingMode.Controllers)
+    {
+        // In controller mode, skew moves only the visible controller mesh here.
+        // GetTransformedInput then reads that visual mesh's actual world delta and
+        // applies it once to the ray origin, keeping the ray attached to the seen controller.
+        Transform controllerMesh = activeHand == Handedness.Left ? _leftPointerVisualTransform : _rightPointerVisualTransform;
+        skew.visualPointerRoot = controllerMesh != null ? controllerMesh : GetActiveControllerTransform();
+        skew.shiftInputPoseAndRay = false;
+        List<Transform> cachedAuxRootsController = activeHand == Handedness.Left ? _leftAuxPointerVisualTransforms : _rightAuxPointerVisualTransforms;
+        if (cachedAuxRootsController != null)
+        {
+            for (int i = 0; i < cachedAuxRootsController.Count; i++)
+            {
+                Transform aux = cachedAuxRootsController[i];
+                if (aux != null && aux != GetActiveControllerRayOriginTransform() && !auxRoots.Contains(aux))
+                    auxRoots.Add(aux);
+            }
+        }
+        skew.visualAuxRoots = auxRoots;
+        return;
+    }
+
+    // In hand mode, tracked joints do not live under one movable scene root, so the
+    // visible hand root is shifted and the input pose/ray are shifted in code too.
     skew.visualPointerRoot = GetActivePointerVisual();
-    skew.visualAuxRoots = activeHand == Handedness.Left ? _leftAuxPointerVisualTransforms : _rightAuxPointerVisualTransforms;
+    skew.shiftInputPoseAndRay = true;
+
+    List<Transform> cachedAuxRoots = activeHand == Handedness.Left ? _leftAuxPointerVisualTransforms : _rightAuxPointerVisualTransforms;
+    if (cachedAuxRoots != null)
+    {
+        for (int i = 0; i < cachedAuxRoots.Count; i++)
+        {
+            Transform aux = cachedAuxRoots[i];
+            if (aux != null && !auxRoots.Contains(aux))
+                auxRoots.Add(aux);
+        }
+    }
+
+    skew.visualAuxRoots = auxRoots;
 }
 
 // Keyboard shortcuts are mainly for debugging and development inside the editor.
 void HandleKeyboardShortcuts()
 {
+    if (experimentMode == ExperimentMode.Participant)
+        return;
+
     if (Input.GetKeyDown(restartBaselineKey))
     {
         RestartBaselineFromAnywhere();
@@ -2008,6 +2963,7 @@ public void ReturnFromExposureToPost()
     taskMode = _measurementTaskBeforeExposure;
     ApplyTaskMode();
     SelectEffect();
+    ResetInputLatchState(true);
 
     BeginMeasurementBlock(taskMode, "Post");
 }
@@ -2031,6 +2987,7 @@ void BeginMeasurementBlock(TaskMode measurementTask, string blockName)
     taskMode = measurementTask;
     ApplyTaskMode();
     SelectEffect();
+    ResetInputLatchState(true);
     experimentLogger?.LogBlockStarted(measurementTask.ToString(), blockName);
 
     if (blockName == "Baseline")
@@ -2046,6 +3003,7 @@ void BeginExposureNow()
     taskMode = TaskMode.Exposure;
     ApplyTaskMode();
     SelectEffect();
+    ResetInputLatchState(true);
 
     TryInvokeNoArg(exposureTask, "StartExposureBlock");
 }
@@ -2300,4 +3258,66 @@ static void TryInvokeBlockMethod(MonoBehaviour target, string methodName, string
         catch { return; }
     }
 }
+
+public void PlayAcceptedClickSound()
+{
+    if (!playAcceptedClickSound)
+        return;
+
+    EnsureAcceptedClickAudio();
+
+    if (_acceptedClickAudioSource == null || _acceptedClickClip == null)
+        return;
+
+    _acceptedClickAudioSource.PlayOneShot(_acceptedClickClip, acceptedClickVolume);
+}
+
+void EnsureAcceptedClickAudio()
+{
+    if (_acceptedClickAudioSource == null)
+    {
+        _acceptedClickAudioSource = GetComponent<AudioSource>();
+
+        if (_acceptedClickAudioSource == null)
+            _acceptedClickAudioSource = gameObject.AddComponent<AudioSource>();
+
+        _acceptedClickAudioSource.playOnAwake = false;
+        _acceptedClickAudioSource.spatialBlend = 0f; // 2D UI-style sound
+        _acceptedClickAudioSource.volume = 1f;
+    }
+
+    if (_acceptedClickClip == null)
+        _acceptedClickClip = CreateSoftAcceptedClickClip();
+}
+
+AudioClip CreateSoftAcceptedClickClip()
+{
+    int sampleRate = 44100;
+    int sampleCount = Mathf.Max(1, Mathf.RoundToInt(sampleRate * acceptedClickDurationSeconds));
+    float[] samples = new float[sampleCount];
+
+    float frequency = Mathf.Max(80f, acceptedClickFrequency);
+
+    for (int i = 0; i < sampleCount; i++)
+    {
+        float t = i / (float)sampleRate;
+        float normalized = i / (float)(sampleCount - 1);
+
+        // Soft attack + quick fade-out, so it feels like feedback rather than an annoying beep.
+        float attack = Mathf.Clamp01(normalized / 0.12f);
+        float decay = Mathf.Pow(1f - normalized, 2.4f);
+        float envelope = attack * decay;
+
+        // Main tone plus a quieter higher harmonic gives a soft "tick" instead of a pure sine beep.
+        float main = Mathf.Sin(2f * Mathf.PI * frequency * t);
+        float harmonic = 0.25f * Mathf.Sin(2f * Mathf.PI * frequency * 2f * t);
+
+        samples[i] = (main + harmonic) * envelope * 0.5f;
+    }
+
+    AudioClip clip = AudioClip.Create("SoftAcceptedClick", sampleCount, 1, sampleRate, false);
+    clip.SetData(samples, 0);
+    return clip;
+}
+
 }

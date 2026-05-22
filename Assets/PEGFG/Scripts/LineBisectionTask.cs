@@ -35,7 +35,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
 
     [Header("Block")]
     private BlockType blockType = BlockType.Baseline;
-    private int trialsPerBlock = 20;
+    private int trialsPerBlock = 10;
     private bool latchConfirm = true;
 
     [Header("Trial gating (return to start posture)")]
@@ -44,7 +44,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     private float minSecondsBetweenTrials = 0f;
 
     [Header("Line settings (in metres)")]
-    [SerializeField] private float lineLength = 1f;
+    [SerializeField] private float lineLength = 0.20f;
     [SerializeField] private float lineZRange = 0.1f;
     [SerializeField] private bool clampToLineSegment = true;
     [SerializeField] private float analysisMidpointRadiusMeters = 0.03f;
@@ -52,9 +52,9 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     [Header("Randomisation")]
     [SerializeField] private bool randomiseLineZEachTrial = true;
     [SerializeField, Tooltip("If enabled, line length changes between trials. If disabled, the same lineLength is used for the whole block.")]
-    private bool randomiseLineLengthEachTrial = true;
-    [SerializeField] private float minLineLength = 1f;
-    [SerializeField] private float maxLineLength = 1.25f;
+    private bool randomiseLineLengthEachTrial = false;
+    [SerializeField] private float minLineLength = 0.20f;
+    [SerializeField] private float maxLineLength = 0.20f;
 
     [Header("Debug")]
     public bool showCursor = true;
@@ -68,7 +68,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
     float? _liveErrorCm = null;
 
     float _currentLineZ = 0f;
-    float _currentHalfLen = 0.2f;
+    float _currentHalfLen = 0.10f;
 
     readonly List<float> _errorsCm = new List<float>(128);
     float? _baselineMeanCm = null;
@@ -265,6 +265,7 @@ public class LineBisectionTask : MonoBehaviour, ISandboxTask, IAimTargetProvider
             }
 
             if (latchConfirm) _confirmLatched = true;
+            runner?.PlayAcceptedClickSound();
 
             // The signed error is the horizontal board coordinate relative to the true midpoint.
             float errorMeters = local.x;
