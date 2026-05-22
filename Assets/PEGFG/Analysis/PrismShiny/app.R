@@ -1981,10 +1981,10 @@ build_participant_signed_plot <- function(participant_data) {
     geom_point(size = 3) +
     facet_wrap(~TaskMode, scales = "free_y") +
     labs(
-      title = "Participant Stable-center Profile",
-      subtitle = "Signed baseline-to-post shift of the stable perceived-center cluster.",
+      title = "Participant Direction of Shift",
+      subtitle = "Signed change from baseline to post in the participant's stable perceived middle. Units: cm.",
       x = "Configured effect",
-      y = "Signed aftereffect",
+      y = "Signed baseline-to-post shift (cm)",
       color = "Task"
     ) +
     theme_minimal(base_size = 13)
@@ -2014,10 +2014,10 @@ build_participant_magnitude_plot <- function(participant_data) {
   ggplot(plot_data, aes(x = EffectGroup, y = Magnitude, fill = TaskMode, text = hover_text)) +
     geom_col(position = position_dodge(width = 0.7), width = 0.65, alpha = 0.82) +
     labs(
-      title = "Absolute Stable-center Shift",
-      subtitle = "Useful for spotting noisy no-effect runs and unusually weak/strong adaptation.",
+      title = "Participant Absolute Shift",
+      subtitle = "Absolute baseline-to-post change in perceived middle. Large None values suggest drift/noise before interpreting perturbations. Units: cm.",
       x = "Configured effect",
-      y = "Magnitude",
+      y = "Absolute shift (cm)",
       fill = "Task"
     ) +
     theme_minimal(base_size = 13)
@@ -2081,10 +2081,10 @@ build_participant_normalized_plot <- function(participant_data) {
     geom_hline(yintercept = 0, color = "#475569", linetype = "dashed") +
     geom_col(position = position_dodge(width = 0.7), width = 0.65, alpha = 0.84) +
     labs(
-      title = "Effect Above No-effect Drift",
-      subtitle = "Positive values mean the perturbation shifted the stable perceived center more than this participant's None run.",
+      title = "Perturbation Shift Above This Participant's No-effect Run",
+      subtitle = "Positive values mean this effect shifted the perceived middle more than the participant's own None run for the same task. Units: cm.",
       x = "Configured effect",
-      y = "Magnitude minus None",
+      y = "Extra shift beyond None (cm)",
       fill = "Task"
     ) +
     theme_minimal(base_size = 13)
@@ -2118,17 +2118,19 @@ build_normalized_group_plot <- function(normalized_data) {
     geom_jitter(width = 0.10, height = 0, size = 2.6, alpha = 0.86) +
     facet_wrap(~TaskMode, scales = "free_y") +
     labs(
-      title = "Effect Above Participant-specific None",
-      subtitle = "Each point is normalized by that participant's no-effect stable-center shift for the same task.",
+      title = "Perturbation Shift Above Participant-specific None",
+      subtitle = "Each point subtracts that participant's no-effect baseline-to-post shift for the same task. Values above zero suggest effect beyond ordinary drift/noise. Units: cm.",
       x = "Configured effect",
-      y = "Magnitude minus None",
+      y = "Extra shift beyond None (cm)",
       color = "Input mode"
     ) +
     theme_minimal(base_size = 13)
 }
 
 # Comparison plot #1:
-# one point per session, ordered in time, faceted by task.
+# compact condition summary. The old run-order line plot was useful while testing
+# the pipeline, but it is too visually noisy for interpretation once many sessions
+# are loaded.
 build_comparison_plot <- function(compare_data) {
   if (nrow(compare_data) == 0) {
     return(
@@ -2138,27 +2140,42 @@ build_comparison_plot <- function(compare_data) {
     )
   }
 
-  compare_plot_data <- compare_data |>
+  summary_data <- compare_data |>
     mutate(
-      RunIndex = dplyr::coalesce(as_num(StudySessionIndex), row_number()),
-      hover_text = paste0(
-        "Run order: ", RunIndex,
-        "<br>Magnitude: ", sprintf("%.3f", Magnitude),
-        "<br>Input mode: ", InputModeLabel,
-        "<br>Effect: ", ConfiguredEffectMode
-      )
-    )
+      EffectGroup = factor(ConfiguredEffectMode, levels = c("None", "Translation", "Rotation", "Skew")),
+      InputModeLabel = ifelse(is.na(InputModeLabel) | InputModeLabel == "", "unknown", InputModeLabel)
+    ) |>
+    group_by(TaskMode, EffectGroup, InputModeLabel) |>
+    summarise(
+      MedianMagnitude = median(Magnitude, na.rm = TRUE),
+      Q1 = quantile(Magnitude, 0.25, na.rm = TRUE),
+      Q3 = quantile(Magnitude, 0.75, na.rm = TRUE),
+      N = n(),
+      .groups = "drop"
+    ) |>
+    filter(!is.na(EffectGroup), is.finite(MedianMagnitude))
 
-  ggplot(compare_plot_data, aes(x = RunIndex, y = Magnitude, color = InputModeLabel)) +
-    geom_line(aes(group = interaction(TaskMode, ConfiguredEffectMode, InputModeLabel)), alpha = 0.4) +
-    geom_point(size = 3) +
+  ggplot(summary_data, aes(x = EffectGroup, y = MedianMagnitude, fill = InputModeLabel)) +
+    geom_col(position = position_dodge(width = 0.75), width = 0.65, alpha = 0.82) +
+    geom_errorbar(
+      aes(ymin = Q1, ymax = Q3),
+      position = position_dodge(width = 0.75),
+      width = 0.2,
+      linewidth = 0.65
+    ) +
+    geom_text(
+      aes(label = paste0("n=", N)),
+      position = position_dodge(width = 0.75),
+      vjust = -0.45,
+      size = 3
+    ) +
     facet_wrap(~TaskMode, scales = "free_y") +
     labs(
-      title = "Aftereffect Magnitude Across Sessions",
-      subtitle = "Each point is one finished session, estimated from the stable response cluster rather than the raw mean.",
-      x = "Run order",
-      y = "Aftereffect magnitude",
-      color = "Input mode"
+      title = "Typical Baseline-to-post Shift by Condition",
+      subtitle = "Bars show median absolute shift in perceived middle; whiskers show the middle 50% of participants. Units: cm.",
+      x = "Configured effect",
+      y = "Median shift from baseline to post (cm)",
+      fill = "Input mode"
     ) +
     theme_minimal(base_size = 13)
 }
@@ -2182,10 +2199,10 @@ build_grouped_comparison_plot <- function(compare_data) {
     geom_jitter(width = 0.12, height = 0, size = 2.4, alpha = 0.8) +
     facet_wrap(~TaskMode, scales = "free_y") +
     labs(
-      title = "Aftereffect Magnitude by Condition",
-      subtitle = "Stable perceived-center shifts by effect, task, and input mode.",
+      title = "Participant-level Baseline-to-post Shifts",
+      subtitle = "Each dot is one module. The value is the absolute shift in perceived middle from baseline to post. Units: cm.",
       x = "Configured effect",
-      y = "Aftereffect magnitude",
+      y = "Absolute shift from baseline to post (cm)",
       color = "Input mode"
     ) +
     theme_minimal(base_size = 13)
@@ -2207,6 +2224,7 @@ ui <- fluidPage(
       .metric-title {font-size: 12px; text-transform: uppercase; color: #6b7280;}
       .metric-value {font-size: 28px; font-weight: 700; color: #111827;}
       .metric-sub {font-size: 13px; color: #4b5563;}
+      .analysis-note {background: #fff7ed; border: 1px solid #fed7aa; color: #7c2d12; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; line-height: 1.35;}
     "))
   ),
   sidebarLayout(
@@ -2233,6 +2251,12 @@ ui <- fluidPage(
         ),
         tabPanel(
           "Compare",
+          div(class = "analysis-note",
+              strong("How to read these plots: "),
+              "Baseline and post responses are each reduced to the participant's most stable perceived middle. ",
+              "This keeps all accepted trials, but random far-away responses have less influence than the cluster where the participant repeatedly responded. ",
+              "Magnitude is the absolute baseline-to-post shift in cm. The normalized plot subtracts that participant's own no-effect shift for the same task, so values above zero are the perturbation effect above ordinary drift/noise."
+          ),
           fluidRow(
             column(3, selectInput("compare_task", "Task", choices = c("All"))),
             column(3, selectInput("compare_input_mode", "Input Mode", choices = c("All"))),
@@ -2250,6 +2274,10 @@ ui <- fluidPage(
         ),
         tabPanel(
           "Participant",
+          div(class = "analysis-note",
+              strong("Participant view: "),
+              "This groups all modules for one participant. The signed plot shows direction of baseline-to-post shift; the magnitude plot ignores direction; the normalized plot asks whether each perturbation shifted responses more than that participant's own no-effect run."
+          ),
           fluidRow(
             column(4, selectInput("participant_id", "Participant", choices = c("No participants loaded"))),
             column(8, uiOutput("participant_cards"))
@@ -2518,13 +2546,13 @@ server <- function(input, output, session) {
       div(class = "metric-card",
           div(class = "metric-title", "Baseline to Post"),
           div(class = "metric-value", sprintf("%.2f", aftereffect$SignedDelta[[1]])),
-          div(class = "metric-sub", paste("Signed change in stable perceived center", aftereffect$MetricUnits[[1]])),
+          div(class = "metric-sub", paste("Signed change in perceived middle", aftereffect$MetricUnits[[1]])),
           div(class = "metric-sub", interpretation$signed_shift_label)
       ),
       div(class = "metric-card",
           div(class = "metric-title", "Magnitude"),
           div(class = "metric-value", sprintf("%.2f", aftereffect$Magnitude[[1]])),
-          div(class = "metric-sub", paste("Absolute stable-center shift from baseline to post", aftereffect$MetricUnits[[1]])),
+          div(class = "metric-sub", paste("Absolute perceived-middle shift from baseline to post", aftereffect$MetricUnits[[1]])),
           div(class = "metric-sub", interpretation$strength_label)
       ),
       div(class = "metric-card",
@@ -2540,7 +2568,7 @@ server <- function(input, output, session) {
       div(class = "metric-card",
           div(class = "metric-title", "Baseline / Post"),
           div(class = "metric-value", sprintf("%.2f -> %.2f", aftereffect$BaselineValue[[1]], aftereffect$PostValue[[1]])),
-          div(class = "metric-sub", "Stable perceived-center estimate for baseline and post")
+          div(class = "metric-sub", "Estimated perceived middle for baseline and post")
       )
     )
 
@@ -2824,12 +2852,12 @@ server <- function(input, output, session) {
       div(class = "metric-card",
           div(class = "metric-title", "Mean Magnitude"),
           div(class = "metric-value", sprintf("%.2f", mean_mag)),
-          div(class = "metric-sub", "Average stable-center shift across filtered sessions")
+          div(class = "metric-sub", "Average baseline-to-post shift in perceived middle across filtered sessions (cm)")
       ),
       div(class = "metric-card",
           div(class = "metric-title", "Median Magnitude"),
           div(class = "metric-value", sprintf("%.2f", median_mag)),
-          div(class = "metric-sub", "Median stable-center shift across filtered sessions")
+          div(class = "metric-sub", "Median baseline-to-post shift in perceived middle across filtered sessions (cm)")
       ),
       div(class = "metric-card",
           div(class = "metric-title", "Toward Target"),
