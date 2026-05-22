@@ -2112,7 +2112,7 @@ build_normalized_group_plot <- function(normalized_data) {
       )
     )
 
-  ggplot(plot_data, aes(x = EffectGroup, y = MagnitudeMinusNone, color = InputModeLabel, text = hover_text)) +
+  ggplot(plot_data, aes(x = EffectGroup, y = MagnitudeMinusNone, color = InputModeLabel)) +
     geom_hline(yintercept = 0, color = "#475569", linetype = "dashed") +
     geom_boxplot(outlier.shape = NA, alpha = 0.22, position = position_dodge(width = 0.6)) +
     geom_jitter(width = 0.10, height = 0, size = 2.6, alpha = 0.86) +
@@ -2149,7 +2149,7 @@ build_comparison_plot <- function(compare_data) {
       )
     )
 
-  ggplot(compare_plot_data, aes(x = RunIndex, y = Magnitude, color = InputModeLabel, text = hover_text)) +
+  ggplot(compare_plot_data, aes(x = RunIndex, y = Magnitude, color = InputModeLabel)) +
     geom_line(aes(group = interaction(TaskMode, ConfiguredEffectMode, InputModeLabel)), alpha = 0.4) +
     geom_point(size = 3) +
     facet_wrap(~TaskMode, scales = "free_y") +
@@ -2241,10 +2241,10 @@ ui <- fluidPage(
           ),
           fluidRow(
             column(4, uiOutput("compare_cards")),
-            column(8, plotlyOutput("compare_plot", height = "360px"))
+            column(8, plotOutput("compare_plot", height = "360px"))
           ),
-          plotlyOutput("compare_group_plot", height = "360px"),
-          plotlyOutput("compare_normalized_plot", height = "380px"),
+          plotOutput("compare_group_plot", height = "360px"),
+          plotOutput("compare_normalized_plot", height = "380px"),
           h3("Comparison Table"),
           DTOutput("compare_table")
         ),
@@ -2841,16 +2841,16 @@ server <- function(input, output, session) {
   })
 
   # Compare-tab plots and table.
-  output$compare_plot <- renderPlotly({
-    ggplotly(build_comparison_plot(comparison_data_filtered()), tooltip = "text")
+  output$compare_plot <- renderPlot({
+    build_comparison_plot(comparison_data_filtered())
   })
 
-  output$compare_group_plot <- renderPlotly({
-    ggplotly(build_grouped_comparison_plot(comparison_data_filtered()))
+  output$compare_group_plot <- renderPlot({
+    build_grouped_comparison_plot(comparison_data_filtered())
   })
 
-  output$compare_normalized_plot <- renderPlotly({
-    ggplotly(build_normalized_group_plot(comparison_normalized_filtered()), tooltip = "text")
+  output$compare_normalized_plot <- renderPlot({
+    build_normalized_group_plot(comparison_normalized_filtered())
   })
 
   output$compare_table <- renderDT({
