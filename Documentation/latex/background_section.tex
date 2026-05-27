@@ -1,0 +1,142 @@
+\chapter{Background Research}
+\label{chap:Background}
+
+\section{Unilateral Spatial Neglect After Stroke}
+\label{sec:background-usn}
+
+Unilateral spatial neglect (USN) is a neuropsychological disorder in which patients fail to report, respond to, or orient toward stimuli on the side of space opposite a brain lesion \cite{heilman2000neglect,Hendrik_Knoche_Lit_Review}. It is most commonly discussed in relation to right-hemisphere stroke, where patients may neglect the left side of space, although neglect can vary substantially in severity, affected reference frame, and functional expression \cite{heilman2000neglect,Hendrik_Knoche_Lit_Review}. Importantly, USN is not reducible to a primary sensory or motor deficit. A patient may be able to see or move, but still fail to attend to, represent, or act toward one side of space \cite{heilman2000neglect}.
+
+This distinction is important for understanding why USN is usually discussed as a disorder of spatial behaviour rather than as a simple loss of vision or strength. Patients may omit objects on one side, fail to explore part of the environment, misjudge spatial midlines, or underuse the contralesional side of the body and surrounding space \cite{heilman2000neglect,Hendrik_Knoche_Lit_Review}. These symptoms can interfere with activities of daily living and slow recovery, which makes USN a clinically relevant target for rehabilitation \cite{Hendrik_Knoche_Lit_Review,Morse2022}.
+
+Assessment of USN therefore often combines several behavioural tasks rather than relying on one single measure. A cancellation task asks the patient to search a page or space and mark target items; omissions on one side can indicate reduced exploration or attention toward that side \cite{Hendrik_Knoche_Lit_Review}. In line bisection, the patient marks the perceived midpoint of a horizontal line, and the deviation from the true centre is used as a measure of spatial bias \cite{frassinetti2002long,Serino2011}. A landmark task is similar in stimulus form, but instead of drawing or pointing to the midpoint, the patient judges whether a pre-bisected line appears divided too far to the left or right; this makes it a more perceptual judgement task \cite{Serino2011}. Open-loop pointing asks the participant to point without online visual feedback of the moving hand, making it useful for estimating perceived straight-ahead or sensorimotor aftereffects \cite{Serino2011}. Functional exploration tasks, such as VR tasks involving search or interaction in a larger scene, are used to observe spatial behaviour in a more activity-like setting \cite{Hendrik_Knoche_Lit_Review,Morse2022}.
+
+\section{Conventional Prism Adaptation Therapy}
+\label{sec:background-prism-therapy}
+
+Prism adaptation therapy is a widely studied intervention for USN in which participants perform repeated goal-directed movements while wearing laterally displacing prism glasses \cite{Rossetti1998Prism,frassinetti2002long,serino2006mechanisms,Serino2011}. In a typical neglect rehabilitation setup, the prisms shift the visual field toward the ipsilesional side. For a patient with left neglect after a right-hemisphere lesion, this usually means that the visual field is shifted rightward. The shift creates a mismatch between where the target is seen and how the arm must move to reach it. At the beginning of exposure, participants therefore make systematic pointing errors. Across repeated movements, these errors are reduced as the sensorimotor system recalibrates to the altered visuomotor relation \cite{serino2006mechanisms,Serino2011}.
+
+When the prisms are removed, participants commonly show an aftereffect in the direction opposite to the optical displacement \cite{Rossetti1998Prism,frassinetti2002long,serino2006mechanisms}. An aftereffect is therefore the residual shift in behaviour observed after the perturbation has been removed. In left neglect, this opposite-direction shift can move behaviour toward the neglected side of space, which is why prism adaptation has been investigated as a rehabilitation method rather than only as a motor-learning phenomenon \cite{Rossetti1998Prism,frassinetti2002long}. Frassinetti et al. reported improvements in neglect symptoms after repeated prism adaptation sessions, and Serino et al. later argued that error reduction during exposure and the resulting aftereffect should be treated as related but distinct components of the adaptation process \cite{frassinetti2002long,serino2006mechanisms}.
+
+The basic structure of prism adaptation can be summarized as three phases. First, a pre-exposure phase measures baseline behaviour without prism displacement. Second, an exposure phase introduces the prism displacement during repeated pointing or reaching movements, allowing error reduction to occur. Third, a post-exposure phase removes the prisms and measures whether behaviour has shifted relative to baseline \cite{Rossetti1998Prism,frassinetti2002long,Serino2011}. In this terminology, \emph{error reduction} describes the decreasing pointing error during exposure, while the \emph{aftereffect} describes the shift measured after the prisms or perturbation have been removed.
+
+The effect of prism adaptation also depends on procedure. Serino et al. compared terminal prism adaptation, where only the later part of the pointing movement is visible, with concurrent prism adaptation, where more online visual feedback is available during movement \cite{Serino2011}. They found that both prism procedures improved neglect compared with a neutral pointing control, but terminal prism adaptation produced stronger neglect improvement than concurrent prism adaptation \cite{Serino2011}. This distinction introduces an important methodological variable: prism adaptation is defined not only by the direction and magnitude of the shift, but also by the visibility of the movement during exposure.
+
+\section{Virtual Reality and Prism Adaptation}
+\label{sec:background-vr-pa}
+
+Virtual reality (VR) is relevant to prism-adaptation research because it allows the relation between physical movement and visual feedback to be manipulated in software. Instead of relying only on physical prism glasses, a VR system can shift a virtual hand, rotate the response mapping, displace the visual scene, control target timing, and record detailed trial-by-trial behaviour \cite{kim2017development,cho2022feasibility,Ramos2019,anan2025comparative}. Anan et al. also emphasize these practical advantages directly: their VR system allowed the deviation angle, target distance, target height, target timing, and number of sets to be adjusted digitally while storing performance and error data for later analysis \cite{anan2025comparative}. These properties make VR a useful setting for studying how different kinds of visual perturbation affect pointing behaviour.
+
+Several studies indicate that VR can induce prism-adaptation-like behaviour. Kim et al. developed a virtual prism adaptation therapy prototype in which a virtual hand was transformed relative to the real hand and reported rightward errors during exposure followed by leftward post-adaptation deviation \cite{kim2017development}. Cho et al. used immersive VR with hand tracking and functional near-infrared spectroscopy, reporting behavioural aftereffects and activation in right-hemisphere regions associated with attention and sensorimotor processing \cite{cho2022feasibility}. Ramos et al. compared physical prism exposure with two immersive VR implementations and found that both VR conditions produced larger aftereffects than the physical-prism condition in healthy participants \cite{Ramos2019}. Anan et al. compared conventional prism glasses with a VR prism adaptation system and reported that VR induced leftward open-loop pointing shifts in more participants, while aftereffects were comparable among participants who adapted in both conditions \cite{anan2025comparative}.
+
+VR also changes how data can be collected. The perturbation can be adjusted digitally, task structure can be standardized, and endpoint errors, hit rates, trajectories, and timing can be logged automatically \cite{cho2022feasibility,anan2025comparative}. At the same time, VR is not automatically equivalent to physical prism glasses. Tracking quality, display latency, depth perception, controller or hand representation, button confirmation, cybersickness, and user understanding of the manipulation can all affect the sensorimotor loop \cite{cho2022feasibility,gerken2025sense,Cybersickness}. These factors are important background constraints when comparing VR-based prism-adaptation procedures with conventional prism glasses.
+
+\section{Implementation Diversity in VR Prism Adaptation}
+\label{sec:background-implementation-diversity}
+
+The reviewed literature shows that VR prism adaptation is implemented in several ways. Some studies shift a virtual hand or effector relative to the real hand \cite{kim2017development,cho2022feasibility,Bourgeois2021}. Others manipulate the rendered scene or camera frustum to simulate a wider visual displacement \cite{Ramos2019,anan2025comparative}. Related visuomotor adaptation studies use rotation between movement and feedback, often to examine embodiment, agency, or generalization rather than clinical neglect directly \cite{gerken2025sense}. These studies all involve a systematic mismatch between action and visual feedback, but the spatial reference frame of the mismatch is different.
+
+These implementation types can be described by their locus of manipulation. A full-field visual shift displaces the scene relative to the body and is therefore conceptually close to conventional prism glasses. A shifted virtual hand or controller changes the seen effector while the surrounding scene may remain stable. A visuomotor rotation changes movement direction rather than applying a constant lateral offset. A skewed or frustum-based rendering manipulation changes the geometry of the visible scene \cite{Ramos2019}. These categories provide vocabulary for describing VR perturbations before evaluating whether they produce similar behavioural outcomes.
+
+The literature also differs in feedback and dosage. Feedback describes what information participants receive about their movement or endpoint during exposure. As described above, terminal feedback limits movement visibility, while concurrent feedback allows more continuous visual guidance \cite{Serino2011}. Ramos et al. similarly note that the size and composition of the after-effect depend partly on whether participants can see the movement during prism exposure, and that terminal access can produce larger after-effects than concurrent access in pointing tasks \cite{Ramos2019}. Feedback modality also differs: Bourgeois et al. compared visual feedback with auditory-verbal feedback and found aftereffects in the altered visual-feedback condition but not in the auditory-verbal condition \cite{Bourgeois2021}. Dosage refers to how much perturbation and repetition the participant receives. Gammeri et al. investigated 0-, 10-, 20-, and 30-degree virtual deviations and found transfer effects in bisection tasks most clearly in the 30-degree condition \cite{Gammeri2020}. Together, these variables describe the procedure around the perturbation, not only the perturbation itself.
+
+\section{Assessment Tasks and Behavioural Outcomes}
+\label{sec:background-assessment-tasks}
+
+Prism adaptation studies commonly distinguish between behaviour during exposure and behaviour after the perturbation is removed. During exposure, trial-by-trial error reduction is used to describe how participants adapt to the altered visuomotor relation \cite{serino2006mechanisms,Serino2011}. After exposure, open-loop pointing is often used to measure the sensorimotor aftereffect because the participant points without the same visual feedback that was available during exposure \cite{Rossetti1998Prism,Ramos2019,anan2025comparative}. If post-exposure pointing is shifted relative to baseline, this is interpreted as an aftereffect.
+
+Line bisection and landmark tasks are used to investigate whether adaptation transfers beyond the trained pointing movement. Transfer means that a change produced during exposure appears in another task or response format. Line bisection asks the participant to mark the perceived midpoint of a horizontal line, while landmark judgement asks whether a pre-bisected line appears transected too far to the left or right. These tasks are relevant to USN because they probe spatial judgement and perceptual bias rather than only endpoint motor error \cite{frassinetti2002long,Serino2011,Bourgeois2021,anan2025comparative}. In rehabilitation research, transfer measures are important because they indicate whether adaptation is limited to the trained movement or also appears in broader spatial tasks \cite{frassinetti2002long,serino2006mechanisms,Serino2011}.
+
+These measures describe different parts of the prism-adaptation process. Error reduction describes performance during the perturbation. Open-loop pointing describes the sensorimotor aftereffect after perturbation removal. Line bisection and landmark judgement describe possible transfer to spatial judgement. Spatial landing patterns and movement trajectories provide more detailed information about where and how participants moved during a task.
+
+\section{State of the Art in VR Prism Adaptation}
+\label{sec:background-state-of-art}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{img/1_Background/MED8gr01 - Frame 7(2).jpg}
+    \caption{Overview of reviewed literature on conventional and virtual prism adaptation. The figure summarizes how the reviewed studies differ in perturbation type, feedback procedure, participant group, and assessment tasks.}
+    \label{fig:Literaturereview}
+\end{figure}
+
+The reviewed work can be understood as a set of overlapping approaches. Conventional clinical prism adaptation provides the clearest procedural anchor: repeated pointing under a lateral optical shift, followed by an opposite-direction aftereffect and possible transfer to neglect symptoms \cite{Rossetti1998Prism,frassinetti2002long,serino2006mechanisms,Serino2011}. VR implementations retain parts of this logic but differ in how the perturbation is created. Kim et al. and Cho et al. use virtual-hand displacement approaches \cite{kim2017development,cho2022feasibility}. Ramos et al. compare rendering-level VR manipulations with physical prism glasses, including both a rotated-frustum and skewed-frustum simulation of a 10-degree deviation \cite{Ramos2019}. Anan et al. compare conventional prism glasses with a VR version of a repeated reaching protocol using 20 diopters, approximately \ang{11.3}, in both conditions \cite{anan2025comparative}. Bourgeois et al. examine whether visual or auditory-verbal feedback is sufficient to induce aftereffects in a virtual prism procedure \cite{Bourgeois2021}. Gerken et al. examine visuomotor rotation and embodiment, showing that hand feedback can speed adaptation without necessarily changing aftereffects or transfer \cite{gerken2025sense}.
+
+Across these studies, the amount of imposed deviation varies substantially. Some studies use values around 10 degrees or 20 diopters, which is close to the scale used in classical prism adaptation and several VR comparisons \cite{frassinetti2002long,Ramos2019,anan2025comparative}. Others use larger virtual deviations such as 30 degrees or 40 degrees to study stronger virtual aftereffects, feedback modality, or visuomotor rotation \cite{Gammeri2020,Bourgeois2021,gerken2025sense}. The variation in magnitude, implementation locus, feedback schedule, and task battery shows why the term ``VR prism adaptation'' can refer to several different experimental procedures.
+
+The broader VR rehabilitation literature adds a related but separate context. Kaiser et al. note that conventional USN assessment can miss milder or heterogeneous neglect presentations and that VR and eye-tracking technologies may support richer, more ecologically valid assessment \cite{Hendrik_Knoche_Lit_Review}. Morse et al. report generally positive attitudes toward VR telerehabilitation among stroke survivors, carers, and clinicians, while also emphasizing the importance of usability, instructions, and user ownership \cite{Morse2022}. Heyse et al. show a different VR rehabilitation direction by using a multisensory music-based environment to encourage exploration of neglected space rather than implementing a prism adaptation procedure \cite{heyse2022patient}. These works are relevant because they frame VR as a rehabilitation medium, even when they do not implement prism adaptation directly.
+
+\section{Conceptual Categories Used in This Project}
+\label{sec:background-conceptual-categories}
+
+To make the literature review operational for the prototype, the reviewed perturbations were grouped into a small set of conceptual categories. The icons in Table~\ref{tab:EffectIcons} are not intended as claims that the categories are physiologically identical. Rather, they show how the project distinguishes between different loci of visual manipulation: a shifted rendering or scene, a displaced virtual effector or response origin, and an angular change to the movement-feedback mapping. This distinction follows directly from the implementation diversity found in VR prism-adaptation studies \cite{kim2017development,cho2022feasibility,Ramos2019,anan2025comparative,gerken2025sense}.
+
+\begin{table}[H]
+    \centering
+    \begin{tblr}{|X[0.4,l,t]|X[0.75,l,t]|X[1,l,t]|}
+    \hline
+    \textbf{Icon} & \textbf{Name} & \textbf{Description} \\
+    \hline
+        \includegraphics[width=3cm,valign=t]{img/1_Background/Icons/Skewness.png} & \textbf{Shifted rendering or scene} & A manipulation where the visual scene, rendering geometry, or visible response representation is displaced relative to the participant. This is conceptually closest to conventional optical prism displacement when the whole visual field is shifted, although VR studies differ in whether they shift the scene, the camera frustum, or a task-specific visual reference \cite{Ramos2019,anan2025comparative}. \\
+    \hline
+        \includegraphics[width=3cm,valign=t]{img/1_Background/Icons/Translate - Hand.png} & \textbf{Virtual effector or response displacement} & A mismatch where the rendered hand, controller, endpoint, or response origin is offset relative to the tracked real movement. Several VR prism-adaptation prototypes use this effector-displacement logic rather than physically shifting the entire visual field \cite{kim2017development,cho2022feasibility,Bourgeois2021}. \\
+    \cline{1}
+        \includegraphics[width=3cm,valign=t]{img/1_Background/Icons/Translate - Arm.png} & with Arm & \\
+    \cline{1}
+        \includegraphics[width=3cm,valign=t]{img/1_Background/Icons/Translate - Controller.png} & with Controller & \\
+    \hline
+        \includegraphics[width=3cm,valign=t]{img/1_Background/Icons/Rotation - Controller v.1.png} & \textbf{Visuomotor rotation} & A manipulation where the direction of visual feedback is rotated relative to the executed movement. Rotation is a standard visuomotor-adaptation manipulation and is useful as a comparison case because it changes the action-feedback mapping differently from a constant lateral offset \cite{gerken2025sense}. \\
+    \cline{1}
+        \includegraphics[width=3cm,valign=t]{img/1_Background/Icons/Rotation - Hand.png} & with Hand & \\
+    \cline{1}
+        \includegraphics[width=3cm,valign=t]{img/1_Background/Icons/Rotation - Arm.png} & with Arm & \\
+    \hline
+    \end{tblr}
+    \caption{Conceptual prism-effect categories used to organize the reviewed VR perturbations. Blue elements represent virtual components, grey elements represent physical components, dotted lines denote raycasts, and red circles indicate target locations.}
+    \label{tab:EffectIcons}
+\end{table}
+
+The same review also motivated a small task vocabulary for measuring adaptation and transfer. Table~\ref{tab:TaskIcons} summarizes the three task types used as reference points in the prototype. Open-loop pointing primarily measures sensorimotor aftereffects, while line bisection and landmark judgement probe whether adaptation transfers to spatial judgement tasks \cite{Rossetti1998Prism,frassinetti2002long,Serino2011,Bourgeois2021,anan2025comparative}.
+
+\begin{table}[H]
+    \centering
+    \begin{tblr}{|X[0.3,l,t]|X[0.5,l,t]|X[1,l,t]|}
+    \hline
+    \textbf{Icon} & \textbf{Name} & \textbf{Description} \\
+    \hline
+        \includegraphics[width=2.5cm,valign=t]{img/1_Background/Icons/Open Loop Pointing.png} & Open-loop pointing & A post-exposure pointing measure used to estimate the direction and magnitude of the sensorimotor aftereffect after the perturbation has been removed \cite{Rossetti1998Prism,Ramos2019,anan2025comparative}. \\
+    \hline
+        \includegraphics[width=2.5cm,valign=t]{img/1_Background/Icons/Line Bisection.png} & Line bisection & A spatial judgement task in which the participant indicates the perceived midpoint of a horizontal line. Baseline-to-post changes can indicate transfer from the trained exposure movement to a spatial estimation task \cite{frassinetti2002long,Serino2011,Bourgeois2021}. \\
+    \hline
+        \includegraphics[width=2.5cm,valign=t]{img/1_Background/Icons/Landmark Bisection.png} & Landmark judgement & A perceptual judgement task in which the participant decides whether a pre-bisected line is transected to the left or right of the true midpoint. Because it does not require the same pointing endpoint measure, it can help separate perceptual bias from motor execution \cite{Serino2011,Bourgeois2021,anan2025comparative}. \\
+    \hline
+    \end{tblr}
+    \caption{Task categories used to describe behavioural assessment in the reviewed literature and in the prototype design.}
+    \label{tab:TaskIcons}
+\end{table}
+
+\section{Research Gap}
+\label{sec:background-research-gap}
+
+The reviewed literature supports VR as a promising platform for inducing and measuring prism-adaptation-like effects, but it also reveals a terminology and framework problem. Researchers use overlapping terms such as prism adaptation, virtual prism adaptation, visuomotor adaptation, virtual hand displacement, frustum rotation, skew, and feedback rotation for procedures that are related but not identical \cite{Ramos2019,Bourgeois2021,cho2022feasibility,gerken2025sense}. Some studies shift the whole visual scene, others shift only the effector, others rotate the mapping between movement and feedback, and others use VR for neglect rehabilitation without inducing prism adaptation at all \cite{kim2017development,cho2022feasibility,Ramos2019,heyse2022patient,gerken2025sense}.
+
+This lack of a shared framework limits comparison across studies. If two systems both claim to implement VR prism adaptation, but one shifts the visual field, one shifts the hand, and one rotates the response vector, it becomes difficult to determine whether differences in outcome reflect clinical efficacy, participant characteristics, perturbation magnitude, feedback procedure, or implementation mechanics. The same problem applies to assessment tasks: open-loop pointing, line bisection, landmark judgement, and exposure error describe different outcomes and should not be treated as interchangeable.
+
+Based on this review, the project identifies two research gaps. First, there is a lack of shared terminology for describing the locus and mechanism of VR prism effects. Second, there is a lack of a unified configurable framework that can implement multiple perturbation types, run comparable measurement and exposure tasks, and preserve detailed data for analysis. Addressing these gaps would make it easier for researchers and clinicians to compare methods, reproduce procedures, and adapt interventions to different USN profiles.
+
+\section{Problem Statement}
+\label{sec:background-problem-statement}
+
+Prism therapy is a well-established rehabilitation method for USN, and VR offers a promising way to make prism-adaptation procedures more configurable, measurable, and reusable. However, existing VR implementations vary in how they create the prism effect, how they present feedback, and which tasks they use to measure adaptation. This creates a need for a sandbox platform that can place different VR-based prism-effect implementations inside one shared experimental structure.
+
+The project is therefore guided by the following problem statement:
+
+\begin{center}
+\textit{How do different implementations of the prism effect in VR influence the magnitude and characteristics of behavioural adaptation in healthy participants?}
+\end{center}
+
+To support this problem statement, the project uses the following research questions:
+
+\begin{enumerate}
+    \item How does prism adaptation implemented in VR affect healthy participants during goal-directed pointing tasks?
+    \item To what extent does adaptation transfer to spatial measurement tasks that do not reproduce the exact trained exposure movement?
+    \item How do different VR perturbation implementations compare when tested within the same task structure and logging framework?
+\end{enumerate}

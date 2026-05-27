@@ -1,42 +1,5 @@
-% Suggested packages for the main Overleaf document:
-% \usepackage{graphicx}
-% \usepackage{float}
-% \usepackage{tikz}
-% \usetikzlibrary{positioning,arrows.meta,fit}
-% \usepackage{tabularx}
-% \usepackage{booktabs}
-% \usepackage{array}
-% \usepackage{xcolor}
-% \usepackage{listings}
-%
-% Suggested code-listing style for later implementation snippets:
-% \lstdefinestyle{pegfgcode}{
-%   basicstyle=\ttfamily\footnotesize,
-%   breaklines=true,
-%   breakatwhitespace=false,
-%   columns=fullflexible,
-%   frame=single,
-%   framerule=0.4pt,
-%   numbers=left,
-%   numberstyle=\scriptsize\color{gray},
-%   stepnumber=1,
-%   tabsize=2,
-%   showstringspaces=false,
-%   keepspaces=true,
-%   keywordstyle=\color{blue!60!black}\bfseries,
-%   commentstyle=\color{green!35!black},
-%   stringstyle=\color{orange!50!black}
-% }
-%
-% Example usage for C#:
-% \begin{lstlisting}[style=pegfgcode, language={[Sharp]C}, caption={Central runtime orchestration in SandboxRunner.}]
-% ...
-% \end{lstlisting}
-%
-% Example usage for R:
-% \begin{lstlisting}[style=pegfgcode, language=R, caption={Session discovery in the Shiny analysis app.}]
-% ...
-% \end{lstlisting}
+\chapter{Implementation}
+\label{chap:implementation}
 
 \section{Implementation Architecture of the Prototype}
 \label{sec:implementation-architecture}
@@ -45,7 +8,7 @@ Where the design chapter described the prototype from the participant's point of
 
 The implemented system can therefore be understood as four connected layers. First, the Unity runtime receives embodied or controller-based input and normalizes it through a central controller script. Second, the task scripts use this normalized input to run the individual baseline, exposure, and post-exposure procedures under the active perturbation. Third, two custom logging scripts translate the runtime state into a session structure composed of metadata, discrete events, continuous samples, and summary rows. Finally, the RShiny dashboard reads these files back in and visualizes the completed sessions through a unified analysis interface. Figure~\ref{fig:implementation-pipeline} shows this pipeline from participant action to later analysis.
 
-\begin{figure}[t]
+\begin{figure}[H]
     \centering
     \resizebox{\linewidth}{!}{%
     \begin{tikzpicture}[
@@ -66,7 +29,7 @@ The implemented system can therefore be understood as four connected layers. Fir
 
         \node[midbox, text width=4.4cm] (core) at (2.1,-4.2) {\texttt{PrismCore.cs}\\translation, rotation, and skew transforms};
         \node[midbox, text width=5.0cm, font=\scriptsize] (tasks) at (7.0,-4.2) {\texttt{OpenLoopPointingTask.cs}\\\texttt{LineBisectionTask.cs}\\\texttt{LandmarkTask.cs}\\\texttt{ExposureTask.cs}};
-        \node[midbox, text width=6.2cm, font=\scriptsize] (helpers) at (12.9,-4.2) {\texttt{HandDwellProgressBar.cs}\\\texttt{RoundedRectGraphic.cs}\\\texttt{DepthQueGradient.cs}};
+        \node[midbox, text width=6.2cm, font=\scriptsize] (helpers) at (12.9,-4.2) {\texttt{HandDwellProgressBar.cs}\\\texttt{RoundedRectGraphic.cs}};
 
         \node[layerbox, fit=(runner)(core)(tasks)(helpers)] (runtimegroup) {};
         \node[font=\scriptsize\bfseries, anchor=west, fill=white, inner sep=1pt] at ([xshift=2pt,yshift=2pt]runtimegroup.north west) {Unity runtime layer};
@@ -82,7 +45,7 @@ The implemented system can therefore be understood as four connected layers. Fir
         \node[bigbox, fill=yellow!14, text width=6.3cm] (csv) at (7.0,-9.8) {CSV session collections\\\texttt{Meta}, \texttt{Event}, \texttt{Sample}, and \texttt{Summary}};
 
         % Analysis layer
-        \node[bigbox, fill=green!9, text width=8.4cm] (analysis) at (7.0,-12.5) {\texttt{app.R}\\session discovery, summary, compare, quality, spatial, and trajectory analysis views};
+        \node[bigbox, fill=green!9, text width=8.4cm] (analysis) at (7.0,-12.5) {\texttt{app.R}\\session discovery, summary, compare, participant, quality, spatial, and trajectory analysis views};
         \node[layerbox, fit=(analysis)] (analysisgroup) {};
         \node[font=\scriptsize\bfseries, anchor=west, fill=white, inner sep=1pt] at ([xshift=2pt,yshift=2pt]analysisgroup.north west) {Analysis layer};
 
@@ -98,7 +61,7 @@ The implemented system can therefore be understood as four connected layers. Fir
         \draw[arr] (slog) -- (csv);
         \draw[arr] (csv) -- (analysis);
     \end{tikzpicture}}
-    \caption{Implementation pipeline from participant action to analysis. Participant input first enters \texttt{SandboxRunner.cs}, which handles calibration, applies the active confirmation rule, selects the current task/effect configuration, and advances the session between baseline, exposure, and post-exposure blocks. From there, the active task script uses the transformed input to run the required procedure, while \texttt{PrismCore.cs} supplies the currently selected perturbation and the helper scripts provide the dwell and depth cues that are visible during interaction. During runtime, \texttt{PrismExperimentLogger.cs} records the discrete structure of the session, such as metadata, phase transitions, accepted responses, exposure events, and summary rows, whereas \texttt{PrismSampleLogger.cs} records the continuous samples needed for later trajectory inspection. The resulting \texttt{Meta}, \texttt{Event}, \texttt{Sample}, and \texttt{Summary} CSV files are then grouped by \texttt{app.R}, which reconstructs the same session as summary, comparison, quality-control, spatial, and trajectory views.}
+    \caption{Implementation pipeline from participant action to analysis. Participant input first enters \texttt{SandboxRunner.cs}, which handles calibration, applies the active confirmation rule, selects the current task/effect configuration, and advances the session between baseline, exposure, and post-exposure blocks. From there, the active task script uses the transformed input to run the required procedure, while \texttt{PrismCore.cs} supplies the currently selected perturbation and the helper scripts provide the visible loading/progress cue used between interactions. During runtime, \texttt{PrismExperimentLogger.cs} records the discrete structure of the session, such as metadata, phase transitions, accepted responses, exposure events, and summary rows, whereas \texttt{PrismSampleLogger.cs} records the continuous samples needed for later trajectory inspection. The resulting \texttt{Meta}, \texttt{Event}, \texttt{Sample}, and \texttt{Summary} CSV files are then grouped by \texttt{app.R}, which reconstructs the same session as summary, comparison, participant-level, quality-control, spatial, and trajectory views.}
     \label{fig:implementation-pipeline}
 \end{figure}
 
@@ -109,14 +72,16 @@ The central implementation decision was to organise the Unity prototype around \
 
 The second central file in the runtime is \texttt{PrismCore.cs}. This script collects the effect abstractions used by the prototype, including the neutral \emph{no effect} condition together with \emph{translation}, \emph{rotation}, and \emph{skew}. The important implementation point is that the effect layer is kept separate from the task layer. Open-Loop Pointing, Line Bisection, Landmark, and Exposure therefore do not each implement their own perturbation rules. Instead, the runner requests the current transform from \texttt{PrismCore.cs}, applies it to the active input representation, and passes the transformed result onward. This makes it possible to run the same task structure under different effect modes without rewriting the task script itself.
 
-Although the runtime is centered on the runner and the effect layer, three smaller support scripts are still important for the participant-facing behaviour of the prototype. \texttt{HandDwellProgressBar.cs} drives the dwell-confirmation and transition progress visualization, so the participant can see when a dwell response has been accepted and when the next trial is loading. \texttt{RoundedRectGraphic.cs} generates the rounded UI geometry used by that progress indicator. \texttt{DepthQueGradient.cs} colors the scene's depth-cue stripes to make forward distance toward the target wall easier to perceive. These scripts are smaller in scope, but they are part of how the designed interaction is made readable during use.
+The word \emph{transform} is used here in a literal runtime sense. The headset, controller, or hand-tracking system first provides the unmodified physical pose of the participant's hand or controller. \texttt{PrismCore.cs} then converts that pose into the pose used by the task. In \emph{translation}, the origin of the pointing response is shifted laterally while the pointing direction is preserved. In \emph{rotation}, the origin is preserved but the pointing direction is rotated. In \emph{skew}, the visible hand or controller representation and the corresponding pointing response are shifted together, so the participant acts through a displaced virtual effector rather than through the raw tracked hand position. Task scripts then use this transformed pose for target acquisition and response measurement. This means that hit detection and logged endpoints are based on the same pose that the participant is meant to experience visually, not on a separate hidden calculation.
 
-Figure~\ref{fig:unity-embodied-loading} makes this support layer visible in the actual task view. In this screenshot, the participant is represented through the embodied hand and pointing ray rather than through a controller model, while the horizontal bar above the targets shows the same progress-display system used for dwell confirmation and task transitions. The image is therefore important because it shows that input mode is not only an internal configuration in the runner: it changes the visible embodiment while the progress cue remains available as a stable part of the interaction language.
+Although the runtime is centered on the runner and the effect layer, two smaller support scripts are still important for the participant-facing behaviour of the prototype. \texttt{HandDwellProgressBar.cs}, despite its earlier name, is used in the final setup as a loading and transition progress visualization rather than as the confirmation method. The participant confirms with the non-dominant-hand controller trigger, while the bar shows when the system is waiting before the next interaction begins. \texttt{RoundedRectGraphic.cs} generates the rounded UI geometry used by that progress indicator. These scripts are smaller in scope, but they are part of how the designed interaction is made readable during use.
+
+Figure~\ref{fig:unity-embodied-loading} makes this support layer visible in the actual task view. In this screenshot, the embodied hand representation is shown instead of a controller model, and a ray/debug line is visible to make the current pointing direction readable in the report. The horizontal bar above the targets shows the progress-display system used for loading and transitions between interactions. The image is therefore important because it shows that input mode is not only an internal configuration in the runner: it changes the visible embodiment while the progress cue remains available as a stable part of the interaction language.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.88\linewidth]{img/3_Implementation/EmbodyDefaultWithLoading.png}
-    \caption{Embodied interaction with the progress bar visible. The screenshot shows the participant-facing exposure view in hand-tracking mode: the embodied hand and ray replace the controller model, the active target still carries the bullseye cue, and the horizontal bar above the target wall visualizes either dwell buildup or the short transition/loading interval between accepted responses. This makes the embodiment change and the participant-facing confirmation/loading cue visible in one image.}
+    \caption{Embodied interaction with the progress bar visible. The screenshot shows the exposure view in hand-tracking mode: the embodied hand representation replaces the controller model, the ray/debug line makes the pointing direction legible in the report, the active target still carries the bullseye cue, and the horizontal bar above the target wall visualizes the short loading or transition interval between accepted responses. Confirmation itself is handled by the non-dominant-hand controller trigger.}
     \label{fig:unity-embodied-loading}
 \end{figure}
 
@@ -170,7 +135,7 @@ One clarification is important for reading these static Unity figures. Where vis
         \centering
         \includegraphics[width=\linewidth]{img/3_Implementation/OpenLoopBackView.png}
     \end{minipage}
-    \caption{Open-Loop Pointing in Unity. Left: the participant-facing stereoscopic view, which keeps the visual presentation sparse and concentrates attention on the target wall, the pointing ray, and the status readout. Right: an oblique scene view of the same task, which makes the wall-based pointing geometry easier to inspect from outside the headset view. These two screenshots together show that Open-Loop Pointing is implemented as the simplest wall-directed measurement task rather than as a complex scene interaction.}
+    \caption{Open-Loop Pointing in Unity. Left: the stereoscopic task view, which keeps the visual presentation sparse and concentrates attention on the target wall, current pointing direction, and status readout. Right: an oblique scene view of the same task, which makes the wall-based pointing geometry easier to inspect from outside the headset view. Visible rays in these screenshots are documentation/debug representations of the aim direction rather than a required participant-facing element.}
     \label{fig:unity-openloop-views}
 \end{figure}
 
@@ -188,7 +153,7 @@ One clarification is important for reading these static Unity figures. Where vis
     \label{fig:unity-measurement-task-views}
 \end{figure}
 
-Exposure is where the runtime-side effect variations become most visible, because the repeated target-acquisition structure stays the same while the perturbation changes. Translation applies a fixed world-space offset to the pose and ray. Rotation keeps the pose origin but rotates the pointing direction around the chosen axis. Skew is the most prism-like of the three in visual terms: it shifts the visible world and pointer representation while the scoring ray remains unchanged. The screenshots in Figure~\ref{fig:unity-exposure-effect-views} therefore matter because they show the same exposure grammar under different perturbation classes rather than four unrelated scenes.
+Exposure is where the runtime-side effect variations become most visible, because the repeated target-acquisition structure stays the same while the perturbation changes. Translation applies a fixed world-space offset to the transformed pointer representation. Rotation keeps the pose origin but rotates the pointing direction around the chosen axis. Skew is the most prism-like of the three in visual terms: it shifts the visible representation and the corresponding aim used for interaction so that the participant acts through a displaced hand or controller. The screenshots in Figure~\ref{fig:unity-exposure-effect-views} therefore matter because they show the same exposure grammar under different perturbation classes rather than four unrelated scenes.
 
 \begin{figure}[H]
     \centering
@@ -211,7 +176,7 @@ Exposure is where the runtime-side effect variations become most visible, becaus
         \centering
         \includegraphics[width=\linewidth]{img/3_Implementation/ExposureSkew.png}
     \end{minipage}
-    \caption{Exposure phase under the implemented perturbation types. Top left and top right: two moments from the translation condition, included to show that the repeated three-target layout stays fixed while the active target, bullseye cue, and hit marker update from attempt to attempt. Bottom left: the rotation condition, where the target layout remains the same but the pointing direction is rotated relative to the target wall. Bottom right: the skew condition, which behaves as a visual prism-style shift by displacing what is seen while preserving the real scoring ray. Across all four screenshots, the same exposure structure remains visible: three horizontally arranged targets, one highlighted active target, a bullseye cue on that selected target, the pointer ray, the last registered hit location, and the status readout on the left.}
+    \caption{Exposure phase under the implemented perturbation types. Top left and top right: two moments from the translation condition, included to show that the repeated three-target layout stays fixed while the active target, bullseye cue, and hit marker update from attempt to attempt. Bottom left: the rotation condition, where the target layout remains the same but the pointing direction is rotated relative to the target wall. Bottom right: the skew condition, which behaves as a visual prism-style shift by displacing the visible hand or controller representation and its corresponding aim. Across all four screenshots, the same exposure structure remains visible: three horizontally arranged targets, one highlighted active target, a bullseye cue on that selected target, an aim/debug line for documentation, the last registered hit location, and the status readout on the left.}
     \label{fig:unity-exposure-effect-views}
 \end{figure}
 
@@ -254,9 +219,9 @@ The Unity screenshots above show what the participant and experimenter see durin
 
 Within \texttt{app.R}, the logic is organized around a set of helper functions that each transform one part of the logging schema into a more interpretable view. Summary helpers reconstruct aftereffect interpretations from \texttt{Summary.csv}. Quality helpers turn accepted trials or exposure attempts into outlier counts, trend lines, and hit-rate summaries. Spatial helpers interpret event rows differently depending on whether the selected task is Open-Loop, Line Bisection, Landmark, or Exposure. Trajectory helpers combine \texttt{Event.csv} and \texttt{Sample.csv} so that one accepted exposure attempt can be reconstructed as a projected aim path on the target plane. The dashboard then reconnects these views to the currently selected session and task, so that the visible tables and plots change together when the user changes the selection.
 
-The dashboard is organized into five tabs. \emph{Summary} focuses on one selected session and reconstructs the main aftereffect interpretation. \emph{Compare} moves to the cross-session level and asks how task, effect, and input mode differ across runs. \emph{Quality} inspects block-level stability and unusually large errors within one task/block combination. \emph{Spatial} re-expresses accepted responses and exposure events as positions on the task plane. \emph{Trajectories} gives the most detailed inspection: for Exposure it shows projected approach behaviour toward the target plane, and for non-exposure tasks it reuses the same tab to show trial-by-trial signed and absolute response trends. The screenshots below make these analytical roles explicit.
+The dashboard is organized into six tabs. \emph{Summary} focuses on one selected session and reconstructs the main aftereffect interpretation. \emph{Compare} moves to the cross-session level and asks how task, effect, and input mode differ across runs. \emph{Participant} summarizes the eight modules belonging to one participant so within-participant patterns can be inspected directly before collapsing data across participants. \emph{Quality} inspects block-level stability and unusually large errors within one task/block combination. \emph{Spatial} re-expresses accepted responses and exposure events as positions on the task plane. \emph{Trajectories} gives the most detailed inspection: for Exposure it shows projected approach behaviour toward the target plane, and for non-exposure tasks it reuses the same tab to show trial-by-trial signed and absolute response trends. The screenshots below make these analytical roles explicit.
 
-These dashboard screenshots should be read as workflow demonstrations rather than as quantitative findings from a large dataset. The shown values come from a small set of complete end-to-end system walkthrough sessions carried out locally to verify that runtime, logging, and analysis worked together as intended. They are therefore useful for showing what the analysis layer can reconstruct, but they should not be interpreted as stable estimates from a formal evaluation sample.
+These dashboard screenshots should be read as workflow demonstrations rather than as quantitative findings from the evaluation dataset. They are useful for showing what the analysis layer can reconstruct, but the evaluation results themselves are reported separately in Chapter~\ref{chap:results}.
 
 \subsubsection{Summary View}
 
@@ -294,7 +259,7 @@ The Quality tab inspects how stable one block was while it was being performed. 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.98\linewidth]{img/3_Implementation/Quality1.png}
-    \caption{Exposure example from the Quality tab. Each point is one exposure attempt, colored by hit or miss, and the vertical value is the final distance from target center on the board. The cards summarize how many attempts were included, the average absolute error, how many attempts exceeded the outlier threshold, whether error drifted over time, and the hit rate for the block. This view is useful for deciding whether an exposure block looked stable enough to support later interpretation.}
+    \caption{Exposure example from the Quality tab. Each point is one exposure attempt, colored by hit or miss, and the vertical value is the final distance from target center on the board. The blue trend line shows whether distance from the target changed over attempts, while the red dashed line marks the threshold used for unusually large errors. The cards summarize how many attempts were included, the average absolute error, how many attempts exceeded the threshold, whether error drifted over time, and the hit rate for the block. This view is useful for deciding whether an exposure block looked stable enough to support later interpretation.}
     \label{fig:rshiny-quality-exposure}
 \end{figure}
 
@@ -308,18 +273,18 @@ The Quality tab inspects how stable one block was while it was being performed. 
         \centering
         \includegraphics[width=\linewidth]{img/3_Implementation/Quality3.png}
     \end{minipage}
-    \caption{Measurement-task examples from the Quality tab. Left: OpenLoop baseline quality, where each point is one accepted pointing response and the vertical value is absolute distance from the true target location. Right: LineBisection baseline quality, where the same structure is reused but the error is measured relative to the true midpoint. These examples show that the tab keeps one shared quality grammar across tasks even though the error metric changes with the task definition.}
+    \caption{Measurement-task examples from the Quality tab. Left: Open-Loop baseline quality, where each point is one accepted pointing response and the vertical value is absolute distance from the true target location. Right: Line Bisection baseline quality, where the same structure is reused but the error is measured relative to the true midpoint. These examples show that the tab keeps one shared quality grammar across tasks even though the error metric changes with the task definition.}
     \label{fig:rshiny-quality-measurement}
 \end{figure}
 
 \subsubsection{Spatial View}
 
-The Spatial tab answers a different question from the Quality tab. Instead of focusing on trend over trial index, it asks where responses actually landed in space. For Exposure, that means preserving the two-dimensional task plane and plotting target positions together with hits and misses in board/world coordinates. For OpenLoop and Line Bisection, the same tab collapses the data to the spatial dimension that matters for the task: signed horizontal deviation from the true target center or from the true midpoint. This gives the reader a more literal view of leftward and rightward bias than the quality plots, which are oriented around distance and trend rather than spatial direction.
+The Spatial tab answers a different question from the Quality tab. Instead of focusing on trend over trial index, it asks where responses actually landed in space. For Exposure, that means preserving the two-dimensional task plane and plotting target positions together with hits and misses in board/world coordinates. For Open-Loop Pointing and Line Bisection, the same tab collapses the data to the spatial dimension that matters for the task: signed horizontal deviation from the true target center or from the true midpoint. This gives the reader a more literal view of leftward and rightward bias than the quality plots, which are oriented around distance and trend rather than spatial direction.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.98\linewidth]{img/3_Implementation/Spatial1.png}
-    \caption{Exposure example from the Spatial tab. The three target locations remain visible as fixed positions on the task board, while hits and misses are plotted around them in world space. This view makes it easy to see not only whether attempts succeeded, but also whether misses cluster above, below, or to one side of the left, centre, or right target.}
+    \caption{Exposure example from the Spatial tab. The crosses mark the left, centre, and right target centres, and the circular outlines show the target radius used to judge whether an attempt counted as a hit. Hits and misses are plotted around these targets in world space. This view makes it easy to see not only whether attempts succeeded, but also whether misses cluster above, below, or to one side of the left, centre, or right target.}
     \label{fig:rshiny-spatial-exposure}
 \end{figure}
 
@@ -333,13 +298,13 @@ The Spatial tab answers a different question from the Quality tab. Instead of fo
         \centering
         \includegraphics[width=\linewidth]{img/3_Implementation/Spatial3.png}
     \end{minipage}
-    \caption{Measurement-task examples from the Spatial tab. Left: LineBisection baseline responses plotted as signed deviation from the true midpoint, with the cross marking the midpoint of the displayed line. Right: OpenLoop baseline responses plotted as signed deviation from the intended target center, again with the cross marking the ideal centre. The purpose of this view is to expose spatial bias directly rather than only through aggregate trial statistics.}
+    \caption{Measurement-task examples from the Spatial tab. Left: Line Bisection baseline responses plotted along the task-relevant horizontal axis, with the cross marking the true midpoint of the displayed line. Right: Open-Loop baseline responses plotted along the same signed horizontal-error axis, with the cross marking the intended target centre. Unlike the exposure view, these plots collapse the response to the left/right dimension that defines the measurement task. The purpose is to expose spatial bias directly rather than only through aggregate trial statistics.}
     \label{fig:rshiny-spatial-measurement}
 \end{figure}
 
 \subsubsection{Trajectory View}
 
-The Trajectories tab is the most detailed view in the dashboard, but it deliberately behaves differently for Exposure and for the measurement tasks. Exposure produces a dense sequence of samples within each target-acquisition attempt, so the tab can reconstruct the projected approach path on the target plane, break the visible response window into acceleration, deceleration, and hover, and then inspect how final error evolves across attempts. OpenLoop and Line Bisection do not always benefit from the same path view, so for those tasks the tab instead becomes a trial-by-trial inspection tool that overlays baseline and post and shows both signed response values and absolute error.
+The Trajectories tab is the most detailed view in the dashboard, but it deliberately behaves differently for Exposure and for the measurement tasks. Exposure produces a dense sequence of samples within each target-acquisition attempt, so the tab can reconstruct the projected approach path on the target plane, break the visible response window into acceleration, deceleration, and hover, and then inspect how final error evolves across attempts. Open-Loop Pointing and Line Bisection do not always benefit from the same path view, so for those tasks the tab instead becomes a trial-by-trial inspection tool that overlays baseline and post and shows both signed response values and absolute error.
 
 \begin{figure}[H]
     \centering
@@ -360,7 +325,7 @@ The Trajectories tab is the most detailed view in the dashboard, but it delibera
     \centering
     \includegraphics[width=0.98\linewidth]{img/3_Implementation/Trajectory3.png}\par\medskip
     \includegraphics[width=0.98\linewidth]{img/3_Implementation/Trajectory4.png}
-    \caption{Signed-response overlays for non-exposure tasks. The upper screenshot shows OpenLoop baseline and post responses overlaid by trial index, and the lower screenshot shows the same idea for LineBisection. The dashed horizontal line is the ideal centre, and the overlay option shifts baseline and post slightly apart at the same index so both blocks remain readable. In other words, this use of the Trajectories tab is not about raw hand motion in 3D space, but about how signed responses changed between baseline and post across the ordered trial sequence.}
+    \caption{Signed-response overlays for non-exposure tasks. The upper screenshot shows Open-Loop baseline and post responses overlaid by trial index, and the lower screenshot shows the same idea for Line Bisection. The dashed horizontal line is the ideal centre, and the overlay option shifts baseline and post slightly apart at the same index so both blocks remain readable. In other words, this use of the Trajectories tab is not about raw hand motion in 3D space, but about how signed responses changed between baseline and post across the ordered trial sequence.}
     \label{fig:rshiny-trajectories-measurement-signed}
 \end{figure}
 
@@ -368,11 +333,11 @@ The Trajectories tab is the most detailed view in the dashboard, but it delibera
     \centering
     \includegraphics[width=0.98\linewidth]{img/3_Implementation/Trajectory6.png}\par\medskip
     \includegraphics[width=0.98\linewidth]{img/3_Implementation/Trajectory7.png}
-    \caption{Absolute-error overlays for non-exposure tasks. The upper screenshot shows OpenLoop absolute deviation from target center by trial, and the lower screenshot shows LineBisection absolute deviation from the true midpoint by trial, each with baseline and post plotted together. These plots complement the signed-response overlays by showing whether the participant ended closer to or farther from the intended location regardless of left/right direction.}
+    \caption{Absolute-error overlays for non-exposure tasks. The upper screenshot shows Open-Loop absolute deviation from target center by trial, and the lower screenshot shows Line Bisection absolute deviation from the true midpoint by trial, each with baseline and post plotted together. These plots complement the signed-response overlays by showing whether the participant ended closer to or farther from the intended location regardless of left/right direction.}
     \label{fig:rshiny-trajectories-measurement-absolute}
 \end{figure}
 
-Taken together, these tabs make the RShiny layer more than a plotting add-on. The same session can be read as an aftereffect summary, a condition comparison, a quality check, a spatial bias pattern, or a movement/response trace depending on which analytical question is being asked. This layer therefore matters because the prototype was built for later inspection as well as runtime use: the Unity side writes the session files, and the dashboard turns those files into a form that can be browsed, compared, and interpreted without manual handling of multiple CSV collections.
+Taken together, these tabs make the RShiny layer more than a plotting add-on. The same session can be read as an aftereffect summary, a participant-level module profile, a condition comparison, a quality check, a spatial bias pattern, or a movement/response trace depending on which analytical question is being asked. This layer therefore matters because the prototype was built for later inspection as well as runtime use: the Unity side writes the session files, and the dashboard turns those files into a form that can be browsed, compared, and interpreted without manual handling of multiple CSV collections.
 
 \subsection{Script Inventory}
 \label{subsec:implementation-script-inventory}
@@ -404,17 +369,15 @@ Table~\ref{tab:pegfg-script-inventory} gives a compact overview of the project-s
         \hline
         \texttt{ExposureTask.cs} & Task layer & Implements the repeated target-acquisition phase under perturbation, including target selection, hit/miss classification, and exposure completion. \\
         \hline
-        \texttt{HandDwellProgressBar.cs} & UI / feedback & Visualizes dwell progress and transition timing so confirmation and loading phases are readable to the participant. \\
+        \texttt{HandDwellProgressBar.cs} & UI / feedback & Visualizes loading and transition timing between interactions. Despite the script name, the final evaluation used opposite-hand trigger confirmation rather than dwell confirmation. \\
         \hline
         \texttt{RoundedRectGraphic.cs} & UI support & Generates rounded rectangle meshes used by the custom progress-bar interface. \\
-        \hline
-        \texttt{DepthQueGradient.cs} & Scene support & Applies graded coloring to the depth-cue objects so forward distance toward the target wall is easier to perceive. \\
         \hline
         \texttt{PrismExperimentLogger.cs} & Logging & Writes metadata, event rows, block summaries, and aftereffect summaries in a format aligned with the experiment structure. \\
         \hline
         \texttt{PrismSampleLogger.cs} & Logging & Writes regular sample snapshots of pointer, head, controller, and movement-anchor state for later trajectory analysis. \\
         \hline
-        \texttt{app.R} & Analysis & Loads completed sessions and visualizes them as summary, compare, quality, spatial, and trajectory views in the local RShiny dashboard. \\
+        \texttt{app.R} & Analysis & Loads completed sessions and visualizes them as summary, compare, participant, quality, spatial, and trajectory views in the local RShiny dashboard. \\
         \hline
     \end{tabularx}
     \caption{Project-specific script inventory for the prototype. The table groups the files by architectural role rather than by folder location and makes the runtime, task, feedback, logging, and analysis responsibilities easier to distinguish.}

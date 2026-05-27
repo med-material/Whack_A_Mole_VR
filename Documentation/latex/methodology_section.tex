@@ -1,0 +1,78 @@
+\chapter{Methodology}
+\label{chap:Meth}
+
+The purpose of the methodology is to define how the prototype can be used to compare VR-based methods for inducing prism-adaptation-like aftereffects. The central methodological distinction is between the phase that induces a visuomotor mismatch and the phases that measure whether this mismatch changes later spatial responses. The experiment therefore follows a baseline--exposure--post structure: first a spatial estimate is measured without perturbation, then repeated pointing is performed under one active visual perturbation, and finally the same spatial estimate is measured again without perturbation.
+
+\section{Design Rationale}
+\label{sec:method-design-rationale}
+
+Prism adaptation is commonly studied by introducing a systematic mismatch between an executed movement and its visual consequences. In conventional prism adaptation, this mismatch is produced by optical prisms that laterally displace the visual field, after which repeated pointing movements lead to error reduction during exposure and a compensatory aftereffect when the prisms are removed \cite{Rossetti1998Prism,frassinetti2002long,Serino2011}. VR-based work has shown that related visuomotor mismatches can be simulated by manipulating virtual visual feedback rather than by using physical prism glasses \cite{kim2017development,Ramos2019,cho2022feasibility,anan2025comparative}. This does not mean that every VR perturbation is equivalent to a wedge prism; rather, VR allows several controlled ways of producing an action-feedback mismatch.
+
+The project uses this principle to compare several high-level implementations of a prism effect inside the same VR sandbox. The goal is not to claim that all visual manipulations are identical at the sensorimotor level, but to test whether they can be placed inside a shared experimental framework with comparable exposure tasks, measurement tasks, input modes, and logging outputs. This supports the broader project aim of clarifying how different VR prism-adaptation implementations can be described and compared using a more unified terminology.
+
+\section{Independent Variables}
+\label{sec:method-independent-variables}
+
+The primary independent variables are the input mode and the visual perturbation. Input mode is manipulated between participants: each participant completes the full procedure using either controller-based pointing or embodied hand-tracking-based pointing. This avoids requiring each participant to complete both input modes, which would substantially increase fatigue and introduce additional order effects.
+
+The visual perturbation is manipulated within the participant's assigned input mode. Each participant completes modules with no perturbation and with three perturbation types: translation, rotation, and skew. These labels are implementation labels for the prototype: translation shifts the response origin, rotation changes the pointing direction, and skew shifts the visible pointing representation together with its corresponding aim. The no-effect condition is used as a participant-specific reference condition because baseline-to-post changes can occur even without an active prism manipulation.
+
+\subsection{Translation}
+\label{subsec:method-translation}
+
+The translation condition implements a lateral displacement of the visual pointing relation. In practical terms, the visual origin of the pointing response is shifted sideways so that the participant must adapt to a systematic spatial offset. This condition is conceptually related to VR prism methods that simulate lateral visual displacement rather than physically rotating the optics in front of the eyes \cite{Ramos2019,anan2025comparative}. In the prototype, the displacement magnitude was configured to approximate a 10-degree lateral deviation at the task distance, matching a commonly used prism-deviation scale in VR and conventional prism-adaptation studies \cite{Ramos2019,Serino2011}.
+
+\subsection{Rotation}
+\label{subsec:method-rotation}
+
+The rotation condition changes the directional mapping between the participant's physical pointing direction and the corresponding visual pointing direction. Instead of applying a constant positional offset, the response direction is angularly rotated. This allows the sandbox to compare a displacement-like perturbation with an angular visuomotor transformation. Rotation-like visuomotor perturbations are common in adaptation research and have also been used in VR studies of visuomotor adaptation and ownership \cite{gerken2025sense}. In the prototype, the rotation magnitude was set to 10 degrees to keep it comparable to the translation condition.
+
+\subsection{Skew}
+\label{subsec:method-skew}
+
+The skew condition displaces the rendered pointing representation itself. In the final prototype this means that the visible virtual controller or embodied hand is laterally displaced together with its corresponding aim/raycast, so that the participant receives concurrent visual feedback from a shifted representation while hit detection follows that shifted representation. This condition is included because VR systems can manipulate the visible body or tool representation directly, which is not equivalent to simply moving a 2D cursor or changing only an invisible response origin. Prior VR prism-adaptation studies have used virtual visual feedback and virtual hand or scene displacement to create adaptation-inducing mismatches \cite{kim2017development,Ramos2019,anan2025comparative}. The implemented skew magnitude was also configured to approximate a 10-degree lateral deviation at the task distance.
+
+\section{Exposure Procedure}
+\label{sec:method-exposure}
+
+During exposure, participants perform repeated goal-directed pointing movements toward targets in a fixed horizontal layout. One target is active at a time, and the participant must point toward the active target and confirm the response. The exposure phase is the only phase in which a perturbation is active, and it is therefore the phase intended to drive error reduction and sensorimotor recalibration.
+
+The literature distinguishes between concurrent and terminal visual feedback. Concurrent feedback allows the participant to see the movement throughout execution, whereas terminal feedback limits visual information to the final part or endpoint of the movement \cite{Serino2011}. Terminal prism adaptation has been reported to produce stronger neglect-related improvements than concurrent prism adaptation in a clinical procedure \cite{Serino2011}. The present prototype used concurrent visual feedback during exposure because the implemented comparison depended on visible VR transformations of the controller or hand representation. This choice is methodologically important because it may affect how directly the procedure can be compared with terminal-feedback prism therapy.
+
+The final procedure used a fixed perturbation magnitude rather than a gradual increase. Gradual or dose-response procedures are relevant in prism-adaptation research because they can examine how adaptation develops as deviation strength changes \cite{Gammeri2020,Bourgeois2021}. Gammeri et al. found transfer most clearly in the 30-degree virtual-deviation group, while Bourgeois et al. used gradual steps to reach a 30-degree virtual deviation and explicitly described this as a way to conceal the perturbation from participants \cite{Gammeri2020,Bourgeois2021}. The present study prioritised a shorter healthy-participant comparison across several perturbation types, and therefore used one fixed deviation level for each active effect.
+
+\section{Measurement Tasks}
+\label{sec:method-measurement-tasks}
+
+The measurement tasks are used before and after exposure to estimate whether the participant's spatial response changes after the perturbation has been removed. The two primary measurement tasks are open-loop pointing and line bisection. Both tasks are performed without the active perturbation during baseline and post-exposure phases, allowing the analysis to compare the participant's pre-exposure and post-exposure response.
+
+\subsection{Open-Loop Pointing}
+\label{subsec:method-open-loop}
+
+Open-loop pointing measures the participant's endpoint estimate relative to a target without showing the shifted exposure feedback. The relevant outcome is the signed horizontal endpoint error from the target, recorded in centimetres. A baseline-to-post change in this error is interpreted as an aftereffect because the post-exposure response is measured after the active perturbation has been removed. Open-loop pointing is commonly used in prism-adaptation research to quantify the direction and magnitude of the aftereffect \cite{Rossetti1998Prism,Serino2011,Ramos2019}.
+
+\subsection{Line Bisection}
+\label{subsec:method-line-bisection}
+
+Line bisection measures the participant's perceived midpoint of a horizontal line. The outcome is the signed deviation between the selected point and the true line centre, recorded in centimetres. This task is included because prism adaptation is often evaluated not only through motor pointing aftereffects, but also through transfer to spatial judgement tasks relevant to spatial bias and neglect assessment \cite{frassinetti2002long,serino2006mechanisms,Serino2011}. In the present study, line bisection provides a second baseline-to-post estimate that is more perceptual than simple target pointing.
+
+\subsection{Landmark Task}
+\label{subsec:method-landmark}
+
+The prototype also implements a landmark task, where participants judge whether a pre-bisected line is transected to the left or right of its true midpoint. Because this response is a comparative judgement rather than a pointing endpoint, it can provide a more perceptual measure of spatial bias. Landmark was retained as part of the sandbox's assessment repertoire, but the final healthy-participant comparison focused on open-loop pointing and line bisection.
+
+\section{Outcome Measures}
+\label{sec:method-outcome-measures}
+
+The primary outcome is the baseline-to-post shift in each measurement task. A shift is defined as the difference between the participant's baseline response estimate and their post-exposure response estimate after the perturbation has been removed. In the analysis dashboard, this is reported as a stable perceived-centre shift: rather than relying only on the most extreme endpoint values, the analysis estimates the central tendency of the stable response cluster for each block and compares the baseline and post-exposure estimates. This makes the measure easier to interpret in noisy VR data while still preserving the raw trial data for quality inspection.
+
+For open-loop pointing, the stable perceived centre refers to the participant's typical signed endpoint relative to the target. For line bisection, it refers to the participant's typical selected midpoint relative to the true centre of the line. The absolute magnitude of the baseline-to-post shift indicates how much the response changed, while the signed value indicates the direction of the change.
+
+Secondary outcome measures are used to interpret the reliability of each module. These include exposure hit rate, mean absolute distance from the active target during exposure, unusually large errors, trial-by-trial change in exposure error, spatial landing patterns, and selected movement trajectories. These measures do not replace the baseline-to-post aftereffect measure, but they help determine whether a module was stable, noisy, rushed, or affected by tracking problems.
+
+\section{Participants and Apparatus}
+\label{sec:method-participants-apparatus}
+
+The experiment is conducted with healthy adult participants. This is appropriate for the present stage of development because the purpose is to test whether the prototype can produce measurable and interpretable adaptation-like effects before it is considered for clinical use. Healthy-participant samples are also common in early VR prism-adaptation and visuomotor-adaptation studies \cite{Ramos2019,cho2022feasibility,gerken2025sense,anan2025comparative}.
+
+The study is implemented in immersive VR using either tracked controller input or embodied hand-tracking input. Both input modes use the same general task structure and the same non-dominant-hand trigger confirmation method during the final evaluation. The sandbox architecture makes it possible to apply the same measurement and exposure procedure across all perturbation conditions while preserving detailed event logs, movement samples, and session metadata for later analysis.

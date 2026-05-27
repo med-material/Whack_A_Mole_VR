@@ -843,7 +843,32 @@ build_spatial_plot <- function(event_data, selected_task = "Exposure", selected_
     paste(selected_task, selected_block, "Spatial Overview")
   }
 
+  target_radius_m <- resolve_exposure_radius_m(tibble(), event_subset)
+  if (!is.finite(target_radius_m)) {
+    target_radius_m <- 0.10
+  }
+  target_circles <- if (nrow(targets) > 0) {
+    circle_steps <- seq(0, 2 * pi, length.out = 160)
+
+    targets |>
+      select(label, x, y) |>
+      tidyr::crossing(theta = circle_steps) |>
+      mutate(
+        circle_x = x + target_radius_m * cos(theta),
+        circle_y = y + target_radius_m * sin(theta)
+      )
+  } else {
+    tibble(label = character(), circle_x = numeric(), circle_y = numeric())
+  }
+
   ggplot() +
+    geom_path(
+      data = target_circles,
+      aes(x = circle_x, y = circle_y, group = label),
+      color = "#94a3b8",
+      linewidth = 0.9,
+      alpha = 0.8
+    ) +
     geom_point(data = targets, aes(x = x, y = y), shape = 4, size = 5, stroke = 1.6, color = "#1f2937") +
     geom_text(data = targets, aes(x = x, y = y, label = label), nudge_y = 0.03, size = 4.2, color = "#1f2937") +
     geom_point(data = hits, aes(x = x, y = y), size = 3, alpha = 0.8, color = "#0ea5a4") +
@@ -1816,6 +1841,14 @@ quality_error_label <- function(selected_task) {
   "Absolute error"
 }
 
+quality_title_label <- function(selected_task, selected_block) {
+  if (identical(selected_task, selected_block)) {
+    return(paste(selected_task, "Quality Overview"))
+  }
+
+  paste(selected_task, selected_block, "Quality Overview")
+}
+
 # Build the main Quality-tab plot.
 # It combines:
 # - per-trial values,
@@ -1841,7 +1874,7 @@ build_quality_plot <- function(quality_trials, selected_task, selected_block) {
     geom_hline(yintercept = metrics$outlier_threshold, linetype = "dashed", color = "#dc2626") +
     geom_smooth(method = "lm", se = FALSE, color = "#1d4ed8", linewidth = 0.8) +
     labs(
-      title = paste(selected_task, selected_block, "Quality Overview"),
+      title = quality_title_label(selected_task, selected_block),
       subtitle = "Per-trial distance from the intended target, with unusually large errors and overall trend",
       x = "Trial / Attempt",
       y = paste(quality_error_label(selected_task), "(", quality_units_label(selected_task), ")"),

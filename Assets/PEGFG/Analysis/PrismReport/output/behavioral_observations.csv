@@ -1,0 +1,11 @@
+Participant,ObserverNote,InterpretiveTags
+1,"Meget erfaring i VR, langsom og præcis.",VR-erfaren; langsom; præcis
+2,"Ekstremt hurtig gennemgang, missede mange gange, dårlig test.",meget hurtig; mange misses; lav datakvalitet
+3,"Stabil, ikke meget at notere.",stabil
+4,"Ikke meget erfaring, missede mange, headset blev løst.",lav VR-erfaring; mange misses; headset løst
+5,"Meget erfaring, ekstremt præcis.",VR-erfaren; meget præcis
+6,"Tracking i embodiment var finicky i nogle tilfælde. Adaptation virkede til at transfer til efterfølgende tasks, specielt run 2 post til run 3 baseline. Håndposition gjorde små justeringer til store afstandsforskelle. Open loop var mere præcis end line bisection med no effect.",tracking-problemer; mulig carryover; embodiment; opgaveforskel
+7,Lærte hurtigt og ramte godt med fin hastighed. Havde svært ved skew i open loop og justerede modsat forventet exposure-retning. Translation mellem task 2-3 syntes at korrigere skew. Inconsistent men god form; moderat VR-erfaring.,hurtig læring; skew-problem; mulig carryover; moderat VR-erfaring
+8,"Blev hurtigt træt og var ikke specielt fokuseret. Kalibrerede mens de kiggede en anden vej, så første post hits i open loop skew blev outliers. Forvirret over hvor der skulle klikkes, hvilket ledte til outliers.",fatigue; lav fokus; kalibreringsfejl; outliers
+9,"Rolig og præcis gennemgang. Fatigue byggede op. Meget præcis og resistent over for adaptation, dog skew-effekt. Brugte overkrop til at sigte selv efter kommentar, hvilket kan gøre resultatet mere præcist og resistent mod perturbation.",rolig; præcis; fatigue; kompensationsstrategi; adaptation-resistent
+10,Embodiment test hvor deltageren lyttede og forstod opgaven godt. Adaptation bløder ind i næste opgave ved task 3 baseline. Pegede meget opad selv med kommentar. Blev hurtigere mod starten og dermed mere upræcis. Generelt upræcis.,embodiment; mulig carryover; peger opad; stigende hastighed; upræcis

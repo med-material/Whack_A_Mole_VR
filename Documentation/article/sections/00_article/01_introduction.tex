@@ -1,0 +1,17 @@
+\section*{Introduction}
+
+Unilateral spatial neglect (USN) is a disorder in which patients fail to report, respond to, or orient toward stimuli on the side of space opposite a brain lesion \cite{heilman2000neglect,Hendrik_Knoche_Lit_Review}. It is not simply a loss of vision or motor ability; rather, it affects spatial attention, spatial representation, and action toward one side of space \cite{heilman2000neglect}. This makes USN clinically relevant because it can interfere with activities of daily living and recovery after stroke \cite{Hendrik_Knoche_Lit_Review,Morse2022}.
+
+Prism adaptation therapy is one approach to USN rehabilitation. In a conventional procedure, patients perform repeated pointing or reaching movements while wearing prism glasses that laterally displace the visual field \cite{Rossetti1998Prism,frassinetti2002long,serino2006mechanisms}. The displacement initially produces systematic pointing errors, but repeated exposure can reduce these errors as the visuomotor system recalibrates. When the prisms are removed, participants often show an after-effect in the opposite direction of the visual displacement \cite{Rossetti1998Prism,frassinetti2002long,serino2006mechanisms}. This baseline--exposure--post structure is central to both clinical and experimental prism-adaptation work.
+
+Virtual reality (VR) is attractive for this kind of work because the relation between physical movement and visual feedback can be manipulated directly in software. Prior studies have used virtual hand displacement, scene or rendering shifts, and visuomotor rotations to induce prism-adaptation-like behaviour or related visuomotor after-effects \cite{kim2017development,Ramos2019,cho2022feasibility,anan2025comparative,gerken2025sense}. VR also makes it possible to log endpoint error, exposure performance, timing, and movement trajectories automatically \cite{cho2022feasibility,anan2025comparative}.
+
+These possibilities also create a terminology and comparison problem. A study may describe its method as virtual prism adaptation whether it shifts the visual scene, offsets only the virtual hand, rotates the response mapping, or changes what feedback is visible at the endpoint. These manipulations are related because they introduce a mismatch between action and visual feedback, but they do not manipulate the same spatial reference frame. Comparing results across studies therefore requires attention to what was shifted, when feedback was visible, how the response was confirmed, and which task was used to measure the after-effect.
+
+This article presents a configurable VR sandbox for placing several prism-effect implementations inside one shared task and logging framework. The guiding research question is:
+
+\begin{center}
+\textit{How do different implementations of the prism effect in VR influence the magnitude and characteristics of behavioural adaptation in healthy participants?}
+\end{center}
+
+The article first frames the relevant VR prism-adaptation literature, then describes the prototype, evaluation design, participant results, and methodological limitations. The focus is exploratory: the goal is to examine whether a unified VR framework can support comparable implementation and analysis of multiple prism-like perturbations.

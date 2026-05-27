@@ -1,0 +1,42 @@
+\section*{Evaluation}
+
+The evaluation used healthy adult participants recruited by convenience sampling. The purpose was to test the sandbox as a framework for comparing prism-effect implementations, not to evaluate clinical rehabilitation. Input mode was between-subjects: each participant completed either controller-based input or embodied hand-tracking input, but not both. Within the assigned input mode, each participant completed Open-Loop Pointing and Line Bisection under four effect conditions: None, Translation, Rotation, and Skew. The None condition was completed first within each task, followed by the three active perturbations in randomized order; task order was varied across participants and counterbalanced where possible.
+
+Each module consisted of 10 baseline trials, 60 exposure attempts, and 10 post-exposure trials. The active perturbation was applied during exposure only. Baseline and post blocks were completed with no effect applied, allowing baseline-to-post response shifts to be measured after the perturbation was removed. The final dataset contained 10 participants and 80 completed modules. Five participants used controllers and five used embodied hand tracking. Participants also completed pre- and post-session Simulator Sickness Questionnaire (SSQ) forms \cite{KennedySSQ}; these were used to check whether the session caused discomfort, not as a separate effect condition.
+
+The primary outcome was baseline-to-post stable perceived-centre shift. For open-loop pointing, this refers to the estimated response centre of the participant's signed endpoints relative to the target. For line bisection, it refers to the estimated response centre of the selected midpoints relative to the true line centre. The word \emph{shift} therefore means: post-exposure response centre minus baseline response centre. The analysis used a stable response-centre estimate rather than only the raw arithmetic mean because several blocks contained occasional slips, fast clicks, or misunderstood responses. The raw trials remained available for quality and spatial inspection.
+
+Two summary measures were used. \emph{Median shift} is the typical absolute movement from baseline to post-exposure within a task, input mode, and effect. \emph{Extra shift beyond None} subtracts each participant's own no-effect module for the same task before summarizing the perturbation modules. This second value answers a simpler question: did the perturbation shift responses more than that participant shifted when no perturbation was used?
+
+Table~\ref{tab:article-results-summary} lists these two measures for each task, input mode, and effect condition. The table is intended as the numeric reference for the plots in the results section: the first numeric column shows absolute baseline-to-post movement, while the second subtracts the matching no-effect module.
+
+\begin{table*}[t]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{1.1}
+    \begin{tabular}{llrr}
+        \toprule
+        \textbf{Task} & \textbf{Input / effect} & \textbf{Median shift (cm)} & \textbf{Extra beyond None (cm)} \\
+        \midrule
+        Line Bisection & Controller / None & 2.91 & 0.00 \\
+        Line Bisection & Controller / Translation & 7.23 & 4.32 \\
+        Line Bisection & Controller / Rotation & 13.87 & 10.67 \\
+        Line Bisection & Controller / Skew & 5.38 & 3.72 \\
+        Line Bisection & Embodied / None & 9.78 & 0.00 \\
+        Line Bisection & Embodied / Translation & 3.98 & -1.10 \\
+        Line Bisection & Embodied / Rotation & 5.50 & -1.33 \\
+        Line Bisection & Embodied / Skew & 7.42 & -2.30 \\
+        Open-Loop & Controller / None & 5.32 & 0.00 \\
+        Open-Loop & Controller / Translation & 12.75 & 1.04 \\
+        Open-Loop & Controller / Rotation & 10.22 & 2.21 \\
+        Open-Loop & Controller / Skew & 9.00 & 0.14 \\
+        Open-Loop & Embodied / None & 17.79 & 0.00 \\
+        Open-Loop & Embodied / Translation & 3.90 & -6.33 \\
+        Open-Loop & Embodied / Rotation & 4.82 & -12.96 \\
+        Open-Loop & Embodied / Skew & 16.51 & -1.28 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Baseline-to-post perceived-centre shifts. Each row summarizes five participants. Median shift is the absolute baseline-to-post movement. Extra beyond None subtracts the participant's own no-effect module for the same task; therefore the None rows are always 0.00 in the final column.}
+    \label{tab:article-results-summary}
+\end{table*}

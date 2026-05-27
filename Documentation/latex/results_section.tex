@@ -1,0 +1,279 @@
+\chapter{Results}
+\label{chap:results}
+
+This chapter presents the results from the healthy-participant evaluation of the VR prism-effect prototype. The purpose of this chapter is descriptive: it reports what was recorded, how the outcome measures were computed, and which patterns were visible in the participant data. Interpretation of why these patterns may have occurred is reserved for the discussion chapter.
+
+The final dataset contained 80 completed participant modules from 10 participants. Each participant completed eight modules: two assessment tasks, Open-Loop Pointing and Line Bisection, crossed with four effect conditions, None, Translation, Rotation, and Skew. Five participants completed the controller condition and five completed the embodied hand-tracking condition. Debug sessions, aborted sessions, and pilot sessions were excluded by requiring the session metadata to be marked as \emph{Participant} and \emph{Finished}. All included participants completed the expected eight modules.
+
+\section{Outcome Measure}
+\label{sec:results-outcome-measure}
+
+The primary outcome was the baseline-to-post change in the participant's estimated response centre. In this chapter, the word \emph{shift} refers to this change: the estimated centre of the participant's responses in the post-exposure block minus the estimated centre of the participant's responses in the baseline block. A larger shift therefore means that the participant responded in a different spatial location after exposure than before exposure.
+
+For Open-Loop Pointing, the response centre was estimated from the signed horizontal endpoint error relative to the target. For Line Bisection, the response centre was estimated from the signed horizontal deviation from the true midpoint of the line. Each baseline and post-exposure block contained 10 accepted trials.
+
+The analysis used a stable perceived-centre estimate rather than only the arithmetic mean of the 10 trials. This estimate still uses the full block, but it represents the repeated response cluster more strongly than isolated far-away clicks. This was used because several blocks contained occasional slips, flicks, or misunderstood clicks, and a raw mean from only 10 trials could be strongly affected by one such response. The resulting after-effect magnitude is reported in centimetres as the absolute distance between the baseline perceived centre and the post-exposure perceived centre.
+
+Two related measures are reported:
+
+\begin{itemize}
+    \item \textbf{Median shift} is the median absolute baseline-to-post perceived-centre shift across the five participants in a given task, input mode, and effect condition.
+    \item \textbf{Median shift above None} subtracts each participant's own no-effect shift for the same task before taking the group median. A value above zero means that the perturbation condition produced a larger baseline-to-post shift than that participant's None condition. A value below zero means that the perturbation condition produced a smaller shift than that participant's None condition.
+\end{itemize}
+
+\section{Condition-Level Results}
+\label{sec:results-condition-level}
+
+Table~\ref{tab:results-condition-summary} summarizes the main condition-level values used throughout this chapter. The column \emph{Median shift} gives the typical absolute baseline-to-post change within that condition. For example, the controller Line Bisection Rotation condition has a median shift of 13.87\,cm, meaning that the median participant in that condition changed their estimated response centre by 13.87\,cm from baseline to post-exposure. The column \emph{Median shift above None} then subtracts the participant's own no-effect shift for the same task. This second value is important because the None condition was not always close to zero.
+
+The table should therefore be read in two steps. First, the median shift column shows whether a condition produced measurable baseline-to-post movement. Second, the median shift above None column shows whether this movement was larger than the participant's own no-effect drift. In the controller input mode, every perturbation condition was above the participant-specific None reference in both tasks. This means that, at the median level, Translation, Rotation, and Skew all produced more baseline-to-post movement than the same participants showed when no perturbation was applied. The strongest controller pattern was Line Bisection Rotation, which was 10.67\,cm above None. By contrast, the embodied input mode did not show the same consistent above-None pattern; its perturbation medians were often below the embodied None reference.
+
+\begin{table}[H]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{1.15}
+    \begin{tabularx}{\linewidth}{llrrr}
+        \toprule
+        \textbf{Task} & \textbf{Input / effect} & \textbf{N} & \textbf{Median shift (cm)} & \textbf{Median shift above None (cm)} \\
+        \midrule
+        Line Bisection & Controller / None & 5 & 2.91 & 0.00 \\
+        Line Bisection & Controller / Translation & 5 & 7.23 & 4.32 \\
+        Line Bisection & Controller / Rotation & 5 & 13.87 & 10.67 \\
+        Line Bisection & Controller / Skew & 5 & 5.38 & 3.72 \\
+        Line Bisection & Embodied / None & 5 & 9.78 & 0.00 \\
+        Line Bisection & Embodied / Translation & 5 & 3.98 & -1.10 \\
+        Line Bisection & Embodied / Rotation & 5 & 5.50 & -1.33 \\
+        Line Bisection & Embodied / Skew & 5 & 7.42 & -2.30 \\
+        Open-Loop & Controller / None & 5 & 5.32 & 0.00 \\
+        Open-Loop & Controller / Translation & 5 & 12.75 & 1.04 \\
+        Open-Loop & Controller / Rotation & 5 & 10.22 & 2.21 \\
+        Open-Loop & Controller / Skew & 5 & 9.00 & 0.14 \\
+        Open-Loop & Embodied / None & 5 & 17.79 & 0.00 \\
+        Open-Loop & Embodied / Translation & 5 & 3.90 & -6.33 \\
+        Open-Loop & Embodied / Rotation & 5 & 4.82 & -12.96 \\
+        Open-Loop & Embodied / Skew & 5 & 16.51 & -1.28 \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Condition-level baseline-to-post perceived-centre shifts. Median shift is the median absolute baseline-to-post shift in centimetres. Median shift above None subtracts the participant's own None condition for the same task before summarizing the perturbation conditions.}
+    \label{tab:results-condition-summary}
+\end{table}
+
+The absolute shifts from Table~\ref{tab:results-condition-summary} are visualized in Figure~\ref{fig:results-absolute-shifts}. This figure shows the spread behind the medians instead of only showing one number per condition. Each mark represents one completed participant module, while the boxes summarize the distribution within a task, input mode, and effect. The key point to read from Figure~\ref{fig:results-absolute-shifts} is that several None modules also have visible baseline-to-post shifts. This is why the perturbation conditions cannot be evaluated from absolute magnitude alone.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{img/5_Results/Compare2.png}
+    \caption{Absolute baseline-to-post perceived-centre shifts by task, effect condition, and input mode. The boxes summarize the distribution within each condition, while the small side ticks show the individual participant modules without using dot markers.}
+    \label{fig:results-absolute-shifts}
+\end{figure}
+
+Figure~\ref{fig:results-effect-minus-none-linebisection} and Figure~\ref{fig:results-effect-minus-none-openloop} show the normalized version of the comparison. Here, each perturbation module is plotted after subtracting the matching None module from the same participant and task. The dashed zero line marks the participant-specific no-effect reference. Values above this line indicate that the perturbation module shifted more than the participant's own None module; values below it indicate that it shifted less. These figures make the input-mode contrast visible. The controller boxes are centred above zero for all three perturbations in both tasks, whereas the embodied boxes are more variable and often fall below zero. This pattern is important because controller tracking was the more stable input mode during testing.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{img/5_Results/Compare3.png}
+    \caption{Perturbation shifts above participant-specific None for Line Bisection. The dashed line marks zero, meaning the participant's own no-effect Line Bisection module. Values above zero indicate a larger baseline-to-post shift than that no-effect reference, and values below zero indicate a smaller shift. Boxes summarize the grouped distribution, while side ticks show the individual participant modules.}
+    \label{fig:results-effect-minus-none-linebisection}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{img/5_Results/Compare4.png}
+    \caption{Perturbation shifts above participant-specific None for Open-Loop Pointing. The dashed line marks zero, meaning the participant's own no-effect Open-Loop module. Values above zero indicate a larger baseline-to-post shift than that no-effect reference, and values below zero indicate a smaller shift. Boxes summarize the grouped distribution, while side ticks show the individual participant modules.}
+    \label{fig:results-effect-minus-none-openloop}
+\end{figure}
+
+\section{Participant-Level Results}
+\label{sec:results-participant-level}
+
+The grouped plots in Figure~\ref{fig:results-absolute-shifts}, Figure~\ref{fig:results-effect-minus-none-linebisection}, and Figure~\ref{fig:results-effect-minus-none-openloop} combine participants with visibly different response profiles. The participant-level plots therefore show all eight modules for selected participants. These plots are descriptive and are used to inspect whether a participant's own module pattern is stable, variable, or dominated by one or two conditions.
+
+Figure~\ref{fig:results-participants-1-2} shows Participant~1 and Participant~2. Participant~1 produced a more orderly profile across the eight modules, with the perturbation modules visually separated from several of the lower-shift modules. Participant~2 showed larger variation between modules, including larger baseline-to-post shifts in some no-effect modules and several condition modules. Both participants contribute equally to the grouped summaries in Table~\ref{tab:results-condition-summary}.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{img/5_Results/Participant1.png}
+        \textbf{(a)} Participant 1
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{img/5_Results/Participant2.png}
+        \textbf{(b)} Participant 2
+    \end{minipage}
+    \caption{Participant-level summaries for Participant~1 and Participant~2. Each profile summarizes the participant's eight completed modules.}
+    \label{fig:results-participants-1-2}
+\end{figure}
+
+Figure~\ref{fig:results-participants-3-4} shows Participant~3 and Participant~4. These profiles were included because both participants contributed to the visible spread in Figure~\ref{fig:results-absolute-shifts}. Participant-level plots make this spread easier to inspect because the reader can see whether a large value belongs to one isolated module or whether it is part of a broader within-participant pattern.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{img/5_Results/Participant3.png}
+        \textbf{(a)} Participant 3
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{img/5_Results/Participant4.png}
+        \textbf{(b)} Participant 4
+    \end{minipage}
+    \caption{Participant-level summaries for Participant~3 and Participant~4. The profiles show how individual participants contributed to the variability in the grouped results.}
+    \label{fig:results-participants-3-4}
+\end{figure}
+
+\section{Exposure Quality}
+\label{sec:results-exposure-quality}
+
+Exposure quality was inspected because the exposure block is the part of the module intended to produce correction. The quality view reports the number of attempts, mean absolute distance from target centre, unusually large errors, change over trials, and hit rate. It also plots each exposure attempt as a hit or miss across the 60 attempts.
+
+Table~\ref{tab:results-participant-quality} combines logged exposure behaviour with facilitator notes for selected participants. The table is included to document participant-level context, not to remove participants from the dataset. Hit rate describes the percentage of exposure attempts that ended inside the target radius. Pace is the median time per exposure attempt. Max None is the largest no-effect baseline-to-post shift observed for that participant. Together, these columns describe whether a participant's data contained rushed exposure, low hit rate, high no-effect drift, or notable facilitator observations.
+
+\begin{table}[H]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{1.15}
+    \begin{tabularx}{\linewidth}{l l r r r X}
+        \toprule
+        \textbf{Participant} & \textbf{Input} & \textbf{Hit rate} & \textbf{Pace (s)} & \textbf{Max None (cm)} & \textbf{Observation} \\
+        \midrule
+        P2 & Embodied & 41\% & 0.66 & 17.79 & Very fast completion and many misses. \\
+        P3 & Controller & 86\% & 1.40 & 44.41 & Behaviourally stable, but with a large no-effect shift. \\
+        P4 & Embodied & 45\% & 1.34 & 22.35 & Low VR experience, many misses, and headset instability. \\
+        P8 & Embodied & 59\% & 1.00 & 10.24 & Fatigue, confusion, and calibration-related outliers. \\
+        P9 & Controller & 82\% & 1.19 & 6.04 & Calm and precise, with some upper-body aiming observed. \\
+        P10 & Embodied & 38\% & 0.80 & 19.46 & Low hit rate, high exposure distance, and general imprecision. \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Selected participant-quality observations. Hit rate and pace are computed from exposure events, while Max None is the largest no-effect baseline-to-post shift observed for that participant.}
+    \label{tab:results-participant-quality}
+\end{table}
+
+Figure~\ref{fig:results-quality-examples} shows two exposure quality examples corresponding to the type of information summarized in Table~\ref{tab:results-participant-quality}. The left panel shows Participant~2, where the hit rate is low, many attempts are marked as misses, and the distance values fluctuate across the block. The right panel shows Participant~9, where most attempts are marked as hits and the distance values remain closer to the target after one large early miss. These examples show how the same 60-attempt exposure structure can produce different quality profiles across participants.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{img/5_Results/Quality1.png}
+        \textbf{(a)} Participant 2
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{img/5_Results/Quality2.png}
+        \textbf{(b)} Participant 9
+    \end{minipage}
+    \caption{Exposure quality examples from RShiny. Left: Participant~2, with a low hit rate and larger target-relative distances across the exposure block. Right: Participant~9, with a high hit rate and a tighter distance profile after one large early miss.}
+    \label{fig:results-quality-examples}
+\end{figure}
+
+\section{Simulator Sickness and Participant Comments}
+\label{sec:results-ssq}
+
+The SSQ forms shown in Appendix~\ref{APP:SSQ} were used to record participant discomfort before and after the VR session. The exported questionnaire file contained 12 paired pre- and post-test responses, of which the first two were pilot tests. The SSQ summary below therefore uses the same 10 participant sessions as the final module-level analysis. The SSQ results are treated as contextual safety and comfort information rather than as a condition-level outcome.
+
+Table~\ref{tab:results-ssq-summary} summarizes the participant SSQ responses using the standard Kennedy et al. scoring procedure described in Section~\ref{sec:evaluation-data}. The total score increased from a mean of 5.98 before the session to 10.47 after the session. The median total score increased from 5.61 to 7.48. Five participants showed an increased total score, two showed a decreased total score, and three were unchanged. The largest post-test total score was 26.18.
+
+\begin{table}[H]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{5pt}
+    \renewcommand{\arraystretch}{1.15}
+    \begin{tabular}{lrrrr}
+        \toprule
+        \textbf{SSQ measure} & \textbf{Pre mean} & \textbf{Post mean} & \textbf{Mean change} & \textbf{Post max} \\
+        \midrule
+        Nausea & 1.91 & 8.59 & 6.68 & 28.62 \\
+        Oculomotor & 9.10 & 12.13 & 3.03 & 30.32 \\
+        Disorientation & 9.74 & 9.74 & 0.00 & 41.76 \\
+        Total score & 5.98 & 10.47 & 4.49 & 26.18 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Descriptive SSQ scores from the 10 participant questionnaire responses, excluding the two pilot responses. Higher values indicate more reported simulator-sickness symptoms.}
+    \label{tab:results-ssq-summary}
+\end{table}
+
+The free-text comments were generally more focused on aiming consistency, calibration, arm fatigue, and task feel than on sickness symptoms. These comments are reported here as contextual participant feedback; their implications for session tolerance are discussed in Chapter~\ref{chap:Discussion}.
+
+\section{Spatial Inspection}
+\label{sec:results-spatial-inspection}
+
+The spatial plots show where accepted responses landed relative to the relevant target or midpoint. They provide a geometric view of the same responses that are summarized numerically as perceived-centre shifts. A compact cluster indicates that the participant repeatedly responded in approximately the same region, whereas a broad spread indicates that the block contained more spatial variability.
+
+Figure~\ref{fig:results-spatial-examples} shows spatial examples from Participant~4 and Participant~10. These examples are included to show how module-level shift values can arise from different response distributions. When reading Figure~\ref{fig:results-spatial-examples}, the relevant feature is not only the average location of the responses, but also whether the responses form a stable cluster or are spread across a larger part of the board.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{img/5_Results/Spatial1.png}
+        \textbf{(a)} Participant 4
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{img/5_Results/Spatial2.png}
+        \textbf{(b)} Participant 10
+    \end{minipage}
+    \caption{Spatial response examples from RShiny. The plots show accepted response locations relative to the task target layout. Participant~4's Open-Loop example contains a separated response away from the main cluster, while Participant~10's Line Bisection example shows responses clustered close to the line midpoint.}
+    \label{fig:results-spatial-examples}
+\end{figure}
+
+\section{Trajectory Inspection}
+\label{sec:results-trajectory-inspection}
+
+The trajectory plots show how individual exposure attempts unfolded before confirmation. These plots are separate from the baseline-to-post shift measure, but they describe how a final hit or miss was produced. The path plot shows the projected aim movement relative to the target, while the phase plot shows the movement-speed profile before confirmation. Together, they make it possible to distinguish a slow controlled approach from a fast or unstable attempt.
+
+Figure~\ref{fig:results-trajectory-p1} shows one selected exposure attempt from Participant~1. The trajectory and phase breakdown show an attempt that ended as a hit. The figure is included as an example of the detailed per-attempt information available in the RShiny trajectory view.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{img/5_Results/Trajectory11.png}
+        \textbf{(a)} Participant 1 trajectory path
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{img/5_Results/Trajectory12.png}
+        \textbf{(b)} Participant 1 phase breakdown
+    \end{minipage}
+    \caption{Trajectory inspection for a selected Participant~1 exposure attempt that ended as a hit. The path view shows the projected aim path relative to the target centre, and the phase breakdown shows the movement-speed profile before confirmation.}
+    \label{fig:results-trajectory-p1}
+\end{figure}
+
+Figure~\ref{fig:results-trajectory-p2} shows one selected exposure attempt from Participant~2. In this example, the attempt ended as a miss, and the phase breakdown records the movement state at confirmation. This provides a concrete example of how missed exposure attempts are represented in the analysis interface.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{img/5_Results/Trajectory21.png}
+        \textbf{(a)} Participant 2 trajectory path
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{img/5_Results/Trajectory22.png}
+        \textbf{(b)} Participant 2 phase breakdown
+    \end{minipage}
+    \caption{Trajectory inspection for a selected Participant~2 exposure attempt that ended as a miss. The path view shows the projected aim ending away from the target centre, and the phase breakdown records that confirmation occurred during a fast movement state rather than during a stable hover.}
+    \label{fig:results-trajectory-p2}
+\end{figure}
+
+\section{Descriptive Summary}
+\label{sec:results-descriptive-summary}
+
+Across the 80 completed modules, measurable baseline-to-post perceived-centre shifts were recorded in both tasks and both input modes. The no-effect condition also produced non-zero shifts, which is why the condition-level results are shown both as absolute shifts and as shifts above participant-specific None.
+
+The largest median shift above None was observed in controller Line Bisection with Rotation. Controller Line Bisection also showed positive median values above None for Translation and Skew. In embodied Line Bisection, the perturbation medians were below the participant-specific None condition. In Open-Loop Pointing, controller perturbation medians were slightly above None, while embodied Translation, Rotation, and Skew were below the embodied None condition at the median level.
+
+The participant-level, quality, spatial, and trajectory views showed substantial variation between participants and modules. These views document differences in exposure hit rate, response spread, movement trajectory, and no-effect drift. The implications of these patterns for the prototype, the study design, and the terminology of VR prism adaptation are discussed in the following chapter.

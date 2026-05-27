@@ -1,79 +1,63 @@
-% Suggested packages for the main Overleaf document:
-% \usepackage{graphicx}
-% \usepackage{float}
-% \usepackage{tabularx}
-% \usepackage{array}
-
 \chapter{Evaluation}
 \label{chap:Evaluation}
 
-This chapter describes how the prototype is evaluated as an experimental sandbox for prism-effect research in VR. The purpose of the evaluation is not to test clinical rehabilitation on patients, but to assess how the implemented perturbations and input modalities behave in a controlled healthy-participant setup. The evaluation therefore focuses on whether the system can produce interpretable baseline, exposure, and post-exposure data across the implemented conditions, and whether participants can complete those conditions in a stable and comparable way.
+This chapter describes how the prototype was evaluated as an experimental sandbox for prism-effect research in VR. The purpose of the evaluation was not to test clinical rehabilitation on patients, but to assess whether the prototype could produce interpretable baseline, exposure, and post-exposure data across the implemented perturbations, input modes, and tasks.
 
 \section{Evaluation Design}
 \label{sec:evaluation-design}
 
-The evaluation uses a mixed-methods approach within a mixed design. For clarity, the two modality conditions are defined as \emph{Condition 1: Controller} and \emph{Condition 2: Embodiment}. The between-subject grouping variable is therefore \emph{starting condition}: one group begins with controllers and the other begins with embodiment. The repeated within-subject factors are \emph{input mode}, with the levels \emph{controllers} and \emph{embodiment}, and \emph{effect mode}, with the levels \emph{translation}, \emph{rotation}, and \emph{skew}. As a result, every participant experiences all three implemented perturbations in both input modalities, but the order of the two modality blocks differs between groups.
+The evaluation used a between-subjects input-mode design. Participants completed the full experiment either with controller-based input or with embodied hand tracking, but not both. This was chosen because completing both input modes would have doubled the number of modules and made the session too long and fatiguing.
 
-This structure serves two purposes. First, it preserves the central comparison that motivates the project, namely whether the same prism-like perturbations behave differently when they are performed through controller input versus embodied hand tracking. Second, it reduces the risk that all modality-related differences are confounded with a fixed first-half versus second-half order effect. The design therefore treats modality order as its own grouping variable rather than allowing every participant to experience the prototype in the same sequence.
-
-\begin{table}[H]
-    \centering
-    \footnotesize
-    \setlength{\tabcolsep}{6pt}
-    \renewcommand{\arraystretch}{1.18}
-    \begin{tabularx}{\linewidth}{|
-        >{\raggedright\arraybackslash}p{0.23\linewidth}|
-        >{\raggedright\arraybackslash}p{0.22\linewidth}|
-        >{\raggedright\arraybackslash}p{0.22\linewidth}|
-        >{\raggedright\arraybackslash}X|}
-        \hline
-        \textbf{Factor} & \textbf{Levels} & \textbf{Role in design} & \textbf{Purpose} \\
-        \hline
-        Starting condition group & Controller-first, Embodiment-first & Between-subject & Separates broad order effects from the comparison between input modalities. \\
-        \hline
-        Input mode & Controllers, Embodiment & Within-subject & Compares mediated pointing with embodied hand tracking in the same participant sample. \\
-        \hline
-        Effect mode & Translation, Rotation, Skew & Within-subject & Compares the three implemented perturbation classes under both input modes. \\
-        \hline
-    \end{tabularx}
-    \caption{Independent variables in the evaluation design.}
-    \label{tab:evaluation-factors}
-\end{table}
+Within the assigned input mode, every participant completed both assessment tasks: \emph{Open-Loop Pointing} and \emph{Line Bisection}. Each task was completed under four effect conditions: \emph{None}, \emph{Translation}, \emph{Rotation}, and \emph{Skew}. These repeated task and effect modules were used to compare conditions inside the assigned input-mode group, but the input-mode comparison itself remained between-subjects. The None condition was always completed first within a task, so every task began with a no-perturbation reference before the participant experienced the three active perturbations. The order of the two tasks was varied across participants and counterbalanced where possible within each input-mode group, while the order of Translation, Rotation, and Skew was randomized after the initial None condition. Table~\ref{tab:evaluation-groups} summarizes the resulting structure.
 
 \begin{table}[H]
     \centering
     \footnotesize
-    \setlength{\tabcolsep}{6pt}
+    \setlength{\tabcolsep}{5pt}
     \renewcommand{\arraystretch}{1.18}
     \begin{tabularx}{\linewidth}{|
-        >{\raggedright\arraybackslash}p{0.19\linewidth}|
+        >{\raggedright\arraybackslash}p{0.16\linewidth}|
+        >{\raggedright\arraybackslash}p{0.18\linewidth}|
         >{\raggedright\arraybackslash}X|
         >{\raggedright\arraybackslash}X|}
         \hline
-        \textbf{Group} & \textbf{First condition block} & \textbf{Second condition block} \\
+        \textbf{Group} & \textbf{Input mode} & \textbf{Task order} & \textbf{Effect order within each task} \\
         \hline
-        Group A & Condition 1: Controller + Translation, Rotation, Skew & Condition 2: Embodiment + Translation, Rotation, Skew \\
+        Group A & Controller & Open-Loop Pointing and Line Bisection, varied across participants & None first, followed by Translation, Rotation, and Skew in randomized order \\
         \hline
-        Group B & Condition 2: Embodiment + Translation, Rotation, Skew & Condition 1: Controller + Translation, Rotation, Skew \\
+        Group B & Embodied hand tracking & Open-Loop Pointing and Line Bisection, varied across participants & None first, followed by Translation, Rotation, and Skew in randomized order \\
         \hline
     \end{tabularx}
-    \caption{High-level condition order for the two participant groups. Each block is followed by a questionnaire.}
+    \caption{Evaluation structure. Participants completed one input mode only, but completed both tasks and all four effect conditions within that input mode.}
     \label{tab:evaluation-groups}
 \end{table}
+
+This structure produced eight measured modules per participant: two tasks crossed with four effect conditions. The design allowed the same perturbation set to be compared across controller and embodied input without requiring each participant to complete both modalities. It also ensured that each task began from a no-effect condition, reducing the risk that participants who started directly with a perturbation would be disadvantaged by unfamiliarity with the system.
 
 \section{Participants and Context}
 \label{sec:evaluation-participants}
 
-The evaluation is conducted with healthy adult participants recruited by convenience sampling. This fits the present stage of the project, where the immediate goal is to test the prototype as a configurable research sandbox before moving toward patient-facing use. Participants should have normal or corrected-to-normal vision and no known condition that would make VR exposure or repeated arm pointing inappropriate. Basic demographic information, handedness, and prior VR experience should be recorded so that the sample and its potential biases remain visible in the final analysis.
+The evaluation was conducted with healthy adult participants recruited by convenience sampling. This fits the stage of the project, where the immediate goal was to evaluate the prototype as a configurable research sandbox before moving toward patient-facing use. Participants were asked about dominant hand, age, vision problems, and muscle or movement problems that could make it difficult to see or point to targets in VR. This information was collected so the sample and its potential biases remained visible in the analysis.
 
 \section{Procedure}
 \label{sec:evaluation-procedure}
 
-Each participant completes one full session consisting of two modality blocks. Condition 1 uses controllers and Condition 2 uses embodied hand tracking. The participant's assigned group determines which of these two blocks comes first. Within each modality block, the participant experiences the three perturbation types: translation, rotation, and skew. Each effect is completed once in that modality before the participant moves on to the next effect.
+Each participant was welcomed with the same general introduction to the prototype. Specific information about Translation, Rotation, and Skew was intentionally left out so participants would not begin the task with detailed expectations about the perturbations. Participants signed a consent form and were assigned to either the controller group or the embodied hand-tracking group. Before entering VR, participants filled out the pre-test Simulator Sickness Questionnaire (SSQ) and demographic questions, shown in Appendix~\ref{fig:app:PreplaySSQ}.
 
-Every effect condition follows the same overall prism-adaptation grammar implemented in the sandbox: a baseline measurement phase under \emph{no effect}, an exposure phase under the active perturbation, and a post-exposure repetition of the same measurement task. In other words, the manipulated condition is the perturbation and input mode, while the surrounding task structure remains stable across the run. This keeps the resulting sessions comparable even when the active effect changes.
+The participant was positioned in the centre of the room to ensure sufficient space for the VR task. Two facilitators were present during the session: one managed the VR prototype, while the other oversaw the questionnaires, consent form, and overall test flow, as illustrated in Figure~\ref{fig:HybridSketch}.
 
-Before the experimental conditions begin, the participant is introduced to the equipment, fitted with the headset, and calibrated inside the VR scene. A short familiarization period is then used so the participant can understand the current confirmation method and aiming behaviour without contributing data to the experimental blocks. This familiarization is especially important because the embodied condition uses dwell-based confirmation, whereas the controller condition can rely on trigger-based confirmation or the selected mitigation variant. After the participant completes the first condition block, a short questionnaire is administered before the modality switch. The same happens again after the second condition block, so each participant produces one questionnaire response per condition.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{img/4_Evaluation/Hybrid test setup.png}
+    \caption{Hybrid sketch of the test setup, showing the participant using the VR prototype and two facilitators: one managing the VR system and one overseeing the questionnaires and overall test procedure.}
+    \label{fig:HybridSketch}
+\end{figure}
+
+Before the measured modules began, the participant was fitted with the headset and calibrated inside the VR scene. A short familiarization period was used so the participant could understand the active aiming method and confirmation method without contributing data to the experimental blocks. Participants were instructed to keep the active hand close enough for reliable tracking and to avoid excessive wrist, torso, or upper-body compensation. This was especially important in the embodied condition, where hand posture and tracking quality could change the projected aiming direction.
+
+Both input modes used the non-dominant hand for confirmation. In controller mode, the participant aimed with the dominant controller and confirmed using the opposite controller trigger. In embodied mode, the participant aimed with the tracked hand and confirmed using the opposite controller trigger. This kept the confirmation action more comparable across input modes and reduced movement disturbance in the aiming hand.
+
+Each module followed the same baseline--exposure--post structure. First, the participant completed 10 baseline trials with no effect applied. Next, the participant completed 60 exposure attempts under the module's active effect condition. For the None module, this exposure phase also used no effect. Finally, the participant completed 10 post-exposure trials with no effect applied. The baseline and post phases measured the participant's response before and after exposure, while the exposure phase was used to apply the selected perturbation or no-effect reference. Table~\ref{tab:evaluation-procedure} summarizes the full participant procedure.
 
 \begin{table}[H]
     \centering
@@ -87,37 +71,35 @@ Before the experimental conditions begin, the participant is introduced to the e
         \hline
         \textbf{Step} & \textbf{Phase} & \textbf{Purpose} \\
         \hline
-        1 & Introduction, consent, and setup & Introduce the study, fit the participant with the VR equipment, and record background information. \\
+        1 & Introduction, consent, and setup & Introduce the study, complete consent form, collect demographic information, complete pre-test SSQ, and fit the VR equipment. \\
         \hline
-        2 & Calibration and familiarization & Align the participant to the scene and let them practice the active input mode before measured trials begin. \\
+        2 & Calibration and familiarization & Align the participant to the scene and let them practise the active input and confirmation method before measured trials begin. \\
         \hline
-        3 & First condition block & Complete the three effect conditions in the participant's assigned starting modality. \\
+        3 & Baseline block, 10 trials & Measure the participant's response centre before exposure, with no effect applied. \\
         \hline
-        4 & Questionnaire 1 & Record the participant's experience of the first completed modality condition before switching. \\
+        4 & Exposure block, 60 attempts & Apply the current effect condition and record hit/miss behaviour, target-relative error, and movement samples. \\
         \hline
-        5 & Break and modality switch & Reduce fatigue and prepare the participant for the second input modality. \\
+        5 & Post-exposure block, 10 trials & Measure the participant's response centre after exposure, with no effect applied. \\
         \hline
-        6 & Second condition block & Complete the same three effect conditions in the remaining modality. \\
+        6 & Break and next module & Allow a short rest, then continue to the next effect condition or task. \\
         \hline
-        7 & Questionnaire 2 & Record the participant's experience of the second completed modality condition. \\
+        7 & Repeat until eight modules are complete & Complete both tasks under None, Translation, Rotation, and Skew in the assigned input mode. \\
         \hline
-        8 & Final debrief & Collect broader qualitative feedback about usability, perceived shift behaviour, effort, and differences between modalities. \\
+        8 & Debrief and post-test SSQ & Complete post-test SSQ and collect general feedback and observational notes. \\
         \hline
     \end{tabularx}
     \caption{Overall procedure for one participant session.}
     \label{tab:evaluation-procedure}
 \end{table}
 
-Within each modality block, the order of translation, rotation, and skew should be counterbalanced or randomized across participants. This reduces the risk that one specific effect is consistently advantaged or disadvantaged by fatigue, growing task familiarity, or residual carry-over from a previous perturbation. A short break should also be inserted between effect conditions, and the next condition should begin from a fresh baseline measurement rather than continuing directly from the previous post-exposure state.
-
-At the level of one condition, the procedure is therefore repeated six times per participant: once for each combination of input mode and effect mode. The participant first completes the baseline block of the selected measurement task, then performs the exposure block under the chosen perturbation, and finally repeats the measurement block in post-exposure form. After the post-exposure block has finished, the system is reset to a neutral state before the next condition begins.
+Short breaks were offered between modules. After one task had been completed under all four effect conditions, the system moved to the second task and repeated the same four-condition structure. This meant that each participant completed all eight modules within one input mode.
 
 \section{Data Collection}
 \label{sec:evaluation-data}
 
-The evaluation adopts a mixed-methods approach by combining quantitative system logs with qualitative participant feedback. The quantitative part comes directly from the implemented logging pipeline. For each condition, the system stores metadata, accepted measurement trials, exposure attempts, target spawns, completion states, summary rows, and continuous movement samples. These data make it possible to inspect baseline performance, exposure behaviour, post-exposure change, spatial landing patterns, and detailed trajectories from the same participant session.
+The evaluation combined quantitative system logs with qualitative participant feedback, as shown in Table~\ref{tab:evaluation-data-sources}. The quantitative data came directly from the implemented logging pipeline. For each module, the system stored metadata, baseline and post trials, exposure attempts, hit or miss outcomes, target spawns, completion states, summary rows, and continuous movement samples. These data made it possible to inspect baseline performance, exposure behaviour, post-exposure change, spatial landing patterns, and detailed trajectories from the same participant session.
 
-The qualitative part is intended to capture how participants experience the two input modalities and the three perturbation types. This includes one questionnaire after Condition 1, one questionnaire after Condition 2, and a final debrief or observation notes on hesitation, confusion, visible correction strategies, or fatigue. These qualitative accounts are useful because they provide context for interpreting the quantitative logs. For example, a condition with noisy exposure data may be easier to understand if participants also report uncertainty about dwell confirmation, unstable aiming, or difficulty perceiving the active shift.
+The qualitative data consisted of pre- and post-test SSQ responses, short post-session comments, facilitator observations, and final debrief responses. Observations focused on hesitation, confusion, visible correction strategies, fatigue, calibration issues, tracking issues, and participant comments during the test. These qualitative accounts were used as context for interpreting the quantitative logs. For example, a condition with noisy exposure data may be easier to understand if the participant also showed uncertainty about confirmation, unstable aiming, rushing, or difficulty perceiving the active shift.
 
 \begin{table}[H]
     \centering
@@ -131,25 +113,32 @@ The qualitative part is intended to capture how participants experience the two 
         \hline
         \textbf{Data source} & \textbf{Collected material} & \textbf{Evaluation role} \\
         \hline
-        Quantitative runtime logs & Session metadata, baseline and post trials, exposure attempts, hit or miss outcomes, target-relative errors, summaries, and continuous samples. & Supports aftereffect analysis, condition comparison, quality inspection, spatial interpretation, and trajectory analysis. \\
+        Quantitative runtime logs & Session metadata, baseline and post trials, exposure attempts, hit or miss outcomes, target-relative errors, summaries, and continuous samples. & Supports after-effect analysis, condition comparison, quality inspection, spatial interpretation, and trajectory analysis. \\
         \hline
-        Qualitative feedback & Questionnaire after Condition 1, questionnaire after Condition 2, final debrief responses, and observation notes during testing. & Supports interpretation of usability, perceived embodiment, fatigue, confusion, and perceived differences between perturbations. \\
+        Qualitative feedback & Pre- and post-test SSQ, post-session comments, observational notes, and final debrief responses. & Supports interpretation of fatigue, confusion, tracking issues, confirmation problems, and perceived prism adaptation. \\
         \hline
     \end{tabularx}
     \caption{Mixed-methods data sources used in the evaluation.}
     \label{tab:evaluation-data-sources}
 \end{table}
 
+\subsection{Simulator Sickness Questionnaire}
+\label{subsec:evaluation-ssq}
+
+Simulator sickness was assessed using the SSQ developed by Kennedy et al. \cite{KennedySSQ}. The SSQ is a widely used assessment tool for measuring discomfort and cybersickness symptoms associated with virtual reality and simulator experiences. Participants rate 16 symptoms on a four-point scale consisting of \emph{None}, \emph{Slight}, \emph{Moderate}, and \emph{Severe}. The questionnaire includes symptoms such as nausea, eyestrain, dizziness, headache, and general discomfort.
+
+The SSQ produces scores across three symptom subscales: \emph{Nausea}, \emph{Oculomotor}, and \emph{Disorientation}. A weighted \emph{Total Score} is additionally calculated to provide an overall measure of simulator sickness severity. Each subscale score is computed by summing the relevant symptom ratings and multiplying the result by standardized weighting factors defined by Kennedy et al. \cite{KennedySSQ}. In this evaluation, the SSQ was administered both before and after the VR session. The pre-test SSQ established a baseline measure of discomfort prior to entering VR, while the post-test SSQ identified symptoms that may have increased during the session.
+
 \section{Evaluation Focus}
 \label{sec:evaluation-focus}
 
-The primary quantitative outcomes are the change from baseline to post-exposure and the behaviour of the exposure block itself. For the measurement phases, the important question is whether a condition produces an interpretable post-exposure shift relative to baseline. For the exposure phase, the important questions concern hit rate, target-relative error, trial-by-trial change, and overall stability. Because the sandbox also stores continuous samples, the evaluation can extend beyond endpoint measures and inspect whether different conditions produce visibly different movement traces, late corrections, or hovering behaviour.
+The primary quantitative outcome was the change from baseline to post-exposure in the participant's estimated response centre. In the later analysis this was reported as a stable perceived-centre shift: the typical signed response location in the post block minus the typical signed response location in the baseline block. For the measurement phases, the important question was whether a module produced an interpretable post-exposure shift relative to baseline. For the exposure phase, the important questions concerned hit rate, target-relative error, trial-by-trial change, and overall stability. Because the sandbox also stored continuous samples, the evaluation could extend beyond endpoint measures and inspect whether different modules produced visibly different movement traces, late corrections, hovering, or unstable pointing.
 
-At the comparison level, the evaluation asks whether the three perturbations behave similarly across the two input modalities and whether the modality order appears to matter. The between-subject grouping variable is therefore not treated as a nuisance, but as part of the evaluation structure. If controller-first and embodiment-first participants show different patterns, that difference can be interpreted as a possible sequence effect rather than being hidden inside the overall averages.
+At the comparison level, the evaluation asked whether the three active perturbations behaved differently from the None condition, whether the two tasks produced similar or different after-effect patterns, and whether controller and embodied input produced different data quality or response patterns. The input-mode comparison was therefore between-subjects, while the repeated task and effect modules provided structured comparisons inside each participant's assigned input mode.
 
-The qualitative analysis complements these quantitative comparisons by asking how participants describe the conditions. Relevant themes include perceived intuitiveness, bodily involvement, confirmation clarity, effort, fatigue, confidence in the aiming process, and whether one perturbation type feels more legible than another. Taken together, the mixed-methods evaluation therefore addresses both behavioural output and participant experience.
+The qualitative analysis complemented these quantitative comparisons by documenting how participants behaved during testing. Relevant observations included perceived task clarity, confirmation clarity, fatigue, tracking issues, posture, confidence in aiming, and visible compensation strategies. Together, the mixed-methods evaluation addressed both behavioural output and the practical feasibility of running the prototype as a prism-effect sandbox.
 
 \section{Summary}
 \label{sec:evaluation-summary}
 
-The evaluation is structured as a mixed-methods study with one between-subject grouping variable and two repeated within-subject factors. Group A starts with Condition 1, controllers, and Group B starts with Condition 2, embodiment, but both groups complete translation, rotation, and skew once in each modality. Each condition follows the same baseline--exposure--post-exposure structure, and each completed condition is followed by its own questionnaire. Together with the final debrief and the runtime logs, this makes the evaluation suitable for assessing the prototype as a comparative prism-effect sandbox rather than as a single-condition demonstration.
+The final evaluation used a healthy-participant setup with input mode as the between-subject grouping variable. Each participant completed one input mode, both assessment tasks, and four effect conditions per task, resulting in eight modules per participant. Each module followed the same 10-trial baseline, 60-attempt exposure, and 10-trial post-exposure structure. Together with SSQ responses, observational notes, and runtime logs, this made the evaluation suitable for assessing whether the prototype could produce analyzable data across multiple prism-effect implementations rather than only demonstrating one fixed task.

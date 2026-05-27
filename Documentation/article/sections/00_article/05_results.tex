@@ -1,0 +1,37 @@
+\section*{Results}
+
+Table~\ref{tab:article-results-summary} and Figure~\ref{fig:article-absolute-shifts} first show the raw baseline-to-post shifts. These values answer a direct question: how far did the participant's typical response move between baseline and post-exposure? The answer was not zero, even in the no-effect modules. For example, embodied Open-Loop had a median no-effect shift of 17.79 cm, and embodied Line Bisection had a median no-effect shift of 9.78 cm. This means that a large absolute shift cannot automatically be read as an effect of the active perturbation.
+
+The last column of Table~\ref{tab:article-results-summary} and Figure~\ref{fig:article-results-normalized} therefore show each perturbation after subtracting that participant's own no-effect module for the same task. This makes the comparison more conservative. Values above zero mean that the perturbation moved responses more than the participant's no-effect drift; values below zero mean that the perturbation moved responses less than the no-effect module.
+
+With this reading, the most visible pattern was controller-based Line Bisection. In Table~\ref{tab:article-results-summary}, Translation, Rotation, and Skew were all above the no-effect reference, with Rotation showing the largest median difference at 10.67 cm. The same pattern can be seen in Figure~\ref{fig:article-results-normalized}(a), where the controller boxes sit mostly above the zero line. The other task and input combinations were less consistent. In Figure~\ref{fig:article-results-normalized}(b), Open-Loop values were closer to zero or below zero after the no-effect subtraction, especially for embodied input.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\linewidth]{img/5_Results/Compare2.png}
+    \caption{Absolute baseline-to-post perceived-centre shifts by task, effect condition, and input mode. Boxes summarize the distribution within each condition, and side ticks show individual participant modules. The no-effect boxes are included because they show ordinary drift, practice, fatigue, or carry-over that can occur even without an active perturbation.}
+    \label{fig:article-absolute-shifts}
+\end{figure*}
+
+\begin{figure*}[t]
+    \centering
+    \begin{minipage}[t]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{img/5_Results/Compare3.png}
+        \textbf{(a)} Line Bisection
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{img/5_Results/Compare4.png}
+        \textbf{(b)} Open-Loop Pointing
+    \end{minipage}
+    \caption{Perturbation shifts after subtracting each participant's own no-effect shift for the same task. The zero line is the participant-specific no-effect reference. Values above zero indicate a larger shift than no-effect; values below zero indicate a smaller shift than no-effect. Boxes summarize each condition, while side ticks show the individual participant modules behind the boxes.}
+    \label{fig:article-results-normalized}
+\end{figure*}
+
+Appendix Figure~\ref{fig:article-appendix-quality} explains part of this spread through two full-size exposure-quality examples. Both exposure modules contain 60 attempts, but their hit rates and target-relative distances differ substantially. This matters because exposure is the only phase intended to create correction. A module with many rushed misses gives the analysis a different basis than a module where the participant repeatedly approached and confirmed near the active target.
+
+Participant-level inspection showed that the grouped plots were influenced by individual response profiles. Some participants produced relatively orderly module patterns, while others showed large no-effect shifts or inconsistent exposure behaviour. Facilitator observations supported this: participants differed in VR experience, speed, focus, fatigue, upper-body compensation, headset stability, and embodied hand posture. These observations were not used to remove participants from the dataset, but they help explain why Figures~\ref{fig:article-absolute-shifts} and~\ref{fig:article-results-normalized} contain visible spread rather than cleanly separated conditions.
+
+The SSQ results indicated a small increase in reported discomfort after testing. Across the 10 participant responses, the mean total SSQ score increased from 5.98 before the session to 10.47 after the session, with five participants increasing, two decreasing, and three remaining unchanged. The largest post-session total score was 26.18. These values suggest that simulator sickness was present for some participants, but the qualitative comments and facilitator observations more often pointed to arm fatigue, calibration, aiming consistency, tracking, and task pace as the immediate sources of variability.

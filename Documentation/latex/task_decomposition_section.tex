@@ -1,24 +1,21 @@
-% Suggested packages for the main Overleaf document:
-% \usepackage{graphicx}
-% \usepackage{tikz}
-% \usetikzlibrary{positioning,arrows.meta,fit,backgrounds}
-% \usepackage{xcolor}
-% \usepackage{float}
-% \usepackage{tabularx}
+\chapter{Design}
+\label{chap:Design}
 
 \section{Task Decomposition of the Prism Adaptation Workflow}
 \label{sec:task-decomposition}
 
-This section visualises how the prototype was designed from the participant's point of view. Rather than starting from scripts or interfaces, the design is described as a small set of repeated interaction loops and block transitions. The overall workflow follows a \emph{measurement--exposure--measurement} structure: a baseline task is first performed without perturbation, then an exposure block is completed under one of the implemented visual effects, and finally the same measurement task is repeated in a post-exposure phase. The key distinction is therefore between tasks that \emph{measure} a spatial estimate and the task that is intended to \emph{change} it through repeated visuomotor correction.
+This section visualises how the prototype was designed from the participant's point of view. Rather than starting from scripts or interfaces, the design is described as a small set of repeated interaction loops and block transitions. The overall workflow follows a \emph{measurement--exposure--measurement} structure: a baseline task is first performed without perturbation, then an exposure block is completed under one of the implemented visual effects, and finally the same measurement task is repeated in a post-exposure phase. The key distinction is therefore between tasks that \emph{measure} a spatial estimate and the task that is intended to \emph{change} it through repeated visuomotor correction. The final evaluation used Open-Loop Pointing and Line Bisection as the two measurement tasks; Landmark remained implemented as a supplementary assessment task in the sandbox.
 
-Because the project compares both input modes and effect modes, the design also had to preserve comparability across conditions. Changing from controller input to embodied input, or from one perturbation to another, should not change the basic block order, the role of baseline and post-exposure measurement, or the participant's understanding of when a response has been accepted. An additional design consideration therefore concerns how responses are confirmed and what visual information is available before and after an action. The default controller implementation uses trigger confirmation, whereas embodied interaction uses dwell-based confirmation. The system also includes prototype-specific Heisenberg-mitigation variants, such as opposite-hand confirmation and controller-hover confirmation. These variants should therefore be understood as configurable design alternatives in the prototype rather than as fixed assumptions inherited from the prism-adaptation literature. Across the tasks, the most important feedforward cues are the currently shown target or stimulus layout, while the most important feedback cues are the accepted response, the loading/progress indicator, and the visible shift to the next required interaction. Figures~\ref{fig:prism-task-cycles} and~\ref{fig:design-task-posture} therefore work together: the first shows the abstract task structure, while the second ties the task modes to the intended body posture and wall-based interaction setup used during testing.
+Because the project compares both input modes and effect modes, the design also had to preserve comparability across conditions. Since participants are assigned to either the controller group or the embodied group, the interaction structure, block order, and the role of baseline and post-exposure measurements are kept consistent across both groups and across perturbation conditions. Another important design consideration concerned response confirmation and the visual information available before and after an action. Spatially tracked selection can suffer from a Heisenberg-like effect, where the act of confirming a selection changes the tracked input pose and therefore introduces selection-induced error \cite{wolf2020understanding}. To reduce this risk, both the controller and embodied implementations used opposite-hand confirmation: participants aimed with the dominant hand, but confirmed selections using the trigger button on the non-dominant-hand controller. This kept the aiming hand as still as possible at the moment of acceptance while also making confirmation timing comparable across input modes.
 
-\begin{figure}[t]
+The system also includes prototype-specific confirmation alternatives, such as controller-hover confirmation, but opposite-hand confirmation was the final evaluation design because it best supported precise endpoint logging without requiring the pointing hand to perform the acceptance action. These confirmation variants should therefore be understood as data-quality design choices in the prototype rather than as fixed assumptions inherited from the prism-adaptation literature. Across the tasks, the most important feedforward cues are the currently shown target or stimulus layout, while the most important feedback cues are the accepted response, the loading/progress indicator, and the visible change to the next required interaction. Figures~\ref{fig:prism-task-cycles} and~\ref{fig:design-task-posture} therefore work together: the first shows the abstract task structure, while the second ties the task modes to the intended body posture and wall-based interaction setup used during testing.
+
+\begin{figure}[H]
     \centering
     \resizebox{\linewidth}{!}{%
     \begin{tikzpicture}[
         x=1cm,
-        y=1cm,
+        y=1.1cm,
         >=Latex,
         titlebox/.style={draw, rounded corners=2pt, align=center, fill=blue!8, minimum width=3.8cm, minimum height=0.85cm, font=\small\bfseries},
         taskbox/.style={draw, rounded corners=2pt, align=center, fill=blue!6, minimum width=2.8cm, minimum height=0.8cm, font=\small\bfseries},
@@ -43,7 +40,7 @@ Because the project compares both input modes and effect modes, the design also 
         \draw[arr] (6.00,-2.2) -- (6.65,-2.2);
         \draw[arr] (9.70,-2.2) -- (10.35,-2.2);
 
-        \node[actionline] (actmeas) at (8.2,-3.55) {Arms lowered $\rightarrow$ raise arm into frontal workspace $\rightarrow$ aim at target or midpoint $\rightarrow$ trigger/dwell $\rightarrow$ lower arm};
+        \node[actionline] (actmeas) at (8.2,-3.55) {Arms lowered $\rightarrow$ raise arm into frontal workspace $\rightarrow$ aim at target or midpoint $\rightarrow$ trigger $\rightarrow$ lower arm};
 
         \node[noteff] (ffmeas) at (4.7,-5.25) {\textbf{Feedforward:} visible target or line, board plane, and the appearance of the next measurement layout.};
         \node[notefb] (fbmeas) at (11.5,-5.25) {\textbf{Feedback:} signed readout after acceptance and a short loading/progress bar before the next trial.};
@@ -73,10 +70,10 @@ Because the project compares both input modes and effect modes, the design also 
         \draw[arr] (6.00,-12.6) -- (6.65,-12.6);
         \draw[arr] (9.70,-12.6) -- (10.35,-12.6);
 
-        \node[actionline] (actexp) at (8.2,-13.95) {See highlighted target $\rightarrow$ redirect aim $\rightarrow$ hold or trigger $\rightarrow$ hit/miss outcome $\rightarrow$ continue to next highlighted target};
+        \node[actionline] (actexp) at (8.2,-13.95) {See highlighted target $\rightarrow$ redirect aim $\rightarrow$ trigger $\rightarrow$ hit/miss outcome $\rightarrow$ continue to next highlighted target};
 
-        \node[noteff] (ffe) at (4.7,-15.65) {\textbf{Feedforward:} active-target highlighting inside a fixed horizontal target layout, together with a bullseye cue on the currently selected target and the loading/layout shift when a newly selected target appears.};
-        \node[notefb] (fbe) at (11.5,-15.65) {\textbf{Feedback:} hit or miss outcome, hit marker, and visible shift to the next required target.};
+        \node[noteff] (ffe) at (4.7,-15.65) {\textbf{Feedforward:} active-target highlighting inside a fixed horizontal target layout, together with a bullseye cue on the currently selected target and the loading cue before a newly selected target appears.};
+        \node[notefb] (fbe) at (11.5,-15.65) {\textbf{Feedback:} hit or miss outcome, hit marker, and visible change to the next required target.};
         \node[draw, dashed, rounded corners=3pt, fit=(t3)(s31)(s32)(s33)(actexp)(ffe)(fbe), inner sep=6pt] (g3) {};
         \node[font=\scriptsize\bfseries, anchor=west, fill=white, inner sep=1pt] at ([xshift=2pt,yshift=2pt]g3.north west) {Exposure block};
     \end{tikzpicture}}
@@ -96,7 +93,7 @@ The participant's body placement was intentionally constrained by design. Across
 \subsection{Open-Loop Pointing}
 \label{subsec:open-loop-decomposition}
 
-Open-loop pointing is the clearest measurement task in the system because each trial yields a single signed endpoint deviation relative to one visible target. The participant begins with the arm lowered alongside the body, raises it into the frontal workspace in a semi-straight configuration, aims toward the target, commits the response, and lowers the arm again. In controller mode, commitment occurs through the trigger; in embodied mode, the endpoint is accepted once the fingertip remains stable for approximately 1.5\,s. The most important feedforward cue is simply the visible target location on the board, while the most important feedback is the accepted endpoint together with the short loading bar and transition to the next trial. As a design element, open-loop pointing is intended to provide a minimal and repeatable measurement loop that can be compared directly between baseline and post-exposure.
+Open-loop pointing is the clearest measurement task in the system because each trial yields a single signed endpoint deviation relative to one visible target. The participant begins with the arm lowered alongside the body, raises it into the frontal workspace in a semi-straight configuration, aims toward the target, commits the response, and lowers the arm again. In both controller and embodied mode, commitment occurs through the trigger on the non-dominant-hand controller. The most important feedforward cue is simply the visible target location on the board, while the most important feedback is the accepted endpoint together with the short loading bar and transition to the next trial. As a design element, open-loop pointing is intended to provide a minimal and repeatable measurement loop that can be compared directly between baseline and post-exposure.
 
 \subsection{Line Bisection}
 \label{subsec:line-bisection-decomposition}
@@ -111,12 +108,12 @@ Landmark has a different structure from the other tasks because it is not primar
 \subsection{Exposure}
 \label{subsec:exposure-decomposition}
 
-Exposure is the adaptation-inducing task and is therefore structured differently from the measurement tasks. Instead of isolating one response and resetting to a neutral starting posture after each accepted trial, the participant repeatedly redirects the response inside a fixed horizontal three-target layout. One target is active at a time, and the active target is repeatedly reselected within that layout rather than following one fixed left-to-right sequence. In controller mode, confirmation is normally trigger-based, although opposite-hand confirmation and controller-hover confirmation are also supported; in embodied mode, confirmation is dwell-based. The dominant feedforward cues are the active-target highlight, the stable spatial layout, the bullseye cue on the currently selected target, and the loading or transition cue that precedes the next required movement. The dominant feedback cues are the hit or miss outcome, the hit marker, and the visible shift to the next target under the active perturbation. In design terms, exposure is the only task whose structure is intentionally repetitive enough to drive correction under perturbation rather than simply record one accepted estimate.
+Exposure is the adaptation-inducing task and is therefore structured differently from the measurement tasks. Instead of isolating one response and resetting to a neutral starting posture after each accepted trial, the participant repeatedly redirects the response inside a fixed horizontal three-target layout. One target is active at a time, and the active target is repeatedly reselected within that layout rather than following one fixed left-to-right sequence. In both controller and embodied mode, the participant confirms using the trigger on the non-dominant-hand controller. The dominant feedforward cues are the active-target highlight, the stable spatial layout, the bullseye cue on the currently selected target, and the loading or transition cue that precedes the next required movement. The dominant feedback cues are the hit or miss outcome, the hit marker, and the visible change to the next selected target under the active perturbation. In design terms, exposure is the only task whose structure is intentionally repetitive enough to drive correction under perturbation rather than simply record one accepted estimate.
 
 \subsection{Measurement Tasks Versus Exposure}
 \label{subsec:measurement-vs-exposure}
 
-The workflow therefore contains two different experimental logics. Open-loop pointing and line bisection are measurement tasks that isolate a single accepted response and compare it between baseline and post-exposure phases. Exposure, by contrast, is a repeated target-acquisition task whose purpose is to induce sensorimotor adaptation under perturbation. Landmark remains conceptually separate as a perceptual comparison task that may be useful for later clinical use, but is less central to the present healthy-participant workflow. These distinctions also define what the later implementation has to preserve: one stable baseline--exposure--post-exposure structure, configurable confirmation variants across input modes, and task-specific differences that remain local to the task itself rather than changing the overall workflow.
+The workflow therefore contains two different experimental logics. Open-loop pointing and line bisection are measurement tasks that isolate a single accepted response and compare it between baseline and post-exposure phases. Exposure, by contrast, is a repeated target-acquisition task whose purpose is to induce sensorimotor adaptation under perturbation. Landmark remains conceptually separate as a perceptual comparison task that may be useful for later clinical use, but is less central to the present healthy-participant workflow. These distinctions also define what the later implementation has to preserve: one stable baseline--exposure--post-exposure structure, comparable confirmation across input modes, and task-specific differences that remain local to the task itself rather than changing the overall workflow.
 
 \subsection{Data Collection and Analysis Design}
 \label{subsec:analysis-layer-design}
@@ -172,6 +169,8 @@ The second requirement concerns how those outputs are used collectively. The pro
         \hline
         How do different task, effect, and input combinations compare? & Accepted responses and summaries must retain shared condition labels so sessions can be filtered and grouped without manual recoding. & Compare \\
         \hline
+        How does one participant behave across the full eight-module sequence? & Session metadata and summaries must retain participant identity, run order, task, effect, and input mode so the full participant profile can be inspected together. & Participant \\
+        \hline
         Does the exposure block look stable, noisy, or adaptive? & Exposure attempts must preserve order, hit or miss status, target-relative error, and enough information to estimate change over attempts. & Quality \\
         \hline
         Where do responses land relative to targets, midpoints, and left/right structure? & Accepted responses must remain attached to task-relevant spatial coordinates rather than only to scalar scores. & Spatial \\
@@ -183,4 +182,4 @@ The second requirement concerns how those outputs are used collectively. The pro
     \label{tab:analysis-design-questions}
 \end{table}
 
-Taken together, the task side and the analysis side describe one continuous design. The Unity runtime specifies what the participant should see and do, while the data structure specifies what the system must preserve so that those actions can later be interpreted as baseline performance, exposure behaviour, aftereffects, spatial bias, and movement form. The implementation chapter can then be read as the concrete realization of these design decisions.
+Taken together, the task side and the analysis side describe one continuous design. The Unity runtime specifies what the participant should see and do, while the data structure specifies what the system must preserve so that those actions can later be interpreted as baseline performance, exposure behaviour, aftereffects, spatial bias, participant-level module patterns, and movement form. The implementation chapter can then be read as the concrete realization of these design decisions.
