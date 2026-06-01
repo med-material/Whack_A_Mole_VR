@@ -1611,6 +1611,7 @@ MonoBehaviour:
   viveCamera: {fileID: 798830143}
   wallReference: {fileID: 1952773532777779179}
   physicalMirror: {fileID: 596029761}
+  VRBody: {fileID: 1062745471}
   hideWallHighestStart: 1.4
   hideWallHighestEnd: 0.8
   hideWallLowestStart: -1.2
@@ -22364,6 +22365,18 @@ MonoBehaviour:
     trackingRotationOffset: {x: 0, y: 270, z: 162.5}
   headBodyPositionOffset: {x: 0, y: -0.63, z: -0.06}
   headBodyYawOffset: 0
+--- !u!114 &1062745477
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1062745471}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b254986da25db416ab99da057f88b9a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1064682602
 GameObject:
   m_ObjectHideFlags: 0
@@ -34639,7 +34652,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1627962220}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2506eb2f13e6b3a42ad46ac0ccd55206, type: 3}
   m_Name: 
@@ -44126,6 +44139,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Myo Armband
+      objectReference: {fileID: 0}
+    - target: {fileID: 4179753060935029866, guid: 3bde4e1f7784c564ab8c4bd6ebc89481,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4179753060935029867, guid: 3bde4e1f7784c564ab8c4bd6ebc89481,
         type: 3}

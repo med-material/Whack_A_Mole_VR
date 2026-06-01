@@ -23,7 +23,7 @@ public class ModifiersManager : MonoBehaviour
     public Dictionary<string, object> defaultModifiers;
 
     public enum ControllerSetup { Left, Both, Right, Off };
-    public enum Embodiment { Hands, Cursor, Off };
+    public enum Embodiment { Full, LeftArm, RightArm, Arms, LeftHand, RightHand, Hands, Cursor, Off };
     public enum MotorspaceSize { Small, Medium, Large };
     public enum EyePatch { Left, None, Right };
     public enum HideWall { Left, None, Right };
@@ -92,6 +92,8 @@ public class ModifiersManager : MonoBehaviour
 
     [SerializeField]
     private GameObject physicalMirror;
+    [SerializeField]
+    private GameObject VRBody;
 
     [SerializeField]
     private float hideWallHighestStart = 1.3f;
@@ -103,7 +105,7 @@ public class ModifiersManager : MonoBehaviour
     private float hideWallLowestEnd = -1.05f;
     private float hideWallAmount = -1f;
     ModifiersManager.MotorspaceSize motorspaceSize = ModifiersManager.MotorspaceSize.Large;
-    private Embodiment embodiment = Embodiment.Hands;
+    private Embodiment embodiment = Embodiment.RightHand;
     private EyePatch eyePatch = EyePatch.None;
     private HideWall hideWall = HideWall.None;
     private ControllerSetup controllerSetup = ControllerSetup.Right;
@@ -619,6 +621,8 @@ public class ModifiersManager : MonoBehaviour
         // Pass embodiment on to the ControllerModifierManager.
         controllersList["main"].gameObject.GetComponent<ControllerModifierManager>().SetEmbodiment(embodiment);
         controllersList["second"].gameObject.GetComponent<ControllerModifierManager>().SetEmbodiment(embodiment);
+
+        VRBody.gameObject.GetComponent<VRBodyEmbodimentManager>().SetEmbodiment(embodiment);
 
         loggerNotifier.NotifyLogger("Embodiment Set " + System.Enum.GetName(typeof(Embodiment), embodiment), EventLogger.EventType.ModifierEvent, new Dictionary<string, object>()
         {
