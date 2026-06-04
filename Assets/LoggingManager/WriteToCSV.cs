@@ -95,7 +95,6 @@ public class WriteToCSV
                 file.Write(dataString);
             }
         }
-        GameDirector.currentPlayPeriod = "PreGame";
 
         writeStopwatch.Stop();
         TimeSpan writeTs = writeStopwatch.Elapsed;

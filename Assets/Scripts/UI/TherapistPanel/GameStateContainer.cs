@@ -84,6 +84,7 @@ public class GameStateContainer : MonoBehaviour
         gameStateText.text = "Uploading Data..";
         loggingManager.SaveAllLogs(clear: true);
         loggingManager.NewFilestamp();
+        GameDirector.initGamePeriod();
     }
 
     public void OnDiscardData()
@@ -96,6 +97,7 @@ public class GameStateContainer : MonoBehaviour
         gameStateText.text = "Hold on..";
         loggingManager.SaveAllLogs(targetType: TargetType.CSV, clear: true);
         loggingManager.NewFilestamp();
+        GameDirector.initGamePeriod();
         Reset();
     }
 

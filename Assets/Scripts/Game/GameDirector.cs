@@ -88,7 +88,7 @@ public class GameDirector : MonoBehaviour
     [SerializeField]
     public TestChangeEvent testChanged = new TestChangeEvent();
 
-    public static string currentPlayPeriod = "PreGame";
+    public static string currentPlayPeriod = null;
 
     private Dictionary<string, float> difficultySettings;
     private Coroutine spawnTimer;
@@ -131,6 +131,12 @@ public class GameDirector : MonoBehaviour
         modifiersManager = FindObjectOfType<ModifiersManager>();
         gameDefaultDuration = gameDuration;
         constraint = FindObjectOfType<Constraint>();
+        initGamePeriod();
+    }
+
+    public static void initGamePeriod()
+    {
+        currentPlayPeriod = "PreGame";
     }
 
     private void Update()
