@@ -155,7 +155,7 @@ public class EventLogger : MonoBehaviour
                 break;
             case "Mole Hit":
             case "Mole Expired":
-                UpdateCurrentMoleLog(datas);
+                UpdateCurrentMoleLog(datas); // to remove
                 SaveEventDatas(datas, true, true);
                 break;
             case "DistractorRight Mole Expired":

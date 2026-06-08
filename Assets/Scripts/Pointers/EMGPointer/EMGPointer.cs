@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -110,9 +110,12 @@ public class EMGPointer : Pointer
         {
             moleHoveringGesture = mole.GetValidationArg();
 
+            loggerNotifier.InitPersistentEventParameters(new Dictionary<string, object>(){
+                {"ControllerHover", mole.GetId().ToString()}
+            });
+
             loggerNotifier.NotifyLogger("Pointer Hover Begin", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
             {
-                {"ControllerHover", mole.GetId().ToString()},
                 {"ControllerName", gameObject.name}
             });
         }
@@ -125,9 +128,12 @@ public class EMGPointer : Pointer
 
         moleHoveringGesture = DEFAULT_GESTURE;
 
+        loggerNotifier.InitPersistentEventParameters(new Dictionary<string, object>(){
+            {"ControllerHover", "NULL"}
+        });
+
         loggerNotifier.NotifyLogger("Pointer Hover End", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
         {
-            {"ControllerHover", mole.name},
             {"ControllerName", gameObject.name}
         });
     }

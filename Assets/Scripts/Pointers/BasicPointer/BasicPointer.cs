@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -106,9 +106,12 @@ public class BasicPointer : Pointer
                     if (hover == string.Empty)
                     {
                         hover = mole.GetId().ToString();
+                        loggerNotifier.InitPersistentEventParameters(new Dictionary<string, object>(){
+                            {"ControllerHover", hover}
+                        });
+
                         loggerNotifier.NotifyLogger("Pointer Hover Begin", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
                             {
-                                {"ControllerHover", hover},
                                 {"ControllerName", gameObject.name}
                             });
                     }
@@ -162,9 +165,12 @@ public class BasicPointer : Pointer
     {
         if (hover != string.Empty)
         {
+            loggerNotifier.InitPersistentEventParameters(new Dictionary<string, object>(){
+                {"ControllerHover", "NULL"}
+            });
+
             loggerNotifier.NotifyLogger("Pointer Hover End", EventLogger.EventType.PointerEvent, new Dictionary<string, object>()
             {
-                {"ControllerHover", hover},
                 {"ControllerName", gameObject.name}
             });
             hover = "";
