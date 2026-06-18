@@ -48,16 +48,16 @@ public class ModifiersManager : MonoBehaviour
     private UnityEngine.UI.Slider prismEffectSlider;
 
     [SerializeField]
-    private GameObject rightController;
+    public GameObject rightController;
 
     [SerializeField]
     private GameObject[] rightControllerVisuals;
 
     [SerializeField]
-    private GameObject mirrorControllerR;
+    public GameObject mirrorControllerR;
 
     [SerializeField]
-    private GameObject mirrorControllerL;
+    public GameObject mirrorControllerL;
 
     [SerializeField]
     private WallManager wallManager;
@@ -66,7 +66,7 @@ public class ModifiersManager : MonoBehaviour
     private MotorSpaceManager motorSpaceManager;
 
     [SerializeField]
-    private GameObject leftController;
+    public GameObject leftController;
 
     [SerializeField]
     private GameObject[] leftControllerVisuals;
@@ -123,6 +123,7 @@ public class ModifiersManager : MonoBehaviour
     private Dictionary<string, GameObject> controllersList;
     private Pointer[] rightControllerPointers;
     private Pointer[] leftControllerPointers;
+    private Embodiment geometricEmbodiment;
     public const PointerType defaultPointerType = PointerType.BasicPointer;
 
     private LoggerNotifier loggerNotifier;
@@ -438,19 +439,34 @@ public class ModifiersManager : MonoBehaviour
         {
             if (controllerSetup == ModifiersManager.ControllerSetup.Right)
             {
-                mirrorControllerR.SetActive(true);
                 mirrorControllerL.SetActive(false);
+                mirrorControllerR.SetActive(true);
+                VRBody.gameObject.GetComponent<VRBodyEmbodimentManager>().SetMirrorRightEmbodiment(true);
             }
             else
             {
-                mirrorControllerL.SetActive(true);
                 mirrorControllerR.SetActive(false);
+                mirrorControllerL.SetActive(true);
+                VRBody.gameObject.GetComponent<VRBodyEmbodimentManager>().SetMirrorLeftEmbodiment(true);
+            }
+
+            if (embodiment != Embodiment.Hands && embodiment != Embodiment.Arms && embodiment != Embodiment.Full) {
+                geometricEmbodiment = embodiment;
+            }
+
+            if (embodiment == Embodiment.LeftHand || embodiment == Embodiment.RightHand) {
+                SetEmbodiment(Embodiment.Hands);
+            } else if (embodiment == Embodiment.LeftArm || embodiment == Embodiment.RightArm) {
+                SetEmbodiment(Embodiment.Arms);
             }
         }
         else
         {
             mirrorControllerL.SetActive(false);
             mirrorControllerR.SetActive(false);
+            VRBody.gameObject.GetComponent<VRBodyEmbodimentManager>().SetMirrorLeftEmbodiment(false);
+            VRBody.gameObject.GetComponent<VRBodyEmbodimentManager>().SetMirrorRightEmbodiment(false);
+            SetEmbodiment(geometricEmbodiment);
         }
     }
 
