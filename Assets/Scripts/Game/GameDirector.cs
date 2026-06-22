@@ -98,7 +98,6 @@ public class GameDirector : MonoBehaviour
     private LoggerNotifier loggerNotifier;
     private PatternManager patternManager;
     private ModifiersManager modifiersManager;
-    private Constraint constraint;
     private SpeedUpdateEvent speedUpdateEvent = new SpeedUpdateEvent();
     private int participantId = 0;
     private int testId = 0;
@@ -130,7 +129,6 @@ public class GameDirector : MonoBehaviour
         patternManager = FindObjectOfType<PatternManager>();
         modifiersManager = FindObjectOfType<ModifiersManager>();
         gameDefaultDuration = gameDuration;
-        constraint = FindObjectOfType<Constraint>();
         initGamePeriod();
     }
 
@@ -203,8 +201,6 @@ public class GameDirector : MonoBehaviour
     // Starts the game.
     public void StartGame()
     {
-        //constraint.SetReset();
-
         if (gameState == GameState.Playing) return;
         LoadDifficulty();
         modifiersManager.LogState();

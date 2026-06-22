@@ -22944,7 +22944,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 0
+  m_PresetInfoIsWorld: 1
 --- !u!223 &1107061117
 Canvas:
   m_ObjectHideFlags: 0
@@ -35988,19 +35988,19 @@ MonoBehaviour:
   motorSpaceSmall:
     width: 0.075
     height: 0.05
-    pos: {x: 0.22, y: 0.8, z: 0.8}
+    pos: {x: 0.22, y: 1.15, z: 0.8}
     multiplier: 1
     mode: 1
   motorSpaceMedium:
     width: 0.3
     height: 0.2
-    pos: {x: 0.22, y: 0.8, z: 0.8}
+    pos: {x: 0.22, y: 1.125, z: 0.8}
     multiplier: 1
     mode: 1
   motorSpaceLarge:
     width: 0.6
     height: 0.4
-    pos: {x: 0.22, y: 0.8, z: 0.8}
+    pos: {x: 0.22, y: 1.1, z: 0.8}
     multiplier: 1
     mode: 1
 --- !u!4 &1699109193
@@ -45587,6 +45587,9 @@ MonoBehaviour:
         m_CallState: 2
   controllerGameObject: {fileID: 121705695}
   ratioSpeed: 3
+  desiredHeadHeight: 1.6
+  originObject: {fileID: 678508908}
+  mainCamera: {fileID: 798830140}
   canvasGroupToFade: {fileID: 350457359156780631}
 --- !u!225 &350457359156780631
 CanvasGroup:
