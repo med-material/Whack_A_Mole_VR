@@ -50,6 +50,8 @@ public class ControllerMirror : MonoBehaviour
     bool didHit = false;
     RaycastHit hit;
 
+    private float dwellStartTime = 0f;
+
     private float laserWidth;
     private Color laserColor;
 
@@ -122,6 +124,11 @@ public class ControllerMirror : MonoBehaviour
                 }
                 hoveredMole = mole;
                 hoveredMole.OnHoverEnter();
+                dwellStartTime = Time.time;
+            }
+            else
+            {
+                mole.SetLoadingValue((Time.time - dwellStartTime) / pointerToMirror.dwellTime);
             }
         }
         else
