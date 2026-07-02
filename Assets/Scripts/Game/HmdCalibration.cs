@@ -53,7 +53,6 @@ public class HmdCalibration : MonoBehaviour
         StartCoroutine(FadeOutCanvasGroup());
         calibrationUpdate.Invoke();
         SetCameraHeight();
-        Debug.Log("Arigato Gozaimasu");
     }
 
     public IEnumerator FadeOutCanvasGroup()
