@@ -112,7 +112,7 @@ public class ModifiersManager : MonoBehaviour
     private bool performanceFeedback = true;
     private bool mirrorEffect;
     private bool physicalMirrorEffect;
-    private bool geometricMirrorEffect;
+    private bool geometricMirrorEffect = false;
     private bool dualTask;
     private bool rightControllerMain;
     private float controllerOffset;
@@ -423,7 +423,6 @@ public class ModifiersManager : MonoBehaviour
 
     public void SetGeometricMirror(bool value)
     {
-        if (geometricMirrorEffect == value) return;
         geometricMirrorEffect = value;
         motorSpaceManager.SetMirror(value);
         UpdateGeometricMirror(value);
