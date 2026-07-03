@@ -13,7 +13,7 @@ Usage:
 */
 public class ScenePersistenceHandler : MonoBehaviour
 {
-    void Start()
+    void Awake()
     {
         GameObject[] objs = GameObject.FindGameObjectsWithTag("keepBetweenScenes");
         objs.ToList().ForEach(obj => DontDestroyOnLoad(obj));
