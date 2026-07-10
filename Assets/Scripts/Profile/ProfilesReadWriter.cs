@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using System;
 
 /*
 Class managing the profiles. Loads, saves, creates and check the profiles locally on the computer.
@@ -115,8 +116,8 @@ public class ProfilesReadWriter
         {
 
             StreamReader reader = new StreamReader(file.FullName);
-            char[] separators = { '\n', '\r' };
-            string[] lines = reader.ReadToEnd().Split(separators);
+            string[] separators = { "\r\n" , "\n", "\r" };
+            string[] lines = reader.ReadToEnd().Split(separators, StringSplitOptions.RemoveEmptyEntries);
             Dictionary<string, string> properties = new Dictionary<string, string>();
 
             for (int i = 0; i < lines.Length; i++)
