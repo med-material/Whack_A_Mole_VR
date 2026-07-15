@@ -315,17 +315,18 @@ public class WallManager : MonoBehaviour
         return wallInfo;
     }
 
-    // Activates a random Mole for a given lifeTime and set if is fake or not
+    // Activates a random Mole for a given lifeTime, set if it is fake or not, and assign a random score.
     public void ActivateRandomMole(float lifeTime, float moleExpiringDuration, Mole.MoleType type, Mole.MoleOutcome outcome)
     {
         if (!active) return;
 
-        GetRandomFreeSpawner().SpawnMole(type, outcome, lifeTime, moleExpiringDuration, moleCount);
+        int randomScore = Random.Range(50, 501);
+        GetRandomFreeSpawner().SpawnMole(type, outcome, lifeTime, moleExpiringDuration, moleCount, randomScore);
         moleCount++;
     }
 
     // Activates a specific Mole for a given lifeTime and set if is fake or not
-    public Mole CreateMole(int targetSpawnId, float lifeTime, float moleExpiringDuration, Mole.MoleType type, Mole.MoleOutcome outcome, string validationArg = "")
+    public Mole CreateMole(int targetSpawnId, float lifeTime, float moleExpiringDuration, Mole.MoleType type, Mole.MoleOutcome outcome, int moleScore, string validationArg = "")
     {
         if (!active) return null;
         if (!targetSpawners.ContainsKey(targetSpawnId))
@@ -334,7 +335,7 @@ public class WallManager : MonoBehaviour
             return null;
         }
 
-        targetSpawners[targetSpawnId].SpawnMole(type, outcome, lifeTime, moleExpiringDuration, spawnOrder, validationArg); 
+        targetSpawners[targetSpawnId].SpawnMole(type, outcome, lifeTime, moleExpiringDuration, spawnOrder, moleScore, validationArg);
         moleCount++;
 
         return targetSpawners[targetSpawnId].GetCurrentMole();

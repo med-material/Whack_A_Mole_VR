@@ -195,6 +195,7 @@ public abstract class Pointer : MonoBehaviour
             case Mole.MolePopAnswer.Ok:
                 PlayShoot(correctHit: true);
                 soundManager.PlaySound(gameObject, SoundManager.Sound.greenMoleHit);
+                Debug.Log($"Mole hit. Score: {mole.GetMoleScore()}");
                 break;
 
             case Mole.MolePopAnswer.Fake:
@@ -318,6 +319,7 @@ public abstract class Pointer : MonoBehaviour
                     case Mole.MolePopAnswer.Ok:
                         PlayShoot(true);
                         soundManager.PlaySound(gameObject, SoundManager.Sound.greenMoleHit);
+                        Debug.Log($"Mole hit. Score: {mole.GetMoleScore()}");
                         break;
 
                     case Mole.MolePopAnswer.Fake:

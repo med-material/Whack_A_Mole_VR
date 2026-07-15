@@ -61,6 +61,7 @@ public abstract class Mole : MonoBehaviour
     protected MoleType moleType = MoleType.SimpleTarget;
     protected string validationArg = ""; // Not used by default: can be used to store data for specific needs (e.g. gesture type for gesture moles)
 
+    protected int moleScore = 0;
 
     public virtual void Init(TargetSpawner parentSpawner) // Needed when the Mole is instantiated, to avoid calling a method before the Awake and Start methods are called.
     {
@@ -97,6 +98,7 @@ public abstract class Mole : MonoBehaviour
             {"MoleIndexY", "NULL"},
             {"MoleNormalizedIndexX", "NULL"},
             {"MoleNormalizedIndexY", "NULL"},
+            {"MoleScore", "NULL"},
             {"MoleSurfaceHitLocationX", "NULL"},
             {"MoleSurfaceHitLocationY", "NULL"}
         });
@@ -175,7 +177,8 @@ public abstract class Mole : MonoBehaviour
     }
     public string GetValidationArg() => validationArg;
     public void SetValidationArg(string data) => validationArg = data;
-
+    public void SetMoleScore(int score) => moleScore = score;
+    public int GetMoleScore() => moleScore;
     public States GetState()
     {
         return state;
@@ -475,6 +478,7 @@ public abstract class Mole : MonoBehaviour
             {"MolePositionLocalZ", transform.localPosition.z},
             {"MoleSize", (this.GetComponentsInChildren<Renderer>()[0].bounds.max.x - this.GetComponentsInChildren<Renderer>()[0].bounds.min.x)},
             {"MoleLifeTime", lifeTime},
+            {"MoleScore", moleScore},
             {"MoleType", moleType},
             {"MoleId", moleId},
             {"MoleSpawnOrder", spawnOrder.ToString("0000")},
