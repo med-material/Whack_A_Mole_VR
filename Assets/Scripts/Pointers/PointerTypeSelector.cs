@@ -12,7 +12,7 @@ public class PointerTypeSelector : MonoBehaviour
     private Dictionary<ModifiersManager.PointerType, Pointer> pointerList = new Dictionary<ModifiersManager.PointerType, Pointer>();
     //private SteamVR_Behaviour_Pose behaviour_Pose;
 
-    void Start()
+    void Awake()
     {
         //behaviour_Pose = GetComponent<SteamVR_Behaviour_Pose>();
         Pointer[] pointers = GetComponents<Pointer>();

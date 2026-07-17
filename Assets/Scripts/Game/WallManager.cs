@@ -81,7 +81,7 @@ public class WallManager : MonoBehaviour
     [System.Serializable]
     public class StateUpdateEvent : UnityEvent<WallInfo> { }
     public StateUpdateEvent stateUpdateEvent;
-    public Dictionary<int, TargetSpawner> targetSpawners { get; private set; }
+    public Dictionary<int, TargetSpawner> targetSpawners { get; private set; } = new Dictionary<int, TargetSpawner>();
 
     private WallGenerator wallGenerator;
     private Vector3 wallCenter;
@@ -155,7 +155,6 @@ public class WallManager : MonoBehaviour
             {"WallCurveRatioY", yCurveRatio}
         });
 
-        targetSpawners = new Dictionary<int, TargetSpawner>();
         wallGenerator = gameObject.GetComponent<WallGenerator>();
         wallCenter = new Vector3(wallSize.x / 2f, wallSize.y / 2f, 0);
         isInit = true;
