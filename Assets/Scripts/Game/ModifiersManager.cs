@@ -47,6 +47,8 @@ public class ModifiersManager : MonoBehaviour
         public float? motorRestrictionUpper;
         public float? motorRestrictionLower;
         public Embodiment? embodiment;
+        public PerformanceFeedback? performanceFeedback;
+        public JudgementType? judgementType;
     }
 
     private Modifiers currentModifiers = new();
@@ -67,13 +69,13 @@ public class ModifiersManager : MonoBehaviour
             motorRestriction = false,
             motorRestrictionUpper = 1f,
             motorRestrictionLower = 0.5f,
-            embodiment = Embodiment.RightHand
+            embodiment = Embodiment.RightHand,
+            performanceFeedback = PerformanceFeedback.None,
+            judgementType = JudgementType.MaxSpeed
         };
 
     [SerializeField]
     private bool performanceFeedbackText = false;
-    [SerializeField]
-    private PerformanceFeedback performanceFeedback = PerformanceFeedback.All;
 
     [SerializeField]
     private GameObject hideWallLeft;
@@ -159,8 +161,6 @@ public class ModifiersManager : MonoBehaviour
     private EyePatch eyePatch = EyePatch.None;
     private HideWall hideWall = HideWall.None;
     private ControllerSetup controllerSetup = ControllerSetup.Right;
-    //private ModifiersManager.PerformanceFeedback performanceFeedback = PerformanceFeedback.All;
-    private JudgementType judgementType = JudgementType.MaxSpeed;
     private bool mirrorEffect;
     private bool physicalMirrorEffect;
     private bool geometricMirrorEffect;
@@ -217,7 +217,8 @@ public class ModifiersManager : MonoBehaviour
     void Start()
     {
         SetDefaultModifiers();
-        SetPerformanceFeedback(performanceFeedback);
+        SetPerformanceFeedback(defaultModifiers.performanceFeedback.Value);
+        SetJudgementType(defaultModifiers.judgementType.Value);
     }
 
     private Pointer getActivePointer(GameObject controller)
@@ -399,7 +400,7 @@ public class ModifiersManager : MonoBehaviour
 
         modifierUpdateEvent.Invoke($"PerformanceFeedback", Enum.GetName(typeof(PerformanceFeedback), value));
 
-        this.performanceFeedback = value;
+        currentModifiers.performanceFeedback = value;
     }
 
     public void SetMotorRestriction(bool value)
@@ -717,7 +718,7 @@ public class ModifiersManager : MonoBehaviour
     }
     public void SetJudgementType(JudgementType value)
     {
-        if (judgementType == value) return;
+        if (currentModifiers.judgementType == value) return;
         performanceManager.SetJudgementType(value);
 
         // Raises an Event and updates a PersistentEvent's parameter (in consequence, a PersistentEvent will also be raised)
@@ -728,7 +729,7 @@ public class ModifiersManager : MonoBehaviour
 
         modifierUpdateEvent.Invoke($"JudgementType", Enum.GetName(typeof(JudgementType), value));
 
-        this.judgementType = value;
+        currentModifiers.judgementType = value;
     }
 
     // Sets the level of embodiment used by the game. (Show hands (including controller) or just cursor).
