@@ -128,6 +128,7 @@ public class PatternInterface : MonoBehaviour
                         action["X"], action["Y"],
                         action["LIFETIME"], moleType,
                         Mole.MoleOutcome.Valid,
+                        action.ContainsKey("SCORE") ? action["SCORE"] : "0",
                         action.ContainsKey("VALIDATION") ? action["VALIDATION"] : ""
                     );
 
@@ -258,10 +259,10 @@ public class PatternInterface : MonoBehaviour
     }
 
     // Spawns a Mole
-    private void SetMole(string xIndex, string yIndex, string lifeTime, Mole.MoleType moleType, Mole.MoleOutcome outcome, string validationArg = "")
+    private void SetMole(string xIndex, string yIndex, string lifeTime, Mole.MoleType moleType, Mole.MoleOutcome outcome,  string moleScore = "0", string validationArg = "")
     {
         int targetSpawnId = ((int.Parse(xIndex)) * 100) + (int.Parse(yIndex));
-        Mole mole = wallManager.CreateMole(targetSpawnId, ParseFloat(lifeTime), gameDirector.GetMoleExpiringDuration(), moleType, outcome, validationArg);
+        Mole mole = wallManager.CreateMole(targetSpawnId, ParseFloat(lifeTime), gameDirector.GetMoleExpiringDuration(), moleType, outcome, ParseInteger(moleScore), validationArg);
         molesList[targetSpawnId] = mole;
         if (mole.IsValid()) AddToTargetsList(mole);
     }
@@ -392,6 +393,11 @@ public class PatternInterface : MonoBehaviour
     private float ParseFloat(string value)
     {
         return float.Parse(value, CultureInfo.InvariantCulture);
+    }
+
+    private int ParseInteger(string value)
+    {
+        return int.Parse(value, CultureInfo.InvariantCulture);
     }
 
     // Sets the outline visibility

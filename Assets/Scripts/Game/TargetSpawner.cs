@@ -56,7 +56,7 @@ public class TargetSpawner : MonoBehaviour
         if (performanceFeedback.HasValue) parameters.performanceFeedback = performanceFeedback.Value;
     }
 
-    public Mole SpawnMole(Mole.MoleType type, Mole.MoleOutcome outcome, float lifeTime, float expiringDuration, int spawnOrder, string validationArg = "")
+    public Mole SpawnMole(Mole.MoleType type, Mole.MoleOutcome outcome, float lifeTime, float expiringDuration, int spawnOrder, int moleScore, string validationArg = "")
     {
         if (_lock)
         {
@@ -75,6 +75,7 @@ public class TargetSpawner : MonoBehaviour
         lastMoleType = type;
 
         currentMole.Init(this);
+        currentMole.SetMoleScore(moleScore);
         currentMole.SetNormalizedIndex(parameters.normalizedIndex);
         currentMole.SetValidationArg(validationArg);
         currentMole.SetPerformanceFeedback(parameters.performanceFeedback);
