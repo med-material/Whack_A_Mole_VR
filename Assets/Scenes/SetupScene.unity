@@ -1537,7 +1537,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   performanceFeedbackText: 0
-  performanceFeedback: 4
   hideWallLeft: {fileID: 1495580201}
   hideWallRight: {fileID: 1609820396}
   hideWallRightMat: {fileID: 2100000, guid: a4600cbac6974644da8facf4590ef312, type: 2}
@@ -1996,7 +1995,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -349.95007, y: 0}
+  m_AnchoredPosition: {x: -349.9501, y: 0}
   m_SizeDelta: {x: -700.1, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &65552937
@@ -3621,7 +3620,6 @@ MonoBehaviour:
   trackRot: 1
   trackPos: 1
   trackTrigger: 0
-  controller: 0
 --- !u!114 &121705700
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3634,39 +3632,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 074630dff0c6e3b48869980ace8ae71f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  laserOrigin: {fileID: 65137675}
-  laserMapper: {fileID: 1115702068}
-  aimAssistState: 0
-  directionSmoothed: 1
-  laserOffset: {x: 0, y: 0, z: 0}
-  startLaserColor: {r: 0.12842648, g: 0.735849, b: 0.13129161, a: 1}
-  EndLaserColor: {r: 1, g: 1, b: 1, a: 0}
-  laserWidth: 0.01
-  laserMaterial: {fileID: 2100000, guid: ca138c071db382b44b53898ca4882baf, type: 2}
-  maxLaserLength: 9
-  cursorLength: 4.5
-  shotCooldown: 0.25
-  performanceManager: {fileID: 0}
-  dwellTime: 2
-  cursor: {fileID: 1713381897}
-  soundManager: {fileID: 207632842}
-  onPointerShoot:
-    m_PersistentCalls:
-      m_Calls: []
-  onPointerMove:
-    m_PersistentCalls:
-      m_Calls: []
-  UpdateInterval: 1
-  virtualHandPrefab: {fileID: 7404121277207229561, guid: e9753f661fd19cc479d9b3ea5f52e2e7,
-    type: 3}
-  handOffsetDistance: -0.45
-  SteamVRVisualHand: {fileID: 7404121277207229561, guid: e9753f661fd19cc479d9b3ea5f52e2e7,
-    type: 3}
-  emgDataProcessor: {fileID: 2119810662}
-  emgPointerBehavior: 1
-  recordMaximumEMG: 1
-  maxEMG: 0
-  emgThreshold: 0.3
 --- !u!1 &125963936
 GameObject:
   m_ObjectHideFlags: 0
@@ -5795,7 +5760,6 @@ MonoBehaviour:
   trackRot: 1
   trackPos: 1
   trackTrigger: 0
-  controller: 0
 --- !u!114 &235334914
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5808,39 +5772,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 074630dff0c6e3b48869980ace8ae71f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  laserOrigin: {fileID: 1587554539}
-  laserMapper: {fileID: 973459713}
-  aimAssistState: 0
-  directionSmoothed: 1
-  laserOffset: {x: 0, y: 0, z: 0}
-  startLaserColor: {r: 0, g: 0, b: 0, a: 0}
-  EndLaserColor: {r: 0, g: 0, b: 0, a: 0}
-  laserWidth: 0.1
-  laserMaterial: {fileID: 0}
-  maxLaserLength: 9
-  cursorLength: 4.5
-  shotCooldown: 0.25
-  performanceManager: {fileID: 0}
-  dwellTime: 2
-  cursor: {fileID: 975448051}
-  soundManager: {fileID: 207632842}
-  onPointerShoot:
-    m_PersistentCalls:
-      m_Calls: []
-  onPointerMove:
-    m_PersistentCalls:
-      m_Calls: []
-  UpdateInterval: 1
-  virtualHandPrefab: {fileID: 7404121277207229561, guid: e9753f661fd19cc479d9b3ea5f52e2e7,
-    type: 3}
-  handOffsetDistance: -0.45
-  SteamVRVisualHand: {fileID: 7404121277207229561, guid: e9753f661fd19cc479d9b3ea5f52e2e7,
-    type: 3}
-  emgDataProcessor: {fileID: 2119810662}
-  emgPointerBehavior: 0
-  recordMaximumEMG: 1
-  maxEMG: 0
-  emgThreshold: 0.3
 --- !u!1 &236941923
 GameObject:
   m_ObjectHideFlags: 0
@@ -6109,6 +6040,131 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 243626306}
   m_CullTransparentMesh: 0
+--- !u!1001 &244592901
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 62430001, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_Name
+      value: WelcomePanel
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430001, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_RootOrder
+      value: 32
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430002, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 62430003, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_Camera
+      value: 
+      objectReference: {fileID: 798830143}
+    - target: {fileID: 62430004, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
+      propertyPath: m_UiScaleMode
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 185efe8d58ca4a40ab64867e6b5b4e3c, type: 3}
 --- !u!1 &250180371
 GameObject:
   m_ObjectHideFlags: 0
@@ -12543,7 +12599,6 @@ MonoBehaviour:
   trackRot: 0
   trackPos: 1
   trackTrigger: 0
-  controller: 0
 --- !u!23 &594297562
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -15951,7 +16006,6 @@ MonoBehaviour:
   trackRot: 1
   trackPos: 0
   trackTrigger: 0
-  controller: 0
 --- !u!114 &798830145
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18864,7 +18918,6 @@ MonoBehaviour:
   trackRot: 0
   trackPos: 1
   trackTrigger: 0
-  controller: 0
 --- !u!23 &916446932
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -20309,7 +20362,6 @@ MonoBehaviour:
   trackRot: 0
   trackPos: 1
   trackTrigger: 0
-  controller: 0
 --- !u!23 &975448053
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -22607,24 +22659,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 933ae96d5faaa984baa041eef30e1c53, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  turnSmoothness: 0.1
-  head:
-    vrTarget: {fileID: 1334894589}
-    ikTarget: {fileID: 1876283932}
-    trackingPositionOffset: {x: 0, y: 0, z: 0}
-    trackingRotationOffset: {x: 0, y: 90, z: 20}
-  leftHand:
-    vrTarget: {fileID: 641797272}
-    ikTarget: {fileID: 398286556}
-    trackingPositionOffset: {x: -0.06, y: 0.08, z: 0}
-    trackingRotationOffset: {x: 180, y: 270, z: 17.5}
-  rightHand:
-    vrTarget: {fileID: 1465898977}
-    ikTarget: {fileID: 1153004078}
-    trackingPositionOffset: {x: 0.06, y: 0.08, z: 0}
-    trackingRotationOffset: {x: 0, y: 270, z: 162.5}
-  headBodyPositionOffset: {x: 0, y: -0.63, z: -0.06}
-  headBodyYawOffset: 0
 --- !u!114 &1062745477
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -33477,44 +33511,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 074630dff0c6e3b48869980ace8ae71f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  laserOrigin: {fileID: 1587554539}
-  laserMapper: {fileID: 973459713}
-  aimAssistState: 0
-  directionSmoothed: 1
-  laserOffset: {x: 0, y: 0, z: 0}
-  startLaserColor: {r: 0, g: 0, b: 0, a: 0}
-  EndLaserColor: {r: 0, g: 0, b: 0, a: 0}
-  laserWidth: 0.1
-  laserMaterial: {fileID: 0}
-  maxLaserLength: 9
-  cursorLength: 4.5
-  shotCooldown: 0.25
-  performanceManager: {fileID: 0}
-  dwellTime: 2
-  cursor: {fileID: 975448051}
-  soundManager: {fileID: 207632842}
-  onPointerShoot:
-    m_PersistentCalls:
-      m_Calls: []
-  onPointerMove:
-    m_PersistentCalls:
-      m_Calls: []
-  UpdateInterval: 1
-  virtualHandPrefab: {fileID: 7353169756236129074, guid: bbe4c046b325ce74397f258a72f0963e,
-    type: 3}
-  handOffsetDistance: -0.45
-  SteamVRVisualHand: {fileID: 1561831793}
-  emgDataProcessor: {fileID: 315884483}
-  emgPointerBehavior: 0
-  recordMaximumEMG: 1
-  maxEMG: 0
-  emgThreshold: 0.3
---- !u!1 &1561831793 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7779414809372479964, guid: 1be95db208be2274cb3a2a657a2b442f,
-    type: 3}
-  m_PrefabInstance: {fileID: 7779414808215484589}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &1561832014 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7779414809372480227, guid: 1be95db208be2274cb3a2a657a2b442f,
@@ -35254,9 +35250,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2506eb2f13e6b3a42ad46ac0ccd55206, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  loggingManager: {fileID: 1627962221}
-  rightHandEMGPointer: {fileID: 121705700}
-  thalmicMyo: {fileID: 2119810664}
 --- !u!1 &1651983710
 GameObject:
   m_ObjectHideFlags: 0
@@ -37117,7 +37110,6 @@ MonoBehaviour:
   trackRot: 0
   trackPos: 1
   trackTrigger: 0
-  controller: 0
 --- !u!23 &1713381895
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -45179,36 +45171,12 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3bde4e1f7784c564ab8c4bd6ebc89481, type: 3}
---- !u!114 &2119810662 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1699063096191847146, guid: 3bde4e1f7784c564ab8c4bd6ebc89481,
-    type: 3}
-  m_PrefabInstance: {fileID: 2119810661}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 505d41d38d0798144af5ab8a35cef708, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &2119810663 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4179753060935029867, guid: 3bde4e1f7784c564ab8c4bd6ebc89481,
     type: 3}
   m_PrefabInstance: {fileID: 2119810661}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &2119810664 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7937852193856734334, guid: 3bde4e1f7784c564ab8c4bd6ebc89481,
-    type: 3}
-  m_PrefabInstance: {fileID: 2119810661}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9e9d766c82b2b52449346917d4f3db5c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &2121759996
 GameObject:
   m_ObjectHideFlags: 0
@@ -46458,6 +46426,7 @@ MonoBehaviour:
   desiredHeadHeight: 1.6
   originObject: {fileID: 678508908}
   mainCamera: {fileID: 798830140}
+  therapistUi: {fileID: 0}
   canvasGroupToFade: {fileID: 350457359156780631}
 --- !u!225 &350457359156780631
 CanvasGroup:
