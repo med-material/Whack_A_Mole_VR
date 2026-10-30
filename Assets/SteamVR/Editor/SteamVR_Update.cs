@@ -39,7 +39,15 @@ namespace Valve.VR
             if (!gotVersion)
             {
                 if (wwwVersion == null)
-                    wwwVersion = new WWW(versionUrl);
+                {
+                    try { wwwVersion = new WWW(versionUrl); }
+                    catch (System.InvalidOperationException)
+                    {
+                        // http:// is blocked by Player Settings; stop polling every frame
+                        EditorApplication.update -= Update;
+                        return;
+                    }
+                }
 
                 if (!wwwVersion.isDone)
                     return;

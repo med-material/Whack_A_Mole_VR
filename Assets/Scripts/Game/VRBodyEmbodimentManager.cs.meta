@@ -1,9 +1,5 @@
 fileFormatVersion: 2
-<<<<<<<< HEAD:Assets/Scripts/Game/VRBodyEmbodimentManager.cs.meta
 guid: b254986da25db416ab99da057f88b9a7
-========
-guid: 424fe6e35b605674dab5d615a618e07c
->>>>>>>> 9743f1e (Quest3 version):Assets/Scripts/Moles/TimeLeftDisplayer.cs.meta
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2

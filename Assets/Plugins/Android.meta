@@ -1,9 +1,5 @@
 fileFormatVersion: 2
-<<<<<<<< HEAD:Assets/VR Body.meta
 guid: d95cfb80e74926e4ab64c64319134aae
-========
-guid: 1cd3736f2d00fb74d8b5cdbc38d50487
->>>>>>>> 9743f1e (Quest3 version):Assets/Plugins/Android.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}

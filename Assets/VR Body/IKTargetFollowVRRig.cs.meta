@@ -1,9 +1,5 @@
 fileFormatVersion: 2
-<<<<<<<< HEAD:Assets/VR Body/IKFootLock.cs.meta
-guid: 82750e7eb2309ed43a33709f80a9b187
-========
 guid: 933ae96d5faaa984baa041eef30e1c53
->>>>>>>> 9743f1e (Quest3 version):Assets/VR Body/IKTargetFollowVRRig.cs.meta
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2

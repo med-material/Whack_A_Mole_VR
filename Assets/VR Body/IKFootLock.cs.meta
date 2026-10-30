@@ -1,17 +1,5 @@
 fileFormatVersion: 2
-<<<<<<< HEAD
-<<<<<<<< HEAD:Assets/VR Body/IKFootLock.cs.meta
 guid: 95a8098103f299b44be14d0de50e7fe3
-========
-guid: 933ae96d5faaa984baa041eef30e1c53
->>>>>>>> 9743f1e (Quest3 version):Assets/VR Body/IKTargetFollowVRRig.cs.meta
-=======
-<<<<<<<< HEAD:Assets/Scripts/Moles/TimeLeftDisplayer.cs.meta
-guid: 424fe6e35b605674dab5d615a618e07c
-========
-guid: 95a8098103f299b44be14d0de50e7fe3
->>>>>>>> 9743f1e (Quest3 version):Assets/VR Body/IKFootLock.cs.meta
->>>>>>> 9743f1e (Quest3 version)
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
